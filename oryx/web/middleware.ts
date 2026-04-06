@@ -10,7 +10,7 @@ import {
   getWebOrigin,
 } from "./src/lib/domains";
 
-export function proxy(request: NextRequest) {
+export function middleware(request: NextRequest) {
   const host = request.headers.get("x-forwarded-host") || request.headers.get("host") || "";
   const pathname = request.nextUrl.pathname;
   const surface = getSurfaceFromHost(host);
