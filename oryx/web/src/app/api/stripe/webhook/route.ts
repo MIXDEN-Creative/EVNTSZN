@@ -1,0 +1,470 @@
+import { headers } from "next/headers";
+import { NextResponse } from "next/server";
+import Stripe from "stripe";
+import { buildTicketCode, logEventActivity } from "@/lib/evntszn";
+import { stripe } from "@/lib/stripe";
+import { supabaseAdmin } from "@/lib/supabase-admin";
+import { sendMerchConfirmationEmail } from "@/lib/send-merch-email";
+
+function getTierFromLifetimePoints(points: number) {
+  if (points >= 1000) return "Elite";
+  if (points >= 500) return "Gold";
+  if (points >= 250) return "Silver";
+  return "Member";
+}
+
+async function handleEventTicketCheckout(session: Stripe.Checkout.Session) {
+  const metadata = session.metadata || {};
+
+  if (metadata.checkout_kind !== "event_ticket") {
+    return false;
+  }
+
+  const eventId = metadata.evntszn_event_id;
+  const ticketTypeId = metadata.evntszn_ticket_type_id;
+  const purchaserUserId = metadata.evntszn_purchaser_user_id || null;
+  const quantity = Math.max(1, Number(metadata.evntszn_quantity || "1"));
+  const customerEmail = (
+    session.customer_details?.email ||
+    session.customer_email ||
+    ""
+  ).toLowerCase();
+  const purchaserName =
+    session.customer_details?.name ||
+    "EVNTSZN Guest";
+
+  if (!eventId || !ticketTypeId || !customerEmail) {
+    throw new Error("Ticket checkout metadata is incomplete.");
+  }
+
+  const { data: existingOrder } = await supabaseAdmin
+    .from("evntszn_ticket_orders")
+    .select("id")
+    .eq("stripe_checkout_session_id", session.id)
+    .maybeSingle();
+
+  if (existingOrder) {
+    return true;
+  }
+
+  const [{ data: event }, { data: ticketType }] = await Promise.all([
+    supabaseAdmin
+      .from("evntszn_events")
+      .select("id, slug, title")
+      .eq("id", eventId)
+      .single(),
+    supabaseAdmin
+      .from("evntszn_ticket_types")
+      .select("id, quantity_total, quantity_sold")
+      .eq("id", ticketTypeId)
+      .single(),
+  ]);
+
+  if (!event || !ticketType) {
+    throw new Error("Ticket inventory no longer exists.");
+  }
+
+  const remaining = (ticketType.quantity_total || 0) - (ticketType.quantity_sold || 0);
+  if (remaining < quantity) {
+    throw new Error("Ticket inventory is no longer available.");
+  }
+
+  const { data: order, error: orderError } = await supabaseAdmin
+    .from("evntszn_ticket_orders")
+    .insert({
+      stripe_checkout_session_id: session.id,
+      stripe_payment_intent_id:
+        typeof session.payment_intent === "string"
+          ? session.payment_intent
+          : null,
+      event_id: event.id,
+      ticket_type_id: ticketTypeId,
+      purchaser_user_id: purchaserUserId,
+      purchaser_email: customerEmail,
+      purchaser_name: purchaserName,
+      quantity,
+      amount_total_cents: session.amount_total || 0,
+      currency_code: session.currency || "usd",
+      status: "paid",
+    })
+    .select("id")
+    .single();
+
+  if (orderError || !order) {
+    throw new Error(orderError?.message || "Could not create ticket order.");
+  }
+
+  const tickets = Array.from({ length: quantity }).map(() => ({
+    event_id: event.id,
+    ticket_type_id: ticketTypeId,
+    order_id: order.id,
+    purchaser_user_id: purchaserUserId,
+    attendee_name: purchaserName,
+    attendee_email: customerEmail,
+    ticket_code: buildTicketCode("EVN"),
+    share_code: buildTicketCode("SHARE"),
+    referral_code: buildTicketCode("REF"),
+    status: "issued",
+  }));
+
+  const { error: ticketError } = await supabaseAdmin.from("evntszn_tickets").insert(tickets);
+
+  if (ticketError) {
+    throw new Error(ticketError.message);
+  }
+
+  await supabaseAdmin
+    .from("evntszn_ticket_types")
+    .update({ quantity_sold: (ticketType.quantity_sold || 0) + quantity })
+    .eq("id", ticketTypeId);
+
+  await logEventActivity(event.id, purchaserUserId, "ticket_paid", "Ticket order paid via Stripe webhook", {
+    quantity,
+    orderId: order.id,
+  });
+
+  return true;
+}
+
+async function handleEplRegistrationCheckout(session: Stripe.Checkout.Session) {
+  const metadata = session.metadata || {};
+  const registrationId = metadata.epl_registration_id;
+  const applicationId = metadata.epl_application_id;
+  const playerProfileId = metadata.epl_player_profile_id;
+
+  if (!registrationId || !applicationId || !playerProfileId) {
+    return false;
+  }
+
+  const { data: existingRegistration } = await supabaseAdmin
+    .schema("epl")
+    .from("season_registrations")
+    .select("id, registration_status")
+    .eq("id", registrationId)
+    .maybeSingle();
+
+  if (!existingRegistration) {
+    throw new Error("EPL registration does not exist.");
+  }
+
+  if (existingRegistration.registration_status === "paid") {
+    return true;
+  }
+
+  const paidAt = new Date().toISOString();
+
+  const [{ error: registrationError }, { error: applicationError }, { error: profileError }] =
+    await Promise.all([
+      supabaseAdmin
+        .schema("epl")
+        .from("season_registrations")
+        .update({
+          registration_status: "paid",
+          player_status: "registered",
+          paid_at: paidAt,
+          stripe_checkout_session_id: session.id,
+          stripe_payment_intent_id:
+            typeof session.payment_intent === "string" ? session.payment_intent : null,
+          updated_at: paidAt,
+        })
+        .eq("id", registrationId),
+      supabaseAdmin
+        .schema("epl")
+        .from("player_applications")
+        .update({
+          status: "approved",
+          pipeline_stage: "approved",
+          updated_at: paidAt,
+        })
+        .eq("id", applicationId),
+      supabaseAdmin
+        .schema("epl")
+        .from("player_profiles")
+        .update({
+          status: "registered",
+          updated_at: paidAt,
+        })
+        .eq("id", playerProfileId),
+    ]);
+
+  if (registrationError || applicationError || profileError) {
+    throw new Error(
+      registrationError?.message || applicationError?.message || profileError?.message || "Could not finalize EPL registration."
+    );
+  }
+
+  return true;
+}
+
+export async function POST(request: Request) {
+  const body = await request.text();
+  const signature = (await headers()).get("stripe-signature");
+
+  if (!signature) {
+    return new NextResponse("Missing stripe-signature", { status: 400 });
+  }
+
+  let event: Stripe.Event;
+
+  try {
+    event = stripe.webhooks.constructEvent(
+      body,
+      signature,
+      process.env.STRIPE_WEBHOOK_SECRET!
+    );
+  } catch (error) {
+    return new NextResponse(
+      `Webhook Error: ${error instanceof Error ? error.message : "Unknown error"}`,
+      { status: 400 }
+    );
+  }
+
+  try {
+    console.log("🔥 WEBHOOK HIT:", event.type);
+
+    if (event.type === "checkout.session.completed") {
+      const session = event.data.object as Stripe.Checkout.Session;
+
+      if (await handleEventTicketCheckout(session)) {
+        return NextResponse.json({ received: true });
+      }
+
+      if (await handleEplRegistrationCheckout(session)) {
+        return NextResponse.json({ received: true });
+      }
+
+      const shippingDetails = (
+        session as Stripe.Checkout.Session & {
+          shipping_details?: {
+            name?: string | null;
+            address?: Stripe.Address | null;
+          } | null;
+        }
+      ).shipping_details;
+
+      const customerDetails = session.customer_details;
+      const metadata = session.metadata || {};
+
+      const fullName =
+        shippingDetails?.name ||
+        customerDetails?.name ||
+        "Customer";
+
+      const customerEmail = (customerDetails?.email || "").toLowerCase();
+
+      const address = shippingDetails?.address || customerDetails?.address;
+
+      if (!address) {
+        return new NextResponse("Missing shipping address", { status: 400 });
+      }
+
+      const printfulSyncVariantId = Number(metadata.printfulVariantId);
+      const linkedUserId = metadata.userId || null;
+      const printfulProductId = metadata.printfulProductId
+        ? Number(metadata.printfulProductId)
+        : null;
+      const quantity = Number(metadata.quantity || "1");
+      const markupAmount = Number(metadata.markupAmount || "0");
+      const baseAmount = Number(metadata.baseAmount || "0");
+      const amountTotal = session.amount_total || 0;
+
+      const publicOrderNumber =
+        "EPL-" + session.id.slice(-10).toUpperCase();
+
+      const { data: settingsRow } = await supabaseAdmin
+        .from("merch_reward_settings")
+        .select("*")
+        .eq("id", 1)
+        .single();
+
+      const pointsPerDollar = Number(settingsRow?.points_per_dollar || 1);
+      const firstOrderBonus = Number(settingsRow?.first_order_bonus || 0);
+
+      const { data: existingAccount } = await supabaseAdmin
+        .from("merch_reward_accounts")
+        .select("*")
+        .eq("customer_email", customerEmail)
+        .maybeSingle();
+
+      const existingOrdersCount = Number(existingAccount?.orders_count || 0);
+      const pointsFromSpend = Math.floor((amountTotal / 100) * pointsPerDollar);
+      const bonusPoints = existingOrdersCount === 0 ? firstOrderBonus : 0;
+      const totalPointsEarned = pointsFromSpend + bonusPoints;
+
+      const baseOrder = {
+        stripe_session_id: session.id,
+        stripe_payment_intent_id:
+          typeof session.payment_intent === "string"
+            ? session.payment_intent
+            : null,
+        public_order_number: publicOrderNumber,
+        user_id: linkedUserId,
+        customer_email: customerEmail,
+        customer_name: fullName,
+        product_name: metadata.productName || "EPL Merch",
+        printful_product_id: printfulProductId,
+        printful_variant_id: printfulSyncVariantId,
+        quantity,
+        amount_total: amountTotal,
+        base_amount: baseAmount,
+        markup_amount: markupAmount,
+        reward_points_earned: totalPointsEarned,
+        currency: session.currency || "usd",
+        status: "paid",
+        fulfillment_status: "sending",
+        recipient_name: fullName,
+        address1: address.line1 || "",
+        address2: address.line2 || "",
+        city: address.city || "",
+        state_code: address.state || "",
+        country_code: address.country || "",
+        zip: address.postal_code || "",
+        stripe_data: session,
+      };
+
+      const { data: upsertedOrder, error: insertError } = await supabaseAdmin
+        .from("merch_orders")
+        .upsert(baseOrder, { onConflict: "stripe_session_id" })
+        .select("id, public_order_number")
+        .single();
+
+      if (insertError) {
+        console.error("Supabase insert error:", insertError);
+        return new NextResponse("Failed to log order", { status: 500 });
+      }
+
+      console.log("✅ ORDER LOGGED:", session.id);
+
+      const printfulRes = await fetch("https://api.printful.com/orders", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.PRINTFUL_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          recipient: {
+            name: fullName,
+            address1: address.line1,
+            address2: address.line2 || "",
+            city: address.city,
+            state_code: address.state,
+            country_code: address.country,
+            zip: address.postal_code,
+            email: customerEmail,
+          },
+          items: [
+            {
+              sync_variant_id: printfulSyncVariantId,
+              quantity,
+            },
+          ],
+        }),
+      });
+
+      const printfulData = await printfulRes.json();
+
+      if (!printfulRes.ok) {
+        console.error("Printful order failed:", printfulData);
+
+        await supabaseAdmin
+          .from("merch_orders")
+          .update({
+            fulfillment_status: "failed",
+            fulfillment_attempts: 1,
+            printful_order_data: printfulData,
+          })
+          .eq("stripe_session_id", session.id);
+
+        return new NextResponse("Printful order failed", { status: 500 });
+      }
+
+      await supabaseAdmin
+        .from("merch_orders")
+        .update({
+          fulfillment_status: "sent",
+          fulfillment_attempts: 1,
+          printful_order_id: printfulData?.result?.id ?? null,
+          printful_order_data: printfulData,
+        })
+        .eq("stripe_session_id", session.id);
+
+      console.log("✅ PRINTFUL ORDER SENT:", printfulData?.result?.id ?? null);
+
+      if (customerEmail) {
+        const currentLifetime = Number(existingAccount?.lifetime_points || 0);
+        const currentAvailable = Number(existingAccount?.available_points || 0);
+        const currentSpent = Number(existingAccount?.total_spent || 0);
+
+        const nextLifetime = currentLifetime + totalPointsEarned;
+        const nextAvailable = currentAvailable + totalPointsEarned;
+        const nextSpent = currentSpent + amountTotal;
+        const nextOrdersCount = existingOrdersCount + 1;
+        const nextTier = getTierFromLifetimePoints(nextLifetime);
+
+        await supabaseAdmin
+          .from("merch_reward_accounts")
+          .upsert(
+            {
+              user_id: linkedUserId,
+        customer_email: customerEmail,
+              customer_name: fullName,
+              lifetime_points: nextLifetime,
+              available_points: nextAvailable,
+              total_spent: nextSpent,
+              orders_count: nextOrdersCount,
+              tier: nextTier,
+              is_active: true,
+            },
+            { onConflict: "customer_email" }
+          );
+
+        await supabaseAdmin
+          .from("merch_reward_events")
+          .upsert(
+            {
+              user_id: linkedUserId,
+        customer_email: customerEmail,
+              merch_order_id: upsertedOrder.id,
+              event_type: "purchase",
+              points: totalPointsEarned,
+              description:
+                bonusPoints > 0
+                  ? `Purchase points (${pointsFromSpend}) + first order bonus (${bonusPoints})`
+                  : `Purchase points (${pointsFromSpend})`,
+            },
+            { onConflict: "merch_order_id,event_type" }
+          );
+      }
+
+      if (customerEmail) {
+        try {
+          await sendMerchConfirmationEmail({
+            to: customerEmail,
+            customerName: fullName,
+            productName: metadata.productName || "EPL Merch",
+            amountTotal,
+            orderNumber: upsertedOrder.public_order_number,
+            pointsEarned: totalPointsEarned,
+          });
+
+          await supabaseAdmin
+            .from("merch_orders")
+            .update({
+              email_sent: true,
+              email_sent_at: new Date().toISOString(),
+            })
+            .eq("stripe_session_id", session.id);
+
+          console.log("✅ EMAIL SENT:", customerEmail);
+        } catch (emailError) {
+          console.error("Confirmation email failed:", emailError);
+        }
+      }
+    }
+
+    return NextResponse.json({ received: true });
+  } catch (error) {
+    console.error("Webhook handler error:", error);
+    return new NextResponse("Webhook handler failed", { status: 500 });
+  }
+}

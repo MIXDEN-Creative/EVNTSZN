@@ -1,0 +1,213 @@
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase-admin";
+import { getAppOrigin, getLoginUrl } from "@/lib/domains";
+
+export type PlatformRole = "attendee" | "organizer" | "venue" | "scanner" | "admin";
+
+export type PlatformProfile = {
+  user_id: string;
+  full_name: string | null;
+  primary_role: PlatformRole;
+  city: string | null;
+  state: string | null;
+  referral_code: string | null;
+  is_active: boolean;
+};
+
+export type EventAccessRow = {
+  role_code: string;
+  can_manage_event: boolean;
+  can_scan: boolean;
+  can_manage_tickets: boolean;
+  can_view_finance: boolean;
+  status: string;
+  evntszn_events?: {
+    id: string;
+    slug: string;
+    title: string;
+    organizer_user_id: string | null;
+    venue_id: string | null;
+  } | null;
+};
+
+export async function getPlatformViewer() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return {
+      user: null,
+      profile: null,
+      isPlatformAdmin: false,
+    };
+  }
+
+  const [{ data: profile }, { data: memberships }] = await Promise.all([
+    supabaseAdmin
+      .from("evntszn_profiles")
+      .select("user_id, full_name, primary_role, city, state, referral_code, is_active")
+      .eq("user_id", user.id)
+      .maybeSingle(),
+    supabaseAdmin
+      .from("admin_memberships")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("is_active", true),
+  ]);
+
+  return {
+    user,
+    profile: (profile as PlatformProfile | null) ?? null,
+    isPlatformAdmin: Boolean(memberships?.length),
+  };
+}
+
+export async function requirePlatformUser(nextPath: string) {
+  const viewer = await getPlatformViewer();
+
+  if (!viewer.user) {
+    redirect(getLoginUrl(nextPath));
+  }
+
+  return viewer;
+}
+
+export async function ensurePlatformProfile(
+  userId: string,
+  input: {
+    fullName?: string | null;
+    primaryRole?: PlatformRole;
+    city?: string | null;
+    state?: string | null;
+  } = {}
+) {
+  const referralCode = `EVN-${userId.slice(0, 6).toUpperCase()}`;
+
+  const { data, error } = await supabaseAdmin
+    .from("evntszn_profiles")
+    .upsert(
+      {
+        user_id: userId,
+        full_name: input.fullName ?? null,
+        primary_role: input.primaryRole ?? "attendee",
+        city: input.city ?? null,
+        state: input.state ?? null,
+        referral_code: referralCode,
+        is_active: true,
+      },
+      { onConflict: "user_id" }
+    )
+    .select("user_id, full_name, primary_role, city, state, referral_code, is_active")
+    .single();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data as PlatformProfile;
+}
+
+export async function requirePlatformRole(nextPath: string, roles: PlatformRole[]) {
+  const viewer = await requirePlatformUser(nextPath);
+  const role = viewer.profile?.primary_role;
+
+  if (viewer.isPlatformAdmin) {
+    return viewer;
+  }
+
+  if (!role || !roles.includes(role)) {
+    redirect("/account");
+  }
+
+  return viewer;
+}
+
+export async function getEventAccessForUser(userId: string, eventSlug: string) {
+  const { data, error } = await supabaseAdmin
+    .from("evntszn_event_staff")
+    .select(`
+      role_code,
+      can_manage_event,
+      can_scan,
+      can_manage_tickets,
+      can_view_finance,
+      status,
+      evntszn_events!inner (
+        id,
+        slug,
+        title,
+        organizer_user_id,
+        venue_id
+      )
+    `)
+    .eq("user_id", userId)
+    .eq("status", "active")
+    .eq("evntszn_events.slug", eventSlug);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return ((data || []) as unknown) as EventAccessRow[];
+}
+
+export async function requireEventScannerAccess(eventSlug: string) {
+  const viewer = await requirePlatformUser(`/scanner/${eventSlug}`);
+  const accessRows = await getEventAccessForUser(viewer.user!.id, eventSlug);
+  const { data: event } = await supabaseAdmin
+    .from("evntszn_events")
+    .select("id, organizer_user_id, venue_id")
+    .eq("slug", eventSlug)
+    .maybeSingle();
+
+  if (viewer.isPlatformAdmin) {
+    return viewer;
+  }
+
+  const { data: venue } = event?.venue_id
+    ? await supabaseAdmin
+        .from("evntszn_venues")
+        .select("owner_user_id")
+        .eq("id", event.venue_id)
+        .maybeSingle()
+    : { data: null };
+
+  const hasScannerAccess =
+    event?.organizer_user_id === viewer.user!.id ||
+    venue?.owner_user_id === viewer.user!.id ||
+    accessRows.some((row) => row.can_scan || row.role_code === "scanner");
+
+  if (!hasScannerAccess) {
+    redirect("/account");
+  }
+
+  return viewer;
+}
+
+export function getBaseUrl() {
+  return getAppOrigin();
+}
+
+export function buildTicketCode(prefix = "EVNTSZN") {
+  const token = crypto.randomUUID().replace(/-/g, "").slice(0, 10).toUpperCase();
+  return `${prefix}-${token}`;
+}
+
+export async function logEventActivity(
+  eventId: string,
+  actorUserId: string | null,
+  activityType: string,
+  activityLabel: string,
+  payload: Record<string, unknown> = {}
+) {
+  await supabaseAdmin.from("evntszn_event_activity").insert({
+    event_id: eventId,
+    actor_user_id: actorUserId,
+    activity_type: activityType,
+    activity_label: activityLabel,
+    payload,
+  });
+}
