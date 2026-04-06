@@ -30,7 +30,7 @@ const SECRET_PROBE_PATTERNS = [
 ];
 
 export function middleware(request: NextRequest) {
-  const host = request.headers.get("x-forwarded-host") || request.headers.get("host") || "";
+  const host = request.nextUrl.host || request.headers.get("host") || request.headers.get("x-forwarded-host") || "";
   const pathname = request.nextUrl.pathname;
   const surface = getSurfaceFromHost(host);
 
