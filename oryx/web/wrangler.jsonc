@@ -1,9 +1,6 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
   "name": "evntszn-prod-live",
   "main": ".open-next/worker.js",
-  "workers_dev": true,
-  "preview_urls": true,
   "compatibility_date": "2026-04-06",
   "compatibility_flags": [
     "nodejs_compat",
@@ -16,10 +13,9 @@
   "services": [
     {
       "binding": "WORKER_SELF_REFERENCE",
-      "service": "evntszn"
+      "service": "evntszn-prod-live"
     }
   ],
-  "observability": {
-    "enabled": true
-  }
+  "workers_dev": true,
+  "preview_urls": true
 }
