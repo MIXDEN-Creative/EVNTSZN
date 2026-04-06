@@ -9,7 +9,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "You must be signed in first." }, { status: 401 });
   }
 
-  const body = await request.json();
+  const body = (await request.json()) as { token?: string };
   const token = String(body.token || "").trim();
 
   if (!token) {

@@ -10,7 +10,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { orderId } = await request.json();
+    const { orderId } = (await request.json()) as { orderId?: string };
 
     const { data: order, error } = await supabaseAdmin
       .from("merch_orders")

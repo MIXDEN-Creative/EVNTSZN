@@ -2,6 +2,14 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+type PlayerPoolResponse = {
+  players?: any[];
+};
+
+type PlayerNotesResponse = {
+  notes?: any[];
+};
+
 export default function PlayerPoolTab({ seasonSlug }: any) {
   const [players, setPlayers] = useState<any[]>([]);
   const [notes, setNotes] = useState<any[]>([]);
@@ -26,8 +34,8 @@ export default function PlayerPoolTab({ seasonSlug }: any) {
       fetch(`/api/epl/draft/notes?seasonSlug=${seasonSlug}&kind=player`, { cache: "no-store" }),
     ]);
 
-    const poolJson = await poolRes.json();
-    const noteJson = await noteRes.json();
+    const poolJson = (await poolRes.json()) as PlayerPoolResponse;
+    const noteJson = (await noteRes.json()) as PlayerNotesResponse;
 
     setPlayers(poolJson?.players || []);
     setNotes(noteJson?.notes || []);

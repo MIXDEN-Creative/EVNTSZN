@@ -39,6 +39,11 @@ const initialState: FormState = {
   headshot: null,
 };
 
+type RegistrationResponse = {
+  error?: string;
+  checkoutUrl?: string;
+};
+
 function inputClassName() {
   return "h-12 w-full rounded-2xl border border-white/10 bg-white/5 px-4 text-sm text-white outline-none transition placeholder:text-white/35 focus:border-[#A259FF] focus:bg-white/[0.07]";
 }
@@ -94,7 +99,7 @@ export default function RegisterForm() {
         body,
       });
 
-      const json = await res.json();
+      const json = (await res.json()) as RegistrationResponse;
 
       if (!res.ok) {
         throw new Error(json.error || "Registration failed.");

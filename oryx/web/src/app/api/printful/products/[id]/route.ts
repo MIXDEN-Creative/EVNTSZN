@@ -9,6 +9,13 @@ type PrintfulVariant = {
   sku?: string | null;
 };
 
+type PrintfulProductDetailResponse = {
+  result?: {
+    sync_product?: Record<string, unknown> | null;
+    sync_variants?: PrintfulVariant[] | null;
+  } | null;
+};
+
 export async function GET(
   _request: Request,
   { params }: { params: Params }
@@ -24,7 +31,7 @@ export async function GET(
       cache: "no-store",
     });
 
-    const data = await res.json();
+    const data = (await res.json()) as PrintfulProductDetailResponse;
 
     const rawVariants = (data?.result?.sync_variants ?? []) as PrintfulVariant[];
 

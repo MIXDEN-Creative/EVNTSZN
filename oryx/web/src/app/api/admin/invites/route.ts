@@ -38,7 +38,7 @@ export async function GET() {
 export async function POST(request: Request) {
   const { user } = await requireAdminPermission("admin.manage", "/epl/admin/team");
 
-  const body = await request.json();
+  const body = (await request.json()) as Record<string, unknown>;
   const email = String(body.email || "").trim().toLowerCase();
   const fullName = String(body.full_name || "").trim();
   const roleId = String(body.role_id || "").trim();

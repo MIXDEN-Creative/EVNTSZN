@@ -5,7 +5,7 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 export async function POST(request: Request) {
   await requireAdminPermission("admin.manage", "/epl/admin/team");
 
-  const body = await request.json();
+  const body = (await request.json()) as Record<string, unknown>;
   const membershipId = String(body.membershipId || "");
   const roleId = String(body.roleId || "");
   const isActive = typeof body.isActive === "boolean" ? body.isActive : null;

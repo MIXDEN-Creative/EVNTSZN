@@ -13,7 +13,7 @@ export async function GET() {
       },
     });
 
-    const data = await res.json();
+    const data = (await res.json()) as Record<string, unknown>;
 
     return NextResponse.json({
       ok: res.ok,

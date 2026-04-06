@@ -7,7 +7,7 @@ type Params = Promise<{ eventId: string }>;
 export async function PATCH(request: Request, { params }: { params: Params }) {
   const viewer = await requirePlatformUser("/organizer");
   const { eventId } = await params;
-  const body = await request.json().catch(() => ({}));
+  const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
 
   const { data: event, error: eventError } = await supabaseAdmin
     .from("evntszn_events")

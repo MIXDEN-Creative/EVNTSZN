@@ -3,6 +3,14 @@
 import { useEffect, useState } from "react";
 import { getCanonicalUrl } from "@/lib/domains";
 
+type LogsResponse = {
+  logs?: any[];
+};
+
+type TradesResponse = {
+  trades?: any[];
+};
+
 export default function SessionsTab({ sessions, reopenSession, seasonSlug }: any) {
   const [logs, setLogs] = useState<any[]>([]);
   const [trades, setTrades] = useState<any[]>([]);
@@ -15,8 +23,8 @@ export default function SessionsTab({ sessions, reopenSession, seasonSlug }: any
       fetch(`/api/epl/draft/trades?seasonSlug=${seasonSlug}`, { cache: "no-store" }),
     ]);
 
-    const logsJson = await logsRes.json();
-    const tradesJson = await tradesRes.json();
+    const logsJson = (await logsRes.json()) as LogsResponse;
+    const tradesJson = (await tradesRes.json()) as TradesResponse;
 
     setLogs(logsJson?.logs || []);
     setTrades(tradesJson?.trades || []);

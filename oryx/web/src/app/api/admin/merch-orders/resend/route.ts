@@ -2,6 +2,12 @@ import { NextResponse } from "next/server";
 import { isAdminAuthorized } from "@/lib/admin-auth";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
+type PrintfulOrderResponse = {
+  result?: {
+    id?: number | string | null;
+  } | null;
+};
+
 export async function POST(request: Request) {
   const allowed = await isAdminAuthorized();
   if (!allowed) {
@@ -9,7 +15,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { orderId } = await request.json();
+    const { orderId } = (await request.json()) as { orderId?: string };
 
     const { data: order, error } = await supabaseAdmin
       .from("merch_orders")
@@ -47,7 +53,7 @@ export async function POST(request: Request) {
       }),
     });
 
-    const printfulData = await printfulRes.json();
+    const printfulData = (await printfulRes.json()) as PrintfulOrderResponse;
 
     if (!printfulRes.ok) {
       await supabaseAdmin

@@ -30,5 +30,12 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules", "src/app"]
+  "exclude": [
+    "node_modules",
+    "src/app",
+    "app_backup_before_disable",
+    "app_disabled",
+    ".open-next",
+    ".wrangler"
+  ]
 }

@@ -25,7 +25,7 @@ function getMarkupForProduct(productName: string): number {
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    const body = (await request.json()) as Record<string, unknown>;
     const supabase = await createClient();
     const {
       data: { user },

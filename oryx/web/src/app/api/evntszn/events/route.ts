@@ -2,6 +2,27 @@ import { NextResponse } from "next/server";
 import { ensurePlatformProfile, logEventActivity, requirePlatformUser } from "@/lib/evntszn";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
+type CreateEventBody = {
+  title?: string;
+  slug?: string;
+  startAt?: string;
+  endAt?: string;
+  city?: string;
+  state?: string;
+  venueName?: string;
+  subtitle?: string;
+  description?: string;
+  heroNote?: string;
+  publishNow?: boolean;
+  capacity?: number | string;
+  payoutAccountLabel?: string;
+  ticketPriceCents?: number | string;
+  ticketQuantityTotal?: number | string;
+  ticketTypeName?: string;
+  ticketDescription?: string;
+  maxPerOrder?: number | string;
+};
+
 function slugify(value: string) {
   return value
     .toLowerCase()
@@ -12,7 +33,7 @@ function slugify(value: string) {
 
 export async function POST(request: Request) {
   const viewer = await requirePlatformUser("/organizer");
-  const body = await request.json().catch(() => ({}));
+  const body = (await request.json().catch(() => ({}))) as CreateEventBody;
   const title = String(body.title || "").trim();
   const startAt = String(body.startAt || "");
   const endAt = String(body.endAt || "");

@@ -143,14 +143,14 @@ export default function LeagueOfficeAdmin({ seasonSlug }: Props) {
       fetch(`/api/epl/admin/add-ons?seasonSlug=${seasonSlug}`),
     ]);
 
-    const playerJson = await playerRes.json();
-    const staffAppJson = await staffAppRes.json();
-    const staffAssignJson = await staffAssignRes.json();
-    const revenueJson = await revenueRes.json();
-    const oppJson = await oppRes.json();
-    const sponsorJson = await sponsorRes.json();
-    const merchJson = await merchRes.json();
-    const addOnJson = await addOnRes.json();
+    const playerJson = (await playerRes.json()) as Record<string, any>;
+    const staffAppJson = (await staffAppRes.json()) as Record<string, any>;
+    const staffAssignJson = (await staffAssignRes.json()) as Record<string, any>;
+    const revenueJson = (await revenueRes.json()) as Record<string, any>;
+    const oppJson = (await oppRes.json()) as Record<string, any>;
+    const sponsorJson = (await sponsorRes.json()) as Record<string, any>;
+    const merchJson = (await merchRes.json()) as Record<string, any>;
+    const addOnJson = (await addOnRes.json()) as Record<string, any>;
 
     setPlayerPipeline(playerJson.entries || []);
     setStaffApplications(staffAppJson.applications || []);
@@ -197,7 +197,7 @@ export default function LeagueOfficeAdmin({ seasonSlug }: Props) {
       body: JSON.stringify({ id, status }),
     });
 
-    const json = await res.json();
+    const json = (await res.json()) as Record<string, any>;
     if (!res.ok) {
       setMessage(json.error || "Could not update staff application.");
       return;
@@ -214,7 +214,7 @@ export default function LeagueOfficeAdmin({ seasonSlug }: Props) {
       body: JSON.stringify({ seasonSlug, ...assignmentForm }),
     });
 
-    const json = await res.json();
+    const json = (await res.json()) as Record<string, any>;
     if (!res.ok) {
       setMessage(json.error || "Could not save staff assignment.");
       return;
@@ -243,7 +243,7 @@ export default function LeagueOfficeAdmin({ seasonSlug }: Props) {
       body: JSON.stringify({ seasonSlug, ...revenueForm }),
     });
 
-    const json = await res.json();
+    const json = (await res.json()) as Record<string, any>;
     if (!res.ok) {
       setMessage(json.error || "Could not save revenue entry.");
       return;
@@ -272,7 +272,7 @@ export default function LeagueOfficeAdmin({ seasonSlug }: Props) {
       }),
     });
 
-    const json = await res.json();
+    const json = (await res.json()) as Record<string, any>;
     if (!res.ok) {
       setMessage(json.error || "Could not save opportunity.");
       return;
@@ -303,7 +303,7 @@ export default function LeagueOfficeAdmin({ seasonSlug }: Props) {
       body: JSON.stringify({ seasonSlug, ...sponsorForm }),
     });
 
-    const json = await res.json();
+    const json = (await res.json()) as Record<string, any>;
     if (!res.ok) {
       setMessage(json.error || "Could not save sponsor.");
       return;
@@ -330,7 +330,7 @@ export default function LeagueOfficeAdmin({ seasonSlug }: Props) {
       body: JSON.stringify({ seasonSlug, ...merchForm }),
     });
 
-    const json = await res.json();
+    const json = (await res.json()) as Record<string, any>;
     if (!res.ok) {
       setMessage(json.error || "Could not save merch item.");
       return;
@@ -356,7 +356,7 @@ export default function LeagueOfficeAdmin({ seasonSlug }: Props) {
       body: JSON.stringify({ seasonSlug, ...addOnForm }),
     });
 
-    const json = await res.json();
+    const json = (await res.json()) as Record<string, any>;
     if (!res.ok) {
       setMessage(json.error || "Could not save add-on.");
       return;

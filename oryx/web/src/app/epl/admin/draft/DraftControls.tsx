@@ -2,6 +2,16 @@
 
 import { useEffect, useState } from "react";
 
+type DraftStateResponse = {
+  session?: {
+    auto_interval_seconds?: number;
+  } | null;
+};
+
+type DraftGenerateResponse = {
+  error?: string;
+};
+
 export default function DraftControls({ seasonSlug }: { seasonSlug: string }) {
   const [autoIntervalSeconds, setAutoIntervalSeconds] = useState<number>(8);
   const [initialized, setInitialized] = useState(false);
@@ -14,7 +24,7 @@ export default function DraftControls({ seasonSlug }: { seasonSlug: string }) {
     async function loadSettings() {
       try {
         const res = await fetch(`/api/epl/draft/state?seasonSlug=${seasonSlug}`);
-        const data = await res.json();
+        const data = (await res.json()) as DraftStateResponse;
 
         if (data?.session?.auto_interval_seconds) {
           setAutoIntervalSeconds(data.session.auto_interval_seconds);
@@ -46,7 +56,7 @@ export default function DraftControls({ seasonSlug }: { seasonSlug: string }) {
         }),
       });
 
-      const json = await res.json();
+      const json = (await res.json()) as DraftGenerateResponse;
 
       if (json.error) {
         alert(json.error);

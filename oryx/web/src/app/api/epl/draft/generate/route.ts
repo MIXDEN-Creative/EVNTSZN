@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/epl/supabase-admin";
 
 export async function POST(req: NextRequest) {
-  const body = await req.json().catch(() => ({}));
+  const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
   const seasonSlug = body.seasonSlug || "season-1";
   const title = body.title || null;
   const snakeMode = body.snakeMode ?? true;

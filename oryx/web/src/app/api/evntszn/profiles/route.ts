@@ -1,9 +1,16 @@
 import { NextResponse } from "next/server";
-import { ensurePlatformProfile, requirePlatformUser } from "@/lib/evntszn";
+import { ensurePlatformProfile, requirePlatformUser, type PlatformRole } from "@/lib/evntszn";
+
+type ProfileBody = {
+  fullName?: string;
+  primaryRole?: PlatformRole;
+  city?: string;
+  state?: string;
+};
 
 export async function POST(request: Request) {
   const viewer = await requirePlatformUser("/account");
-  const body = await request.json().catch(() => ({}));
+  const body = (await request.json().catch(() => ({}))) as ProfileBody;
 
   try {
     const profile = await ensurePlatformProfile(viewer.user!.id, {

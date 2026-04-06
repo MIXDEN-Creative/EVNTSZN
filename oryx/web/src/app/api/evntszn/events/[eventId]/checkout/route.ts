@@ -9,7 +9,7 @@ type Params = Promise<{ eventId: string }>;
 export async function POST(request: Request, { params }: { params: Params }) {
   const viewer = await requirePlatformUser("/events");
   const { eventId } = await params;
-  const body = await request.json().catch(() => ({}));
+  const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
   const quantity = Math.max(1, Number(body.quantity || 1));
 
   const [{ data: event }, { data: ticketType }] = await Promise.all([

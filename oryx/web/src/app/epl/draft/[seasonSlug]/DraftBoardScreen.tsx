@@ -12,6 +12,8 @@ type DraftState = {
   error?: string;
 };
 
+type DraftStateResponse = DraftState;
+
 function getPhotoUrl(path: string | null | undefined) {
   if (!path) return null;
   const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -119,7 +121,7 @@ export default function DraftBoardScreen({ seasonSlug }: { seasonSlug: string })
     const res = await fetch(`/api/epl/draft/state?seasonSlug=${seasonSlug}`, {
       cache: "no-store",
     });
-    const json = await res.json();
+    const json = (await res.json()) as DraftStateResponse;
 
     const incomingPick = json?.session?.current_pick_number || 0;
     const incomingCurrentPick = json?.currentPick || null;

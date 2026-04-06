@@ -20,9 +20,11 @@ const eslintConfig = defineConfig([
   globalIgnores([
     // Default ignores of eslint-config-next:
     ".next/**",
+    ".open-next/**",
     "out/**",
     "build/**",
     "next-env.d.ts",
+    "cloudflare-env.d.ts",
     "app_backup_before_disable/**",
     "app_disabled/**",
     "src/app/**",

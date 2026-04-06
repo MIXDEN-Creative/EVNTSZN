@@ -6,6 +6,12 @@ import { stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { sendMerchConfirmationEmail } from "@/lib/send-merch-email";
 
+type PrintfulOrderResponse = {
+  result?: {
+    id?: number | string | null;
+  } | null;
+};
+
 function getTierFromLifetimePoints(points: number) {
   if (points >= 1000) return "Elite";
   if (points >= 500) return "Gold";
@@ -361,7 +367,7 @@ export async function POST(request: Request) {
         }),
       });
 
-      const printfulData = await printfulRes.json();
+      const printfulData = (await printfulRes.json()) as PrintfulOrderResponse;
 
       if (!printfulRes.ok) {
         console.error("Printful order failed:", printfulData);

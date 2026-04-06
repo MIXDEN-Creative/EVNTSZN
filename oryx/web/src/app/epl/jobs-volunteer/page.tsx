@@ -35,7 +35,7 @@ export default function EPLJobsVolunteerPage() {
   useEffect(() => {
     async function load() {
       const res = await fetch("/api/epl/opportunities", { cache: "no-store" });
-      const json = await res.json();
+      const json = (await res.json()) as Record<string, any>;
       setOpportunities(json?.opportunities || []);
     }
     load();
@@ -77,7 +77,7 @@ export default function EPLJobsVolunteerPage() {
       }),
     });
 
-    const json = await res.json();
+    const json = (await res.json()) as Record<string, any>;
 
     if (!res.ok) {
       setMessage(json.error || "Could not submit application.");

@@ -24,6 +24,14 @@ type DraftSessionRow = {
   created_at: string;
 };
 
+type DraftSessionsResponse = {
+  sessions?: DraftSessionRow[];
+};
+
+type DraftActionResponse = {
+  error?: string;
+};
+
 const defaultState: DraftState = {
   session: null,
   picks: [],
@@ -60,7 +68,7 @@ export default function DraftHostConsole() {
     const res = await fetch(`/api/epl/draft/state?seasonSlug=${seasonSlug}`, {
       cache: "no-store",
     });
-    const json = await res.json();
+    const json = (await res.json()) as DraftState;
     setState(json);
 
     const serverSpeed = json?.session?.auto_interval_seconds;
@@ -77,7 +85,7 @@ export default function DraftHostConsole() {
 
   async function loadSessions() {
     const res = await fetch("/api/epl/draft/sessions", { cache: "no-store" });
-    const json = await res.json();
+    const json = (await res.json()) as DraftSessionsResponse;
     setSessions(json?.sessions || []);
   }
 
@@ -166,7 +174,7 @@ export default function DraftHostConsole() {
       }),
     });
 
-    const json = await res.json();
+    const json = (await res.json()) as DraftActionResponse;
 
     if (!res.ok) {
       setError(json.error || "Draft preparation failed.");

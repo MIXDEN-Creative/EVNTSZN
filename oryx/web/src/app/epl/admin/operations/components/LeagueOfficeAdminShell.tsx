@@ -17,6 +17,9 @@ type RowAction = {
   danger?: boolean;
 };
 
+type ArrayResponse = Record<string, any[] | undefined>;
+type MutationResponse = { error?: string };
+
 function SectionCard({
   title,
   subtitle,
@@ -248,19 +251,19 @@ export default function LeagueOfficeAdminShell() {
       fetch(`/api/epl/admin/coaches`),
     ]);
 
-    const seasonsJson = await seasonsRes.json();
-    const playersJson = await playersRes.json();
-    const staffAppJson = await staffAppRes.json();
-    const staffAssignJson = await staffAssignRes.json();
-    const oppJson = await oppRes.json();
-    const sponsorsJson = await sponsorsRes.json();
-    const packagesJson = await packagesRes.json();
-    const deliverablesJson = await deliverablesRes.json();
-    const merchJson = await merchRes.json();
-    const merchSalesJson = await merchSalesRes.json();
-    const addOnsJson = await addOnsRes.json();
-    const revenueJson = await revenueRes.json();
-    const coachesJson = await coachesRes.json();
+    const seasonsJson = (await seasonsRes.json()) as ArrayResponse;
+    const playersJson = (await playersRes.json()) as ArrayResponse;
+    const staffAppJson = (await staffAppRes.json()) as ArrayResponse;
+    const staffAssignJson = (await staffAssignRes.json()) as ArrayResponse;
+    const oppJson = (await oppRes.json()) as ArrayResponse;
+    const sponsorsJson = (await sponsorsRes.json()) as ArrayResponse;
+    const packagesJson = (await packagesRes.json()) as ArrayResponse;
+    const deliverablesJson = (await deliverablesRes.json()) as ArrayResponse;
+    const merchJson = (await merchRes.json()) as ArrayResponse;
+    const merchSalesJson = (await merchSalesRes.json()) as ArrayResponse;
+    const addOnsJson = (await addOnsRes.json()) as ArrayResponse;
+    const revenueJson = (await revenueRes.json()) as ArrayResponse;
+    const coachesJson = (await coachesRes.json()) as ArrayResponse;
 
     setSeasons(seasonsJson.seasons || []);
     setPlayerPipeline(playersJson.entries || []);
@@ -291,7 +294,7 @@ export default function LeagueOfficeAdminShell() {
       body: JSON.stringify({ table, id, action }),
     });
 
-    const json = await res.json();
+    const json = (await res.json()) as MutationResponse;
     if (!res.ok) {
       setMessage(json.error || "Could not update record.");
       return;
@@ -312,7 +315,7 @@ export default function LeagueOfficeAdminShell() {
       }),
     });
 
-    const json = await res.json();
+    const json = (await res.json()) as MutationResponse;
     if (!res.ok) {
       setMessage(json.error || "Could not save coach.");
       return;
@@ -347,7 +350,7 @@ export default function LeagueOfficeAdminShell() {
       }),
     });
 
-    const json = await res.json();
+    const json = (await res.json()) as MutationResponse;
     if (!res.ok) {
       setMessage(json.error || "Could not save deliverable.");
       return;
@@ -374,7 +377,7 @@ export default function LeagueOfficeAdminShell() {
       }),
     });
 
-    const json = await res.json();
+    const json = (await res.json()) as MutationResponse;
     if (!res.ok) {
       setMessage(json.error || "Could not save merch sale.");
       return;

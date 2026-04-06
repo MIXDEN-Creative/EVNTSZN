@@ -49,7 +49,7 @@ export default function TicketPurchaseCard({
         }),
       });
 
-      const data = await res.json();
+      const data = (await res.json()) as Record<string, any>;
 
       if (!res.ok) {
         throw new Error(data.error || "Checkout failed.");

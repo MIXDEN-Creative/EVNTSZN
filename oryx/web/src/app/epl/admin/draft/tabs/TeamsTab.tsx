@@ -2,6 +2,16 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+type TeamsResponse = {
+  teams?: any[];
+  needs?: any[];
+  board?: any[];
+};
+
+type NotesResponse = {
+  notes?: any[];
+};
+
 export default function TeamsTab({ seasonSlug }: any) {
   const [teams, setTeams] = useState<any[]>([]);
   const [needs, setNeeds] = useState<any[]>([]);
@@ -16,8 +26,8 @@ export default function TeamsTab({ seasonSlug }: any) {
       fetch(`/api/epl/draft/notes?seasonSlug=${seasonSlug}&type=team`, { cache: "no-store" }),
     ]);
 
-    const teamsJson = await teamsRes.json();
-    const notesJson = await notesRes.json();
+    const teamsJson = (await teamsRes.json()) as TeamsResponse;
+    const notesJson = (await notesRes.json()) as NotesResponse;
 
     setTeams(teamsJson?.teams || []);
     setNeeds(teamsJson?.needs || []);

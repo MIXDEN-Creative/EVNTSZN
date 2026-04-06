@@ -3,7 +3,7 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    const body = (await request.json()) as Record<string, unknown>;
     const email = String(body.email || "").trim().toLowerCase();
     const orderNumber = String(body.orderNumber || "").trim().toUpperCase();
 

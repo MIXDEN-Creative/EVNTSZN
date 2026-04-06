@@ -39,7 +39,7 @@ export default function ScannerConsole({
         `/api/evntszn/events/${eventId}/scanner/search?q=${encodeURIComponent(nextQuery)}`,
         { cache: "no-store" }
       );
-      const data = await res.json();
+      const data = (await res.json()) as Record<string, any>;
       if (!res.ok) throw new Error(data.error || "Search failed.");
       setResults(data.results || []);
     } catch (error) {
@@ -59,7 +59,7 @@ export default function ScannerConsole({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ticketId }),
       });
-      const data = await res.json();
+      const data = (await res.json()) as Record<string, any>;
       if (!res.ok) throw new Error(data.error || "Check-in failed.");
 
       setCount((value) => value + 1);

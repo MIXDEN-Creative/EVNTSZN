@@ -7,7 +7,7 @@ type Params = Promise<{ eventId: string }>;
 export async function POST(request: Request, { params }: { params: Params }) {
   const viewer = await requirePlatformUser("/account");
   const { eventId } = await params;
-  const body = await request.json().catch(() => ({}));
+  const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
 
   const [{ data: event }, { data: ticket }] = await Promise.all([
     supabaseAdmin

@@ -24,6 +24,22 @@ type Props = {
   initialTotal: number;
 };
 
+type OrdersResponse = {
+  error?: string;
+  orders?: Order[];
+  page?: number;
+  total?: number;
+};
+
+type OrderDetailResponse = {
+  error?: string;
+  order?: unknown;
+};
+
+type ActionResponse = {
+  error?: string;
+};
+
 export default function MerchOrdersClient({
   initialOrders,
   initialError = "",
@@ -62,7 +78,7 @@ export default function MerchOrdersClient({
         cache: "no-store",
       });
 
-      const data = await res.json();
+      const data = (await res.json()) as OrdersResponse;
 
       if (!res.ok) throw new Error(data.error || "Failed to load orders");
 
@@ -87,7 +103,7 @@ export default function MerchOrdersClient({
       const res = await fetch(`/api/admin/merch-orders/${orderId}`, {
         cache: "no-store",
       });
-      const data = await res.json();
+      const data = (await res.json()) as OrderDetailResponse;
 
       if (!res.ok) throw new Error(data.error || "Failed to load order detail");
 
@@ -107,7 +123,7 @@ export default function MerchOrdersClient({
         body: JSON.stringify({ orderId }),
       });
 
-      const data = await res.json();
+      const data = (await res.json()) as ActionResponse;
       if (!res.ok) throw new Error(data.error || "Action failed");
 
       await loadOrders();

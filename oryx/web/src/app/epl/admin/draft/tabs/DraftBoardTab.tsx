@@ -2,6 +2,16 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+type DraftBoardResponse = {
+  board?: any[];
+};
+
+type DraftStateResponse = {
+  session?: {
+    draft_session_id?: string;
+  } | null;
+};
+
 export default function DraftBoardTab({ seasonSlug }: any) {
   const [board, setBoard] = useState<any[]>([]);
   const [pickA, setPickA] = useState("");
@@ -18,7 +28,7 @@ export default function DraftBoardTab({ seasonSlug }: any) {
     const res = await fetch(`/api/epl/draft/board?seasonSlug=${seasonSlug}`, {
       cache: "no-store",
     });
-    const json = await res.json();
+    const json = (await res.json()) as DraftBoardResponse;
     setBoard(json?.board || []);
   }
 
@@ -56,7 +66,7 @@ export default function DraftBoardTab({ seasonSlug }: any) {
   async function createTrade() {
     if (!fromTeamId || !toTeamId) return;
     const stateRes = await fetch(`/api/epl/draft/state?seasonSlug=${seasonSlug}`, { cache: "no-store" });
-    const stateJson = await stateRes.json();
+    const stateJson = (await stateRes.json()) as DraftStateResponse;
 
     await fetch("/api/epl/draft/trades", {
       method: "POST",

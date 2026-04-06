@@ -49,7 +49,7 @@ export default function OrganizerDashboard({ canOperate, events }: OrganizerDash
         body: JSON.stringify({ primaryRole: "organizer" }),
       });
 
-      const data = await res.json();
+      const data = (await res.json()) as Record<string, any>;
       if (!res.ok) throw new Error(data.error || "Could not activate organizer workspace.");
       window.location.reload();
     } catch (error) {
@@ -71,7 +71,7 @@ export default function OrganizerDashboard({ canOperate, events }: OrganizerDash
         body: JSON.stringify(form),
       });
 
-      const data = await res.json();
+      const data = (await res.json()) as Record<string, any>;
       if (!res.ok) throw new Error(data.error || "Could not create event.");
 
       window.location.href = `/events/${data.event.slug}`;
@@ -93,7 +93,7 @@ export default function OrganizerDashboard({ canOperate, events }: OrganizerDash
         body: JSON.stringify(patch),
       });
 
-      const data = await res.json();
+      const data = (await res.json()) as Record<string, any>;
       if (!res.ok) throw new Error(data.error || "Could not update event.");
       window.location.reload();
     } catch (error) {

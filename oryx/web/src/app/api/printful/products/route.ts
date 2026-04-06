@@ -17,6 +17,13 @@ type CatalogRow = {
   sort_order?: number | null;
 };
 
+type PrintfulProductsResponse = {
+  error?: {
+    message?: string | null;
+  } | null;
+  result?: PrintfulStoreProduct[] | null;
+};
+
 export async function GET() {
   try {
     const [printfulRes, catalogRes] = await Promise.all([
@@ -34,7 +41,7 @@ export async function GET() {
         .order("sort_order", { ascending: true }),
     ]);
 
-    const printfulData = await printfulRes.json();
+    const printfulData = (await printfulRes.json()) as PrintfulProductsResponse;
 
     if (!printfulRes.ok) {
       return NextResponse.json(

@@ -47,7 +47,7 @@ export default function TrackOrderPage() {
         }),
       });
 
-      const data = await res.json();
+      const data = (await res.json()) as OrderLookupResult & { error?: string };
 
       if (!res.ok) {
         throw new Error(data.error || "Lookup failed");

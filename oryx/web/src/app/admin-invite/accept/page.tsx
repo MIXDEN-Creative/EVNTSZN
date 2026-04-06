@@ -29,7 +29,7 @@ export default function AdminInviteAcceptPage({
       body: JSON.stringify({ token }),
     });
 
-    const data = await res.json();
+    const data = (await res.json()) as { error?: string };
 
     if (!res.ok) {
       setMessage(data.error || "Failed to accept invite");

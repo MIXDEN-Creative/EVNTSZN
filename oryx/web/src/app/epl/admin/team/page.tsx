@@ -22,9 +22,9 @@ export default function AdminTeamPage() {
       fetch("/api/admin/invites", { cache: "no-store" }),
     ]);
 
-    const rolesData = await rolesRes.json();
-    const teamData = await teamRes.json();
-    const invitesData = await invitesRes.json();
+    const rolesData = (await rolesRes.json()) as Record<string, any>;
+    const teamData = (await teamRes.json()) as Record<string, any>;
+    const invitesData = (await invitesRes.json()) as Record<string, any>;
 
     if (rolesRes.ok) setRoles(rolesData.roles || []);
     if (teamRes.ok) setTeam(teamData.team || []);
@@ -49,7 +49,7 @@ export default function AdminTeamPage() {
       body: JSON.stringify({ email, full_name: fullName, role_id: roleId }),
     });
 
-    const data = await res.json();
+    const data = (await res.json()) as Record<string, any>;
     setSending(false);
 
     if (!res.ok) {
@@ -72,7 +72,7 @@ export default function AdminTeamPage() {
       body: JSON.stringify({ membershipId, ...update }),
     });
 
-    const data = await res.json();
+    const data = (await res.json()) as Record<string, any>;
 
     if (!res.ok) {
       alert(data.error || "Failed to update membership");

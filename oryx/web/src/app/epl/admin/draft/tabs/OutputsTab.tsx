@@ -2,6 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+type BoardResponse = {
+  board?: any[];
+};
+
 export default function OutputsTab({ seasonSlug }: any) {
   const [board, setBoard] = useState<any[]>([]);
   const [packet, setPacket] = useState<any>(null);
@@ -12,8 +16,8 @@ export default function OutputsTab({ seasonSlug }: any) {
       fetch(`/api/epl/draft/packet?seasonSlug=${seasonSlug}`, { cache: "no-store" }),
     ]);
 
-    const boardJson = await boardRes.json();
-    const packetJson = await packetRes.json();
+    const boardJson = (await boardRes.json()) as BoardResponse;
+    const packetJson = (await packetRes.json()) as Record<string, unknown> | null;
 
     setBoard(boardJson?.board || []);
     setPacket(packetJson || null);

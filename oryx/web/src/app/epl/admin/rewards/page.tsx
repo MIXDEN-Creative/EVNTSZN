@@ -16,8 +16,8 @@ export default function AdminRewardsPage() {
       fetch("/api/admin/rewards/accounts", { cache: "no-store" }),
     ]);
 
-    const settingsData = await settingsRes.json();
-    const accountsData = await accountsRes.json();
+    const settingsData = (await settingsRes.json()) as Record<string, any>;
+    const accountsData = (await accountsRes.json()) as Record<string, any>;
 
     if (settingsRes.ok) setSettings(settingsData.settings);
     if (accountsRes.ok) setAccounts(accountsData.accounts || []);
@@ -40,7 +40,7 @@ export default function AdminRewardsPage() {
       body: JSON.stringify(settings),
     });
 
-    const data = await res.json();
+    const data = (await res.json()) as Record<string, any>;
 
     setSaving(false);
 
