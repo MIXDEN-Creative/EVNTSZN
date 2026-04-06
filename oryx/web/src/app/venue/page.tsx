@@ -1,9 +1,10 @@
 import VenueOpsDashboard from "./VenueOpsDashboard";
-import { getPlatformViewer, requirePlatformUser } from "@/lib/evntszn";
+import SurfaceShell from "@/components/shells/SurfaceShell";
+import { getPlatformViewer, requirePlatformRole } from "@/lib/evntszn";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export default async function VenuePage() {
-  await requirePlatformUser("/venue");
+  await requirePlatformRole("/venue", ["venue"]);
   const viewer = await getPlatformViewer();
 
   const [venueEventsRes, staffEventsRes] = await Promise.all([
@@ -52,22 +53,28 @@ export default async function VenuePage() {
   const byId = new Map([...venueEvents, ...staffedEvents].map((event) => [event.id, event]));
 
   return (
-    <main className="min-h-screen bg-black px-6 py-12 text-white">
-      <div className="mx-auto max-w-6xl">
-        <p className="text-xs uppercase tracking-[0.28em] text-[#A259FF]">Venue ops</p>
-        <h1 className="mt-3 text-5xl font-black tracking-tight">Front gate and room control</h1>
-        <p className="mt-4 max-w-3xl text-lg text-white/66">
-          Venue operators get a purpose-built dashboard for scanner access, attendance pulse,
-          and event-day execution without exposing scanner routes in public navigation.
-        </p>
-
-        <div className="mt-10">
-          <VenueOpsDashboard
-            canOperate={viewer.isPlatformAdmin || viewer.profile?.primary_role === "venue"}
-            events={Array.from(byId.values())}
-          />
-        </div>
-      </div>
-    </main>
+    <SurfaceShell
+      surface="ops"
+      eyebrow="Venue ops"
+      title="Front gate and room control"
+      description="Venue operators get a purpose-built dashboard for scanner access, attendance pulse, and event-day execution without exposing scanner routes in public navigation."
+      meta={
+        <>
+          <div className="ev-meta-card">
+            <div className="ev-meta-label">Assigned events</div>
+            <div className="ev-meta-value">{byId.size} events currently connected to this venue operator account.</div>
+          </div>
+          <div className="ev-meta-card">
+            <div className="ev-meta-label">Execution lane</div>
+            <div className="ev-meta-value">Scanner launch, check-in visibility, and venue staffing stay separated from public attendee flows.</div>
+          </div>
+        </>
+      }
+    >
+      <VenueOpsDashboard
+        canOperate={viewer.isPlatformAdmin || viewer.profile?.primary_role === "venue"}
+        events={Array.from(byId.values())}
+      />
+    </SurfaceShell>
   );
 }

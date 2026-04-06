@@ -1,4 +1,5 @@
 import Link from "next/link";
+import SurfaceShell from "@/components/shells/SurfaceShell";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export default async function EventsPage() {
@@ -9,22 +10,29 @@ export default async function EventsPage() {
     .order("start_at", { ascending: true });
 
   return (
-    <main className="min-h-screen bg-black px-6 py-12 text-white">
-      <div className="mx-auto max-w-7xl">
-        <div className="max-w-3xl">
-          <p className="text-xs uppercase tracking-[0.28em] text-[#A259FF]">EVNTSZN live inventory</p>
-          <h1 className="mt-3 text-5xl font-black tracking-tight">Events and ticket drops</h1>
-          <p className="mt-4 text-lg text-white/66">
-            Browse published EVNTSZN experiences, purchase branded access, and move into
-            a clean attendee flow with share-ready tickets.
-          </p>
-        </div>
-
-        <div className="mt-10 grid gap-6">
+    <SurfaceShell
+      surface="web"
+      eyebrow="EVNTSZN live inventory"
+      title="Events and ticket drops"
+      description="Browse published EVNTSZN experiences, purchase branded access, and move into a clean attendee flow with share-ready tickets."
+      meta={
+        <>
+          <div className="ev-meta-card">
+            <div className="ev-meta-label">Access layer</div>
+            <div className="ev-meta-value">Public browsing stays on the web surface while member, scanner, and operator environments remain separated.</div>
+          </div>
+          <div className="ev-meta-card">
+            <div className="ev-meta-label">Run of show</div>
+            <div className="ev-meta-value">Every event opens into the branded purchase path with scanner-ready operations already wired behind the scenes.</div>
+          </div>
+        </>
+      }
+    >
+      <div className="grid gap-6">
           {(events || []).map((event) => (
             <article
               key={event.id}
-              className="grid gap-5 rounded-[32px] border border-white/10 bg-white/[0.03] p-6 lg:grid-cols-[1.2fr_0.8fr]"
+              className="grid gap-5 rounded-[32px] border border-white/10 bg-white/[0.03] p-6 shadow-[0_18px_50px_rgba(0,0,0,0.24)] lg:grid-cols-[1.2fr_0.8fr]"
             >
               <div>
                 <div className="text-xs uppercase tracking-[0.24em] text-white/45">
@@ -55,8 +63,7 @@ export default async function EventsPage() {
               </div>
             </article>
           ))}
-        </div>
       </div>
-    </main>
+    </SurfaceShell>
   );
 }

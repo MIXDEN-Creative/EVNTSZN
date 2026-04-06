@@ -7,6 +7,8 @@ export type EvntsznSurface =
   | "hq"
   | "admin";
 
+export type RestrictedSurface = Exclude<EvntsznSurface, "web">;
+
 const DEFAULT_BASE_DOMAIN = "evntszn.com";
 const DEFAULT_DEV_ORIGIN = "http://localhost:3000";
 
@@ -157,7 +159,9 @@ export function getSurfaceForPath(path: string): EvntsznSurface {
     return "admin";
   }
   if (normalized.startsWith("/epl") || normalized.startsWith("/api/epl")) return "epl";
-  if (normalized.startsWith("/organizer") || normalized.startsWith("/venue")) return "ops";
+  if (normalized.startsWith("/organizer") || normalized.startsWith("/venue") || normalized.startsWith("/ops")) {
+    return "ops";
+  }
   return "app";
 }
 
@@ -252,4 +256,80 @@ export function getLoginUrl(next?: string | null, runtimeHost?: string) {
     `/account/login?next=${encodeURIComponent(nextPath)}`,
     getLoginRedirectOrigin(nextPath, runtimeHost),
   ).toString();
+}
+
+export function getSurfaceLabel(surface: RestrictedSurface) {
+  switch (surface) {
+    case "app":
+      return "Member Access";
+    case "scanner":
+      return "Scanner Access";
+    case "epl":
+      return "League Access";
+    case "ops":
+      return "Operations Access";
+    case "hq":
+      return "HQ Access";
+    case "admin":
+      return "Admin Access";
+  }
+}
+
+export function getRestrictedSurfaceForPath(path: string): RestrictedSurface {
+  const surface = getSurfaceForPath(path);
+  return surface === "web" ? "app" : surface;
+}
+
+export function getSurfaceFallback(
+  surface: RestrictedSurface
+): { surface: EvntsznSurface; path: string; label: string } {
+  switch (surface) {
+    case "scanner":
+      return { surface: "app", path: "/account", label: "Return to my account" };
+    case "ops":
+      return { surface: "app", path: "/account", label: "Return to my account" };
+    case "hq":
+      return { surface: "app", path: "/account", label: "Return to my account" };
+    case "admin":
+      return { surface: "app", path: "/account", label: "Return to my account" };
+    case "epl":
+      return { surface: "epl", path: "/", label: "Return to EPL" };
+    case "app":
+    default:
+      return { surface: "web", path: "/", label: "Back to EVNTSZN" };
+  }
+}
+
+export function getRestrictedUrl(
+  restrictedSurface: RestrictedSurface,
+  options: {
+    runtimeHost?: string;
+    fallbackSurface?: EvntsznSurface;
+    fallbackPath?: string;
+    fallbackLabel?: string;
+  } = {}
+) {
+  const fallback =
+    options.fallbackSurface && options.fallbackPath
+      ? {
+          surface: options.fallbackSurface,
+          path: normalizeNextPath(options.fallbackPath),
+          label: options.fallbackLabel || "Continue",
+        }
+      : getSurfaceFallback(restrictedSurface);
+
+  const params = new URLSearchParams({
+    surface: restrictedSurface,
+    fallbackSurface: fallback.surface,
+    fallbackPath: fallback.path,
+    fallbackLabel: fallback.label,
+  });
+
+  const path = `/access-restricted?${params.toString()}`;
+
+  if (!options.runtimeHost) {
+    return path;
+  }
+
+  return getCanonicalUrl(path, restrictedSurface, options.runtimeHost);
 }

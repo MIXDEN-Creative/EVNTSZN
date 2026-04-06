@@ -32,25 +32,41 @@ export default async function AdminHomePage() {
   ].filter(Boolean) as { title: string; href: string; description: string }[];
 
   return (
-    <main className="p-6">
-      <div className="mx-auto max-w-6xl">
-        <h1 className="text-4xl font-black">Overview</h1>
-        <p className="mt-2 text-white/65">
-          One place to run EVNTSZN merch, customer rewards, and admin access.
-        </p>
+    <main className="mx-auto max-w-6xl">
+      <section className="ev-shell-hero">
+        <div className="ev-shell-hero-grid">
+          <div>
+            <div className="ev-kicker">Admin Overview</div>
+            <h1 className="ev-title">Executive control across EVNTSZN.</h1>
+            <p className="ev-subtitle">
+              One place to run merch, customer rewards, and access control while keeping attendee, scanner, and ops experiences separated.
+            </p>
+          </div>
+          <div className="ev-hero-meta">
+            <div className="ev-meta-card">
+              <div className="ev-meta-label">Permissions live</div>
+              <div className="ev-meta-value">{permissions.length} permission codes active for this account.</div>
+            </div>
+            <div className="ev-meta-card">
+              <div className="ev-meta-label">Surface</div>
+              <div className="ev-meta-value">Administrative tools remain distinct from HQ and public league surfaces.</div>
+            </div>
+          </div>
+        </div>
+      </section>
 
-        <div className="mt-6 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+      <div className="mt-6 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
           {cards.map((card) => (
             <Link
               key={card.href}
               href={card.href}
-              className="rounded-3xl border border-white/10 bg-white/[0.03] p-6 hover:bg-white/[0.05]"
+              className="ev-panel hover:bg-white/[0.05]"
             >
-              <div className="text-2xl font-bold">{card.title}</div>
+              <div className="ev-section-kicker">Control surface</div>
+              <div className="mt-3 text-2xl font-bold">{card.title}</div>
               <div className="mt-3 text-white/65">{card.description}</div>
             </Link>
           ))}
-        </div>
       </div>
     </main>
   );

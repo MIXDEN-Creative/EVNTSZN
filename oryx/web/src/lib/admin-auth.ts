@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
-import { getLoginUrl } from "@/lib/domains";
+import { getLoginUrl, getRestrictedSurfaceForPath, getRestrictedUrl } from "@/lib/domains";
 
 export async function getCurrentUser() {
   const supabase = await createClient();
@@ -52,7 +52,13 @@ export async function requireAdmin(nextPath = "/epl/admin") {
 
   const memberships = await getAdminMemberships(user.id);
   if (!memberships.length) {
-    redirect("/account");
+    redirect(
+      getRestrictedUrl(getRestrictedSurfaceForPath(nextPath), {
+        fallbackSurface: "app",
+        fallbackPath: "/account",
+        fallbackLabel: "Return to my account",
+      })
+    );
   }
 
   return { user, memberships };
@@ -129,8 +135,31 @@ export async function requireAdminPermission(permissionCode: string, nextPath = 
   const permissions = await getAdminPermissions(user.id);
 
   if (!permissions.includes(permissionCode)) {
-    redirect("/epl/admin");
+    redirect(
+      getRestrictedUrl(getRestrictedSurfaceForPath(nextPath), {
+        fallbackSurface: "app",
+        fallbackPath: "/account",
+        fallbackLabel: "Return to my account",
+      })
+    );
   }
 
   return { user, memberships, permissions };
+}
+
+export async function requireHq(nextPath = "/epl/admin/operations") {
+  const { user, memberships } = await requireAdmin(nextPath);
+  const hasHqAccess = memberships.some((membership: { is_owner?: boolean | null }) => membership.is_owner);
+
+  if (!hasHqAccess) {
+    redirect(
+      getRestrictedUrl("hq", {
+        fallbackSurface: "app",
+        fallbackPath: "/account",
+        fallbackLabel: "Return to my account",
+      })
+    );
+  }
+
+  return { user, memberships };
 }

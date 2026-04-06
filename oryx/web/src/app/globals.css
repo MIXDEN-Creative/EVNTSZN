@@ -1,8 +1,19 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #050507;
+  --foreground: #f4f5f7;
+  --surface-0: #050507;
+  --surface-1: #0b0b10;
+  --surface-2: rgba(255, 255, 255, 0.045);
+  --surface-3: rgba(255, 255, 255, 0.07);
+  --line-soft: rgba(255, 255, 255, 0.1);
+  --line-strong: rgba(255, 255, 255, 0.16);
+  --text-soft: rgba(244, 245, 247, 0.68);
+  --text-muted: rgba(244, 245, 247, 0.5);
+  --ev-accent: #a259ff;
+  --ev-accent-soft: rgba(162, 89, 255, 0.16);
+  --ev-highlight: rgba(255, 255, 255, 0.14);
 }
 
 @theme inline {
@@ -12,15 +23,295 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+body {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top, rgba(162, 89, 255, 0.16), transparent 26%),
+    linear-gradient(180deg, #050507 0%, #08080c 46%, #040406 100%);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+a,
+button,
+input,
+textarea,
+select {
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+.ev-surface {
+  position: relative;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top, rgba(162, 89, 255, 0.18), transparent 22%),
+    linear-gradient(180deg, #050507 0%, #08080c 52%, #040406 100%);
+}
+
+.ev-surface::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(115deg, rgba(255, 255, 255, 0.045), transparent 22%),
+    radial-gradient(circle at 80% 0%, rgba(255, 255, 255, 0.07), transparent 24%);
+  opacity: 0.8;
+}
+
+.ev-surface--app::before {
+  background:
+    linear-gradient(120deg, rgba(255, 255, 255, 0.05), transparent 20%),
+    radial-gradient(circle at 82% 0%, rgba(162, 89, 255, 0.13), transparent 22%);
+}
+
+.ev-surface--ops::before,
+.ev-surface--admin::before,
+.ev-surface--hq::before {
+  background:
+    linear-gradient(120deg, rgba(255, 255, 255, 0.045), transparent 18%),
+    radial-gradient(circle at 80% 0%, rgba(162, 89, 255, 0.12), transparent 18%);
+}
+
+.ev-surface--epl::before {
+  background:
+    linear-gradient(110deg, rgba(255, 255, 255, 0.05), transparent 20%),
+    radial-gradient(circle at 84% 0%, rgba(162, 89, 255, 0.16), transparent 22%);
+}
+
+.ev-shell {
+  position: relative;
+  z-index: 1;
+  margin: 0 auto;
+  width: 100%;
+  max-width: 84rem;
+  padding: 2rem 1.5rem 4rem;
+}
+
+.ev-shell-hero {
+  overflow: hidden;
+  border: 1px solid var(--line-soft);
+  border-radius: 2rem;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.085), rgba(255, 255, 255, 0.028)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.03) inset,
+    0 24px 64px rgba(0, 0, 0, 0.4);
+}
+
+.ev-shell-hero-grid {
+  display: grid;
+  gap: 1.5rem;
+  padding: 2rem;
+}
+
+@media (min-width: 900px) {
+  .ev-shell-hero-grid {
+    grid-template-columns: minmax(0, 1.15fr) minmax(18rem, 0.85fr);
+    align-items: end;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+.ev-kicker {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid rgba(162, 89, 255, 0.3);
+  background: rgba(162, 89, 255, 0.1);
+  padding: 0.55rem 0.9rem;
+  color: #e6d6ff;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+.ev-title {
+  margin-top: 1rem;
+  color: white;
+  font-size: clamp(2.5rem, 5vw, 4.75rem);
+  font-weight: 900;
+  line-height: 0.96;
+  letter-spacing: -0.04em;
+}
+
+.ev-subtitle {
+  margin-top: 1rem;
+  max-width: 48rem;
+  color: var(--text-soft);
+  font-size: 1rem;
+  line-height: 1.8;
+}
+
+.ev-hero-meta {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.ev-meta-card,
+.ev-panel,
+.ev-stat,
+.ev-empty {
+  border: 1px solid var(--line-soft);
+  border-radius: 1.75rem;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.058), rgba(255, 255, 255, 0.024)),
+    rgba(7, 7, 10, 0.74);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 16px 40px rgba(0, 0, 0, 0.28);
+}
+
+.ev-meta-card {
+  padding: 1rem 1.1rem;
+}
+
+.ev-meta-label {
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.ev-meta-value {
+  margin-top: 0.5rem;
+  color: white;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.ev-panel {
+  padding: 1.5rem;
+}
+
+.ev-panel-muted {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.016)),
+    rgba(4, 4, 6, 0.78);
+}
+
+.ev-panel-title {
+  color: white;
+  font-size: 1.65rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.ev-panel-copy {
+  margin-top: 0.65rem;
+  color: var(--text-soft);
+  line-height: 1.7;
+}
+
+.ev-section-kicker {
+  color: #cab0ff;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+.ev-stat {
+  padding: 1.15rem 1.2rem;
+}
+
+.ev-stat-label {
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.ev-stat-value {
+  margin-top: 0.65rem;
+  color: white;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.ev-field,
+.ev-textarea,
+.ev-select {
+  width: 100%;
+  border: 1px solid var(--line-soft);
+  border-radius: 1rem;
+  background: rgba(0, 0, 0, 0.42);
+  color: white;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.035) inset;
+}
+
+.ev-field,
+.ev-select {
+  min-height: 3rem;
+  padding: 0.85rem 1rem;
+}
+
+.ev-textarea {
+  min-height: 7.5rem;
+  padding: 0.9rem 1rem;
+}
+
+.ev-field:focus,
+.ev-textarea:focus,
+.ev-select:focus {
+  outline: none;
+  border-color: rgba(162, 89, 255, 0.45);
+  box-shadow:
+    0 0 0 1px rgba(162, 89, 255, 0.28),
+    0 0 0 5px rgba(162, 89, 255, 0.08);
+}
+
+.ev-button-primary,
+.ev-button-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 1rem;
+  padding: 0.9rem 1.15rem;
+  font-weight: 700;
+}
+
+.ev-button-primary {
+  background: linear-gradient(180deg, #ffffff 0%, #ececf2 100%);
+  color: #08080b;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
+}
+
+.ev-button-primary:hover {
+  transform: translateY(-1px);
+}
+
+.ev-button-secondary {
+  border: 1px solid var(--line-soft);
+  background: rgba(255, 255, 255, 0.045);
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.ev-button-secondary:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.ev-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border-radius: 999px;
+  border: 1px solid rgba(162, 89, 255, 0.24);
+  background: rgba(162, 89, 255, 0.1);
+  padding: 0.5rem 0.85rem;
+  color: #dfd1ff;
+  font-size: 0.75rem;
+}
+
+.ev-empty {
+  padding: 1.25rem;
+  color: var(--text-soft);
+  line-height: 1.65;
 }

@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
-import { getAppOrigin, getLoginUrl } from "@/lib/domains";
+import { getAppOrigin, getLoginUrl, getRestrictedSurfaceForPath, getRestrictedUrl } from "@/lib/domains";
 
 export type PlatformRole = "attendee" | "organizer" | "venue" | "scanner" | "admin";
 
@@ -119,7 +119,13 @@ export async function requirePlatformRole(nextPath: string, roles: PlatformRole[
   }
 
   if (!role || !roles.includes(role)) {
-    redirect("/account");
+    redirect(
+      getRestrictedUrl(getRestrictedSurfaceForPath(nextPath), {
+        fallbackSurface: "app",
+        fallbackPath: "/account",
+        fallbackLabel: "Return to my account",
+      })
+    );
   }
 
   return viewer;
@@ -181,7 +187,13 @@ export async function requireEventScannerAccess(eventSlug: string) {
     accessRows.some((row) => row.can_scan || row.role_code === "scanner");
 
   if (!hasScannerAccess) {
-    redirect("/account");
+    redirect(
+      getRestrictedUrl("scanner", {
+        fallbackSurface: "app",
+        fallbackPath: "/account",
+        fallbackLabel: "Return to my account",
+      })
+    );
   }
 
   return viewer;

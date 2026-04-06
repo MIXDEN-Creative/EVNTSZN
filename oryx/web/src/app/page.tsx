@@ -1,65 +1,63 @@
-import Image from "next/image";
+import Link from "next/link";
+import SurfaceShell from "@/components/shells/SurfaceShell";
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <SurfaceShell
+      surface="web"
+      eyebrow="EVNTSZN"
+      title="Premium event experiences with a command-center backbone."
+      description="A cinematic event platform for ticket drops, live entry, operator control, and branded league experiences across every EVNTSZN surface."
+      actions={
+        <>
+          <Link href="/events" className="ev-button-primary">
+            Explore live events
+          </Link>
+          <Link href="/account/login?next=/account" className="ev-button-secondary">
+            Sign in to EVNTSZN
+          </Link>
+        </>
+      }
+      meta={
+        <>
+          <div className="ev-meta-card">
+            <div className="ev-meta-label">Experience stack</div>
+            <div className="ev-meta-value">
+              Premium ticketing, mobile-first scanning, attendee accounts, and multi-surface operations.
+            </div>
+          </div>
+          <div className="ev-meta-card">
+            <div className="ev-meta-label">Built for velocity</div>
+            <div className="ev-meta-value">
+              Run public discovery on EVNTSZN while staff, leagues, admins, and operators work in their own guarded environments.
+            </div>
+          </div>
+        </>
+      }
+    >
+      <div className="grid gap-6 lg:grid-cols-3">
+        <section className="ev-panel">
+          <div className="ev-section-kicker">Public web</div>
+          <h2 className="ev-panel-title mt-3">Discovery that feels premium at first contact</h2>
+          <p className="ev-panel-copy">
+            EVNTSZN keeps the public surface elegant, branded, and focused on event conversion instead of exposing operator tooling in the wrong places.
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+        </section>
+        <section className="ev-panel">
+          <div className="ev-section-kicker">Member portal</div>
+          <h2 className="ev-panel-title mt-3">A concierge-grade account experience</h2>
+          <p className="ev-panel-copy">
+            Tickets, rewards, orders, and account activity live in a dedicated member environment with premium hierarchy and clean navigation.
+          </p>
+        </section>
+        <section className="ev-panel">
+          <div className="ev-section-kicker">Operations</div>
+          <h2 className="ev-panel-title mt-3">Scanner, ops, league, HQ, and admin with real separation</h2>
+          <p className="ev-panel-copy">
+            Each EVNTSZN role lands in the right surface with its own cadence, density, and guardrails instead of one generic dashboard shell.
+          </p>
+        </section>
+      </div>
+    </SurfaceShell>
   );
 }

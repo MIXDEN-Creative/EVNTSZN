@@ -1,9 +1,10 @@
 import OrganizerDashboard from "./OrganizerDashboard";
-import { getPlatformViewer, requirePlatformUser } from "@/lib/evntszn";
+import SurfaceShell from "@/components/shells/SurfaceShell";
+import { getPlatformViewer, requirePlatformRole } from "@/lib/evntszn";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export default async function OrganizerPage() {
-  await requirePlatformUser("/organizer");
+  await requirePlatformRole("/organizer", ["organizer"]);
   const viewer = await getPlatformViewer();
 
   const { data: events } = await supabaseAdmin
@@ -13,22 +14,28 @@ export default async function OrganizerPage() {
     .order("start_at", { ascending: true });
 
   return (
-    <main className="min-h-screen bg-black px-6 py-12 text-white">
-      <div className="mx-auto max-w-7xl">
-        <p className="text-xs uppercase tracking-[0.28em] text-[#A259FF]">Organizer OS</p>
-        <h1 className="mt-3 text-5xl font-black tracking-tight">Event operating system</h1>
-        <p className="mt-4 max-w-3xl text-lg text-white/66">
-          Manage event setup, ticket releases, scanner routes, and venue execution from one
-          premium EVNTSZN workspace.
-        </p>
-
-        <div className="mt-10">
-          <OrganizerDashboard
-            canOperate={viewer.isPlatformAdmin || viewer.profile?.primary_role === "organizer"}
-            events={events || []}
-          />
-        </div>
-      </div>
-    </main>
+    <SurfaceShell
+      surface="ops"
+      eyebrow="Organizer OS"
+      title="Event operating system"
+      description="Manage event setup, ticket releases, scanner routes, and venue execution from one premium EVNTSZN workspace."
+      meta={
+        <>
+          <div className="ev-meta-card">
+            <div className="ev-meta-label">Live events</div>
+            <div className="ev-meta-value">{events?.length || 0} productions connected to this organizer account.</div>
+          </div>
+          <div className="ev-meta-card">
+            <div className="ev-meta-label">Operator mode</div>
+            <div className="ev-meta-value">Ticketing, scanner handoff, and event visibility remain contained inside the ops surface.</div>
+          </div>
+        </>
+      }
+    >
+      <OrganizerDashboard
+        canOperate={viewer.isPlatformAdmin || viewer.profile?.primary_role === "organizer"}
+        events={events || []}
+      />
+    </SurfaceShell>
   );
 }

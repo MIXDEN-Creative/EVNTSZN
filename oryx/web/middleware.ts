@@ -36,6 +36,8 @@ export function middleware(request: NextRequest) {
 
   if (
     STATIC_PREFIXES.some((prefix) => pathname.startsWith(prefix)) ||
+    pathname === "/access-restricted" ||
+    pathname === "/ops" ||
     STATIC_FILES.has(pathname)
   ) {
     return NextResponse.next();
@@ -182,7 +184,7 @@ export function middleware(request: NextRequest) {
 
   if (surface === "ops") {
     if (pathname === "/") {
-      url.pathname = "/organizer";
+      url.pathname = "/ops";
       return NextResponse.rewrite(url);
     }
     return NextResponse.next();
