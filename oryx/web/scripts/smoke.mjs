@@ -86,11 +86,12 @@ const domainsFile = readText("src/lib/domains.ts");
   assert(domainsFile.includes(origin), `Missing canonical origin in domains utility: ${origin}`);
 });
 
-const proxyFile = readText("proxy.ts");
-assert(proxyFile.includes("getSurfaceFromHost"), "Proxy is not surface-aware.");
-assert(proxyFile.includes('surface === "web"'), "Proxy does not expose public EVNTSZN web routing.");
-assert(proxyFile.includes('surface === "scanner"'), "Proxy does not expose scanner routing.");
-assert(proxyFile.includes('surface === "epl"'), "Proxy does not expose EPL routing.");
+const middlewareFile = readText("middleware.ts");
+assert(middlewareFile.includes("getSurfaceFromHost"), "Middleware is not surface-aware.");
+assert(middlewareFile.includes('surface === "web"'), "Middleware does not expose public EVNTSZN web routing.");
+assert(middlewareFile.includes('surface === "scanner"'), "Middleware does not expose scanner routing.");
+assert(middlewareFile.includes('surface === "epl"'), "Middleware does not expose EPL routing.");
+assert(middlewareFile.includes("SECRET_PROBE_PATTERNS"), "Middleware does not block secret-like probe paths.");
 
 const migrationFiles = fs
   .readdirSync(path.join(root, "supabase/migrations"))

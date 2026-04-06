@@ -6,11 +6,6 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: path.join(__dirname),
   },
-  serverExternalPackages: [
-    "stripe",
-    "resend",
-    "@supabase/supabase-js",
-  ],
   allowedDevOrigins: [
     "localhost:3000",
     "127.0.0.1:3000",

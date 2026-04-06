@@ -10,10 +10,40 @@ import {
   getWebOrigin,
 } from "./src/lib/domains";
 
+const STATIC_PREFIXES = ["/_next/static", "/_next/image"];
+const STATIC_FILES = new Set([
+  "/favicon.ico",
+  "/robots.txt",
+  "/sitemap.xml",
+]);
+
+const SECRET_PROBE_PATTERNS = [
+  /^\/\.env(?:[./-].*)?$/i,
+  /^\/.*\/\.env(?:[./-].*)?$/i,
+  /^\/\.github(?:\/.*)?$/i,
+  /^\/docker(?:\/.*)?$/i,
+  /^\/production(?:\/.*)?$/i,
+  /^\/config(?:\/.*)?$/i,
+  /^\/kubernetes(?:\/.*)?$/i,
+  /^\/secrets?(?:\/.*)?$/i,
+  /^\/.*(?:secrets?|config|docker|kubernetes|production)\/.*\.env(?:[./-].*)?$/i,
+];
+
 export function middleware(request: NextRequest) {
   const host = request.headers.get("x-forwarded-host") || request.headers.get("host") || "";
   const pathname = request.nextUrl.pathname;
   const surface = getSurfaceFromHost(host);
+
+  if (
+    STATIC_PREFIXES.some((prefix) => pathname.startsWith(prefix)) ||
+    STATIC_FILES.has(pathname)
+  ) {
+    return NextResponse.next();
+  }
+
+  if (SECRET_PROBE_PATTERNS.some((pattern) => pattern.test(pathname))) {
+    return new NextResponse(null, { status: 404 });
+  }
 
   const previewHost = process.env.PREVIEW_HOST || "preview.evntszn.com";
 
@@ -215,5 +245,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!.*\\..*|_next/static|_next/image).*)"],
+  matcher: ["/:path*"],
 };
