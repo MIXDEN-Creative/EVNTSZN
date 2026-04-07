@@ -1,123 +1,159 @@
 import type { Metadata } from "next";
+import EplNav from "@/components/epl/EplNav";
+import DraftCountdown from "@/components/epl/DraftCountdown";
 import Link from "next/link";
-import { getEplOrigin } from "@/lib/domains";
+import { EPL_TEAM_PROFILES } from "@/lib/epl-teams";
 import { getEplPublicContent } from "@/lib/site-content";
 
-export async function generateMetadata(): Promise<Metadata> {
+export const metadata: Metadata = {
+  title: "EPL | EVNTSZN Prime League",
+  description:
+    "Explore EVNTSZN Prime League, a premium coed city-built league with registration, draft-night energy, team identity, standings movement, and public schedule momentum.",
+  alternates: {
+    canonical: "https://epl.evntszn.com",
+  },
+};
+
+export default async function EplPage() {
   const content = await getEplPublicContent();
-  const title = "EPL | Coed league competition, draft night, schedule, teams, standings, and league merch";
-  const description =
-    "Explore EVNTSZN Prime League: register for Season 1, follow teams, watch the standings tighten, and move through a premium city-built sports-entertainment league experience.";
-
-  return {
-    title,
-    description,
-    alternates: {
-      canonical: `${getEplOrigin()}/`,
-    },
-    openGraph: {
-      title: `EVNTSZN | ${title}`,
-      description,
-      url: `${getEplOrigin()}/`,
-      type: "website",
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: `EVNTSZN | ${title}`,
-      description,
-    },
-    keywords: [
-      "EPL",
-      "EVNTSZN Prime League",
-      "coed league",
-      "draft night",
-      "standings",
-      "schedule",
-      "Baltimore sports entertainment",
-    ],
-  };
-}
-
-export default async function EplPublicPage() {
-  const content = await getEplPublicContent();
-
-  const menuItems = [
-    content.menu.showRegister && { label: "Register", href: content.hero.primaryCtaHref },
-    content.menu.showSchedule && { label: "Schedule", href: "#schedule" },
-    content.menu.showTeams && { label: "Teams", href: "#teams" },
-    content.menu.showStandings && { label: "Standings", href: "#standings" },
-    content.menu.showStore && { label: "Store", href: "/epl/store" },
-  ].filter(Boolean) as Array<{ label: string; href: string }>;
-
-  const teamCards = [
-    "Canton Chargers",
-    "Federal Hill Sentinels",
-    "Fells Point Raiders",
-    "Hampden Rebels",
-    "Harbor Titans",
-    "Mount Vernon Royals",
-  ];
 
   return (
-    <main className="ev-surface ev-surface--epl">
-      <div className="ev-shell">
-        <section className="ev-shell-hero">
-          <div className="ev-shell-hero-grid">
-            <div>
-              <div className="ev-kicker">{content.hero.eyebrow}</div>
-              <h1 className="ev-title">{content.hero.title}</h1>
-              <p className="ev-subtitle">{content.hero.description}</p>
-              <div className="mt-8 flex flex-wrap gap-3">
-                <Link href={content.hero.primaryCtaHref} className="ev-button-primary">
+    <main className="min-h-screen bg-black text-white">
+      <EplNav menu={content.menu} />
+
+      <section className="relative overflow-hidden border-b border-white/10">
+        <img
+          src="https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&w=1800&q=80"
+          alt="EVNTSZN Prime League"
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(162,89,255,0.30),transparent_35%),linear-gradient(180deg,rgba(0,0,0,0.40),rgba(0,0,0,0.84))]" />
+        <div className="relative mx-auto grid max-w-7xl gap-8 px-4 py-16 md:px-6 lg:grid-cols-[1.1fr_0.9fr] lg:px-8 lg:py-24">
+          <div>
+            <div className="inline-flex rounded-full border border-white/15 bg-white/8 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-white/90">
+              {content.hero.eyebrow}
+            </div>
+
+            <h1 className="mt-5 max-w-4xl text-5xl font-black leading-[0.93] tracking-[-0.05em] text-white md:text-7xl">
+              {content.hero.title}
+            </h1>
+
+            <p className="mt-5 max-w-2xl text-base leading-7 text-white/80 md:text-lg">
+              {content.hero.description}
+            </p>
+
+            <div className="mt-8 flex flex-wrap gap-3">
+              {content.menu.showRegister ? (
+                <a
+                  href={content.hero.primaryCtaHref}
+                  className="rounded-full bg-white px-5 py-3 text-sm font-semibold text-black transition hover:opacity-90"
+                >
                   {content.hero.primaryCtaLabel}
-                </Link>
-                <Link href={content.hero.secondaryCtaHref} className="ev-button-secondary">
+                </a>
+              ) : null}
+              {content.menu.showSchedule ? (
+                <a
+                  href="#schedule"
+                  className="rounded-full border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+                >
                   {content.hero.secondaryCtaLabel}
-                </Link>
-                <Link href="/epl/draft/season-1" className="ev-button-secondary">
-                  Draft Night
-                </Link>
-              </div>
+                </a>
+              ) : null}
+              {content.menu.showDraftCountdown ? (
+                <a
+                  href="#countdown"
+                  className="rounded-full border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+                >
+                  Draft Countdown
+                </a>
+              ) : null}
+              <a
+                href="https://evntszn.com"
+                className="rounded-full border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+              >
+                Back to EVNTSZN
+              </a>
             </div>
-            <div className="ev-hero-meta">
-              <div className="ev-meta-card">
-                <div className="ev-meta-label">League shape</div>
-                <div className="ev-meta-value">Registration, player review, draft-night energy, team identity, standings pressure, and premium league presentation.</div>
-              </div>
-              <div className="ev-meta-card">
-                <div className="ev-meta-label">Menu</div>
-                <div className="flex flex-wrap gap-2">
-                  {menuItems.map((item) => (
-                    <Link key={item.label} href={item.href} className="ev-chip">
-                      {item.label}
-                    </Link>
-                  ))}
+          </div>
+
+          <div className="grid gap-4">
+            {[
+              {
+                label: "League shape",
+                body: "Registration, player review, draft-night anticipation, team identity, and standings pressure all belong in one public-facing league surface.",
+              },
+              {
+                label: "Why it matters",
+                body: "EPL gives EVNTSZN a sports vertical people can actually discover, follow, and join instead of a one-off registration page with no momentum.",
+              },
+              {
+                label: "Built for pull",
+                body: "Fans, players, and curious city traffic should all have a reason to come back before, during, and after the season.",
+              },
+            ].map((item) => (
+              <div key={item.label} className="rounded-[24px] border border-white/10 bg-white/8 p-5 backdrop-blur-xl">
+                <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/55">
+                  {item.label}
                 </div>
+                <p className="mt-2 text-base leading-7 text-white/82">{item.body}</p>
               </div>
-            </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <div className="mx-auto max-w-7xl px-4 py-12 md:px-6 lg:px-8">
+        {content.menu.showDraftCountdown ? <DraftCountdown /> : null}
+
+        <section className="mt-10 rounded-[32px] border border-white/10 bg-[#0c0c15] p-6 md:p-8">
+          <div className="text-xs font-semibold uppercase tracking-[0.24em] text-[#b899ff]">
+            Season overview
+          </div>
+          <h2 className="mt-3 text-3xl font-black tracking-tight text-white md:text-5xl">
+            {content.sections.seasonHeadline}
+          </h2>
+          <p className="mt-4 max-w-3xl text-base leading-7 text-white/72">
+            {content.sections.seasonBody}
+          </p>
+          <div className="mt-8 grid gap-4 md:grid-cols-3">
+            {[
+              "Coed league structure",
+              "Saturday, June 6 draft night",
+              "City-rooted competition with real team identity",
+            ].map((text) => (
+              <div key={text} className="rounded-[24px] border border-white/10 bg-white/5 p-5">
+                <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/55">
+                  Season 1
+                </div>
+                <div className="mt-2 text-xl font-bold text-white">{text}</div>
+              </div>
+            ))}
           </div>
         </section>
 
-        <section className="mt-8 ev-panel ev-metal-border">
-          <div className="ev-section-kicker">Season overview</div>
-          <h2 className="ev-panel-title mt-3">{content.sections.seasonHeadline}</h2>
-          <p className="ev-panel-copy mt-3">{content.sections.seasonBody}</p>
-        </section>
-
         {content.menu.showSchedule ? (
-          <section id="schedule" className="mt-8 ev-panel ev-metal-border">
-            <div className="ev-section-kicker">Schedule</div>
-            <h2 className="ev-panel-title mt-3">{content.sections.scheduleHeadline}</h2>
-            <p className="ev-panel-copy mt-3">{content.sections.scheduleBody}</p>
-            <div className="mt-6 grid gap-3 md:grid-cols-3">
+          <section id="schedule" className="mt-10 rounded-[32px] border border-white/10 bg-[#0c0c15] p-6 md:p-8">
+            <div className="text-xs font-semibold uppercase tracking-[0.24em] text-[#b899ff]">
+              Schedule
+            </div>
+            <h2 className="mt-3 text-3xl font-black tracking-tight text-white md:text-5xl">
+              {content.sections.scheduleHeadline}
+            </h2>
+            <p className="mt-4 max-w-3xl text-base leading-7 text-white/72">
+              {content.sections.scheduleBody}
+            </p>
+
+            <div className="mt-8 grid gap-4 md:grid-cols-3">
               {[
-                "Season openers and statement nights",
+                "Season opener and statement nights",
                 "Mid-table pressure and rivalry fixtures",
                 "Stretch-run matchups that move the standings",
-              ].map((item) => (
-                <div key={item} className="ev-meta-card">
-                  <div className="ev-meta-label">League rhythm</div>
-                  <div className="ev-meta-value">{item}</div>
+              ].map((text) => (
+                <div key={text} className="rounded-[24px] border border-white/10 bg-white/5 p-5">
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/55">
+                    League rhythm
+                  </div>
+                  <div className="mt-2 text-xl font-bold text-white">{text}</div>
                 </div>
               ))}
             </div>
@@ -125,53 +161,89 @@ export default async function EplPublicPage() {
         ) : null}
 
         {content.menu.showTeams ? (
-          <section id="teams" className="mt-8">
-            <div className="ev-kicker">Teams</div>
-            <h2 className="ev-panel-title mt-2">{content.sections.teamsHeadline}</h2>
-            <p className="mt-3 max-w-3xl text-white/68">{content.sections.teamsBody}</p>
-            <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {teamCards.map((team) => (
-                <div key={team} className="ev-panel ev-metal-border">
-                  <div className="ev-section-kicker">Season 1 club</div>
-                  <div className="mt-3 text-2xl font-semibold text-white">{team}</div>
-                  <p className="mt-3 text-white/66">
-                    Team identity, draft-night momentum, and a city-rooted table race held inside the EVNTSZN league layer.
-                  </p>
-                </div>
+          <section id="teams" className="mt-10 rounded-[32px] border border-white/10 bg-[#0c0c15] p-6 md:p-8">
+            <div className="text-xs font-semibold uppercase tracking-[0.24em] text-[#b899ff]">
+              Teams
+            </div>
+            <h2 className="mt-3 text-3xl font-black tracking-tight text-white md:text-5xl">
+              {content.sections.teamsHeadline}
+            </h2>
+            <p className="mt-4 max-w-3xl text-base leading-7 text-white/72">
+              {content.sections.teamsBody}
+            </p>
+
+            <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {EPL_TEAM_PROFILES.map((team) => (
+                <Link key={team.slug} href={`/epl/teams/${team.slug}`} className="rounded-[24px] border border-white/10 bg-white/5 p-5 hover:bg-white/[0.08]">
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/55">
+                    Season 1 Club
+                  </div>
+                  <div className="mt-2 text-2xl font-bold text-white">{team.name}</div>
+                  <p className="mt-2 text-sm leading-6 text-white/72">{team.headline}</p>
+                </Link>
               ))}
             </div>
           </section>
         ) : null}
 
         {content.menu.showStandings ? (
-          <section id="standings" className="mt-8 ev-panel ev-metal-border">
-            <div className="ev-section-kicker">Standings</div>
-            <h2 className="ev-panel-title mt-3">{content.sections.standingsHeadline}</h2>
-            <p className="ev-panel-copy mt-3">{content.sections.standingsBody}</p>
-            <div className="mt-6 grid gap-3 md:grid-cols-3">
-              {[
-                "Wins, goal difference, and table movement stay visible as the season tightens.",
-                "Standings are designed to give fans and players a clean weekly read on league pressure.",
-                "The public league site is ready for a real table, not a throwaway placeholder block.",
-              ].map((item) => (
-                <div key={item} className="ev-meta-card">
-                  <div className="ev-meta-label">Table pressure</div>
-                  <div className="ev-meta-value">{item}</div>
-                </div>
-              ))}
+          <section id="standings" className="mt-10 rounded-[32px] border border-white/10 bg-[#0c0c15] p-6 md:p-8">
+            <div className="text-xs font-semibold uppercase tracking-[0.24em] text-[#b899ff]">
+              Standings
             </div>
+            <h2 className="mt-3 text-3xl font-black tracking-tight text-white md:text-5xl">
+              {content.sections.standingsHeadline}
+            </h2>
+            <p className="mt-4 max-w-3xl text-base leading-7 text-white/72">
+              {content.sections.standingsBody}
+            </p>
           </section>
         ) : null}
 
         {content.menu.showStore ? (
-          <section id="store" className="mt-8 ev-panel ev-metal-border">
-            <div className="ev-section-kicker">Store</div>
-            <h2 className="ev-panel-title mt-3">{content.sections.storeHeadline}</h2>
-            <p className="ev-panel-copy mt-3">{content.sections.storeBody}</p>
+          <section id="store" className="mt-10 rounded-[32px] border border-white/10 bg-[#0c0c15] p-6 md:p-8">
+            <div className="text-xs font-semibold uppercase tracking-[0.24em] text-[#b899ff]">
+              Store
+            </div>
+            <h2 className="mt-3 text-3xl font-black tracking-tight text-white md:text-5xl">
+              {content.sections.storeHeadline}
+            </h2>
+            <p className="mt-4 max-w-3xl text-base leading-7 text-white/72">
+              {content.sections.storeBody}
+            </p>
             <div className="mt-6">
-              <Link href="/epl/store" className="ev-button-primary">
-                Shop EPL merch
+              <Link href="/epl/store" className="rounded-full bg-white px-5 py-3 text-sm font-semibold text-black transition hover:opacity-90">
+                Shop EPL Store
               </Link>
+            </div>
+          </section>
+        ) : null}
+
+        {content.menu.showFaq ? (
+          <section className="mt-10 rounded-[32px] border border-white/10 bg-[#0c0c15] p-6 md:p-8">
+            <div className="text-xs font-semibold uppercase tracking-[0.24em] text-[#b899ff]">
+              How it works
+            </div>
+            <div className="mt-6 grid gap-4 md:grid-cols-3">
+              {[
+                {
+                  title: "Register",
+                  body: "Players enter through the public registration flow with clear next steps and a clean path into the league.",
+                },
+                {
+                  title: "Draft night",
+                  body: "Saturday, June 6 sets the roster picture and locks in the clubs that define Season 1.",
+                },
+                {
+                  title: "Follow the table",
+                  body: "Schedule, team identity, and standings movement keep the season alive week after week.",
+                },
+              ].map((item) => (
+                <div key={item.title} className="rounded-[24px] border border-white/10 bg-white/5 p-5">
+                  <div className="text-xl font-bold text-white">{item.title}</div>
+                  <p className="mt-2 text-sm leading-6 text-white/72">{item.body}</p>
+                </div>
+              ))}
             </div>
           </section>
         ) : null}

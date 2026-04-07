@@ -9,6 +9,7 @@ import {
   getSurfaceFromHost,
   getWebOrigin,
 } from "./src/lib/domains";
+import { PUBLIC_CITIES } from "./src/lib/public-cities";
 
 const STATIC_PREFIXES = ["/_next/static", "/_next/image"];
 const STATIC_FILES = new Set([
@@ -30,7 +31,11 @@ const SECRET_PROBE_PATTERNS = [
 ];
 
 export function middleware(request: NextRequest) {
-  const host = request.nextUrl.host || request.headers.get("host") || request.headers.get("x-forwarded-host") || "";
+  const host =
+    request.headers.get("x-forwarded-host") ||
+    request.headers.get("host") ||
+    request.nextUrl.host ||
+    "";
   const pathname = request.nextUrl.pathname;
   const surface = getSurfaceFromHost(host);
   const bareHost = host.replace(/:\d+$/, "").toLowerCase();
@@ -79,6 +84,7 @@ export function middleware(request: NextRequest) {
   const url = request.nextUrl.clone();
 
   if (surface === "web") {
+    const publicCityPaths = new Set(PUBLIC_CITIES.map((city) => `/${city.slug}`));
     const publicAllowed = [
     "/",
     "/events",
@@ -86,6 +92,10 @@ export function middleware(request: NextRequest) {
     "/checkout/success",
     "/checkout/cancel",
     "/coming-soon",
+    "/privacy",
+    "/terms",
+    "/refund-policy",
+    "/liability-notice",
     "/favicon.ico",
     "/robots.txt",
     "/sitemap.xml",
@@ -114,6 +124,7 @@ export function middleware(request: NextRequest) {
 
     const isPublicPath =
       publicAllowed.includes(pathname) ||
+      publicCityPaths.has(pathname) ||
       publicAllowedPrefixes.some((prefix) => pathname.startsWith(prefix)) ||
       publicAllowedApiPatterns.some((pattern) => pattern.test(pathname));
 

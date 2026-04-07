@@ -41,6 +41,7 @@ type ManagedContent = {
     showIndependentSection: boolean;
     showExternalSection: boolean;
     showEplPanel: boolean;
+    showPopularSection: boolean;
     showCategoryBlocks: boolean;
     showCityBlocks: boolean;
   };
@@ -75,6 +76,8 @@ type ManagedEplContent = {
     showTeams: boolean;
     showStandings: boolean;
     showStore: boolean;
+    showDraftCountdown: boolean;
+    showFaq: boolean;
   };
   storageReady: boolean;
 };
@@ -330,6 +333,7 @@ export default function DiscoveryAdminClient() {
                 ["showIndependentSection", "Show Independent Organizer section"],
                 ["showExternalSection", "Show external discovery section"],
                 ["showEplPanel", "Show EPL homepage spotlight"],
+                ["showPopularSection", "Show popular/search results rail"],
                 ["showCategoryBlocks", "Show category intent blocks"],
                 ["showCityBlocks", "Show city blocks"],
               ].map(([key, label]) => (
@@ -546,6 +550,8 @@ export default function DiscoveryAdminClient() {
                     ["showTeams", "Show Teams"],
                     ["showStandings", "Show Standings"],
                     ["showStore", "Show Store"],
+                    ["showDraftCountdown", "Show Draft Countdown"],
+                    ["showFaq", "Show FAQ"],
                   ].map(([key, label]) => (
                     <label key={key} className="flex items-center gap-3 text-sm text-white/72">
                       <input

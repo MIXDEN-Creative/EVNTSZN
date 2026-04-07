@@ -48,6 +48,48 @@ function getEnvValue(keys: string[]) {
   return null;
 }
 
+function getExpectedHost(surface: EvntsznSurface) {
+  const baseDomain = getBaseDomain();
+
+  switch (surface) {
+    case "web":
+      return baseDomain;
+    case "app":
+      return `app.${baseDomain}`;
+    case "scanner":
+      return `scanner.${baseDomain}`;
+    case "epl":
+      return `epl.${baseDomain}`;
+    case "ops":
+      return `ops.${baseDomain}`;
+    case "hq":
+      return `hq.${baseDomain}`;
+    case "admin":
+      return `admin.${baseDomain}`;
+  }
+}
+
+function getConfiguredOrigin(surface: EvntsznSurface) {
+  const configured = getEnvValue(SURFACE_ENV_KEYS[surface]);
+  if (!configured) return null;
+
+  try {
+    const configuredHost = stripPort(new URL(configured).host);
+    const expectedHost = getExpectedHost(surface);
+    if (
+      isLocalHost(configuredHost) ||
+      configuredHost === expectedHost ||
+      (surface === "web" && configuredHost === `www.${expectedHost}`)
+    ) {
+      return configured;
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+}
+
 export function isLocalHost(host = "") {
   const bare = stripPort(host);
   return (
@@ -67,7 +109,7 @@ export function getCanonicalOrigin(surface: EvntsznSurface, runtimeHost?: string
     return cleanOrigin(process.env.NEXT_PUBLIC_DEV_ORIGIN || DEFAULT_DEV_ORIGIN);
   }
 
-  const configured = getEnvValue(SURFACE_ENV_KEYS[surface]);
+  const configured = getConfiguredOrigin(surface);
   if (configured) return configured;
 
   return DEFAULT_ORIGINS[surface];
@@ -111,8 +153,17 @@ export function getSurfaceFromHost(host = ""): EvntsznSurface | null {
   if (isLocalHost(bare)) return null;
 
   const matched = (Object.keys(DEFAULT_ORIGINS) as EvntsznSurface[]).find((surface) => {
-    const canonicalHost = new URL(getCanonicalOrigin(surface)).host.toLowerCase();
-    return bare === canonicalHost || bare === `www.${canonicalHost}`;
+    const expectedHost = getExpectedHost(surface);
+    const configuredHost = getConfiguredOrigin(surface)
+      ? stripPort(new URL(getConfiguredOrigin(surface)!).host)
+      : null;
+
+    return (
+      bare === expectedHost ||
+      (surface === "web" && bare === `www.${expectedHost}`) ||
+      (configuredHost !== null &&
+        (bare === configuredHost || (surface === "web" && bare === `www.${configuredHost}`)))
+    );
   });
 
   return matched || null;

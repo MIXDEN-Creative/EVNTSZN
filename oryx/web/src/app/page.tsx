@@ -1,121 +1,144 @@
 import type { Metadata } from "next";
 import Script from "next/script";
+import PublicNav from "@/components/public/PublicNav";
+import PublicFooter from "@/components/public/PublicFooter";
 import DiscoveryLanding from "@/components/public/DiscoveryLanding";
 import { getDiscoveryNativeEvents, groupDiscoveryEventsBySource } from "@/lib/discovery";
-import { getWebOrigin } from "@/lib/domains";
 import { getHomepageContent } from "@/lib/site-content";
-import { searchTicketmasterEvents } from "@/lib/ticketmaster";
+import { getTicketmasterShowcase } from "@/lib/ticketmaster";
+import { getWebOrigin } from "@/lib/domains";
 
-export async function generateMetadata(): Promise<Metadata> {
-  const homepage = await getHomepageContent();
-  const title = "Nightlife, music, sports, entertainment, and things to do in Baltimore, Atlanta, Miami, New York, and beyond";
-  const description =
-    "Discover premium EVNTSZN events, hosted experiences, nightlife, sports, music, and city energy through a cinematic event platform built for discovery, tickets, and momentum.";
+export const metadata: Metadata = {
+  title: "EVNTSZN | Discover nightlife, live music, sports, and the best things to do",
+  description:
+    "Discover nightlife, live music, sports, draft night energy, and the best things to do in Baltimore, Atlanta, Miami, New York, and DC with EVNTSZN.",
+  alternates: {
+    canonical: "https://evntszn.com",
+  },
+  keywords: [
+    "events",
+    "nightlife",
+    "music",
+    "sports",
+    "live entertainment",
+    "things to do",
+    "Baltimore events",
+    "Atlanta events",
+    "Miami events",
+    "New York nightlife",
+    "DC events",
+    "EVNTSZN",
+  ],
+  openGraph: {
+    title: "EVNTSZN | Discover nightlife, live music, sports, and the best things to do",
+    description:
+      "Search nightlife, concerts, sports, city energy, and the strongest live plans with EVNTSZN’s premium public discovery experience.",
+    url: "https://evntszn.com",
+    siteName: "EVNTSZN",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "EVNTSZN | Discover nightlife, live music, sports, and the best things to do",
+    description:
+      "Find the best things to do in Baltimore, Atlanta, Miami, New York, DC, and beyond with EVNTSZN.",
+  },
+};
 
+function formatHomepageJsonLd() {
+  const origin = getWebOrigin();
   return {
-    title,
-    description,
-    alternates: {
-      canonical: "/",
-    },
-    openGraph: {
-      title: `EVNTSZN | ${title}`,
-      description,
-      url: "/",
-      type: "website",
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: `EVNTSZN | ${title}`,
-      description,
-    },
-    keywords: [
-      "events",
-      "event discovery",
-      "nightlife",
-      "music events",
-      "sports events",
-      "entertainment",
-      "things to do",
-      "Baltimore events",
-      "Atlanta events",
-      "Miami events",
-      "New York events",
-      "premium event platform",
-      "EVNTSZN",
-      homepage.hero.title,
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": `${origin}/#organization`,
+        name: "EVNTSZN",
+        url: origin,
+        logo: `${origin}/favicon.ico`,
+        description:
+          "EVNTSZN is a premium event discovery platform for nightlife, music, sports, and live entertainment.",
+      },
+      {
+        "@type": "WebSite",
+        "@id": `${origin}/#website`,
+        url: origin,
+        name: "EVNTSZN",
+        potentialAction: {
+          "@type": "SearchAction",
+          target: `${origin}/?q={search_term_string}`,
+          "query-input": "required name=search_term_string",
+        },
+      },
     ],
   };
 }
 
 export default async function HomePage() {
-  const [homepage, nativeResult, externalShowcase] = await Promise.all([
+  const [content, nativeResult, externalShowcase] = await Promise.all([
     getHomepageContent(),
     getDiscoveryNativeEvents({ limit: 12 }),
-    searchTicketmasterEvents({ size: 6 }).catch(() => []),
+    getTicketmasterShowcase().catch(() => []),
   ]);
 
-  const groupedNative = groupDiscoveryEventsBySource(nativeResult.events);
-  const heroImage =
-    externalShowcase.find((event) => event.imageUrl)?.imageUrl ||
-    null;
-
-  const organizationSchema = {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    name: "EVNTSZN",
-    url: getWebOrigin(),
-    description:
-      "Premium event discovery, ticketing, scanning, and operations across EVNTSZN-native events, hosted experiences, nightlife, sports, music, and city energy.",
-    sameAs: [getWebOrigin()],
-  };
-
-  const websiteSchema = {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    name: "EVNTSZN",
-    url: getWebOrigin(),
-    description: homepage.discovery.body,
-    potentialAction: {
-      "@type": "SearchAction",
-      target: `${getWebOrigin()}/?q={search_term_string}`,
-      "query-input": "required name=search_term_string",
-    },
-  };
-
-  const featuredItemsSchema = {
-    "@context": "https://schema.org",
-    "@type": "ItemList",
-    name: "Featured EVNTSZN discovery listings",
-    itemListElement: nativeResult.events.slice(0, 8).map((event, index) => ({
-      "@type": "ListItem",
-      position: index + 1,
-      url: `${getWebOrigin()}${event.href}`,
-      name: event.title,
+  const nativeSections = groupDiscoveryEventsBySource(nativeResult.events);
+  const initialPopular = [
+    ...nativeResult.events.slice(0, 4).map((event) => ({
+      id: event.id,
+      title: event.title,
+      href: event.href,
+      imageUrl:
+        event.imageUrl ||
+        "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=1800&q=80",
+      venue: event.subtitle || event.heroNote || "EVNTSZN listing",
+      city: event.city,
+      state: event.state,
+      startAt: event.startAt,
+      source: event.source,
+      badgeLabel: event.badgeLabel,
+      summary:
+        event.description ||
+        event.heroNote ||
+        `${event.sourceLabel} shaping the city calendar.`,
+      isPrimary: true,
+      featured: event.featured,
     })),
-  };
+    ...externalShowcase.slice(0, 8).map((event) => ({
+      id: event.id,
+      title: event.title,
+      href: event.url || "/events",
+      imageUrl:
+        event.imageUrl ||
+        "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=1800&q=80",
+      venue: event.venueName || "Venue to be announced",
+      city: event.city || "",
+      state: event.state || "",
+      startAt: event.startAt,
+      source: "ticketmaster" as const,
+      badgeLabel: "External listing",
+      summary:
+        "Broader city demand pulled into EVNTSZN discovery without crowding out EVNTSZN-led inventory.",
+      isPrimary: false,
+    })),
+  ].slice(0, 8);
 
   return (
-    <>
+    <main className="min-h-screen bg-black text-white">
       <Script
-        id="evntszn-homepage-schema"
+        id="evntszn-homepage-structured-data"
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify([organizationSchema, websiteSchema, featuredItemsSchema]),
+          __html: JSON.stringify(formatHomepageJsonLd()),
         }}
       />
-      <main className="ev-surface ev-surface--web">
-        <DiscoveryLanding
-          hero={homepage.hero}
-          banner={homepage.banner}
-          discovery={homepage.discovery}
-          taxonomy={homepage.taxonomy}
-          visibility={homepage.visibility}
-          groupedNativeEvents={groupedNative}
-          externalShowcase={externalShowcase}
-          heroImage={heroImage}
-        />
-      </main>
-    </>
+      <PublicNav />
+      <DiscoveryLanding
+        content={content}
+        initialPopular={initialPopular}
+        initialNativeSections={nativeSections}
+        initialExternal={externalShowcase}
+      />
+      <PublicFooter />
+    </main>
   );
 }

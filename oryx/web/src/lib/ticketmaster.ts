@@ -118,3 +118,24 @@ export async function searchTicketmasterEvents(input: {
     };
   });
 }
+
+export async function getTicketmasterShowcase(cities: string[] = ["Baltimore", "Atlanta", "New York", "Miami", "Washington"]) {
+  const groups = await Promise.all(
+    cities.map((city) =>
+      searchTicketmasterEvents({
+        city,
+        size: 3,
+      }).catch(() => [] as TicketmasterEvent[]),
+    ),
+  );
+
+  const seen = new Set<string>();
+  return groups
+    .flat()
+    .filter((event) => {
+      if (seen.has(event.id)) return false;
+      seen.add(event.id);
+      return true;
+    })
+    .slice(0, 12);
+}

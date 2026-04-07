@@ -34,6 +34,41 @@ function getWindowRange(when: string) {
   return { startAt: undefined, endAt: undefined };
 }
 
+function scoreExternalResult(
+  event: {
+    title: string | null;
+    city: string | null;
+    venueName: string | null;
+    startAt: string | null;
+  },
+  query: string,
+  city: string,
+) {
+  let score = 0;
+  const normalizedQuery = query.toLowerCase();
+  const normalizedCity = city.toLowerCase();
+  const haystack = [event.title, event.venueName, event.city].filter(Boolean).join(" ").toLowerCase();
+
+  if (normalizedQuery) {
+    if (haystack.includes(normalizedQuery)) score += 24;
+    if (event.title?.toLowerCase().includes(normalizedQuery)) score += 12;
+  }
+
+  if (normalizedCity) {
+    if (event.city?.toLowerCase() === normalizedCity) score += 30;
+    else if (event.city?.toLowerCase().includes(normalizedCity)) score += 16;
+  }
+
+  if (event.startAt) {
+    const delta = new Date(event.startAt).getTime() - Date.now();
+    if (delta > 0) {
+      score += Math.max(0, 18 - Math.floor(delta / (1000 * 60 * 60 * 24)));
+    }
+  }
+
+  return score;
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
 
@@ -62,14 +97,58 @@ export async function GET(request: NextRequest) {
     }).catch(() => []),
   ]);
 
+  const rankedExternal = [...externalEvents].sort(
+    (a, b) => scoreExternalResult(b, query, city) - scoreExternalResult(a, query, city),
+  );
+  const mergedResults = [
+    ...nativeResult.events.map((event) => ({
+      id: event.id,
+      title: event.title,
+      href: event.href,
+      imageUrl:
+        event.imageUrl ||
+        "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=1800&q=80",
+      venue: event.subtitle || event.heroNote || "EVNTSZN listing",
+      city: event.city,
+      state: event.state,
+      startAt: event.startAt,
+      source: event.source,
+      badgeLabel: event.badgeLabel,
+      summary:
+        event.description ||
+        event.heroNote ||
+        `${event.sourceLabel} shaping the city calendar.`,
+      isPrimary: true,
+      featured: event.featured,
+    })),
+    ...rankedExternal.map((event) => ({
+      id: event.id,
+      title: event.title,
+      href: event.url || "/events",
+      imageUrl:
+        event.imageUrl ||
+        "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=1800&q=80",
+      venue: event.venueName || "Venue to be announced",
+      city: event.city || "",
+      state: event.state || "",
+      startAt: event.startAt,
+      source: "ticketmaster" as const,
+      badgeLabel: "External listing",
+      summary:
+        "Broader city demand pulled into EVNTSZN discovery without crowding out EVNTSZN-led inventory.",
+      isPrimary: false,
+    })),
+  ];
+
   return NextResponse.json({
     ok: true,
     storageReady: nativeResult.storageReady,
     native: nativeResult.events,
     nativeSections: groupDiscoveryEventsBySource(nativeResult.events),
-    external: externalEvents.map((event) => ({
+    external: rankedExternal.map((event) => ({
       ...event,
       isPrimary: false,
     })),
+    results: mergedResults,
   });
 }

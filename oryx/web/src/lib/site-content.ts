@@ -52,6 +52,7 @@ export type HomepageVisibilityContent = {
   showIndependentSection: boolean;
   showExternalSection: boolean;
   showEplPanel: boolean;
+  showPopularSection: boolean;
   showCategoryBlocks: boolean;
   showCityBlocks: boolean;
 };
@@ -85,6 +86,8 @@ export type EplMenuVisibilityContent = {
   showTeams: boolean;
   showStandings: boolean;
   showStore: boolean;
+  showDraftCountdown: boolean;
+  showFaq: boolean;
 };
 
 type SiteContentRow = {
@@ -125,10 +128,10 @@ export type EplPublicContent = {
 export const DEFAULT_HOMEPAGE_CONTENT: Omit<HomepageContent, "storageReady"> = {
   hero: {
     eyebrow: "EVNTSZN live discovery",
-    title: "Nightlife, music, sports, and city energy curated like a headline event platform.",
+    title: "Find the night, the match, the concert, or the city plan worth moving on.",
     description:
-      "Discover official EVNTSZN events first, then move through hosted experiences, independent organizer drops, and broader city demand with a premium discovery layer built for Baltimore, Atlanta, Miami, New York, and the next market up.",
-    primaryCtaLabel: "Explore live events",
+      "EVNTSZN helps people find the strongest nightlife, live music, sports, league energy, and things to do across Baltimore, Atlanta, Miami, New York, DC, and the next city up.",
+    primaryCtaLabel: "Start discovering",
     primaryCtaHref: "/events",
     secondaryCtaLabel: "Create attendee account",
     secondaryCtaHref: "/account/login?mode=signup&next=/account",
@@ -136,16 +139,16 @@ export const DEFAULT_HOMEPAGE_CONTENT: Omit<HomepageContent, "storageReady"> = {
     tertiaryCtaHref: "/account/login?next=/account",
   },
   banner: {
-    eyebrow: "Built for momentum",
-    title: "Public discovery stays cinematic. Ops, scanner, admin, and HQ stay controlled.",
-    body: "EVNTSZN gives customers a premium discovery and ticketing experience while keeping scanner, operations, league, admin, and HQ environments purpose-built behind their own guarded surfaces.",
+    eyebrow: "Built for real nights out",
+    title: "Discover what is actually happening without digging through junk.",
+    body: "Search the city fast, surface the strongest listings first, and move from discovery to account, tickets, and league action without getting pulled into clutter.",
   },
   discovery: {
-    headline: "Find the move before the city catches up.",
+    headline: "Search the city and get to the best options fast.",
     body: "Search nightlife, concerts, sports, live entertainment, and things to do right now. EVNTSZN leads with its own premium inventory first, then expands into the city's broader pulse when you want more range.",
     disclosure:
-      "External listings widen coverage for fast-moving city discovery, but EVNTSZN-led inventory stays the first signal and the strongest presentation layer.",
-    searchPlaceholder: "Search artist, event, venue, vibe, or city moment",
+      "EVNTSZN-led inventory still gets priority. External discovery only widens the field when it actually helps the search.",
+    searchPlaceholder: "Search artist, event, venue, vibe, or something happening tonight",
     keywordPlaceholder: "Keyword",
     cityPlaceholder: "City",
     nativeHeadline: "Official EVNTSZN events",
@@ -197,6 +200,7 @@ export const DEFAULT_HOMEPAGE_CONTENT: Omit<HomepageContent, "storageReady"> = {
     showIndependentSection: false,
     showExternalSection: true,
     showEplPanel: true,
+    showPopularSection: true,
     showCategoryBlocks: true,
     showCityBlocks: true,
   },
@@ -236,6 +240,8 @@ export const DEFAULT_EPL_PUBLIC_CONTENT: Omit<EplPublicContent, "storageReady"> 
     showTeams: true,
     showStandings: true,
     showStore: true,
+    showDraftCountdown: true,
+    showFaq: true,
   },
 };
 
@@ -284,6 +290,7 @@ function normalizeHomepageVisibility(value: Record<string, unknown> | null | und
     showIndependentSection: value?.showIndependentSection === true,
     showExternalSection: value?.showExternalSection !== false,
     showEplPanel: value?.showEplPanel !== false,
+    showPopularSection: value?.showPopularSection !== false,
     showCategoryBlocks: value?.showCategoryBlocks !== false,
     showCityBlocks: value?.showCityBlocks !== false,
   };
@@ -296,6 +303,8 @@ function normalizeEplMenu(value: Record<string, unknown> | null | undefined): Ep
     showTeams: value?.showTeams !== false,
     showStandings: value?.showStandings !== false,
     showStore: value?.showStore !== false,
+    showDraftCountdown: value?.showDraftCountdown !== false,
+    showFaq: value?.showFaq !== false,
   };
 }
 
