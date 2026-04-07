@@ -13,9 +13,57 @@
   "services": [
     {
       "binding": "WORKER_SELF_REFERENCE",
-      "service": "evntszn-prod-live"
+      "service": "evntszn-prod-live",
+      "environment": "production"
     }
   ],
+  "routes": [
+    {
+      "pattern": "evntszn.com",
+      "zone_name": "evntszn.com",
+      "custom_domain": true
+    },
+    {
+      "pattern": "www.evntszn.com",
+      "zone_name": "evntszn.com",
+      "custom_domain": true
+    },
+    {
+      "pattern": "app.evntszn.com",
+      "zone_name": "evntszn.com",
+      "custom_domain": true
+    },
+    {
+      "pattern": "scanner.evntszn.com",
+      "zone_name": "evntszn.com",
+      "custom_domain": true
+    },
+    {
+      "pattern": "epl.evntszn.com",
+      "zone_name": "evntszn.com",
+      "custom_domain": true
+    },
+    {
+      "pattern": "ops.evntszn.com",
+      "zone_name": "evntszn.com",
+      "custom_domain": true
+    },
+    {
+      "pattern": "hq.evntszn.com",
+      "zone_name": "evntszn.com",
+      "custom_domain": true
+    },
+    {
+      "pattern": "admin.evntszn.com",
+      "zone_name": "evntszn.com",
+      "custom_domain": true
+    }
+  ],
+  "vars": {
+    "NEXT_PUBLIC_SITE_URL": "https://evntszn.com",
+    "NEXT_PUBLIC_SCANNER_ORIGIN": "https://scanner.evntszn.com",
+    "NEXT_PUBLIC_SUPABASE_URL": "https://zeiaepflfqdesvzakdvu.supabase.co"
+  },
   "workers_dev": true,
   "preview_urls": true
 }
