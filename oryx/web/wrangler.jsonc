@@ -60,8 +60,15 @@
     }
   ],
   "vars": {
+    // Non-secret worker vars only. Keep Supabase keys in local `.env.local` or `.dev.vars`
+    // for builds, and set runtime keys explicitly in Cloudflare with `wrangler secret put`.
     "NEXT_PUBLIC_SITE_URL": "https://evntszn.com",
+    "NEXT_PUBLIC_APP_ORIGIN": "https://app.evntszn.com",
     "NEXT_PUBLIC_SCANNER_ORIGIN": "https://scanner.evntszn.com",
+    "NEXT_PUBLIC_EPL_ORIGIN": "https://epl.evntszn.com",
+    "NEXT_PUBLIC_OPS_ORIGIN": "https://ops.evntszn.com",
+    "NEXT_PUBLIC_HQ_ORIGIN": "https://hq.evntszn.com",
+    "NEXT_PUBLIC_ADMIN_ORIGIN": "https://admin.evntszn.com",
     "NEXT_PUBLIC_SUPABASE_URL": "https://zeiaepflfqdesvzakdvu.supabase.co"
   },
   "workers_dev": true,

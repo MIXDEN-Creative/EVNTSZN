@@ -45,6 +45,11 @@ export default async function AdminHomePage() {
       description: "Track market-level events, revenue, host coverage, and pending approvals city by city.",
     },
     permissions.includes("admin.manage") && {
+      title: "Signal & Ambassador",
+      href: `${getAdminOrigin(host)}/programs`,
+      description: "Manage Signal and Ambassador pipelines as distinct internal programs with city-aware activation and review status.",
+    },
+    permissions.includes("admin.manage") && {
       title: "Hiring Pipeline",
       href: `${getAdminOrigin(host)}/hiring`,
       description: "Review EPL applications, assign interviews, capture notes, and convert hired applicants into users.",

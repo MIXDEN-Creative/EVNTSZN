@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { getOperatorRoleOptions } from "@/lib/operator-access";
+import {
+  getOperatorRoleOptions,
+  getOrganizerClassificationLabel,
+  getOrganizerClassificationOptions,
+} from "@/lib/operator-access";
 
 type PlatformUser = {
   user_id: string;
@@ -18,6 +22,7 @@ type PlatformUser = {
 };
 
 const roleOptions = getOperatorRoleOptions();
+const organizerClassificationOptions = getOrganizerClassificationOptions();
 const primaryRoles = ["attendee", "organizer", "venue", "scanner", "admin"];
 
 function parseList(value: string) {
@@ -42,6 +47,8 @@ export default function UsersAdminClient() {
     password: "",
     primary_role: "attendee",
     role_key: "host",
+    organizer_classification: "evntszn_host",
+    network_status: "active",
     city: "",
     state: "",
     job_title: "",
@@ -100,6 +107,9 @@ export default function UsersAdminClient() {
       phone: selectedUser.phone || "",
       notes: selectedUser.notes || "",
       role_key: selectedUser.operator_profile?.role_key || "host",
+      organizer_classification:
+        selectedUser.operator_profile?.organizer_classification || "evntszn_host",
+      network_status: selectedUser.operator_profile?.network_status || "active",
       job_title: selectedUser.operator_profile?.job_title || "",
       functions: stringifyList(selectedUser.operator_profile?.functions),
       city_scope: stringifyList(selectedUser.operator_profile?.city_scope),
@@ -150,6 +160,8 @@ export default function UsersAdminClient() {
       password: "",
       primary_role: "attendee",
       role_key: "host",
+      organizer_classification: "evntszn_host",
+      network_status: "active",
       city: "",
       state: "",
       job_title: "",
@@ -247,6 +259,18 @@ export default function UsersAdminClient() {
                 ))}
               </select>
             </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              <select className="ev-field" value={createForm.organizer_classification} onChange={(e) => setCreateForm({ ...createForm, organizer_classification: e.target.value })}>
+                {organizerClassificationOptions.map((classification) => (
+                  <option key={classification.value} value={classification.value}>{classification.label}</option>
+                ))}
+              </select>
+              <select className="ev-field" value={createForm.network_status} onChange={(e) => setCreateForm({ ...createForm, network_status: e.target.value })}>
+                {["prospect", "active", "paused", "alumni"].map((status) => (
+                  <option key={status} value={status}>{status}</option>
+                ))}
+              </select>
+            </div>
             <input className="ev-field" placeholder="Job title" value={createForm.job_title} onChange={(e) => setCreateForm({ ...createForm, job_title: e.target.value })} />
             <input className="ev-field" placeholder="Functions (comma separated)" value={createForm.functions} onChange={(e) => setCreateForm({ ...createForm, functions: e.target.value })} />
             <div className="grid gap-4 md:grid-cols-2">
@@ -305,6 +329,11 @@ export default function UsersAdminClient() {
                     <div className="mt-1 text-xs uppercase tracking-[0.18em] text-[#caa7ff]">
                       {user.operator_profile?.role_key || user.primary_role}
                     </div>
+                    <div className="mt-1 text-[11px] uppercase tracking-[0.18em] text-white/45">
+                      {getOrganizerClassificationLabel(
+                        String(user.operator_profile?.organizer_classification || "evntszn_host"),
+                      )}
+                    </div>
                     <div className="mt-2 text-sm text-white/55">
                       {user.city || "No city"}{user.state ? `, ${user.state}` : ""}
                     </div>
@@ -324,12 +353,14 @@ export default function UsersAdminClient() {
                     <div>
                       <div className="ev-section-kicker">Selected operator</div>
                       <h2 className="mt-3 text-2xl font-bold text-white">{selectedUser.full_name || selectedUser.user_id}</h2>
-                      <div className="mt-2 flex flex-wrap gap-2 text-xs uppercase tracking-[0.18em] text-[#caa7ff]">
-                        <span>{selectedUser.admin_membership?.isOwner ? "Founder override" : selectedUser.operator_preset?.label || "Custom operator"}</span>
-                        <span>{selectedUser.is_active ? "active" : "disabled"}</span>
-                        {selectedUser.admin_membership?.roles?.map((role) => (
-                          <span key={role}>{role}</span>
-                        ))}
+                    <div className="mt-2 flex flex-wrap gap-2 text-xs uppercase tracking-[0.18em] text-[#caa7ff]">
+                      <span>{selectedUser.admin_membership?.isOwner ? "Founder override" : selectedUser.operator_preset?.label || "Custom operator"}</span>
+                      <span>{selectedUser.is_active ? "active" : "disabled"}</span>
+                      <span>{getOrganizerClassificationLabel(String(editor.organizer_classification || "evntszn_host"))}</span>
+                      <span>{String(editor.network_status || "active").replace(/_/g, " ")}</span>
+                      {selectedUser.admin_membership?.roles?.map((role) => (
+                        <span key={role}>{role}</span>
+                      ))}
                       </div>
                     </div>
                     <button onClick={saveSelectedUser} className="ev-button-primary">
@@ -347,6 +378,16 @@ export default function UsersAdminClient() {
                     <select className="ev-field" value={editor.role_key} onChange={(e) => setEditor({ ...editor, role_key: e.target.value })}>
                       {roleOptions.map((role) => (
                         <option key={role.value} value={role.value}>{role.label}</option>
+                      ))}
+                    </select>
+                    <select className="ev-field" value={editor.organizer_classification} onChange={(e) => setEditor({ ...editor, organizer_classification: e.target.value })}>
+                      {organizerClassificationOptions.map((classification) => (
+                        <option key={classification.value} value={classification.value}>{classification.label}</option>
+                      ))}
+                    </select>
+                    <select className="ev-field" value={editor.network_status} onChange={(e) => setEditor({ ...editor, network_status: e.target.value })}>
+                      {["prospect", "active", "paused", "alumni"].map((status) => (
+                        <option key={status} value={status}>{status}</option>
                       ))}
                     </select>
                     <input className="ev-field" value={editor.job_title} placeholder="Job title" onChange={(e) => setEditor({ ...editor, job_title: e.target.value })} />
@@ -395,12 +436,15 @@ export default function UsersAdminClient() {
                         <div>Surfaces: {editor.surface_access || "None assigned"}</div>
                         <div>Modules: {editor.module_access || "None assigned"}</div>
                         <div>Approvals: {editor.approval_authority || "No approval authority"}</div>
+                        <div>Program class: {getOrganizerClassificationLabel(String(editor.organizer_classification || "evntszn_host"))}</div>
                       </div>
                     </div>
                     <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
                       <div className="text-xs uppercase tracking-[0.18em] text-white/45">Operating identity</div>
                       <div className="mt-3 text-sm leading-7 text-white/72">
                         <div>Role: {editor.role_key}</div>
+                        <div>Classification: {getOrganizerClassificationLabel(String(editor.organizer_classification || "evntszn_host"))}</div>
+                        <div>Network status: {String(editor.network_status || "active").replace(/_/g, " ")}</div>
                         <div>Job title: {editor.job_title || "Not assigned"}</div>
                         <div>Functions: {editor.functions || "None assigned"}</div>
                         <div>City scope: {editor.city_scope || "No city scope"}</div>

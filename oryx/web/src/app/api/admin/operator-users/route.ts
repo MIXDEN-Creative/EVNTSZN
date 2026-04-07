@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAdminPermission } from "@/lib/admin-auth";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { ensurePlatformProfile } from "@/lib/evntszn";
-import { getOperatorPreset, normalizeStringArray } from "@/lib/operator-access";
+import { getOperatorPreset, inferOrganizerClassification, normalizeStringArray } from "@/lib/operator-access";
 import { logSystemIssue } from "@/lib/system-logs";
 
 export async function GET() {
@@ -66,6 +66,7 @@ export async function POST(request: Request) {
   const password = String(body.password || "").trim();
   const primaryRole = String(body.primary_role || "attendee").trim();
   const roleKey = String(body.role_key || primaryRole).trim();
+  const organizerClassification = String(body.organizer_classification || "").trim() || inferOrganizerClassification(roleKey);
 
   if (!email || !password) {
     return NextResponse.json({ error: "Email and password are required." }, { status: 400 });
@@ -108,6 +109,8 @@ export async function POST(request: Request) {
     .upsert({
       user_id: userId,
       role_key: roleKey,
+      organizer_classification: organizerClassification,
+      network_status: String(body.network_status || "active").trim() || "active",
       job_title: String(body.job_title || "").trim() || null,
       functions: normalizeStringArray(body.functions),
       city_scope: normalizeStringArray(body.city_scope || body.city),

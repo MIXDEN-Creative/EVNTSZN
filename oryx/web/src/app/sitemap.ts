@@ -36,6 +36,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.6,
     },
     {
+      url: `${origin}/signal/apply`,
+      changeFrequency: "weekly",
+      priority: 0.5,
+    },
+    {
+      url: `${origin}/ambassador/apply`,
+      changeFrequency: "weekly",
+      priority: 0.5,
+    },
+    {
       url: `${origin}/privacy`,
       changeFrequency: "monthly",
       priority: 0.4,

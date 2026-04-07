@@ -129,6 +129,48 @@ export const OPERATOR_ROLE_PRESETS = {
 
 export type OperatorRoleKey = keyof typeof OPERATOR_ROLE_PRESETS;
 
+export const ORGANIZER_CLASSIFICATION_LABELS = {
+  evntszn_host: "EVNTSZN Host",
+  independent_organizer: "Independent Organizer",
+  city_host: "City Host / Leader",
+  venue_partner: "Venue Partner",
+  internal_operator: "Internal Operator",
+} as const;
+
+export type OrganizerClassification = keyof typeof ORGANIZER_CLASSIFICATION_LABELS;
+
+export function inferOrganizerClassification(roleKey: string | null | undefined): OrganizerClassification {
+  switch (roleKey) {
+    case "host":
+    case "certified_host":
+    case "pro_host":
+    case "host_development_manager":
+      return "evntszn_host";
+    case "independent_organizer":
+      return "independent_organizer";
+    case "city_commissioner":
+    case "deputy_commissioner":
+    case "city_leader":
+      return "city_host";
+    case "venue_user":
+      return "venue_partner";
+    default:
+      return "internal_operator";
+  }
+}
+
+export function getOrganizerClassificationLabel(value: string | null | undefined) {
+  if (!value) return ORGANIZER_CLASSIFICATION_LABELS.internal_operator;
+  return ORGANIZER_CLASSIFICATION_LABELS[value as OrganizerClassification] || ORGANIZER_CLASSIFICATION_LABELS.internal_operator;
+}
+
+export function getOrganizerClassificationOptions() {
+  return Object.entries(ORGANIZER_CLASSIFICATION_LABELS).map(([value, label]) => ({
+    value,
+    label,
+  }));
+}
+
 export function getOperatorPreset(roleKey: string | null | undefined) {
   if (!roleKey) return null;
   return OPERATOR_ROLE_PRESETS[roleKey as OperatorRoleKey] || null;

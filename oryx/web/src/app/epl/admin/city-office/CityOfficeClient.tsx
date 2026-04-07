@@ -56,6 +56,11 @@ export default function CityOfficeClient({
             {scopeNote}
           </div>
         </div>
+        <div className="mt-4 flex flex-wrap gap-3">
+          <a href="/epl/admin/approvals" className="ev-button-secondary">Review approvals</a>
+          <a href="/epl/admin/programs" className="ev-button-secondary">Open programs</a>
+          <a href="/epl/admin/sponsors" className="ev-button-secondary">Open sponsors</a>
+        </div>
       </section>
 
       {city ? (
@@ -68,6 +73,10 @@ export default function CityOfficeClient({
               ["Pending approvals", city.pendingApprovals],
               ["Hosts", city.hosts],
               ["Organizers", city.organizers],
+              ["Host upgrade leads", city.hostUpgradeCandidates],
+              ["Signal members", city.signalMembers],
+              ["Ambassadors", city.ambassadorMembers],
+              ["Sponsor accounts", city.sponsorAccounts],
               ["Ticket revenue", `$${((city.paidRevenueCents || 0) / 100).toLocaleString()}`],
               ["Sponsor revenue", `$${((city.sponsorRevenueCents || 0) / 100).toLocaleString()}`],
             ].map(([label, value]) => (
@@ -91,6 +100,9 @@ export default function CityOfficeClient({
                       <div className="mt-1 text-xs uppercase tracking-[0.18em] text-[#caa7ff]">
                         {operator.isActive ? "active" : "inactive"}
                       </div>
+                      {operator.organizerClassification ? (
+                        <div className="mt-2 text-sm text-white/55">{String(operator.organizerClassification).replace(/_/g, " ")}</div>
+                      ) : null}
                     </div>
                   ))
                 )}
@@ -108,6 +120,57 @@ export default function CityOfficeClient({
                       <div className="text-sm font-semibold text-white">{application.type}</div>
                       <div className="mt-1 text-xs uppercase tracking-[0.18em] text-[#caa7ff]">
                         {application.status}{application.discoveryEligible ? " · discovery eligible" : ""}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </section>
+          </div>
+
+          <div className="mt-6 grid gap-6 lg:grid-cols-2">
+            <section className="ev-panel p-6">
+              <div className="ev-section-kicker">Program readiness</div>
+              <div className="mt-5 space-y-3">
+                {(city.programMembers || []).length === 0 ? (
+                  <div className="rounded-2xl border border-white/10 bg-black/30 p-4 text-white/60">No Signal or Ambassador members are currently assigned to this city.</div>
+                ) : (
+                  city.programMembers.map((member: any) => (
+                    <div key={member.id} className="rounded-2xl border border-white/10 bg-black/30 p-4">
+                      <div className="flex flex-wrap gap-2 text-[11px] uppercase tracking-[0.18em] text-[#caa7ff]">
+                        <span>{member.programKey}</span>
+                        <span>{member.status}</span>
+                        <span>{String(member.activationReadiness || "review_needed").replace(/_/g, " ")}</span>
+                      </div>
+                      <div className="mt-2 text-sm font-semibold text-white">{member.fullName || "Program member"}</div>
+                      <div className="mt-2 text-sm text-white/55">
+                        {String(member.activationState || "pending").replace(/_/g, " ")}
+                        {member.assignedManagerUserId ? " · manager assigned" : ""}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </section>
+
+            <section className="ev-panel p-6">
+              <div className="ev-section-kicker">Sponsor relationships</div>
+              <div className="mt-5 space-y-3">
+                {(city.sponsorRelationships || []).length === 0 ? (
+                  <div className="rounded-2xl border border-white/10 bg-black/30 p-4 text-white/60">No city-linked sponsor relationships are active yet.</div>
+                ) : (
+                  city.sponsorRelationships.map((account: any) => (
+                    <div key={account.id} className="rounded-2xl border border-white/10 bg-black/30 p-4">
+                      <div className="flex flex-wrap gap-2 text-[11px] uppercase tracking-[0.18em] text-[#caa7ff]">
+                        <span>{account.scopeType}</span>
+                        <span>{account.status}</span>
+                        <span>{String(account.activationStatus || "prospect").replace(/_/g, " ")}</span>
+                      </div>
+                      <div className="mt-2 text-sm font-semibold text-white">{account.name || "Sponsor account"}</div>
+                      <div className="mt-2 text-sm text-white/55">
+                        {String(account.fulfillmentStatus || "not_started").replace(/_/g, " ")}
+                        {account.eplCategory ? ` · ${String(account.eplCategory).replace(/_/g, " ")}` : ""}
+                        {account.assetReady ? " · assets ready" : ""}
                       </div>
                     </div>
                   ))

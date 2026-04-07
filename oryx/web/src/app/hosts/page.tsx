@@ -32,6 +32,9 @@ export default function HostsPage() {
             <Link href={`${getAppOrigin()}/account/login?next=/ops`} className="ev-button-secondary">
               Already approved? Enter ops
             </Link>
+            <Link href="/organizer/apply" className="ev-button-secondary">
+              Independent Organizer instead?
+            </Link>
           </div>
         </div>
       </section>
@@ -83,6 +86,30 @@ export default function HostsPage() {
               <p>Public visitors can start a request for ops access, but elevated roles are not granted automatically.</p>
               <p>Organizer, venue, scanner, host, and city-operating permissions remain subject to review and approval by EVNTSZN admin or HQ controls.</p>
               <p>Once approved, operators are routed into the correct protected workspace with only the capabilities their role allows.</p>
+            </div>
+          </section>
+        </div>
+
+        <div className="mt-8 grid gap-6 lg:grid-cols-2">
+          <section className="ev-panel p-6">
+            <div className="ev-section-kicker">Signal</div>
+            <div className="mt-3 text-2xl font-black tracking-tight text-white">Controlled city support and activation</div>
+            <p className="mt-3 text-sm leading-6 text-white/72">
+              Signal is for controlled support, activation, and city help. It is separate from Ambassador and it does not automatically grant broad operator privileges.
+            </p>
+            <div className="mt-5">
+              <Link href="/signal/apply" className="ev-button-secondary">Request Signal consideration</Link>
+            </div>
+          </section>
+
+          <section className="ev-panel p-6">
+            <div className="ev-section-kicker">Ambassador</div>
+            <div className="mt-3 text-2xl font-black tracking-tight text-white">Growth, referrals, and city awareness</div>
+            <p className="mt-3 text-sm leading-6 text-white/72">
+              Ambassador is the public-facing growth path for referral pull and city presence. It is not the same program as Signal and it is not the same track as approved EVNTSZN Hosts.
+            </p>
+            <div className="mt-5">
+              <Link href="/ambassador/apply" className="ev-button-secondary">Apply to Ambassador</Link>
             </div>
           </section>
         </div>

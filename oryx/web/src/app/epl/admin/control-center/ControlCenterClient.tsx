@@ -24,8 +24,12 @@ export default function ControlCenterClient() {
   const topEvents = data?.topEvents || [];
   const issueCountsBySource = data?.issueCountsBySource || [];
   const issueCountsBySeverity = data?.issueCountsBySeverity || [];
+  const sponsorAccountCounts = data?.sponsorAccountCounts || [];
+  const programCounts = data?.programCounts || [];
   const hiringStageCounts = data?.hiringStageCounts || [];
   const opportunityCounts = data?.opportunityCounts || null;
+  const hostOrganizerMix = data?.hostOrganizerMix || { hosts: 0, independentOrganizers: 0 };
+  const cityReadinessCounts = data?.cityReadinessCounts || [];
 
   return (
     <main className="mx-auto max-w-7xl">
@@ -56,7 +60,14 @@ export default function ControlCenterClient() {
           ["Ticket revenue", stats ? `$${((stats.ticketRevenueCents || 0) / 100).toLocaleString()}` : "—"],
           ["Sponsor revenue", stats ? `$${((stats.sponsorRevenueCents || 0) / 100).toLocaleString()}` : "—"],
           ["Package orders", stats?.sponsorPackageOrders ?? "—"],
+          ["Sponsor accounts", stats?.sponsorAccounts ?? "—"],
+          ["Sponsor prospects", stats?.sponsorProspects ?? "—"],
+          ["Active sponsors", stats?.activeSponsors ?? "—"],
+          ["Program members", stats?.programMembers ?? "—"],
+          ["Pending program reviews", stats?.pendingProgramReviews ?? "—"],
           ["Operator profiles", stats?.operatorProfiles ?? "—"],
+          ["Active hosts", stats?.activeHosts ?? "—"],
+          ["Independent organizers", stats?.independentOrganizers ?? "—"],
           ["Check-ins logged", stats?.checkInTotal ?? "—"],
           ["Scanner-capable users", stats?.scannerCapableOperators ?? "—"],
           ["Active scan assignments", stats?.activeScanAssignments ?? "—"],
@@ -141,6 +152,42 @@ export default function ControlCenterClient() {
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
         <section className="ev-panel p-6">
+          <div className="ev-section-kicker">Sponsors and programs</div>
+          <div className="mt-5 grid gap-4 md:grid-cols-2">
+            <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
+              <div className="text-sm font-semibold text-white">Sponsor accounts</div>
+              <div className="mt-3 space-y-2 text-sm text-white/65">
+                {sponsorAccountCounts.length === 0 ? (
+                  <div>No sponsor-account lifecycle data yet.</div>
+                ) : (
+                  sponsorAccountCounts.map((row: any) => (
+                    <div key={row.status} className="flex items-center justify-between gap-3">
+                      <span>{String(row.status).replace(":", " · ")}</span>
+                      <span className="font-semibold text-white">{row.count}</span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
+              <div className="text-sm font-semibold text-white">Signal & Ambassador</div>
+              <div className="mt-3 space-y-2 text-sm text-white/65">
+                {programCounts.length === 0 ? (
+                  <div>No program-member pipeline data yet.</div>
+                ) : (
+                  programCounts.map((row: any) => (
+                    <div key={row.key} className="flex items-center justify-between gap-3">
+                      <span>{String(row.key).replace(":", " · ")}</span>
+                      <span className="font-semibold text-white">{row.count}</span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="ev-panel p-6">
           <div className="ev-section-kicker">Issue distribution</div>
           <div className="mt-5 grid gap-4 md:grid-cols-2">
             <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
@@ -168,6 +215,40 @@ export default function ControlCenterClient() {
                     <div key={row.severity} className="flex items-center justify-between gap-3">
                       <span>{row.severity}</span>
                       <span className="font-semibold text-white">{row.count}</span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="ev-panel p-6">
+          <div className="ev-section-kicker">Readiness mix</div>
+          <div className="mt-5 grid gap-4 md:grid-cols-2">
+            <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
+              <div className="text-sm font-semibold text-white">Host vs organizer mix</div>
+              <div className="mt-3 space-y-2 text-sm text-white/65">
+                <div className="flex items-center justify-between gap-3">
+                  <span>Network-aligned hosts</span>
+                  <span className="font-semibold text-white">{hostOrganizerMix.hosts ?? 0}</span>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <span>Independent organizers</span>
+                  <span className="font-semibold text-white">{hostOrganizerMix.independentOrganizers ?? 0}</span>
+                </div>
+              </div>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
+              <div className="text-sm font-semibold text-white">City readiness</div>
+              <div className="mt-3 space-y-2 text-sm text-white/65">
+                {cityReadinessCounts.length === 0 ? (
+                  <div>No city-readiness signals yet.</div>
+                ) : (
+                  cityReadinessCounts.slice(0, 6).map((row: any) => (
+                    <div key={row.city} className="flex items-center justify-between gap-3">
+                      <span>{row.city}</span>
+                      <span className="font-semibold text-white">{row.hosts} hosts · {row.programs} ready programs</span>
                     </div>
                   ))
                 )}

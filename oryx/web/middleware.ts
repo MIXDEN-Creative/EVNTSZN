@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import {
   getAppOrigin,
+  getBaseDomain,
   getCanonicalPath,
   getEplOrigin,
   getOpsOrigin,
@@ -40,6 +41,30 @@ export function middleware(request: NextRequest) {
   const surface = getSurfaceFromHost(host);
   const bareHost = host.replace(/:\d+$/, "").toLowerCase();
   const canonicalWebHost = new URL(getWebOrigin(host)).host.toLowerCase();
+  const hostsWebHost = `hosts.${getBaseDomain()}`.toLowerCase();
+  const url = request.nextUrl.clone();
+
+  if (bareHost === hostsWebHost || bareHost === `www.${hostsWebHost}`) {
+    if (pathname === "/") {
+      url.pathname = "/hosts";
+      return NextResponse.rewrite(url);
+    }
+
+    if (pathname === "/apply" || pathname.startsWith("/apply/")) {
+      url.pathname = `/hosts${pathname}`;
+      return NextResponse.rewrite(url);
+    }
+
+    if (pathname.startsWith("/api/public/applications")) {
+      return NextResponse.next();
+    }
+
+    if (pathname === "/hosts" || pathname.startsWith("/hosts/")) {
+      return NextResponse.next();
+    }
+
+    return NextResponse.redirect(new URL("/", getWebOrigin(host)));
+  }
 
   if (surface === "web" && bareHost === `www.${canonicalWebHost}`) {
     const canonicalUrl = request.nextUrl.clone();
@@ -81,17 +106,21 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const url = request.nextUrl.clone();
-
   if (surface === "web") {
     const publicCityPaths = new Set(PUBLIC_CITIES.map((city) => `/${city.slug}`));
     const publicAllowed = [
     "/",
     "/events",
+    "/hosts/apply",
+    "/organizer/apply",
+    "/signal/apply",
+    "/ambassador/apply",
+    "/partners/packages",
     "/orders/track",
     "/checkout/success",
     "/checkout/cancel",
     "/coming-soon",
+    "/hosts",
     "/privacy",
     "/terms",
     "/refund-policy",
@@ -104,6 +133,10 @@ export function middleware(request: NextRequest) {
     const publicAllowedApiPatterns = [
       /^\/api\/evntszn\/events\/[^/]+\/checkout$/,
       /^\/api\/discovery\/search$/,
+      /^\/api\/public\/applications$/,
+      /^\/api\/programs\/applications$/,
+      /^\/api\/sponsors\/checkout$/,
+      /^\/api\/sponsors\/inquiries$/,
     ];
 
     if (pathname.startsWith("/account") || pathname.startsWith("/auth/callback")) {

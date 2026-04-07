@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getLoginUrl } from "@/lib/domains";
 import { supabaseAdmin } from "@/lib/supabase-admin";
-import { normalizeStringArray } from "@/lib/operator-access";
+import { inferOrganizerClassification, normalizeStringArray } from "@/lib/operator-access";
 
 export async function POST(request: Request) {
   const contentType = request.headers.get("content-type") || "";
@@ -17,6 +17,9 @@ export async function POST(request: Request) {
   const payload = {
     application_type: String(body.application_type || "host"),
     requested_role_key: String(body.requested_role_key || "").trim() || null,
+    organizer_classification:
+      String(body.organizer_classification || "").trim() ||
+      inferOrganizerClassification(String(body.requested_role_key || body.application_type || "host")),
     full_name: String(body.full_name || "").trim(),
     email: String(body.email || "").trim().toLowerCase(),
     phone: String(body.phone || "").trim() || null,

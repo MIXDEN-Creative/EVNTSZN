@@ -2,12 +2,16 @@ import Link from "next/link";
 import { getAppOrigin, getEplOrigin, getHostsOrigin, getWebOrigin } from "@/lib/domains";
 import { PUBLIC_CITIES } from "@/lib/public-cities";
 import { getPublicSponsorPlacements } from "@/lib/sponsor-placements";
-import { getPublicModulesContent } from "@/lib/site-content";
+import { DEFAULT_PUBLIC_MODULES, getPublicModulesContent } from "@/lib/site-content";
+import { safePublicLoad } from "@/lib/public-safe-load";
 
 export default async function PublicFooter() {
   const [placements, modules] = await Promise.all([
-    getPublicSponsorPlacements("footer"),
-    getPublicModulesContent(),
+    safePublicLoad("footer-sponsor-placements", () => getPublicSponsorPlacements("footer"), []),
+    safePublicLoad("footer-public-modules", () => getPublicModulesContent(), {
+      ...DEFAULT_PUBLIC_MODULES,
+      storageReady: false,
+    }),
   ]);
 
   return (
@@ -54,6 +58,8 @@ export default async function PublicFooter() {
               <Link href={`${getEplOrigin()}/`}>EPL</Link>
               <Link href={`${getEplOrigin()}/opportunities`}>EPL Opportunities</Link>
               <Link href={`${getHostsOrigin()}/`}>Host Network</Link>
+              <Link href={`${getWebOrigin()}/signal/apply`}>Signal</Link>
+              <Link href={`${getWebOrigin()}/ambassador/apply`}>Ambassador</Link>
               <Link href={`${getWebOrigin()}/partners/packages`}>Sponsor Packages</Link>
               <Link href={`${getEplOrigin()}/store`}>Store</Link>
             </div>

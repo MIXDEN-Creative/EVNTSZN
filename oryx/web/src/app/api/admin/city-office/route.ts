@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
 
   const cityFilter = request.nextUrl.searchParams.get("city");
 
-  const [eventsRes, applicationsRes, profilesRes, ordersRes, sponsorOrdersRes] = await Promise.all([
+  const [eventsRes, applicationsRes, profilesRes, ordersRes, sponsorOrdersRes, programsRes, sponsorAccountsRes] = await Promise.all([
     supabaseAdmin
       .from("evntszn_events")
       .select("id, city, status, start_at, check_in_count"),
@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
       .select("id, city, status, application_type, discovery_eligible"),
     supabaseAdmin
       .from("evntszn_operator_profiles")
-      .select("user_id, role_key, city_scope, is_active"),
+      .select("user_id, role_key, organizer_classification, city_scope, is_active"),
     supabaseAdmin
       .from("evntszn_ticket_orders")
       .select("id, amount_total_cents, status, evntszn_events(city)")
@@ -28,10 +28,16 @@ export async function GET(request: NextRequest) {
     supabaseAdmin
       .from("evntszn_sponsor_package_orders")
       .select("id, amount_cents, status, metadata"),
+    supabaseAdmin
+      .from("evntszn_program_members")
+      .select("id, full_name, program_key, city, status, activation_state, activation_readiness, assigned_manager_user_id"),
+    supabaseAdmin
+      .from("evntszn_sponsor_accounts")
+      .select("id, name, scope_type, city_scope, status, activation_status, fulfillment_status, asset_ready, epl_category"),
   ]);
 
   const error =
-    eventsRes.error || applicationsRes.error || profilesRes.error || ordersRes.error || sponsorOrdersRes.error;
+    eventsRes.error || applicationsRes.error || profilesRes.error || ordersRes.error || sponsorOrdersRes.error || programsRes.error || sponsorAccountsRes.error;
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
@@ -47,10 +53,16 @@ export async function GET(request: NextRequest) {
         pendingApprovals: 0,
         hosts: 0,
         organizers: 0,
+        hostUpgradeCandidates: 0,
+        signalMembers: 0,
+        ambassadorMembers: 0,
         paidRevenueCents: 0,
         sponsorRevenueCents: 0,
+        sponsorAccounts: 0,
         operators: [] as any[],
         applications: [] as any[],
+        programMembers: [] as any[],
+        sponsorRelationships: [] as any[],
       });
     }
     return cityMap.get(cityName);
@@ -83,9 +95,11 @@ export async function GET(request: NextRequest) {
       if (!profile.is_active) continue;
       if (String(profile.role_key || "").includes("host")) row.hosts += 1;
       if (String(profile.role_key || "").includes("organizer")) row.organizers += 1;
+      if (profile.organizer_classification === "independent_organizer") row.hostUpgradeCandidates += 1;
       row.operators.push({
         userId: profile.user_id,
         roleKey: profile.role_key,
+        organizerClassification: profile.organizer_classification,
         isActive: profile.is_active,
       });
     }
@@ -101,6 +115,45 @@ export async function GET(request: NextRequest) {
     const city = normalizeCity((order.metadata as Record<string, unknown> | null)?.city as string | undefined);
     const row = ensureCity(city);
     if (order.status === "paid") row.sponsorRevenueCents += order.amount_cents || 0;
+  }
+
+  for (const member of programsRes.data || []) {
+    const row = ensureCity(normalizeCity(member.city));
+    if (member.program_key === "signal") row.signalMembers += 1;
+    if (member.program_key === "ambassador") row.ambassadorMembers += 1;
+    row.programMembers.push({
+      id: member.id,
+      fullName: member.full_name,
+      programKey: member.program_key,
+      status: member.status,
+      activationState: member.activation_state,
+      activationReadiness: member.activation_readiness,
+      assignedManagerUserId: member.assigned_manager_user_id,
+    });
+  }
+
+  for (const account of sponsorAccountsRes.data || []) {
+    const cities = Array.isArray(account.city_scope) && account.city_scope.length
+      ? account.city_scope
+      : account.scope_type === "city"
+        ? ["Unassigned"]
+        : [];
+    for (const city of cities) {
+      const row = ensureCity(normalizeCity(city));
+      if (account.status === "active" || account.status === "pending" || account.status === "lead") {
+        row.sponsorAccounts += 1;
+      }
+      row.sponsorRelationships.push({
+        id: account.id,
+        name: account.name,
+        scopeType: account.scope_type,
+        status: account.status,
+        activationStatus: account.activation_status,
+        fulfillmentStatus: account.fulfillment_status,
+        assetReady: Boolean(account.asset_ready),
+        eplCategory: account.epl_category,
+      });
+    }
   }
 
   const cities = Array.from(cityMap.values())

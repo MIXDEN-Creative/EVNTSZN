@@ -3,9 +3,15 @@ import EplNav from "@/components/epl/EplNav";
 import DraftCountdown from "@/components/epl/DraftCountdown";
 import Link from "next/link";
 import { EPL_TEAM_PROFILES } from "@/lib/epl-teams";
-import { getEplPublicContent, getPublicModulesContent } from "@/lib/site-content";
+import {
+  DEFAULT_EPL_PUBLIC_CONTENT,
+  DEFAULT_PUBLIC_MODULES,
+  getEplPublicContent,
+  getPublicModulesContent,
+} from "@/lib/site-content";
 import { getPublicSponsorPlacements } from "@/lib/sponsor-placements";
 import SponsorPlacementStrip from "@/components/public/SponsorPlacementStrip";
+import { safePublicLoad } from "@/lib/public-safe-load";
 
 export const metadata: Metadata = {
   title: "EPL | EVNTSZN Prime League",
@@ -18,9 +24,15 @@ export const metadata: Metadata = {
 
 export default async function EplPage() {
   const [content, modules, placements] = await Promise.all([
-    getEplPublicContent(),
-    getPublicModulesContent(),
-    getPublicSponsorPlacements("epl"),
+    safePublicLoad("epl-public-content", () => getEplPublicContent(), {
+      ...DEFAULT_EPL_PUBLIC_CONTENT,
+      storageReady: false,
+    }),
+    safePublicLoad("epl-public-modules", () => getPublicModulesContent(), {
+      ...DEFAULT_PUBLIC_MODULES,
+      storageReady: false,
+    }),
+    safePublicLoad("epl-sponsor-placements", () => getPublicSponsorPlacements("epl"), []),
   ]);
 
   return (

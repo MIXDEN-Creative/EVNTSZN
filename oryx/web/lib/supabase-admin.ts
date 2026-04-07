@@ -1,8 +1,11 @@
 import { createClient } from "@supabase/supabase-js";
+import { requireSupabaseRuntimeConfig } from "@/lib/runtime-env";
+
+const config = requireSupabaseRuntimeConfig("server-admin", "legacy.supabase.admin");
 
 export const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  config.url!,
+  config.serviceRoleKey!,
   {
     auth: {
       persistSession: false,

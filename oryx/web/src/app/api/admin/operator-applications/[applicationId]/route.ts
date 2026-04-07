@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 import { NextResponse } from "next/server";
 import { requireAdminPermission } from "@/lib/admin-auth";
 import { supabaseAdmin } from "@/lib/supabase-admin";
-import { getOperatorPreset, normalizeStringArray } from "@/lib/operator-access";
+import { getOperatorPreset, inferOrganizerClassification, normalizeStringArray } from "@/lib/operator-access";
 import { ensurePlatformProfile } from "@/lib/evntszn";
 
 type RouteContext = {
@@ -51,6 +51,9 @@ export async function PATCH(request: Request, context: RouteContext) {
 
   if (status === "approved" && approvedUserId) {
     const roleKey = String(body.role_key || application.requested_role_key || application.application_type);
+    const organizerClassification =
+      String(body.organizer_classification || application.organizer_classification || "").trim() ||
+      inferOrganizerClassification(roleKey);
     const preset = getOperatorPreset(roleKey);
     const presetModules = preset ? Array.from(preset.modules) : [];
     const presetSurfaces = preset ? Array.from(preset.surfaces) : [];
@@ -66,6 +69,8 @@ export async function PATCH(request: Request, context: RouteContext) {
       {
         user_id: approvedUserId,
         role_key: roleKey,
+        organizer_classification: organizerClassification,
+        network_status: "active",
         job_title: String(body.job_title || "").trim() || null,
         functions: normalizeStringArray(body.functions),
         city_scope: normalizeStringArray(body.city_scope || application.desired_city_scope || application.city),
@@ -89,6 +94,10 @@ export async function PATCH(request: Request, context: RouteContext) {
     .update({
       status,
       user_id: approvedUserId,
+      organizer_classification:
+        String(body.organizer_classification || "").trim() ||
+        application.organizer_classification ||
+        inferOrganizerClassification(String(body.role_key || application.requested_role_key || application.application_type)),
       discovery_eligible: "discovery_eligible" in body ? Boolean(body.discovery_eligible) : application.discovery_eligible,
       internal_notes: String(body.internal_notes || "").trim() || application.internal_notes,
       reviewed_by: user.id.startsWith("founder:") ? null : user.id,

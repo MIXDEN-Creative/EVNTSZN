@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { getSupabaseRuntimeSnapshot, isSupabaseCredentialError } from "@/lib/runtime-env";
 
 export type SponsorPlacement = {
   id: string;
@@ -23,26 +24,36 @@ function isMissingPlacementsTableError(error: unknown) {
 }
 
 export async function getPublicSponsorPlacements(location: string | string[]) {
-  const { data, error } = await supabaseAdmin
-    .from("evntszn_sponsor_placements")
-    .select("*")
-    .order("display_order", { ascending: true });
+  try {
+    const { data, error } = await supabaseAdmin
+      .from("evntszn_sponsor_placements")
+      .select("*")
+      .order("display_order", { ascending: true });
 
-  if (error) {
-    if (isMissingPlacementsTableError(error)) {
-      return [] as SponsorPlacement[];
+    if (error) {
+      if (isMissingPlacementsTableError(error)) {
+        return [] as SponsorPlacement[];
+      }
+      throw new Error(error.message);
     }
-    throw new Error(error.message);
+
+    const now = Date.now();
+    const requestedLocations = Array.isArray(location) ? location : [location];
+
+    return ((data || []) as SponsorPlacement[]).filter((placement) => {
+      const locations = Array.isArray(placement.visibility_locations) ? placement.visibility_locations : [];
+      const statusActive = placement.status === "ready" || placement.status === "live";
+      const startsAtOkay = !placement.starts_at || new Date(placement.starts_at).getTime() <= now;
+      const endsAtOkay = !placement.ends_at || new Date(placement.ends_at).getTime() >= now;
+      return statusActive && startsAtOkay && endsAtOkay && requestedLocations.some((requestedLocation) => locations.includes(requestedLocation));
+    });
+  } catch (error) {
+    console.error("[sponsor-placements] public placement load failed", {
+      error,
+      credentialIssue: isSupabaseCredentialError(error),
+      supabase: getSupabaseRuntimeSnapshot(),
+      location,
+    });
+    return [] as SponsorPlacement[];
   }
-
-  const now = Date.now();
-  const requestedLocations = Array.isArray(location) ? location : [location];
-
-  return ((data || []) as SponsorPlacement[]).filter((placement) => {
-    const locations = Array.isArray(placement.visibility_locations) ? placement.visibility_locations : [];
-    const statusActive = placement.status === "ready" || placement.status === "live";
-    const startsAtOkay = !placement.starts_at || new Date(placement.starts_at).getTime() <= now;
-    const endsAtOkay = !placement.ends_at || new Date(placement.ends_at).getTime() >= now;
-    return statusActive && startsAtOkay && endsAtOkay && requestedLocations.some((requestedLocation) => locations.includes(requestedLocation));
-  });
 }

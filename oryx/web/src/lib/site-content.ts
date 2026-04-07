@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { getSupabaseRuntimeSnapshot, isSupabaseCredentialError } from "@/lib/runtime-env";
 
 type ContentCategory = {
   title: string;
@@ -458,7 +459,11 @@ export async function getHomepageContent(): Promise<HomepageContent> {
       };
     }
 
-    console.error("[discovery] homepage content load failed", error);
+    console.error("[discovery] homepage content load failed", {
+      error,
+      credentialIssue: isSupabaseCredentialError(error),
+      supabase: getSupabaseRuntimeSnapshot(),
+    });
     return {
       ...DEFAULT_HOMEPAGE_CONTENT,
       storageReady: false,
@@ -507,7 +512,11 @@ export async function getEplPublicContent(): Promise<EplPublicContent> {
       };
     }
 
-    console.error("[epl] public content load failed", error);
+    console.error("[epl] public content load failed", {
+      error,
+      credentialIssue: isSupabaseCredentialError(error),
+      supabase: getSupabaseRuntimeSnapshot(),
+    });
     return {
       ...DEFAULT_EPL_PUBLIC_CONTENT,
       storageReady: false,
@@ -554,7 +563,11 @@ export async function getPublicModulesContent(): Promise<PublicModules> {
       };
     }
 
-    console.error("[public-modules] content load failed", error);
+    console.error("[public-modules] content load failed", {
+      error,
+      credentialIssue: isSupabaseCredentialError(error),
+      supabase: getSupabaseRuntimeSnapshot(),
+    });
     return {
       ...DEFAULT_PUBLIC_MODULES,
       storageReady: false,

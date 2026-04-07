@@ -39,6 +39,8 @@ export async function PATCH(request: Request, context: RouteContext) {
   ] as const;
 
   if ("role_key" in body) operatorPayload.role_key = String(body.role_key || "").trim() || "attendee";
+  if ("organizer_classification" in body) operatorPayload.organizer_classification = String(body.organizer_classification || "").trim() || "internal_operator";
+  if ("network_status" in body) operatorPayload.network_status = String(body.network_status || "").trim() || "active";
   if ("job_title" in body) operatorPayload.job_title = String(body.job_title || "").trim() || null;
 
   for (const field of jsonFields) {

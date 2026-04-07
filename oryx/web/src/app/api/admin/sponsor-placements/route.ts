@@ -22,6 +22,7 @@ export async function POST(request: Request) {
   const payload = {
     sponsor_partner_id: String(body.sponsor_partner_id || "").trim() || null,
     sponsor_package_order_id: String(body.sponsor_package_order_id || "").trim() || null,
+    sponsor_account_id: String(body.sponsor_account_id || "").trim() || null,
     name: String(body.name || "").trim(),
     type: String(body.type || "sponsor"),
     logo_url: String(body.logo_url || "").trim() || null,

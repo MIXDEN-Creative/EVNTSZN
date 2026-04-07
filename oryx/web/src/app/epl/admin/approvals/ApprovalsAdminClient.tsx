@@ -1,9 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getOperatorRoleOptions } from "@/lib/operator-access";
+import {
+  getOperatorRoleOptions,
+  getOrganizerClassificationLabel,
+  getOrganizerClassificationOptions,
+  inferOrganizerClassification,
+} from "@/lib/operator-access";
 
 const roleOptions = getOperatorRoleOptions();
+const organizerClassificationOptions = getOrganizerClassificationOptions();
 
 export default function ApprovalsAdminClient() {
   const [applications, setApplications] = useState<any[]>([]);
@@ -83,11 +89,24 @@ export default function ApprovalsAdminClient() {
                   <div className="mt-3 flex flex-wrap gap-2 text-xs uppercase tracking-[0.18em] text-[#c5a2ff]">
                     <span>{application.application_type}</span>
                     <span>{application.status}</span>
+                    <span>
+                      {getOrganizerClassificationLabel(
+                        String(
+                          application.organizer_classification ||
+                            inferOrganizerClassification(application.requested_role_key || application.application_type),
+                        ),
+                      )}
+                    </span>
                     {application.city ? <span>{application.city}</span> : null}
                   </div>
                   {application.motivation ? (
                     <p className="mt-4 max-w-3xl text-sm leading-6 text-white/72">{application.motivation}</p>
                   ) : null}
+                  <div className="mt-4 text-sm leading-6 text-white/60">
+                    {String(application.organizer_classification || "").includes("independent")
+                      ? "Independent Organizers stay on the external operator track. They can manage their own event activity, but they do not inherit EVNTSZN Host network privileges by default."
+                      : "EVNTSZN Host-track applicants move through the network path, which can include city support, host progression, and internal program visibility once approved."}
+                  </div>
                 </div>
 
                 <div className="grid gap-3 md:min-w-[240px]">
@@ -102,8 +121,36 @@ export default function ApprovalsAdminClient() {
                       </option>
                     ))}
                   </select>
+                  <select
+                    defaultValue={
+                      application.organizer_classification ||
+                      inferOrganizerClassification(application.requested_role_key || application.application_type)
+                    }
+                    onChange={(e) =>
+                      updateApplication(application.id, {
+                        status: "reviewing",
+                        organizer_classification: e.target.value,
+                      })
+                    }
+                    className="rounded-xl border border-white/10 bg-black px-4 py-2 text-sm text-white"
+                  >
+                    {organizerClassificationOptions.map((classification) => (
+                      <option key={classification.value} value={classification.value}>
+                        {classification.label}
+                      </option>
+                    ))}
+                  </select>
                   <button
-                    onClick={() => updateApplication(application.id, { status: "approved", role_key: application.requested_role_key || application.application_type, discovery_eligible: true })}
+                    onClick={() =>
+                      updateApplication(application.id, {
+                        status: "approved",
+                        role_key: application.requested_role_key || application.application_type,
+                        organizer_classification:
+                          application.organizer_classification ||
+                          inferOrganizerClassification(application.requested_role_key || application.application_type),
+                        discovery_eligible: true,
+                      })
+                    }
                     className="rounded-xl bg-[#A259FF] px-4 py-2 text-sm font-semibold text-white"
                   >
                     Approve

@@ -2,6 +2,7 @@ import Link from "next/link";
 import SurfaceShell from "@/components/shells/SurfaceShell";
 import { getAdminOrigin, getScannerOrigin } from "@/lib/domains";
 import type { OperatorProfile, PlatformProfile } from "@/lib/evntszn";
+import { getOrganizerClassificationLabel } from "@/lib/operator-access";
 
 function labelize(value: string) {
   return value.replace(/_/g, " ");
@@ -16,6 +17,7 @@ export default function OperatorOpsDashboard({
   operatorProfile: OperatorProfile;
   runtimeHost?: string;
 }) {
+  const organizerClassification = operatorProfile.organizer_classification || "evntszn_host";
   const actions = [
     operatorProfile.module_access.includes("events") ? (
       <Link key="events" href="/organizer" className="ev-button-primary">
@@ -37,6 +39,16 @@ export default function OperatorOpsDashboard({
         Open city office
       </a>
     ) : null,
+    organizerClassification === "evntszn_host" || organizerClassification === "city_host" ? (
+      <Link key="host-network" href="/hosts" className="ev-button-secondary">
+        Host network path
+      </Link>
+    ) : null,
+    organizerClassification === "independent_organizer" ? (
+      <Link key="sponsor-interest" href="/partners/packages" className="ev-button-secondary">
+        Sponsor options
+      </Link>
+    ) : null,
   ].filter(Boolean);
 
   return (
@@ -48,13 +60,17 @@ export default function OperatorOpsDashboard({
       actions={<>{actions}</>}
       meta={
         <>
-          <div className="ev-meta-card">
-            <div className="ev-meta-label">Role</div>
-            <div className="ev-meta-value">{labelize(operatorProfile.role_key)}</div>
-          </div>
-          <div className="ev-meta-card">
-            <div className="ev-meta-label">City scope</div>
-            <div className="ev-meta-value">{operatorProfile.city_scope.length ? operatorProfile.city_scope.join(", ") : profile?.city || "Unassigned"}</div>
+            <div className="ev-meta-card">
+              <div className="ev-meta-label">Role</div>
+              <div className="ev-meta-value">{labelize(operatorProfile.role_key)}</div>
+            </div>
+            <div className="ev-meta-card">
+              <div className="ev-meta-label">Classification</div>
+              <div className="ev-meta-value">{getOrganizerClassificationLabel(organizerClassification)}</div>
+            </div>
+            <div className="ev-meta-card">
+              <div className="ev-meta-label">City scope</div>
+              <div className="ev-meta-value">{operatorProfile.city_scope.length ? operatorProfile.city_scope.join(", ") : profile?.city || "Unassigned"}</div>
           </div>
         </>
       }
@@ -97,6 +113,14 @@ export default function OperatorOpsDashboard({
               <div className="text-sm font-semibold text-white">Discovery eligibility</div>
               <div className="mt-2 text-sm text-white/65">
                 Inventory visibility and public ranking stay inside the approval and discovery control surfaces. Your current role can {operatorProfile.can_manage_discovery ? "" : "not "}manage discovery settings.
+              </div>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
+              <div className="text-sm font-semibold text-white">Network path</div>
+              <div className="mt-2 text-sm text-white/65">
+                {organizerClassification === "independent_organizer"
+                  ? "You are on the Independent Organizer track. That means event operations stay available, but EVNTSZN Host network tools, internal growth paths, and program perks are not assumed by default."
+                  : "You are on an EVNTSZN network-aligned track. Host progression, city support, and controlled program visibility can expand as your role and approvals deepen."}
               </div>
             </div>
             <div className="rounded-2xl border border-white/10 bg-black/30 p-4">

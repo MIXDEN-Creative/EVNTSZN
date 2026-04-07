@@ -6,6 +6,8 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 export default async function OrganizerPage() {
   await requirePlatformRole("/organizer", ["organizer"]);
   const viewer = await getPlatformViewer();
+  const isIndependentOrganizer =
+    viewer.operatorProfile?.organizer_classification === "independent_organizer";
 
   const { data: events } = await supabaseAdmin
     .from("evntszn_events")
@@ -18,7 +20,11 @@ export default async function OrganizerPage() {
       surface="ops"
       eyebrow="Organizer OS"
       title="Event operating system"
-      description="Manage event setup, ticket releases, scanner routes, and venue execution from one premium EVNTSZN workspace."
+      description={
+        isIndependentOrganizer
+          ? "Manage your event operations, ticket releases, scanner routes, and venue execution from the external organizer track without crossing into EVNTSZN Host network privileges."
+          : "Manage event setup, ticket releases, scanner routes, and venue execution from one premium EVNTSZN workspace."
+      }
       meta={
         <>
           <div className="ev-meta-card">
@@ -27,7 +33,11 @@ export default async function OrganizerPage() {
           </div>
           <div className="ev-meta-card">
             <div className="ev-meta-label">Operator mode</div>
-            <div className="ev-meta-value">Ticketing, scanner handoff, and event visibility remain contained inside the ops surface.</div>
+            <div className="ev-meta-value">
+              {isIndependentOrganizer
+                ? "Independent Organizer surface. Event execution stays available here, but host-network benefits and internal programs remain separate unless you are approved into them."
+                : "Ticketing, scanner handoff, and event visibility remain contained inside the ops surface."}
+            </div>
           </div>
         </>
       }

@@ -4,10 +4,16 @@ import PublicNav from "@/components/public/PublicNav";
 import PublicFooter from "@/components/public/PublicFooter";
 import DiscoveryLanding from "@/components/public/DiscoveryLanding";
 import { getDiscoveryNativeEvents, groupDiscoveryEventsBySource } from "@/lib/discovery";
-import { getHomepageContent, getPublicModulesContent } from "@/lib/site-content";
+import {
+  DEFAULT_HOMEPAGE_CONTENT,
+  DEFAULT_PUBLIC_MODULES,
+  getHomepageContent,
+  getPublicModulesContent,
+} from "@/lib/site-content";
 import { getTicketmasterShowcase } from "@/lib/ticketmaster";
 import { getWebOrigin } from "@/lib/domains";
 import { getPublicSponsorPlacements } from "@/lib/sponsor-placements";
+import { safePublicLoad } from "@/lib/public-safe-load";
 
 export const metadata: Metadata = {
   title: "EVNTSZN | Discover nightlife, live music, sports, and the best things to do",
@@ -77,11 +83,20 @@ function formatHomepageJsonLd() {
 
 export default async function HomePage() {
   const [content, modules, nativeResult, externalShowcase, homepagePlacements] = await Promise.all([
-    getHomepageContent(),
-    getPublicModulesContent(),
-    getDiscoveryNativeEvents({ limit: 12 }),
-    getTicketmasterShowcase().catch(() => []),
-    getPublicSponsorPlacements("homepage"),
+    safePublicLoad("homepage-content", () => getHomepageContent(), {
+      ...DEFAULT_HOMEPAGE_CONTENT,
+      storageReady: false,
+    }),
+    safePublicLoad("homepage-public-modules", () => getPublicModulesContent(), {
+      ...DEFAULT_PUBLIC_MODULES,
+      storageReady: false,
+    }),
+    safePublicLoad("homepage-native-discovery", () => getDiscoveryNativeEvents({ limit: 12 }), {
+      events: [],
+      storageReady: false,
+    }),
+    safePublicLoad("homepage-ticketmaster-showcase", () => getTicketmasterShowcase(), []),
+    safePublicLoad("homepage-sponsor-placements", () => getPublicSponsorPlacements("homepage"), []),
   ]);
 
   const nativeSections = groupDiscoveryEventsBySource(nativeResult.events);

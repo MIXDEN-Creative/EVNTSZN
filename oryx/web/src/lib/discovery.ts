@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { getSupabaseRuntimeSnapshot, isSupabaseCredentialError } from "@/lib/runtime-env";
 
 export type DiscoverySourceType =
   | "evntszn"
@@ -178,30 +179,30 @@ export async function getDiscoveryNativeEvents(input: {
   const city = input.city?.trim() || "";
   const limit = input.limit || 12;
 
-  const nativeQuery = supabaseAdmin
-    .from("evntszn_events")
-    .select("id, title, slug, subtitle, description, city, state, start_at, hero_note, banner_image_url, organizer_user_id")
-    .eq("visibility", "published")
-    .order("start_at", { ascending: true })
-    .limit(limit);
-
-  if (query) {
-    nativeQuery.or(`title.ilike.%${query}%,subtitle.ilike.%${query}%,description.ilike.%${query}%`);
-  }
-
-  if (city) {
-    nativeQuery.ilike("city", `%${city}%`);
-  }
-
-  if (input.startAt) {
-    nativeQuery.gte("start_at", input.startAt);
-  }
-
-  if (input.endAt) {
-    nativeQuery.lte("start_at", input.endAt);
-  }
-
   try {
+    const nativeQuery = supabaseAdmin
+      .from("evntszn_events")
+      .select("id, title, slug, subtitle, description, city, state, start_at, hero_note, banner_image_url, organizer_user_id")
+      .eq("visibility", "published")
+      .order("start_at", { ascending: true })
+      .limit(limit);
+
+    if (query) {
+      nativeQuery.or(`title.ilike.%${query}%,subtitle.ilike.%${query}%,description.ilike.%${query}%`);
+    }
+
+    if (city) {
+      nativeQuery.ilike("city", `%${city}%`);
+    }
+
+    if (input.startAt) {
+      nativeQuery.gte("start_at", input.startAt);
+    }
+
+    if (input.endAt) {
+      nativeQuery.lte("start_at", input.endAt);
+    }
+
     const { data: rawEvents, error: rawEventsError } = await nativeQuery;
 
     if (rawEventsError) {
@@ -273,47 +274,63 @@ export async function getDiscoveryNativeEvents(input: {
     if (isMissingDiscoveryControlsError(error)) {
       console.warn("[discovery] listing controls unavailable, using inferred native discovery ordering");
 
-      const { data: rawEvents } = await supabaseAdmin
-        .from("evntszn_events")
-        .select("id, title, slug, subtitle, description, city, state, start_at, hero_note, banner_image_url, organizer_user_id")
-        .eq("visibility", "published")
-        .order("start_at", { ascending: true })
-        .limit(limit);
+      try {
+        const { data: rawEvents } = await supabaseAdmin
+          .from("evntszn_events")
+          .select("id, title, slug, subtitle, description, city, state, start_at, hero_note, banner_image_url, organizer_user_id")
+          .eq("visibility", "published")
+          .order("start_at", { ascending: true })
+          .limit(limit);
 
-      const events = ((rawEvents || []) as NativeEventRow[])
-        .map<DiscoveryNativeEvent>((event) => {
-          const source = inferSourceType(event, null);
+        const events = ((rawEvents || []) as NativeEventRow[])
+          .map<DiscoveryNativeEvent>((event) => {
+            const source = inferSourceType(event, null);
 
-          return {
-            id: event.id,
-            title: event.title,
-            slug: event.slug,
-            href: `/events/${event.slug}`,
-            subtitle: event.subtitle,
-            description: event.description,
-            city: event.city,
-            state: event.state,
-            startAt: event.start_at,
-            heroNote: event.hero_note,
-            imageUrl: event.banner_image_url,
-            source,
-            sourceLabel: getSourceLabel(source),
-            badgeLabel: getDefaultBadgeLabel(source),
-            featured: false,
-            listingPriority: 0,
-            promoCollection: null,
-            isPrimary: true as const,
-          };
-        })
-        .sort(sortDiscoveryEvents);
+            return {
+              id: event.id,
+              title: event.title,
+              slug: event.slug,
+              href: `/events/${event.slug}`,
+              subtitle: event.subtitle,
+              description: event.description,
+              city: event.city,
+              state: event.state,
+              startAt: event.start_at,
+              heroNote: event.hero_note,
+              imageUrl: event.banner_image_url,
+              source,
+              sourceLabel: getSourceLabel(source),
+              badgeLabel: getDefaultBadgeLabel(source),
+              featured: false,
+              listingPriority: 0,
+              promoCollection: null,
+              isPrimary: true as const,
+            };
+          })
+          .sort(sortDiscoveryEvents);
 
-      return {
-        events,
-        storageReady: false,
-      };
+        return {
+          events,
+          storageReady: false,
+        };
+      } catch (fallbackError) {
+        console.error("[discovery] fallback native discovery load failed", {
+          error: fallbackError,
+          supabase: getSupabaseRuntimeSnapshot(),
+        });
+        return {
+          events: [] as DiscoveryNativeEvent[],
+          storageReady: false,
+        };
+      }
     }
 
-    console.error("[discovery] native discovery load failed", error);
+    console.error("[discovery] native discovery load failed", {
+      error,
+      route: "public-discovery",
+      credentialIssue: isSupabaseCredentialError(error),
+      supabase: getSupabaseRuntimeSnapshot(),
+    });
     return {
       events: [] as DiscoveryNativeEvent[],
       storageReady: false,

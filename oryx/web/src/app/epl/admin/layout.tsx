@@ -106,6 +106,12 @@ export default async function AdminLayout({
             ) : null}
 
             {canManageAdmins ? (
+              <Link href={`${getAdminOrigin(host)}/programs`} className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 hover:bg-white/[0.08]">
+                Signal & Ambassador
+              </Link>
+            ) : null}
+
+            {canManageAdmins ? (
               <Link href={`${getAdminOrigin(host)}/hiring`} className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 hover:bg-white/[0.08]">
                 Hiring Pipeline
               </Link>

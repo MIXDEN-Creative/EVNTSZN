@@ -19,6 +19,8 @@ export type PlatformProfile = {
 export type OperatorProfile = {
   user_id: string;
   role_key: string;
+  organizer_classification: string;
+  network_status: string;
   job_title: string | null;
   functions: string[];
   city_scope: string[];

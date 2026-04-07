@@ -7,9 +7,10 @@ import SponsorPlacementStrip from "@/components/public/SponsorPlacementStrip";
 import { getWebOrigin } from "@/lib/domains";
 import { getDiscoveryNativeEvents } from "@/lib/discovery";
 import { PUBLIC_CITIES, getPublicCityBySlug } from "@/lib/public-cities";
-import { getPublicModulesContent } from "@/lib/site-content";
+import { DEFAULT_PUBLIC_MODULES, getPublicModulesContent } from "@/lib/site-content";
 import { getPublicSponsorPlacements } from "@/lib/sponsor-placements";
 import { searchTicketmasterEvents } from "@/lib/ticketmaster";
+import { safePublicLoad } from "@/lib/public-safe-load";
 
 type CityPageProps = {
   params: Promise<{ citySlug: string }>;
@@ -64,10 +65,16 @@ export default async function PublicCityPage({ params }: CityPageProps) {
   }
 
   const [nativeResult, externalEvents, modules, sponsorPlacements] = await Promise.all([
-    getDiscoveryNativeEvents({ city: city.name, limit: 6 }),
-    searchTicketmasterEvents({ city: city.name, size: 6 }).catch(() => []),
-    getPublicModulesContent(),
-    getPublicSponsorPlacements([`city:${city.slug}`, "city"]),
+    safePublicLoad("city-native-discovery", () => getDiscoveryNativeEvents({ city: city.name, limit: 6 }), {
+      events: [],
+      storageReady: false,
+    }),
+    safePublicLoad("city-ticketmaster-discovery", () => searchTicketmasterEvents({ city: city.name, size: 6 }), []),
+    safePublicLoad("city-public-modules", () => getPublicModulesContent(), {
+      ...DEFAULT_PUBLIC_MODULES,
+      storageReady: false,
+    }),
+    safePublicLoad("city-sponsor-placements", () => getPublicSponsorPlacements([`city:${city.slug}`, "city"]), []),
   ]);
 
   const cards = [
