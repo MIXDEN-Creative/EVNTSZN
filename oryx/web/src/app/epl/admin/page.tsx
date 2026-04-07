@@ -29,6 +29,11 @@ export default async function AdminHomePage() {
       href: `${getEplOrigin(host)}/store`,
       description: "View the curated customer storefront and merch experience.",
     },
+    permissions.includes("catalog.manage") && {
+      title: "Discovery Control",
+      href: `${getAdminOrigin(host)}/discovery`,
+      description: "Manage homepage hero content, featured listings, taxonomy blocks, and public discovery hierarchy.",
+    },
   ].filter(Boolean) as { title: string; href: string; description: string }[];
 
   return (

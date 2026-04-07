@@ -1,0 +1,408 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
+type ManagedContent = {
+  hero: {
+    eyebrow: string;
+    title: string;
+    description: string;
+    primaryCtaLabel: string;
+    primaryCtaHref: string;
+    secondaryCtaLabel: string;
+    secondaryCtaHref: string;
+    tertiaryCtaLabel: string;
+    tertiaryCtaHref: string;
+  };
+  banner: {
+    eyebrow: string;
+    title: string;
+    body: string;
+  };
+  discovery: {
+    headline: string;
+    body: string;
+    disclosure: string;
+    searchPlaceholder: string;
+    cityPlaceholder: string;
+    nativeHeadline: string;
+    hostHeadline: string;
+    independentHeadline: string;
+    externalHeadline: string;
+  };
+  taxonomy: {
+    categories: Array<{ title: string; description: string }>;
+    cities: Array<{ name: string; description: string }>;
+  };
+  storageReady: boolean;
+};
+
+type DiscoveryListing = {
+  id: string;
+  title: string;
+  city: string;
+  state: string;
+  source: "evntszn" | "host" | "independent_organizer";
+  badgeLabel: string;
+  featured: boolean;
+  listingPriority: number;
+  promoCollection: string | null;
+};
+
+function parseLines(value: string, mode: "category" | "city") {
+  return value
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const [label, ...rest] = line.split("|");
+      const description = rest.join("|").trim();
+
+      if (mode === "category") {
+        return {
+          title: label.trim(),
+          description,
+        };
+      }
+
+      return {
+        name: label.trim(),
+        description,
+      };
+    });
+}
+
+function serializeCategories(items: Array<{ title: string; description: string }>) {
+  return items.map((item) => `${item.title}|${item.description}`).join("\n");
+}
+
+function serializeCities(items: Array<{ name: string; description: string }>) {
+  return items.map((item) => `${item.name}|${item.description}`).join("\n");
+}
+
+export default function DiscoveryAdminClient() {
+  const [content, setContent] = useState<ManagedContent | null>(null);
+  const [listings, setListings] = useState<DiscoveryListing[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const [taxonomyCategories, setTaxonomyCategories] = useState("");
+  const [taxonomyCities, setTaxonomyCities] = useState("");
+
+  async function load() {
+    setLoading(true);
+    const response = await fetch("/api/admin/discovery", { cache: "no-store" });
+    const payload = (await response.json()) as Record<string, unknown>;
+
+    if (!response.ok) {
+      setMessage(String(payload.error || "Could not load discovery controls."));
+      setLoading(false);
+      return;
+    }
+
+    const nextContent = payload.content as ManagedContent;
+    setContent(nextContent);
+    setListings((payload.listings as DiscoveryListing[]) || []);
+    setTaxonomyCategories(serializeCategories(nextContent.taxonomy.categories));
+    setTaxonomyCities(serializeCities(nextContent.taxonomy.cities));
+    setMessage(nextContent.storageReady ? null : "Discovery controls are running on fallback content until the new discovery migration is applied.");
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  async function saveContent(key: string, body: Record<string, unknown>, label: string) {
+    setSaving(key);
+    setMessage(null);
+
+    const response = await fetch("/api/admin/discovery", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        kind: "content",
+        key,
+        label,
+        content: body,
+      }),
+    });
+
+    const payload = (await response.json()) as Record<string, unknown>;
+    setSaving(null);
+
+    if (!response.ok) {
+      setMessage(String(payload.error || "Could not save discovery content."));
+      return;
+    }
+
+    setMessage("Discovery content updated.");
+    await load();
+  }
+
+  async function saveListing(listing: DiscoveryListing) {
+    setSaving(listing.id);
+    setMessage(null);
+
+    const response = await fetch("/api/admin/discovery", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        kind: "listing",
+        eventId: listing.id,
+        sourceType: listing.source,
+        badgeLabel: listing.badgeLabel,
+        featured: listing.featured,
+        listingPriority: listing.listingPriority,
+        promoCollection: listing.promoCollection,
+        isDiscoverable: true,
+      }),
+    });
+
+    const payload = (await response.json()) as Record<string, unknown>;
+    setSaving(null);
+
+    if (!response.ok) {
+      setMessage(String(payload.error || "Could not save listing controls."));
+      return;
+    }
+
+    setMessage(`Updated discovery controls for ${listing.title}.`);
+    await load();
+  }
+
+  if (loading || !content) {
+    return (
+      <main className="mx-auto max-w-7xl p-6">
+        <div className="ev-empty">Loading discovery controls...</div>
+      </main>
+    );
+  }
+
+  return (
+    <main className="mx-auto max-w-7xl p-6">
+      <section className="ev-shell-hero">
+        <div className="ev-shell-hero-grid">
+          <div>
+            <div className="ev-kicker">Discovery Control</div>
+            <h1 className="ev-title">Shape the public EVNTSZN discovery experience.</h1>
+            <p className="ev-subtitle">
+              Keep layout integrity in code while controlling the homepage hero, promoted discovery messaging, taxonomy blocks, and native listing priority from inside the admin surface.
+            </p>
+          </div>
+          <div className="ev-hero-meta">
+            <div className="ev-meta-card">
+              <div className="ev-meta-label">Discovery hierarchy</div>
+              <div className="ev-meta-value">Official EVNTSZN events rank first, then hosted network events, then verified independent organizer listings.</div>
+            </div>
+            <div className="ev-meta-card">
+              <div className="ev-meta-label">Status</div>
+              <div className="ev-meta-value">{message || "Discovery controls are connected."}</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div className="mt-8 grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+        <section className="grid gap-6">
+          <div className="ev-panel">
+            <div className="ev-section-kicker">Homepage hero</div>
+            <div className="mt-5 grid gap-4">
+              <input className="ev-field" value={content.hero.eyebrow} onChange={(event) => setContent({ ...content, hero: { ...content.hero, eyebrow: event.target.value } })} />
+              <input className="ev-field" value={content.hero.title} onChange={(event) => setContent({ ...content, hero: { ...content.hero, title: event.target.value } })} />
+              <textarea className="ev-textarea" value={content.hero.description} onChange={(event) => setContent({ ...content, hero: { ...content.hero, description: event.target.value } })} />
+            </div>
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
+              <input className="ev-field" value={content.hero.primaryCtaLabel} onChange={(event) => setContent({ ...content, hero: { ...content.hero, primaryCtaLabel: event.target.value } })} />
+              <input className="ev-field" value={content.hero.primaryCtaHref} onChange={(event) => setContent({ ...content, hero: { ...content.hero, primaryCtaHref: event.target.value } })} />
+              <input className="ev-field" value={content.hero.secondaryCtaLabel} onChange={(event) => setContent({ ...content, hero: { ...content.hero, secondaryCtaLabel: event.target.value } })} />
+              <input className="ev-field" value={content.hero.secondaryCtaHref} onChange={(event) => setContent({ ...content, hero: { ...content.hero, secondaryCtaHref: event.target.value } })} />
+              <input className="ev-field" value={content.hero.tertiaryCtaLabel} onChange={(event) => setContent({ ...content, hero: { ...content.hero, tertiaryCtaLabel: event.target.value } })} />
+              <input className="ev-field" value={content.hero.tertiaryCtaHref} onChange={(event) => setContent({ ...content, hero: { ...content.hero, tertiaryCtaHref: event.target.value } })} />
+            </div>
+            <button
+              type="button"
+              className="ev-button-primary mt-5"
+              disabled={saving === "homepage.hero"}
+              onClick={() => saveContent("homepage.hero", content.hero, "Homepage Hero")}
+            >
+              {saving === "homepage.hero" ? "Saving..." : "Save hero"}
+            </button>
+          </div>
+
+          <div className="ev-panel">
+            <div className="ev-section-kicker">Homepage message blocks</div>
+            <div className="mt-5 grid gap-5">
+              <div>
+                <input className="ev-field" value={content.banner.eyebrow} onChange={(event) => setContent({ ...content, banner: { ...content.banner, eyebrow: event.target.value } })} />
+                <input className="ev-field mt-3" value={content.banner.title} onChange={(event) => setContent({ ...content, banner: { ...content.banner, title: event.target.value } })} />
+                <textarea className="ev-textarea mt-3" value={content.banner.body} onChange={(event) => setContent({ ...content, banner: { ...content.banner, body: event.target.value } })} />
+                <button
+                  type="button"
+                  className="ev-button-secondary mt-4"
+                  disabled={saving === "homepage.banner"}
+                  onClick={() => saveContent("homepage.banner", content.banner, "Homepage Banner")}
+                >
+                  {saving === "homepage.banner" ? "Saving..." : "Save banner"}
+                </button>
+              </div>
+
+              <div>
+                <input className="ev-field" value={content.discovery.headline} onChange={(event) => setContent({ ...content, discovery: { ...content.discovery, headline: event.target.value } })} />
+                <textarea className="ev-textarea mt-3" value={content.discovery.body} onChange={(event) => setContent({ ...content, discovery: { ...content.discovery, body: event.target.value } })} />
+                <textarea className="ev-textarea mt-3" value={content.discovery.disclosure} onChange={(event) => setContent({ ...content, discovery: { ...content.discovery, disclosure: event.target.value } })} />
+                <div className="mt-3 grid gap-3 md:grid-cols-2">
+                  <input className="ev-field" value={content.discovery.searchPlaceholder} onChange={(event) => setContent({ ...content, discovery: { ...content.discovery, searchPlaceholder: event.target.value } })} />
+                  <input className="ev-field" value={content.discovery.cityPlaceholder} onChange={(event) => setContent({ ...content, discovery: { ...content.discovery, cityPlaceholder: event.target.value } })} />
+                  <input className="ev-field" value={content.discovery.nativeHeadline} onChange={(event) => setContent({ ...content, discovery: { ...content.discovery, nativeHeadline: event.target.value } })} />
+                  <input className="ev-field" value={content.discovery.hostHeadline} onChange={(event) => setContent({ ...content, discovery: { ...content.discovery, hostHeadline: event.target.value } })} />
+                  <input className="ev-field" value={content.discovery.independentHeadline} onChange={(event) => setContent({ ...content, discovery: { ...content.discovery, independentHeadline: event.target.value } })} />
+                  <input className="ev-field" value={content.discovery.externalHeadline} onChange={(event) => setContent({ ...content, discovery: { ...content.discovery, externalHeadline: event.target.value } })} />
+                </div>
+                <button
+                  type="button"
+                  className="ev-button-secondary mt-4"
+                  disabled={saving === "homepage.discovery"}
+                  onClick={() => saveContent("homepage.discovery", content.discovery, "Homepage Discovery")}
+                >
+                  {saving === "homepage.discovery" ? "Saving..." : "Save discovery copy"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="grid gap-6">
+          <div className="ev-panel">
+            <div className="ev-section-kicker">Taxonomy blocks</div>
+            <p className="mt-3 text-sm text-white/65">Use one line per block with the format `Label|Description`.</p>
+            <label className="mt-5 block text-sm font-medium text-white/72">Categories</label>
+            <textarea className="ev-textarea mt-2" value={taxonomyCategories} onChange={(event) => setTaxonomyCategories(event.target.value)} />
+            <label className="mt-5 block text-sm font-medium text-white/72">Cities</label>
+            <textarea className="ev-textarea mt-2" value={taxonomyCities} onChange={(event) => setTaxonomyCities(event.target.value)} />
+            <button
+              type="button"
+              className="ev-button-primary mt-5"
+              disabled={saving === "homepage.taxonomy"}
+              onClick={() =>
+                saveContent(
+                  "homepage.taxonomy",
+                  {
+                    categories: parseLines(taxonomyCategories, "category"),
+                    cities: parseLines(taxonomyCities, "city"),
+                  },
+                  "Homepage Taxonomy",
+                )
+              }
+            >
+              {saving === "homepage.taxonomy" ? "Saving..." : "Save taxonomy"}
+            </button>
+          </div>
+
+          <div className="ev-panel">
+            <div className="ev-section-kicker">Listing controls</div>
+            <p className="mt-3 text-sm text-white/65">
+              Curate native EVNTSZN discovery priority, source labeling, and featured status without compromising layout integrity.
+            </p>
+            <div className="mt-5 space-y-4">
+              {listings.map((listing) => (
+                <div key={listing.id} className="ev-meta-card">
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                    <div>
+                      <div className="text-lg font-semibold text-white">{listing.title}</div>
+                      <div className="mt-1 text-sm text-white/55">
+                        {listing.city}, {listing.state}
+                      </div>
+                    </div>
+
+                    <div className="grid flex-1 gap-3 md:grid-cols-2">
+                      <select
+                        className="ev-select"
+                        value={listing.source}
+                        onChange={(event) =>
+                          setListings((current) =>
+                            current.map((item) =>
+                              item.id === listing.id
+                                ? { ...item, source: event.target.value as DiscoveryListing["source"] }
+                                : item,
+                            ),
+                          )
+                        }
+                      >
+                        <option value="evntszn">EVNTSZN Event</option>
+                        <option value="host">EVNTSZN Host Event</option>
+                        <option value="independent_organizer">Independent Organizer Event</option>
+                      </select>
+                      <input
+                        className="ev-field"
+                        value={listing.badgeLabel}
+                        onChange={(event) =>
+                          setListings((current) =>
+                            current.map((item) =>
+                              item.id === listing.id ? { ...item, badgeLabel: event.target.value } : item,
+                            ),
+                          )
+                        }
+                      />
+                      <input
+                        type="number"
+                        className="ev-field"
+                        value={listing.listingPriority}
+                        onChange={(event) =>
+                          setListings((current) =>
+                            current.map((item) =>
+                              item.id === listing.id
+                                ? { ...item, listingPriority: Number(event.target.value || 0) }
+                                : item,
+                            ),
+                          )
+                        }
+                      />
+                      <input
+                        className="ev-field"
+                        value={listing.promoCollection || ""}
+                        onChange={(event) =>
+                          setListings((current) =>
+                            current.map((item) =>
+                              item.id === listing.id ? { ...item, promoCollection: event.target.value || null } : item,
+                            ),
+                          )
+                        }
+                      />
+                      <label className="flex items-center gap-3 text-sm text-white/72">
+                        <input
+                          type="checkbox"
+                          checked={listing.featured}
+                          onChange={(event) =>
+                            setListings((current) =>
+                              current.map((item) =>
+                                item.id === listing.id ? { ...item, featured: event.target.checked } : item,
+                              ),
+                            )
+                          }
+                        />
+                        Featured on discovery
+                      </label>
+                      <button
+                        type="button"
+                        className="ev-button-secondary"
+                        disabled={saving === listing.id}
+                        onClick={() => saveListing(listing)}
+                      >
+                        {saving === listing.id ? "Saving..." : "Save listing"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  );
+}

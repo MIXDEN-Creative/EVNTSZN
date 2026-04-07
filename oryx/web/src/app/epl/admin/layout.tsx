@@ -63,6 +63,12 @@ export default async function AdminLayout({
               </Link>
             ) : null}
 
+            {canManageCatalog ? (
+              <Link href={`${getAdminOrigin(host)}/discovery`} className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 hover:bg-white/[0.08]">
+                Discovery Control
+              </Link>
+            ) : null}
+
             {isHqSurface ? (
               <Link href={`${getHqOrigin(host)}/draft`} className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 hover:bg-white/[0.08]">
                 Draft Console

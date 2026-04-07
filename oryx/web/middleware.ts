@@ -33,6 +33,15 @@ export function middleware(request: NextRequest) {
   const host = request.nextUrl.host || request.headers.get("host") || request.headers.get("x-forwarded-host") || "";
   const pathname = request.nextUrl.pathname;
   const surface = getSurfaceFromHost(host);
+  const bareHost = host.replace(/:\d+$/, "").toLowerCase();
+  const canonicalWebHost = new URL(getWebOrigin(host)).host.toLowerCase();
+
+  if (surface === "web" && bareHost === `www.${canonicalWebHost}`) {
+    const canonicalUrl = request.nextUrl.clone();
+    canonicalUrl.host = canonicalWebHost;
+    canonicalUrl.protocol = "https";
+    return NextResponse.redirect(canonicalUrl, 308);
+  }
 
   if (
     STATIC_PREFIXES.some((prefix) => pathname.startsWith(prefix)) ||
@@ -48,8 +57,6 @@ export function middleware(request: NextRequest) {
   }
 
   const previewHost = process.env.PREVIEW_HOST || "preview.evntszn.com";
-
-  const bareHost = host.replace(/:\d+$/, "");
   const isPreviewHost =
     bareHost === previewHost || bareHost === `www.${previewHost}`;
 
@@ -84,7 +91,10 @@ export function middleware(request: NextRequest) {
     "/sitemap.xml",
     ];
     const publicAllowedPrefixes = ["/events/"];
-    const publicAllowedApiPatterns = [/^\/api\/evntszn\/events\/[^/]+\/checkout$/];
+    const publicAllowedApiPatterns = [
+      /^\/api\/evntszn\/events\/[^/]+\/checkout$/,
+      /^\/api\/discovery\/search$/,
+    ];
 
     if (pathname.startsWith("/account") || pathname.startsWith("/auth/callback")) {
       return NextResponse.redirect(new URL(getCanonicalPath(pathname, "app"), getAppOrigin(host)));

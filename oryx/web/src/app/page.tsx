@@ -1,63 +1,134 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+import Script from "next/script";
 import SurfaceShell from "@/components/shells/SurfaceShell";
+import DiscoveryLanding from "@/components/public/DiscoveryLanding";
+import { getDiscoveryNativeEvents } from "@/lib/discovery";
+import { getWebOrigin } from "@/lib/domains";
+import { getHomepageContent } from "@/lib/site-content";
 
-export default function Home() {
+export async function generateMetadata(): Promise<Metadata> {
+  const homepage = await getHomepageContent();
+  const title = "Discover premium events, nightlife, sports, music, and things to do";
+  const description = homepage.hero.description;
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: "/",
+    },
+    openGraph: {
+      title: `EVNTSZN | ${title}`,
+      description,
+      url: "/",
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `EVNTSZN | ${title}`,
+      description,
+    },
+    keywords: [
+      "events",
+      "things to do",
+      "nightlife",
+      "sports events",
+      "music events",
+      "city event discovery",
+      "premium event platform",
+      "EVNTSZN",
+    ],
+  };
+}
+
+export default async function Home() {
+  const [homepage, featuredResult] = await Promise.all([
+    getHomepageContent(),
+    getDiscoveryNativeEvents({ limit: 12 }),
+  ]);
+
+  const organizationSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "EVNTSZN",
+    url: getWebOrigin(),
+    description:
+      "Premium event discovery, ticketing, scanning, and operations across EVNTSZN-native, hosted, and selected partner inventory.",
+    sameAs: [getWebOrigin()],
+  };
+
+  const websiteSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "EVNTSZN",
+    url: getWebOrigin(),
+    description: homepage.discovery.body,
+  };
+
+  const featuredItemsSchema = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: "Featured EVNTSZN discovery listings",
+    itemListElement: featuredResult.events.slice(0, 8).map((event, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      url: `${getWebOrigin()}${event.href}`,
+      name: event.title,
+    })),
+  };
+
   return (
-    <SurfaceShell
-      surface="web"
-      eyebrow="EVNTSZN"
-      title="Premium event experiences with a command-center backbone."
-      description="A cinematic event platform for ticket drops, live entry, operator control, and branded league experiences across every EVNTSZN surface."
-      actions={
-        <>
-          <Link href="/events" className="ev-button-primary">
-            Explore live events
-          </Link>
-          <Link href="/account/login?next=/account" className="ev-button-secondary">
-            Sign in to EVNTSZN
-          </Link>
-        </>
-      }
-      meta={
-        <>
-          <div className="ev-meta-card">
-            <div className="ev-meta-label">Experience stack</div>
-            <div className="ev-meta-value">
-              Premium ticketing, mobile-first scanning, attendee accounts, and multi-surface operations.
+    <>
+      <Script
+        id="evntszn-homepage-schema"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify([organizationSchema, websiteSchema, featuredItemsSchema]),
+        }}
+      />
+      <SurfaceShell
+        surface="web"
+        eyebrow={homepage.hero.eyebrow}
+        title={homepage.hero.title}
+        description={homepage.hero.description}
+        actions={
+          <>
+            <Link href={homepage.hero.primaryCtaHref} className="ev-button-primary">
+              {homepage.hero.primaryCtaLabel}
+            </Link>
+            <Link href={homepage.hero.secondaryCtaHref} className="ev-button-secondary">
+              {homepage.hero.secondaryCtaLabel}
+            </Link>
+            <Link href={homepage.hero.tertiaryCtaHref} className="ev-button-secondary">
+              {homepage.hero.tertiaryCtaLabel}
+            </Link>
+          </>
+        }
+        meta={
+          <>
+            <div className="ev-meta-card">
+              <div className="ev-meta-label">Discovery hierarchy</div>
+              <div className="ev-meta-value">
+                EVNTSZN events lead, hosted experiences stay elevated, independent organizers remain clear, and external discovery expands breadth without hijacking priority.
+              </div>
             </div>
-          </div>
-          <div className="ev-meta-card">
-            <div className="ev-meta-label">Built for velocity</div>
-            <div className="ev-meta-value">
-              Run public discovery on EVNTSZN while staff, leagues, admins, and operators work in their own guarded environments.
+            <div className="ev-meta-card">
+              <div className="ev-meta-label">Operational control</div>
+              <div className="ev-meta-value">
+                Staff, ops, scanner, admin, HQ, and league operations stay inside their own guarded EVNTSZN surfaces.
+              </div>
             </div>
-          </div>
-        </>
-      }
-    >
-      <div className="grid gap-6 lg:grid-cols-3">
-        <section className="ev-panel">
-          <div className="ev-section-kicker">Public web</div>
-          <h2 className="ev-panel-title mt-3">Discovery that feels premium at first contact</h2>
-          <p className="ev-panel-copy">
-            EVNTSZN keeps the public surface elegant, branded, and focused on event conversion instead of exposing operator tooling in the wrong places.
-          </p>
-        </section>
-        <section className="ev-panel">
-          <div className="ev-section-kicker">Member portal</div>
-          <h2 className="ev-panel-title mt-3">A concierge-grade account experience</h2>
-          <p className="ev-panel-copy">
-            Tickets, rewards, orders, and account activity live in a dedicated member environment with premium hierarchy and clean navigation.
-          </p>
-        </section>
-        <section className="ev-panel">
-          <div className="ev-section-kicker">Operations</div>
-          <h2 className="ev-panel-title mt-3">Scanner, ops, league, HQ, and admin with real separation</h2>
-          <p className="ev-panel-copy">
-            Each EVNTSZN role lands in the right surface with its own cadence, density, and guardrails instead of one generic dashboard shell.
-          </p>
-        </section>
-      </div>
-    </SurfaceShell>
+          </>
+        }
+      >
+        <DiscoveryLanding
+          featuredNativeEvents={featuredResult.events}
+          banner={homepage.banner}
+          discovery={homepage.discovery}
+          taxonomy={homepage.taxonomy}
+        />
+      </SurfaceShell>
+    </>
   );
 }
