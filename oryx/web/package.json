@@ -21,12 +21,14 @@
     "@opennextjs/cloudflare": "^1.18.0",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.101.1",
+    "clsx": "^2.1.1",
     "framer-motion": "^12.38.0",
     "next": "16.1.6",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "resend": "^6.10.0",
-    "stripe": "^20.3.1"
+    "stripe": "^20.3.1",
+    "tailwind-merge": "^3.5.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

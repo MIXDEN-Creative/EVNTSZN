@@ -169,7 +169,7 @@ export function middleware(request: NextRequest) {
 
   if (surface === "epl") {
     if (pathname === "/") {
-      url.pathname = "/epl/season-1/register";
+      url.pathname = "/epl";
       return NextResponse.rewrite(url);
     }
 

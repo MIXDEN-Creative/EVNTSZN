@@ -33,6 +33,7 @@ export type HomepageDiscoveryContent = {
   body: string;
   disclosure: string;
   searchPlaceholder: string;
+  keywordPlaceholder: string;
   cityPlaceholder: string;
   nativeHeadline: string;
   hostHeadline: string;
@@ -45,6 +46,47 @@ export type HomepageTaxonomyContent = {
   cities: ContentCity[];
 };
 
+export type HomepageVisibilityContent = {
+  showNativeSection: boolean;
+  showHostSection: boolean;
+  showIndependentSection: boolean;
+  showExternalSection: boolean;
+  showEplPanel: boolean;
+  showCategoryBlocks: boolean;
+  showCityBlocks: boolean;
+};
+
+export type EplHeroContent = {
+  eyebrow: string;
+  title: string;
+  description: string;
+  primaryCtaLabel: string;
+  primaryCtaHref: string;
+  secondaryCtaLabel: string;
+  secondaryCtaHref: string;
+};
+
+export type EplSectionContent = {
+  seasonHeadline: string;
+  seasonBody: string;
+  scheduleHeadline: string;
+  scheduleBody: string;
+  teamsHeadline: string;
+  teamsBody: string;
+  standingsHeadline: string;
+  standingsBody: string;
+  storeHeadline: string;
+  storeBody: string;
+};
+
+export type EplMenuVisibilityContent = {
+  showRegister: boolean;
+  showSchedule: boolean;
+  showTeams: boolean;
+  showStandings: boolean;
+  showStore: boolean;
+};
+
 type SiteContentRow = {
   key: string;
   content: Record<string, unknown> | null;
@@ -55,6 +97,7 @@ export type HomepageContent = {
   banner: HomepageBannerContent;
   discovery: HomepageDiscoveryContent;
   taxonomy: HomepageTaxonomyContent;
+  visibility: HomepageVisibilityContent;
   storageReady: boolean;
 };
 
@@ -63,37 +106,52 @@ const HOMEPAGE_CONTENT_KEYS = [
   "homepage.banner",
   "homepage.discovery",
   "homepage.taxonomy",
+  "homepage.visibility",
 ] as const;
+
+const EPL_PUBLIC_CONTENT_KEYS = [
+  "epl.hero",
+  "epl.sections",
+  "epl.menu",
+] as const;
+
+export type EplPublicContent = {
+  hero: EplHeroContent;
+  sections: EplSectionContent;
+  menu: EplMenuVisibilityContent;
+  storageReady: boolean;
+};
 
 export const DEFAULT_HOMEPAGE_CONTENT: Omit<HomepageContent, "storageReady"> = {
   hero: {
-    eyebrow: "EVNTSZN discovery",
-    title: "A premium discovery surface for the events people actually move on.",
+    eyebrow: "EVNTSZN live discovery",
+    title: "Nightlife, music, sports, and city energy curated like a headline event platform.",
     description:
-      "Discover EVNTSZN-native events first, explore broader city demand intelligently, and move from public discovery into a premium member experience without losing trust, clarity, or momentum.",
-    primaryCtaLabel: "Explore EVNTSZN events",
+      "Discover official EVNTSZN events first, then move through hosted experiences, independent organizer drops, and broader city demand with a premium discovery layer built for Baltimore, Atlanta, Miami, New York, and the next market up.",
+    primaryCtaLabel: "Explore live events",
     primaryCtaHref: "/events",
-    secondaryCtaLabel: "Open discovery",
-    secondaryCtaHref: "/events",
-    tertiaryCtaLabel: "Member access",
+    secondaryCtaLabel: "Create attendee account",
+    secondaryCtaHref: "/account/login?mode=signup&next=/account",
+    tertiaryCtaLabel: "Member login",
     tertiaryCtaHref: "/account/login?next=/account",
   },
   banner: {
-    eyebrow: "Premium access",
-    title: "EVNTSZN keeps discovery public and operations controlled.",
-    body: "Attendees can explore EVNTSZN openly while scanner, league, admin, HQ, and operations surfaces stay clearly separated and purpose-built.",
+    eyebrow: "Built for momentum",
+    title: "Public discovery stays cinematic. Ops, scanner, admin, and HQ stay controlled.",
+    body: "EVNTSZN gives customers a premium discovery and ticketing experience while keeping scanner, operations, league, admin, and HQ environments purpose-built behind their own guarded surfaces.",
   },
   discovery: {
-    headline: "Start with EVNTSZN. Expand with market-scale discovery.",
-    body: "Native EVNTSZN inventory stays primary. External discovery adds breadth when you want a wider city pulse without diluting the platform.",
+    headline: "Find the move before the city catches up.",
+    body: "Search nightlife, concerts, sports, live entertainment, and things to do right now. EVNTSZN leads with its own premium inventory first, then expands into the city's broader pulse when you want more range.",
     disclosure:
-      "Broader event discovery is available when you search for it. EVNTSZN native inventory remains the primary path and featured layer.",
-    searchPlaceholder: "Search events, artists, moments",
+      "External listings widen coverage for fast-moving city discovery, but EVNTSZN-led inventory stays the first signal and the strongest presentation layer.",
+    searchPlaceholder: "Search artist, event, venue, vibe, or city moment",
+    keywordPlaceholder: "Keyword",
     cityPlaceholder: "City",
-    nativeHeadline: "Featured EVNTSZN events",
+    nativeHeadline: "Official EVNTSZN events",
     hostHeadline: "EVNTSZN Host events",
     independentHeadline: "Independent Organizer events",
-    externalHeadline: "External discovery, handled carefully",
+    externalHeadline: "Expanded city discovery",
   },
   taxonomy: {
     categories: [
@@ -133,6 +191,52 @@ export const DEFAULT_HOMEPAGE_CONTENT: Omit<HomepageContent, "storageReady"> = {
       },
     ],
   },
+  visibility: {
+    showNativeSection: false,
+    showHostSection: false,
+    showIndependentSection: false,
+    showExternalSection: true,
+    showEplPanel: true,
+    showCategoryBlocks: true,
+    showCityBlocks: true,
+  },
+};
+
+export const DEFAULT_EPL_PUBLIC_CONTENT: Omit<EplPublicContent, "storageReady"> = {
+  hero: {
+    eyebrow: "EVNTSZN Prime League",
+    title: "A city-built coed league with draft-night energy and premium presentation.",
+    description:
+      "EPL brings registration, team identity, schedule momentum, and sports-entertainment polish into one public league surface built for players, fans, and city energy.",
+    primaryCtaLabel: "Register",
+    primaryCtaHref: "/epl/season-1/register",
+    secondaryCtaLabel: "View Schedule",
+    secondaryCtaHref: "#schedule",
+  },
+  sections: {
+    seasonHeadline: "Season 1 is built to feel organized, competitive, and alive.",
+    seasonBody:
+      "Structured registration, player review, draft-night presentation, and team identity make EPL feel like a real league product instead of a one-off rec run.",
+    scheduleHeadline: "Schedule visibility that supports players, fans, and weekly momentum.",
+    scheduleBody:
+      "Use the public league page as the clean front door for season rhythm, marquee matchups, and the nights that define the table.",
+    teamsHeadline: "Six teams. Strong identity. Real city pull.",
+    teamsBody:
+      "Canton Chargers, Federal Hill Sentinels, Fells Point Raiders, Hampden Rebels, Harbor Titans, and Mount Vernon Royals drive the league's competitive personality.",
+    standingsHeadline: "Standings that make every week matter.",
+    standingsBody:
+      "The public league surface is built to support competitive tension, weekly movement, and a table that fans can actually follow.",
+    storeHeadline: "League merch should feel collectible, not generic.",
+    storeBody:
+      "The EPL store keeps branded gear, drop moments, and team identity aligned with the same premium EVNTSZN presentation standard.",
+  },
+  menu: {
+    showRegister: true,
+    showSchedule: true,
+    showTeams: true,
+    showStandings: true,
+    showStore: true,
+  },
 };
 
 function mergeObject<T extends Record<string, unknown>>(base: T, patch: Record<string, unknown> | null | undefined): T {
@@ -170,6 +274,28 @@ function normalizeTaxonomyContent(value: Record<string, unknown> | null | undefi
   return {
     categories,
     cities,
+  };
+}
+
+function normalizeHomepageVisibility(value: Record<string, unknown> | null | undefined): HomepageVisibilityContent {
+  return {
+    showNativeSection: value?.showNativeSection === true,
+    showHostSection: value?.showHostSection === true,
+    showIndependentSection: value?.showIndependentSection === true,
+    showExternalSection: value?.showExternalSection !== false,
+    showEplPanel: value?.showEplPanel !== false,
+    showCategoryBlocks: value?.showCategoryBlocks !== false,
+    showCityBlocks: value?.showCityBlocks !== false,
+  };
+}
+
+function normalizeEplMenu(value: Record<string, unknown> | null | undefined): EplMenuVisibilityContent {
+  return {
+    showRegister: value?.showRegister !== false,
+    showSchedule: value?.showSchedule !== false,
+    showTeams: value?.showTeams !== false,
+    showStandings: value?.showStandings !== false,
+    showStore: value?.showStore !== false,
   };
 }
 
@@ -222,6 +348,7 @@ export async function getHomepageContent(): Promise<HomepageContent> {
       banner: mergeObject(DEFAULT_HOMEPAGE_CONTENT.banner, rows["homepage.banner"]),
       discovery: mergeObject(DEFAULT_HOMEPAGE_CONTENT.discovery, rows["homepage.discovery"]),
       taxonomy: normalizeTaxonomyContent(rows["homepage.taxonomy"]),
+      visibility: normalizeHomepageVisibility(rows["homepage.visibility"]),
       storageReady: true,
     };
   } catch (error) {
@@ -236,6 +363,55 @@ export async function getHomepageContent(): Promise<HomepageContent> {
     console.error("[discovery] homepage content load failed", error);
     return {
       ...DEFAULT_HOMEPAGE_CONTENT,
+      storageReady: false,
+    };
+  }
+}
+
+export async function getEplPublicContent(): Promise<EplPublicContent> {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from("site_content_entries")
+      .select("key, content")
+      .in("key", [...EPL_PUBLIC_CONTENT_KEYS])
+      .eq("is_active", true);
+
+    if (error) {
+      if (isMissingContentTableError(error)) {
+        return {
+          ...DEFAULT_EPL_PUBLIC_CONTENT,
+          storageReady: false,
+        };
+      }
+
+      throw new Error(error.message);
+    }
+
+    const rows = ((data || []) as SiteContentRow[]).reduce<Record<string, Record<string, unknown>>>((acc, row) => {
+      if (row.key && row.content) {
+        acc[row.key] = row.content;
+      }
+      return acc;
+    }, {});
+
+    return {
+      hero: mergeObject(DEFAULT_EPL_PUBLIC_CONTENT.hero, rows["epl.hero"]),
+      sections: mergeObject(DEFAULT_EPL_PUBLIC_CONTENT.sections, rows["epl.sections"]),
+      menu: normalizeEplMenu(rows["epl.menu"]),
+      storageReady: true,
+    };
+  } catch (error) {
+    if (isMissingContentTableError(error)) {
+      console.warn("[epl] public content controls unavailable, using fallback content");
+      return {
+        ...DEFAULT_EPL_PUBLIC_CONTENT,
+        storageReady: false,
+      };
+    }
+
+    console.error("[epl] public content load failed", error);
+    return {
+      ...DEFAULT_EPL_PUBLIC_CONTENT,
       storageReady: false,
     };
   }

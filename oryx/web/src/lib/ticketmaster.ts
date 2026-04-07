@@ -42,13 +42,21 @@ function pickEventImage(
 ) {
   return (images || [])
     .filter((image) => image.url)
-    .sort((a, b) => (b.width || 0) - (a.width || 0))[0]?.url || null;
+    .sort((a, b) => {
+      const distanceA = Math.abs((a.width || 0) - 1200);
+      const distanceB = Math.abs((b.width || 0) - 1200);
+      return distanceA - distanceB;
+    })[0]?.url || null;
 }
 
 export async function searchTicketmasterEvents(input: {
   query?: string;
   city?: string;
   size?: number;
+  startAt?: string;
+  endAt?: string;
+  latitude?: number;
+  longitude?: number;
 }) {
   const apiKey = process.env.TM_API_KEY;
 
@@ -68,6 +76,20 @@ export async function searchTicketmasterEvents(input: {
 
   if (input.city?.trim()) {
     params.set("city", input.city.trim());
+  }
+
+  if (typeof input.latitude === "number" && typeof input.longitude === "number") {
+    params.set("latlong", `${input.latitude},${input.longitude}`);
+    params.set("radius", "25");
+    params.set("unit", "miles");
+  }
+
+  if (input.startAt) {
+    params.set("startDateTime", input.startAt);
+  }
+
+  if (input.endAt) {
+    params.set("endDateTime", input.endAt);
   }
 
   const response = await fetch(`https://app.ticketmaster.com/discovery/v2/events.json?${params.toString()}`, {

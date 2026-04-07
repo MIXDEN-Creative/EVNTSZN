@@ -26,6 +26,7 @@ type NativeEventRow = {
   state: string;
   start_at: string;
   hero_note: string | null;
+  banner_image_url: string | null;
   organizer_user_id: string | null;
 };
 
@@ -40,6 +41,7 @@ export type DiscoveryNativeEvent = {
   state: string;
   startAt: string;
   heroNote: string | null;
+  imageUrl: string | null;
   source: Exclude<DiscoverySourceType, "ticketmaster">;
   sourceLabel: string;
   badgeLabel: string;
@@ -48,6 +50,47 @@ export type DiscoveryNativeEvent = {
   promoCollection: string | null;
   isPrimary: true;
 };
+
+const DISCOVERY_FALLBACK_IMAGES = {
+  evntszn: {
+    default:
+      "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=1600&q=80",
+    baltimore:
+      "https://images.unsplash.com/photo-1519501025264-65ba15a82390?auto=format&fit=crop&w=1600&q=80",
+    newyork:
+      "https://images.unsplash.com/photo-1499092346589-b9b6be3e94b2?auto=format&fit=crop&w=1600&q=80",
+    atlanta:
+      "https://images.unsplash.com/photo-1577648188599-291bb8b831c3?auto=format&fit=crop&w=1600&q=80",
+    miami:
+      "https://images.unsplash.com/photo-1535498730771-e735b998cd64?auto=format&fit=crop&w=1600&q=80",
+  },
+  host: {
+    default:
+      "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1600&q=80",
+    baltimore:
+      "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=1600&q=80",
+    newyork:
+      "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=1600&q=80",
+    atlanta:
+      "https://images.unsplash.com/photo-1507874457470-272b3c8d8ee2?auto=format&fit=crop&w=1600&q=80",
+    miami:
+      "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=1600&q=80",
+  },
+  independent_organizer: {
+    default:
+      "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1600&q=80",
+    baltimore:
+      "https://images.unsplash.com/photo-1521334884684-d80222895322?auto=format&fit=crop&w=1600&q=80",
+    newyork:
+      "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1600&q=80",
+    atlanta:
+      "https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=1600&q=80",
+    miami:
+      "https://images.unsplash.com/photo-1519671482749-fd09be7ccebf?auto=format&fit=crop&w=1600&q=80",
+  },
+} satisfies Record<Exclude<DiscoverySourceType, "ticketmaster">, Record<string, string>>;
+
+type DiscoveryFallbackImageKey = "default" | "baltimore" | "newyork" | "atlanta" | "miami";
 
 const SOURCE_PRIORITY: Record<Exclude<DiscoverySourceType, "ticketmaster">, number> = {
   evntszn: 0,
@@ -128,6 +171,8 @@ export async function getDiscoveryNativeEvents(input: {
   query?: string;
   city?: string;
   limit?: number;
+  startAt?: string;
+  endAt?: string;
 }) {
   const query = input.query?.trim() || "";
   const city = input.city?.trim() || "";
@@ -135,7 +180,7 @@ export async function getDiscoveryNativeEvents(input: {
 
   const nativeQuery = supabaseAdmin
     .from("evntszn_events")
-    .select("id, title, slug, subtitle, description, city, state, start_at, hero_note, organizer_user_id")
+    .select("id, title, slug, subtitle, description, city, state, start_at, hero_note, banner_image_url, organizer_user_id")
     .eq("visibility", "published")
     .order("start_at", { ascending: true })
     .limit(limit);
@@ -146,6 +191,14 @@ export async function getDiscoveryNativeEvents(input: {
 
   if (city) {
     nativeQuery.ilike("city", `%${city}%`);
+  }
+
+  if (input.startAt) {
+    nativeQuery.gte("start_at", input.startAt);
+  }
+
+  if (input.endAt) {
+    nativeQuery.lte("start_at", input.endAt);
   }
 
   try {
@@ -180,7 +233,7 @@ export async function getDiscoveryNativeEvents(input: {
     );
 
     const mapped = events
-      .map((event) => {
+      .map<DiscoveryNativeEvent | null>((event) => {
         const control = controlsByEventId.get(event.id);
         if (control && !control.is_discoverable) {
           return null;
@@ -199,6 +252,7 @@ export async function getDiscoveryNativeEvents(input: {
           state: event.state,
           startAt: event.start_at,
           heroNote: event.hero_note,
+          imageUrl: event.banner_image_url,
           source,
           sourceLabel: getSourceLabel(source),
           badgeLabel: control?.badge_label || getDefaultBadgeLabel(source),
@@ -221,13 +275,13 @@ export async function getDiscoveryNativeEvents(input: {
 
       const { data: rawEvents } = await supabaseAdmin
         .from("evntszn_events")
-        .select("id, title, slug, subtitle, description, city, state, start_at, hero_note, organizer_user_id")
+        .select("id, title, slug, subtitle, description, city, state, start_at, hero_note, banner_image_url, organizer_user_id")
         .eq("visibility", "published")
         .order("start_at", { ascending: true })
         .limit(limit);
 
       const events = ((rawEvents || []) as NativeEventRow[])
-        .map((event) => {
+        .map<DiscoveryNativeEvent>((event) => {
           const source = inferSourceType(event, null);
 
           return {
@@ -241,6 +295,7 @@ export async function getDiscoveryNativeEvents(input: {
             state: event.state,
             startAt: event.start_at,
             heroNote: event.hero_note,
+            imageUrl: event.banner_image_url,
             source,
             sourceLabel: getSourceLabel(source),
             badgeLabel: getDefaultBadgeLabel(source),
@@ -272,4 +327,20 @@ export function groupDiscoveryEventsBySource(events: DiscoveryNativeEvent[]) {
     host: events.filter((event) => event.source === "host"),
     independent_organizer: events.filter((event) => event.source === "independent_organizer"),
   };
+}
+
+export function getDiscoveryFallbackImage(
+  city: string | null | undefined,
+  source: Exclude<DiscoverySourceType, "ticketmaster">,
+) {
+  const rawKey = city?.toLowerCase().replace(/\s+/g, "") || "default";
+  const key: DiscoveryFallbackImageKey =
+    rawKey === "baltimore" ||
+    rawKey === "newyork" ||
+    rawKey === "atlanta" ||
+    rawKey === "miami"
+      ? rawKey
+      : "default";
+  const sourceImages = DISCOVERY_FALLBACK_IMAGES[source];
+  return sourceImages[key] || sourceImages.default;
 }

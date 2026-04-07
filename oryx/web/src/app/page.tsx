@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import Script from "next/script";
-import SurfaceShell from "@/components/shells/SurfaceShell";
 import DiscoveryLanding from "@/components/public/DiscoveryLanding";
-import { getDiscoveryNativeEvents } from "@/lib/discovery";
+import { getDiscoveryNativeEvents, groupDiscoveryEventsBySource } from "@/lib/discovery";
 import { getWebOrigin } from "@/lib/domains";
 import { getHomepageContent } from "@/lib/site-content";
+import { searchTicketmasterEvents } from "@/lib/ticketmaster";
 
 export async function generateMetadata(): Promise<Metadata> {
   const homepage = await getHomepageContent();
-  const title = "Discover premium events, nightlife, sports, music, and things to do";
-  const description = homepage.hero.description;
+  const title = "Nightlife, music, sports, entertainment, and things to do in Baltimore, Atlanta, Miami, New York, and beyond";
+  const description =
+    "Discover premium EVNTSZN events, hosted experiences, nightlife, sports, music, and city energy through a cinematic event platform built for discovery, tickets, and momentum.";
 
   return {
     title,
@@ -31,22 +31,34 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     keywords: [
       "events",
-      "things to do",
+      "event discovery",
       "nightlife",
-      "sports events",
       "music events",
-      "city event discovery",
+      "sports events",
+      "entertainment",
+      "things to do",
+      "Baltimore events",
+      "Atlanta events",
+      "Miami events",
+      "New York events",
       "premium event platform",
       "EVNTSZN",
+      homepage.hero.title,
     ],
   };
 }
 
-export default async function Home() {
-  const [homepage, featuredResult] = await Promise.all([
+export default async function HomePage() {
+  const [homepage, nativeResult, externalShowcase] = await Promise.all([
     getHomepageContent(),
     getDiscoveryNativeEvents({ limit: 12 }),
+    searchTicketmasterEvents({ size: 6 }).catch(() => []),
   ]);
+
+  const groupedNative = groupDiscoveryEventsBySource(nativeResult.events);
+  const heroImage =
+    externalShowcase.find((event) => event.imageUrl)?.imageUrl ||
+    null;
 
   const organizationSchema = {
     "@context": "https://schema.org",
@@ -54,7 +66,7 @@ export default async function Home() {
     name: "EVNTSZN",
     url: getWebOrigin(),
     description:
-      "Premium event discovery, ticketing, scanning, and operations across EVNTSZN-native, hosted, and selected partner inventory.",
+      "Premium event discovery, ticketing, scanning, and operations across EVNTSZN-native events, hosted experiences, nightlife, sports, music, and city energy.",
     sameAs: [getWebOrigin()],
   };
 
@@ -64,13 +76,18 @@ export default async function Home() {
     name: "EVNTSZN",
     url: getWebOrigin(),
     description: homepage.discovery.body,
+    potentialAction: {
+      "@type": "SearchAction",
+      target: `${getWebOrigin()}/?q={search_term_string}`,
+      "query-input": "required name=search_term_string",
+    },
   };
 
   const featuredItemsSchema = {
     "@context": "https://schema.org",
     "@type": "ItemList",
     name: "Featured EVNTSZN discovery listings",
-    itemListElement: featuredResult.events.slice(0, 8).map((event, index) => ({
+    itemListElement: nativeResult.events.slice(0, 8).map((event, index) => ({
       "@type": "ListItem",
       position: index + 1,
       url: `${getWebOrigin()}${event.href}`,
@@ -87,48 +104,18 @@ export default async function Home() {
           __html: JSON.stringify([organizationSchema, websiteSchema, featuredItemsSchema]),
         }}
       />
-      <SurfaceShell
-        surface="web"
-        eyebrow={homepage.hero.eyebrow}
-        title={homepage.hero.title}
-        description={homepage.hero.description}
-        actions={
-          <>
-            <Link href={homepage.hero.primaryCtaHref} className="ev-button-primary">
-              {homepage.hero.primaryCtaLabel}
-            </Link>
-            <Link href={homepage.hero.secondaryCtaHref} className="ev-button-secondary">
-              {homepage.hero.secondaryCtaLabel}
-            </Link>
-            <Link href={homepage.hero.tertiaryCtaHref} className="ev-button-secondary">
-              {homepage.hero.tertiaryCtaLabel}
-            </Link>
-          </>
-        }
-        meta={
-          <>
-            <div className="ev-meta-card">
-              <div className="ev-meta-label">Discovery hierarchy</div>
-              <div className="ev-meta-value">
-                EVNTSZN events lead, hosted experiences stay elevated, independent organizers remain clear, and external discovery expands breadth without hijacking priority.
-              </div>
-            </div>
-            <div className="ev-meta-card">
-              <div className="ev-meta-label">Operational control</div>
-              <div className="ev-meta-value">
-                Staff, ops, scanner, admin, HQ, and league operations stay inside their own guarded EVNTSZN surfaces.
-              </div>
-            </div>
-          </>
-        }
-      >
+      <main className="ev-surface ev-surface--web">
         <DiscoveryLanding
-          featuredNativeEvents={featuredResult.events}
+          hero={homepage.hero}
           banner={homepage.banner}
           discovery={homepage.discovery}
           taxonomy={homepage.taxonomy}
+          visibility={homepage.visibility}
+          groupedNativeEvents={groupedNative}
+          externalShowcase={externalShowcase}
+          heroImage={heroImage}
         />
-      </SurfaceShell>
+      </main>
     </>
   );
 }

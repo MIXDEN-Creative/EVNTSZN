@@ -27,12 +27,14 @@ export default function ScannerConsole({
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<ScannerResult[]>([]);
   const [message, setMessage] = useState("");
+  const [messageTone, setMessageTone] = useState<"neutral" | "success" | "error">("neutral");
   const [loading, setLoading] = useState(false);
   const [count, setCount] = useState(checkedInCount);
 
   async function searchTickets(nextQuery = query) {
     setLoading(true);
     setMessage("");
+    setMessageTone("neutral");
 
     try {
       const res = await fetch(
@@ -42,7 +44,11 @@ export default function ScannerConsole({
       const data = (await res.json()) as Record<string, any>;
       if (!res.ok) throw new Error(data.error || "Search failed.");
       setResults(data.results || []);
+      if ((data.results || []).length === 0) {
+        setMessage("No matching ticket was found. Try attendee name, ticket code, or email.");
+      }
     } catch (error) {
+      setMessageTone("error");
       setMessage(error instanceof Error ? error.message : "Search failed.");
     } finally {
       setLoading(false);
@@ -52,6 +58,7 @@ export default function ScannerConsole({
   async function checkIn(ticketId: string) {
     setLoading(true);
     setMessage("");
+    setMessageTone("neutral");
 
     try {
       const res = await fetch(`/api/evntszn/events/${eventId}/scanner/check-in`, {
@@ -70,8 +77,10 @@ export default function ScannerConsole({
             : ticket
         )
       );
+      setMessageTone("success");
       setMessage("Ticket checked in.");
     } catch (error) {
+      setMessageTone("error");
       setMessage(error instanceof Error ? error.message : "Check-in failed.");
     } finally {
       setLoading(false);
@@ -101,10 +110,9 @@ export default function ScannerConsole({
             <div className="flex min-h-[420px] items-end justify-between p-5">
               <div className="max-w-sm">
                 <div className="text-xs uppercase tracking-[0.24em] text-white/45">Camera lane</div>
-                <div className="mt-3 text-2xl font-semibold">Manual-first scanner shell</div>
+                <div className="mt-3 text-2xl font-semibold">Fast check-in, clean lane, no wasted motion.</div>
                 <p className="mt-3 text-sm text-white/65">
-                  Use device camera or wedge scanner in this lane, then fall back to universal search
-                  for rapid guest recovery on iPhone and iPad.
+                  Keep the camera lane unobstructed, recover guests through universal search, and hold the entire front-gate experience inside one tight mobile-first surface.
                 </p>
               </div>
               <div className="rounded-3xl border border-[#A259FF]/30 bg-[#A259FF]/10 px-4 py-3 text-xs uppercase tracking-[0.22em] text-[#dfd0ff]">
@@ -116,8 +124,10 @@ export default function ScannerConsole({
 
         <section className="rounded-[32px] border border-white/10 bg-white/[0.03] p-5">
           <div className="text-xs uppercase tracking-[0.24em] text-[#A259FF]">Universal search</div>
+          <div className="mt-2 text-sm text-white/58">Search by ticket code, attendee, or email. Results stay in-line with direct check-in action.</div>
           <div className="mt-4 flex gap-3">
             <input
+              autoFocus
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={(e) => {
@@ -139,10 +149,23 @@ export default function ScannerConsole({
           </div>
 
           {message ? (
-            <div className="mt-4 rounded-2xl border border-white/10 bg-black/40 p-4 text-sm text-white/72">
+            <div
+              className={`mt-4 rounded-2xl border p-4 text-sm ${
+                messageTone === "success"
+                  ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-100"
+                  : messageTone === "error"
+                    ? "border-red-500/20 bg-red-500/10 text-red-100"
+                    : "border-white/10 bg-black/40 text-white/72"
+              }`}
+            >
               {message}
             </div>
           ) : null}
+
+          <div className="mt-4 flex items-center justify-between gap-3 text-xs uppercase tracking-[0.18em] text-white/45">
+            <span>Results</span>
+            <span>{results.length}</span>
+          </div>
 
           <div className="mt-5 grid gap-3">
             {results.map((ticket) => (
@@ -171,7 +194,7 @@ export default function ScannerConsole({
 
             {!results.length ? (
               <div className="rounded-2xl border border-dashed border-white/15 bg-black/30 p-4 text-sm text-white/52">
-                Search results will appear here with direct check-in actions.
+                Search results appear here immediately with direct check-in actions and clear ticket status.
               </div>
             ) : null}
           </div>

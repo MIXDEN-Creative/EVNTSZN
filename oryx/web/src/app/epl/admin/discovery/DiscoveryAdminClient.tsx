@@ -24,6 +24,7 @@ type ManagedContent = {
     body: string;
     disclosure: string;
     searchPlaceholder: string;
+    keywordPlaceholder: string;
     cityPlaceholder: string;
     nativeHeadline: string;
     hostHeadline: string;
@@ -33,6 +34,47 @@ type ManagedContent = {
   taxonomy: {
     categories: Array<{ title: string; description: string }>;
     cities: Array<{ name: string; description: string }>;
+  };
+  visibility: {
+    showNativeSection: boolean;
+    showHostSection: boolean;
+    showIndependentSection: boolean;
+    showExternalSection: boolean;
+    showEplPanel: boolean;
+    showCategoryBlocks: boolean;
+    showCityBlocks: boolean;
+  };
+  storageReady: boolean;
+};
+
+type ManagedEplContent = {
+  hero: {
+    eyebrow: string;
+    title: string;
+    description: string;
+    primaryCtaLabel: string;
+    primaryCtaHref: string;
+    secondaryCtaLabel: string;
+    secondaryCtaHref: string;
+  };
+  sections: {
+    seasonHeadline: string;
+    seasonBody: string;
+    scheduleHeadline: string;
+    scheduleBody: string;
+    teamsHeadline: string;
+    teamsBody: string;
+    standingsHeadline: string;
+    standingsBody: string;
+    storeHeadline: string;
+    storeBody: string;
+  };
+  menu: {
+    showRegister: boolean;
+    showSchedule: boolean;
+    showTeams: boolean;
+    showStandings: boolean;
+    showStore: boolean;
   };
   storageReady: boolean;
 };
@@ -82,6 +124,7 @@ function serializeCities(items: Array<{ name: string; description: string }>) {
 
 export default function DiscoveryAdminClient() {
   const [content, setContent] = useState<ManagedContent | null>(null);
+  const [eplContent, setEplContent] = useState<ManagedEplContent | null>(null);
   const [listings, setListings] = useState<DiscoveryListing[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
@@ -101,11 +144,13 @@ export default function DiscoveryAdminClient() {
     }
 
     const nextContent = payload.content as ManagedContent;
+    const nextEpl = payload.epl as ManagedEplContent;
     setContent(nextContent);
+    setEplContent(nextEpl);
     setListings((payload.listings as DiscoveryListing[]) || []);
     setTaxonomyCategories(serializeCategories(nextContent.taxonomy.categories));
     setTaxonomyCities(serializeCities(nextContent.taxonomy.cities));
-    setMessage(nextContent.storageReady ? null : "Discovery controls are running on fallback content until the new discovery migration is applied.");
+    setMessage(nextContent.storageReady && nextEpl.storageReady ? null : "Public-surface controls are running on fallback content until the discovery controls migration is applied.");
     setLoading(false);
   }
 
@@ -175,7 +220,7 @@ export default function DiscoveryAdminClient() {
     await load();
   }
 
-  if (loading || !content) {
+  if (loading || !content || !eplContent) {
     return (
       <main className="mx-auto max-w-7xl p-6">
         <div className="ev-empty">Loading discovery controls...</div>
@@ -257,6 +302,7 @@ export default function DiscoveryAdminClient() {
                 <textarea className="ev-textarea mt-3" value={content.discovery.disclosure} onChange={(event) => setContent({ ...content, discovery: { ...content.discovery, disclosure: event.target.value } })} />
                 <div className="mt-3 grid gap-3 md:grid-cols-2">
                   <input className="ev-field" value={content.discovery.searchPlaceholder} onChange={(event) => setContent({ ...content, discovery: { ...content.discovery, searchPlaceholder: event.target.value } })} />
+                  <input className="ev-field" value={content.discovery.keywordPlaceholder} onChange={(event) => setContent({ ...content, discovery: { ...content.discovery, keywordPlaceholder: event.target.value } })} />
                   <input className="ev-field" value={content.discovery.cityPlaceholder} onChange={(event) => setContent({ ...content, discovery: { ...content.discovery, cityPlaceholder: event.target.value } })} />
                   <input className="ev-field" value={content.discovery.nativeHeadline} onChange={(event) => setContent({ ...content, discovery: { ...content.discovery, nativeHeadline: event.target.value } })} />
                   <input className="ev-field" value={content.discovery.hostHeadline} onChange={(event) => setContent({ ...content, discovery: { ...content.discovery, hostHeadline: event.target.value } })} />
@@ -273,6 +319,46 @@ export default function DiscoveryAdminClient() {
                 </button>
               </div>
             </div>
+          </div>
+
+          <div className="ev-panel">
+            <div className="ev-section-kicker">Homepage visibility</div>
+            <div className="mt-5 grid gap-3 md:grid-cols-2">
+              {[
+                ["showNativeSection", "Show EVNTSZN event section"],
+                ["showHostSection", "Show EVNTSZN Host section"],
+                ["showIndependentSection", "Show Independent Organizer section"],
+                ["showExternalSection", "Show external discovery section"],
+                ["showEplPanel", "Show EPL homepage spotlight"],
+                ["showCategoryBlocks", "Show category intent blocks"],
+                ["showCityBlocks", "Show city blocks"],
+              ].map(([key, label]) => (
+                <label key={key} className="flex items-center gap-3 text-sm text-white/72">
+                  <input
+                    type="checkbox"
+                    checked={content.visibility[key as keyof ManagedContent["visibility"]]}
+                    onChange={(event) =>
+                      setContent({
+                        ...content,
+                        visibility: {
+                          ...content.visibility,
+                          [key]: event.target.checked,
+                        },
+                      })
+                    }
+                  />
+                  {label}
+                </label>
+              ))}
+            </div>
+            <button
+              type="button"
+              className="ev-button-primary mt-5"
+              disabled={saving === "homepage.visibility"}
+              onClick={() => saveContent("homepage.visibility", content.visibility, "Homepage Visibility")}
+            >
+              {saving === "homepage.visibility" ? "Saving..." : "Save visibility"}
+            </button>
           </div>
         </section>
 
@@ -399,6 +485,95 @@ export default function DiscoveryAdminClient() {
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+
+          <div className="ev-panel">
+            <div className="ev-section-kicker">EPL public page</div>
+            <p className="mt-3 text-sm text-white/65">
+              Control the public league landing page, hero copy, and menu visibility without turning EPL into a page-builder.
+            </p>
+
+            <div className="mt-5 space-y-6">
+              <div>
+                <input className="ev-field" value={eplContent.hero.eyebrow} onChange={(event) => setEplContent({ ...eplContent, hero: { ...eplContent.hero, eyebrow: event.target.value } })} />
+                <input className="ev-field mt-3" value={eplContent.hero.title} onChange={(event) => setEplContent({ ...eplContent, hero: { ...eplContent.hero, title: event.target.value } })} />
+                <textarea className="ev-textarea mt-3" value={eplContent.hero.description} onChange={(event) => setEplContent({ ...eplContent, hero: { ...eplContent.hero, description: event.target.value } })} />
+                <div className="mt-3 grid gap-3 md:grid-cols-2">
+                  <input className="ev-field" value={eplContent.hero.primaryCtaLabel} onChange={(event) => setEplContent({ ...eplContent, hero: { ...eplContent.hero, primaryCtaLabel: event.target.value } })} />
+                  <input className="ev-field" value={eplContent.hero.primaryCtaHref} onChange={(event) => setEplContent({ ...eplContent, hero: { ...eplContent.hero, primaryCtaHref: event.target.value } })} />
+                  <input className="ev-field" value={eplContent.hero.secondaryCtaLabel} onChange={(event) => setEplContent({ ...eplContent, hero: { ...eplContent.hero, secondaryCtaLabel: event.target.value } })} />
+                  <input className="ev-field" value={eplContent.hero.secondaryCtaHref} onChange={(event) => setEplContent({ ...eplContent, hero: { ...eplContent.hero, secondaryCtaHref: event.target.value } })} />
+                </div>
+                <button
+                  type="button"
+                  className="ev-button-secondary mt-4"
+                  disabled={saving === "epl.hero"}
+                  onClick={() => saveContent("epl.hero", eplContent.hero, "EPL Hero")}
+                >
+                  {saving === "epl.hero" ? "Saving..." : "Save EPL hero"}
+                </button>
+              </div>
+
+              <div>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <input className="ev-field" value={eplContent.sections.seasonHeadline} onChange={(event) => setEplContent({ ...eplContent, sections: { ...eplContent.sections, seasonHeadline: event.target.value } })} />
+                  <textarea className="ev-textarea" value={eplContent.sections.seasonBody} onChange={(event) => setEplContent({ ...eplContent, sections: { ...eplContent.sections, seasonBody: event.target.value } })} />
+                  <input className="ev-field" value={eplContent.sections.scheduleHeadline} onChange={(event) => setEplContent({ ...eplContent, sections: { ...eplContent.sections, scheduleHeadline: event.target.value } })} />
+                  <textarea className="ev-textarea" value={eplContent.sections.scheduleBody} onChange={(event) => setEplContent({ ...eplContent, sections: { ...eplContent.sections, scheduleBody: event.target.value } })} />
+                  <input className="ev-field" value={eplContent.sections.teamsHeadline} onChange={(event) => setEplContent({ ...eplContent, sections: { ...eplContent.sections, teamsHeadline: event.target.value } })} />
+                  <textarea className="ev-textarea" value={eplContent.sections.teamsBody} onChange={(event) => setEplContent({ ...eplContent, sections: { ...eplContent.sections, teamsBody: event.target.value } })} />
+                  <input className="ev-field" value={eplContent.sections.standingsHeadline} onChange={(event) => setEplContent({ ...eplContent, sections: { ...eplContent.sections, standingsHeadline: event.target.value } })} />
+                  <textarea className="ev-textarea" value={eplContent.sections.standingsBody} onChange={(event) => setEplContent({ ...eplContent, sections: { ...eplContent.sections, standingsBody: event.target.value } })} />
+                  <input className="ev-field" value={eplContent.sections.storeHeadline} onChange={(event) => setEplContent({ ...eplContent, sections: { ...eplContent.sections, storeHeadline: event.target.value } })} />
+                  <textarea className="ev-textarea" value={eplContent.sections.storeBody} onChange={(event) => setEplContent({ ...eplContent, sections: { ...eplContent.sections, storeBody: event.target.value } })} />
+                </div>
+                <button
+                  type="button"
+                  className="ev-button-secondary mt-4"
+                  disabled={saving === "epl.sections"}
+                  onClick={() => saveContent("epl.sections", eplContent.sections, "EPL Sections")}
+                >
+                  {saving === "epl.sections" ? "Saving..." : "Save EPL sections"}
+                </button>
+              </div>
+
+              <div>
+                <div className="grid gap-3 md:grid-cols-2">
+                  {[
+                    ["showRegister", "Show Register"],
+                    ["showSchedule", "Show Schedule"],
+                    ["showTeams", "Show Teams"],
+                    ["showStandings", "Show Standings"],
+                    ["showStore", "Show Store"],
+                  ].map(([key, label]) => (
+                    <label key={key} className="flex items-center gap-3 text-sm text-white/72">
+                      <input
+                        type="checkbox"
+                        checked={eplContent.menu[key as keyof ManagedEplContent["menu"]]}
+                        onChange={(event) =>
+                          setEplContent({
+                            ...eplContent,
+                            menu: {
+                              ...eplContent.menu,
+                              [key]: event.target.checked,
+                            },
+                          })
+                        }
+                      />
+                      {label}
+                    </label>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  className="ev-button-primary mt-4"
+                  disabled={saving === "epl.menu"}
+                  onClick={() => saveContent("epl.menu", eplContent.menu, "EPL Menu")}
+                >
+                  {saving === "epl.menu" ? "Saving..." : "Save EPL menu"}
+                </button>
+              </div>
             </div>
           </div>
         </section>

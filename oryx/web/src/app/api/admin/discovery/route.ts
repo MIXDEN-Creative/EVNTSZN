@@ -1,12 +1,25 @@
 import { NextResponse } from "next/server";
 import { requireAdminPermission } from "@/lib/admin-auth";
 import { getDiscoveryNativeEvents } from "@/lib/discovery";
-import { getHomepageContent, DEFAULT_HOMEPAGE_CONTENT } from "@/lib/site-content";
+import {
+  getHomepageContent,
+  DEFAULT_HOMEPAGE_CONTENT,
+  DEFAULT_EPL_PUBLIC_CONTENT,
+  getEplPublicContent,
+} from "@/lib/site-content";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 type DiscoveryContentUpdateBody = {
   kind: "content";
-  key: "homepage.hero" | "homepage.banner" | "homepage.discovery" | "homepage.taxonomy";
+  key:
+    | "homepage.hero"
+    | "homepage.banner"
+    | "homepage.discovery"
+    | "homepage.taxonomy"
+    | "homepage.visibility"
+    | "epl.hero"
+    | "epl.sections"
+    | "epl.menu";
   label?: string;
   description?: string;
   content: Record<string, unknown>;
@@ -38,16 +51,21 @@ function isMissingDiscoveryTableError(error: unknown) {
 export async function GET() {
   await requireAdminPermission("catalog.manage", "/epl/admin/discovery");
 
-  const [homepage, discoveryListings] = await Promise.all([
+  const [homepage, discoveryListings, epl] = await Promise.all([
     getHomepageContent(),
     getDiscoveryNativeEvents({ limit: 50 }),
+    getEplPublicContent(),
   ]);
 
   return NextResponse.json({
     ok: true,
-    storageReady: homepage.storageReady && discoveryListings.storageReady,
-    defaults: DEFAULT_HOMEPAGE_CONTENT,
+    storageReady: homepage.storageReady && discoveryListings.storageReady && epl.storageReady,
+    defaults: {
+      homepage: DEFAULT_HOMEPAGE_CONTENT,
+      epl: DEFAULT_EPL_PUBLIC_CONTENT,
+    },
     content: homepage,
+    epl,
     listings: discoveryListings.events,
   });
 }
