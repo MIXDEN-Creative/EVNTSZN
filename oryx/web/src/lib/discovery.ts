@@ -57,12 +57,20 @@ const SOURCE_PRIORITY: Record<Exclude<DiscoverySourceType, "ticketmaster">, numb
 
 function isMissingDiscoveryControlsError(error: unknown) {
   const code = typeof error === "object" && error !== null && "code" in error ? String((error as { code?: unknown }).code) : "";
+  const status = typeof error === "object" && error !== null && "status" in error ? String((error as { status?: unknown }).status) : "";
   const message =
     typeof error === "object" && error !== null && "message" in error
       ? String((error as { message?: unknown }).message)
       : "";
 
-  return code === "42P01" || code === "PGRST205" || /discovery_listing_controls/i.test(message);
+  return (
+    code === "42P01" ||
+    code === "PGRST205" ||
+    status === "404" ||
+    /discovery_listing_controls/i.test(message) ||
+    /relation .*discovery_listing_controls/i.test(message) ||
+    /schema cache/i.test(message)
+  );
 }
 
 function inferSourceType(row: NativeEventRow, control?: DiscoveryControlRow | null): Exclude<DiscoverySourceType, "ticketmaster"> {
@@ -140,72 +148,122 @@ export async function getDiscoveryNativeEvents(input: {
     nativeQuery.ilike("city", `%${city}%`);
   }
 
-  const { data: rawEvents, error: rawEventsError } = await nativeQuery;
+  try {
+    const { data: rawEvents, error: rawEventsError } = await nativeQuery;
 
-  if (rawEventsError) {
-    throw new Error(rawEventsError.message);
-  }
+    if (rawEventsError) {
+      throw new Error(rawEventsError.message);
+    }
 
-  const events = (rawEvents || []) as NativeEventRow[];
-  if (!events.length) {
+    const events = (rawEvents || []) as NativeEventRow[];
+    if (!events.length) {
+      return {
+        events: [] as DiscoveryNativeEvent[],
+        storageReady: true,
+      };
+    }
+
+    const eventIds = events.map((event) => event.id);
+    const { data: rawControls, error: rawControlsError } = await supabaseAdmin
+      .from("discovery_listing_controls")
+      .select("event_id, source_type, badge_label, featured, listing_priority, promo_collection, is_discoverable")
+      .in("event_id", eventIds);
+
+    const storageReady = !rawControlsError || !isMissingDiscoveryControlsError(rawControlsError);
+
+    if (rawControlsError && !isMissingDiscoveryControlsError(rawControlsError)) {
+      throw new Error(rawControlsError.message);
+    }
+
+    const controlsByEventId = new Map<string, DiscoveryControlRow>(
+      ((rawControls || []) as DiscoveryControlRow[]).map((control) => [control.event_id, control]),
+    );
+
+    const mapped = events
+      .map((event) => {
+        const control = controlsByEventId.get(event.id);
+        if (control && !control.is_discoverable) {
+          return null;
+        }
+
+        const source = inferSourceType(event, control);
+
+        return {
+          id: event.id,
+          title: event.title,
+          slug: event.slug,
+          href: `/events/${event.slug}`,
+          subtitle: event.subtitle,
+          description: event.description,
+          city: event.city,
+          state: event.state,
+          startAt: event.start_at,
+          heroNote: event.hero_note,
+          source,
+          sourceLabel: getSourceLabel(source),
+          badgeLabel: control?.badge_label || getDefaultBadgeLabel(source),
+          featured: control?.featured || false,
+          listingPriority: control?.listing_priority || 0,
+          promoCollection: control?.promo_collection || null,
+          isPrimary: true as const,
+        };
+      })
+      .filter((event): event is DiscoveryNativeEvent => Boolean(event))
+      .sort(sortDiscoveryEvents);
+
     return {
-      events: [] as DiscoveryNativeEvent[],
-      storageReady: true,
+      events: mapped,
+      storageReady,
     };
-  }
+  } catch (error) {
+    if (isMissingDiscoveryControlsError(error)) {
+      console.warn("[discovery] listing controls unavailable, using inferred native discovery ordering");
 
-  const eventIds = events.map((event) => event.id);
-  const { data: rawControls, error: rawControlsError } = await supabaseAdmin
-    .from("discovery_listing_controls")
-    .select("event_id, source_type, badge_label, featured, listing_priority, promo_collection, is_discoverable")
-    .in("event_id", eventIds);
+      const { data: rawEvents } = await supabaseAdmin
+        .from("evntszn_events")
+        .select("id, title, slug, subtitle, description, city, state, start_at, hero_note, organizer_user_id")
+        .eq("visibility", "published")
+        .order("start_at", { ascending: true })
+        .limit(limit);
 
-  const storageReady = !rawControlsError || !isMissingDiscoveryControlsError(rawControlsError);
+      const events = ((rawEvents || []) as NativeEventRow[])
+        .map((event) => {
+          const source = inferSourceType(event, null);
 
-  if (rawControlsError && !isMissingDiscoveryControlsError(rawControlsError)) {
-    throw new Error(rawControlsError.message);
-  }
-
-  const controlsByEventId = new Map<string, DiscoveryControlRow>(
-    ((rawControls || []) as DiscoveryControlRow[]).map((control) => [control.event_id, control]),
-  );
-
-  const mapped = events
-    .map((event) => {
-      const control = controlsByEventId.get(event.id);
-      if (control && !control.is_discoverable) {
-        return null;
-      }
-
-      const source = inferSourceType(event, control);
+          return {
+            id: event.id,
+            title: event.title,
+            slug: event.slug,
+            href: `/events/${event.slug}`,
+            subtitle: event.subtitle,
+            description: event.description,
+            city: event.city,
+            state: event.state,
+            startAt: event.start_at,
+            heroNote: event.hero_note,
+            source,
+            sourceLabel: getSourceLabel(source),
+            badgeLabel: getDefaultBadgeLabel(source),
+            featured: false,
+            listingPriority: 0,
+            promoCollection: null,
+            isPrimary: true as const,
+          };
+        })
+        .sort(sortDiscoveryEvents);
 
       return {
-        id: event.id,
-        title: event.title,
-        slug: event.slug,
-        href: `/events/${event.slug}`,
-        subtitle: event.subtitle,
-        description: event.description,
-        city: event.city,
-        state: event.state,
-        startAt: event.start_at,
-        heroNote: event.hero_note,
-        source,
-        sourceLabel: getSourceLabel(source),
-        badgeLabel: control?.badge_label || getDefaultBadgeLabel(source),
-        featured: control?.featured || false,
-        listingPriority: control?.listing_priority || 0,
-        promoCollection: control?.promo_collection || null,
-        isPrimary: true as const,
+        events,
+        storageReady: false,
       };
-    })
-    .filter((event): event is DiscoveryNativeEvent => Boolean(event))
-    .sort(sortDiscoveryEvents);
+    }
 
-  return {
-    events: mapped,
-    storageReady,
-  };
+    console.error("[discovery] native discovery load failed", error);
+    return {
+      events: [] as DiscoveryNativeEvent[],
+      storageReady: false,
+    };
+  }
 }
 
 export function groupDiscoveryEventsBySource(events: DiscoveryNativeEvent[]) {

@@ -175,44 +175,68 @@ function normalizeTaxonomyContent(value: Record<string, unknown> | null | undefi
 
 function isMissingContentTableError(error: unknown) {
   const code = typeof error === "object" && error !== null && "code" in error ? String((error as { code?: unknown }).code) : "";
+  const status = typeof error === "object" && error !== null && "status" in error ? String((error as { status?: unknown }).status) : "";
   const message =
     typeof error === "object" && error !== null && "message" in error
       ? String((error as { message?: unknown }).message)
       : "";
 
-  return code === "42P01" || code === "PGRST205" || /site_content_entries/i.test(message);
+  return (
+    code === "42P01" ||
+    code === "PGRST205" ||
+    status === "404" ||
+    /site_content_entries/i.test(message) ||
+    /relation .*site_content_entries/i.test(message) ||
+    /schema cache/i.test(message)
+  );
 }
 
 export async function getHomepageContent(): Promise<HomepageContent> {
-  const { data, error } = await supabaseAdmin
-    .from("site_content_entries")
-    .select("key, content")
-    .in("key", [...HOMEPAGE_CONTENT_KEYS])
-    .eq("is_active", true);
+  try {
+    const { data, error } = await supabaseAdmin
+      .from("site_content_entries")
+      .select("key, content")
+      .in("key", [...HOMEPAGE_CONTENT_KEYS])
+      .eq("is_active", true);
 
-  if (error) {
+    if (error) {
+      if (isMissingContentTableError(error)) {
+        return {
+          ...DEFAULT_HOMEPAGE_CONTENT,
+          storageReady: false,
+        };
+      }
+
+      throw new Error(error.message);
+    }
+
+    const rows = ((data || []) as SiteContentRow[]).reduce<Record<string, Record<string, unknown>>>((acc, row) => {
+      if (row.key && row.content) {
+        acc[row.key] = row.content;
+      }
+      return acc;
+    }, {});
+
+    return {
+      hero: mergeObject(DEFAULT_HOMEPAGE_CONTENT.hero, rows["homepage.hero"]),
+      banner: mergeObject(DEFAULT_HOMEPAGE_CONTENT.banner, rows["homepage.banner"]),
+      discovery: mergeObject(DEFAULT_HOMEPAGE_CONTENT.discovery, rows["homepage.discovery"]),
+      taxonomy: normalizeTaxonomyContent(rows["homepage.taxonomy"]),
+      storageReady: true,
+    };
+  } catch (error) {
     if (isMissingContentTableError(error)) {
+      console.warn("[discovery] homepage content controls unavailable, using fallback content");
       return {
         ...DEFAULT_HOMEPAGE_CONTENT,
         storageReady: false,
       };
     }
 
-    throw new Error(error.message);
+    console.error("[discovery] homepage content load failed", error);
+    return {
+      ...DEFAULT_HOMEPAGE_CONTENT,
+      storageReady: false,
+    };
   }
-
-  const rows = ((data || []) as SiteContentRow[]).reduce<Record<string, Record<string, unknown>>>((acc, row) => {
-    if (row.key && row.content) {
-      acc[row.key] = row.content;
-    }
-    return acc;
-  }, {});
-
-  return {
-    hero: mergeObject(DEFAULT_HOMEPAGE_CONTENT.hero, rows["homepage.hero"]),
-    banner: mergeObject(DEFAULT_HOMEPAGE_CONTENT.banner, rows["homepage.banner"]),
-    discovery: mergeObject(DEFAULT_HOMEPAGE_CONTENT.discovery, rows["homepage.discovery"]),
-    taxonomy: normalizeTaxonomyContent(rows["homepage.taxonomy"]),
-    storageReady: true,
-  };
 }
