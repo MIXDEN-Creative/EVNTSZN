@@ -3,9 +3,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import PublicPageFrame from "@/components/public/PublicPageFrame";
+import SponsorPlacementStrip from "@/components/public/SponsorPlacementStrip";
 import { getWebOrigin } from "@/lib/domains";
 import { getDiscoveryNativeEvents } from "@/lib/discovery";
 import { PUBLIC_CITIES, getPublicCityBySlug } from "@/lib/public-cities";
+import { getPublicModulesContent } from "@/lib/site-content";
+import { getPublicSponsorPlacements } from "@/lib/sponsor-placements";
 import { searchTicketmasterEvents } from "@/lib/ticketmaster";
 
 type CityPageProps = {
@@ -60,9 +63,11 @@ export default async function PublicCityPage({ params }: CityPageProps) {
     notFound();
   }
 
-  const [nativeResult, externalEvents] = await Promise.all([
+  const [nativeResult, externalEvents, modules, sponsorPlacements] = await Promise.all([
     getDiscoveryNativeEvents({ city: city.name, limit: 6 }),
     searchTicketmasterEvents({ city: city.name, size: 6 }).catch(() => []),
+    getPublicModulesContent(),
+    getPublicSponsorPlacements([`city:${city.slug}`, "city"]),
   ]);
 
   const cards = [
@@ -117,10 +122,11 @@ export default async function PublicCityPage({ params }: CityPageProps) {
       </section>
 
       <section className="mx-auto max-w-7xl px-4 py-10 md:px-6 lg:px-8">
-        <div className="ev-section-kicker">City feed</div>
+        <div className="ev-section-kicker">{modules.citySpotlight.eyebrow}</div>
         <h2 className="mt-3 text-3xl font-black tracking-[-0.04em] text-white md:text-4xl">
-          What is moving in {city.name} right now.
+          {modules.citySpotlight.headline}
         </h2>
+        <p className="mt-4 max-w-3xl text-base leading-7 text-white/72">{modules.citySpotlight.body}</p>
         {cards.length ? (
           <div className="mt-6 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
             {cards.map((event) => (
@@ -148,6 +154,18 @@ export default async function PublicCityPage({ params }: CityPageProps) {
           </div>
         )}
       </section>
+
+      {sponsorPlacements.length ? (
+        <section className="mx-auto max-w-7xl px-4 pb-10 md:px-6 lg:px-8">
+          <SponsorPlacementStrip
+            placements={sponsorPlacements}
+            eyebrow={modules.sponsorBlock.eyebrow}
+            headline={`${city.name} sponsors and partners`}
+            body={modules.sponsorBlock.body}
+            compact
+          />
+        </section>
+      ) : null}
     </PublicPageFrame>
   );
 }

@@ -24,6 +24,46 @@ export default async function AdminHomePage() {
       href: `${getAdminOrigin(host)}/team`,
       description: "Invite admins, assign roles, and control permissions.",
     },
+    permissions.includes("admin.manage") && {
+      title: "Control Center",
+      href: `${getAdminOrigin(host)}/control-center`,
+      description: "Monitor approvals, open issues, sponsorship money, and operator coverage from one executive summary.",
+    },
+    permissions.includes("admin.manage") && {
+      title: "Users",
+      href: `${getAdminOrigin(host)}/users`,
+      description: "Create users, assign operator roles, and manage city or surface access.",
+    },
+    permissions.includes("admin.manage") && {
+      title: "Approvals",
+      href: `${getAdminOrigin(host)}/approvals`,
+      description: "Review host, organizer, and partner applications and approve discovery eligibility.",
+    },
+    permissions.includes("admin.manage") && {
+      title: "City Office",
+      href: `${getAdminOrigin(host)}/city-office`,
+      description: "Track market-level events, revenue, host coverage, and pending approvals city by city.",
+    },
+    permissions.includes("admin.manage") && {
+      title: "Hiring Pipeline",
+      href: `${getAdminOrigin(host)}/hiring`,
+      description: "Review EPL applications, assign interviews, capture notes, and convert hired applicants into users.",
+    },
+    permissions.includes("admin.manage") && {
+      title: "Opportunities",
+      href: `${getAdminOrigin(host)}/opportunities`,
+      description: "Publish or close current EPL volunteer and paid roles without touching code.",
+    },
+    permissions.includes("admin.manage") && {
+      title: "Scanner Access",
+      href: `${getAdminOrigin(host)}/scanner`,
+      description: "See who can work the gate, what city they cover, and which events they can scan.",
+    },
+    permissions.includes("admin.manage") && {
+      title: "Issues & Health",
+      href: `${getAdminOrigin(host)}/issues`,
+      description: "Review operational failures, webhook trouble, and store issues from one monitored queue.",
+    },
     permissions.includes("catalog.manage") && {
       title: "Storefront",
       href: `${getEplOrigin(host)}/store`,
@@ -33,6 +73,11 @@ export default async function AdminHomePage() {
       title: "Discovery Control",
       href: `${getAdminOrigin(host)}/discovery`,
       description: "Manage homepage hero content, featured listings, taxonomy blocks, and public discovery hierarchy.",
+    },
+    permissions.includes("catalog.manage") && {
+      title: "Sponsors & Packages",
+      href: `${getAdminOrigin(host)}/sponsors`,
+      description: "Manage sponsor placements, package orders, live readiness, and payment-backed partner operations.",
     },
   ].filter(Boolean) as { title: string; href: string; description: string }[];
 

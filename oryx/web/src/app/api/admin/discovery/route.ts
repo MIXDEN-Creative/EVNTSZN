@@ -6,6 +6,8 @@ import {
   DEFAULT_HOMEPAGE_CONTENT,
   DEFAULT_EPL_PUBLIC_CONTENT,
   getEplPublicContent,
+  DEFAULT_PUBLIC_MODULES,
+  getPublicModulesContent,
 } from "@/lib/site-content";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
@@ -19,7 +21,8 @@ type DiscoveryContentUpdateBody = {
     | "homepage.visibility"
     | "epl.hero"
     | "epl.sections"
-    | "epl.menu";
+    | "epl.menu"
+    | "public.modules";
   label?: string;
   description?: string;
   content: Record<string, unknown>;
@@ -51,21 +54,24 @@ function isMissingDiscoveryTableError(error: unknown) {
 export async function GET() {
   await requireAdminPermission("catalog.manage", "/epl/admin/discovery");
 
-  const [homepage, discoveryListings, epl] = await Promise.all([
+  const [homepage, discoveryListings, epl, modules] = await Promise.all([
     getHomepageContent(),
     getDiscoveryNativeEvents({ limit: 50 }),
     getEplPublicContent(),
+    getPublicModulesContent(),
   ]);
 
   return NextResponse.json({
     ok: true,
-    storageReady: homepage.storageReady && discoveryListings.storageReady && epl.storageReady,
+    storageReady: homepage.storageReady && discoveryListings.storageReady && epl.storageReady && modules.storageReady,
     defaults: {
       homepage: DEFAULT_HOMEPAGE_CONTENT,
       epl: DEFAULT_EPL_PUBLIC_CONTENT,
+      modules: DEFAULT_PUBLIC_MODULES,
     },
     content: homepage,
     epl,
+    modules,
     listings: discoveryListings.events,
   });
 }

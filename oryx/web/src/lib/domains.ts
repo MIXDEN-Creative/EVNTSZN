@@ -143,6 +143,14 @@ export function getAdminOrigin(runtimeHost?: string) {
   return getCanonicalOrigin("admin", runtimeHost);
 }
 
+export function getHostsOrigin(runtimeHost?: string) {
+  if (runtimeHost && isLocalHost(runtimeHost)) {
+    return cleanOrigin(process.env.NEXT_PUBLIC_DEV_ORIGIN || DEFAULT_DEV_ORIGIN);
+  }
+
+  return `https://hosts.${getBaseDomain()}`;
+}
+
 export function getSurfaceHost(surface: EvntsznSurface) {
   return new URL(getCanonicalOrigin(surface)).host;
 }

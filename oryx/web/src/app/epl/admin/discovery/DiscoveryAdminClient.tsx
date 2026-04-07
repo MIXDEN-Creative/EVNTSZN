@@ -76,8 +76,44 @@ type ManagedEplContent = {
     showTeams: boolean;
     showStandings: boolean;
     showStore: boolean;
+    showOpportunities: boolean;
     showDraftCountdown: boolean;
     showFaq: boolean;
+  };
+  storageReady: boolean;
+};
+
+type ManagedPublicModules = {
+  citySpotlight: {
+    eyebrow: string;
+    headline: string;
+    body: string;
+  };
+  teamBlocks: {
+    scheduleHeadline: string;
+    scheduleBody: string;
+    rosterHeadline: string;
+    rosterBody: string;
+    announcementsHeadline: string;
+    announcementsBody: string;
+  };
+  storePromo: {
+    eyebrow: string;
+    headline: string;
+    body: string;
+    ctaLabel: string;
+    ctaHref: string;
+  };
+  sponsorBlock: {
+    eyebrow: string;
+    headline: string;
+    body: string;
+    footerHeadline: string;
+  };
+  opportunitiesBlock: {
+    eyebrow: string;
+    headline: string;
+    body: string;
   };
   storageReady: boolean;
 };
@@ -128,6 +164,7 @@ function serializeCities(items: Array<{ name: string; description: string }>) {
 export default function DiscoveryAdminClient() {
   const [content, setContent] = useState<ManagedContent | null>(null);
   const [eplContent, setEplContent] = useState<ManagedEplContent | null>(null);
+  const [modules, setModules] = useState<ManagedPublicModules | null>(null);
   const [listings, setListings] = useState<DiscoveryListing[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
@@ -148,12 +185,14 @@ export default function DiscoveryAdminClient() {
 
     const nextContent = payload.content as ManagedContent;
     const nextEpl = payload.epl as ManagedEplContent;
+    const nextModules = payload.modules as ManagedPublicModules;
     setContent(nextContent);
     setEplContent(nextEpl);
+    setModules(nextModules);
     setListings((payload.listings as DiscoveryListing[]) || []);
     setTaxonomyCategories(serializeCategories(nextContent.taxonomy.categories));
     setTaxonomyCities(serializeCities(nextContent.taxonomy.cities));
-    setMessage(nextContent.storageReady && nextEpl.storageReady ? null : "Public-surface controls are running on fallback content until the discovery controls migration is applied.");
+    setMessage(nextContent.storageReady && nextEpl.storageReady && nextModules.storageReady ? null : "Public-surface controls are running on fallback content until the discovery controls migration is applied.");
     setLoading(false);
   }
 
@@ -223,7 +262,7 @@ export default function DiscoveryAdminClient() {
     await load();
   }
 
-  if (loading || !content || !eplContent) {
+  if (loading || !content || !eplContent || !modules) {
     return (
       <main className="mx-auto max-w-7xl p-6">
         <div className="ev-empty">Loading discovery controls...</div>
@@ -394,6 +433,88 @@ export default function DiscoveryAdminClient() {
           </div>
 
           <div className="ev-panel">
+            <div className="ev-section-kicker">Public module copy</div>
+            <p className="mt-3 text-sm text-white/65">
+              Manage the shared copy blocks that feed city pages, team pages, sponsor placement sections, the EPL store promo, and the public opportunities surface.
+            </p>
+            <div className="mt-5 grid gap-5">
+              <div>
+                <div className="text-sm font-medium text-white/78">City spotlight</div>
+                <div className="mt-3 grid gap-3 md:grid-cols-2">
+                  <input className="ev-field" value={modules.citySpotlight.eyebrow} onChange={(event) => setModules({ ...modules, citySpotlight: { ...modules.citySpotlight, eyebrow: event.target.value } })} />
+                  <input className="ev-field" value={modules.citySpotlight.headline} onChange={(event) => setModules({ ...modules, citySpotlight: { ...modules.citySpotlight, headline: event.target.value } })} />
+                </div>
+                <textarea className="ev-textarea mt-3" value={modules.citySpotlight.body} onChange={(event) => setModules({ ...modules, citySpotlight: { ...modules.citySpotlight, body: event.target.value } })} />
+              </div>
+
+              <div>
+                <div className="text-sm font-medium text-white/78">Team page blocks</div>
+                <div className="mt-3 grid gap-3 md:grid-cols-2">
+                  <input className="ev-field" value={modules.teamBlocks.scheduleHeadline} onChange={(event) => setModules({ ...modules, teamBlocks: { ...modules.teamBlocks, scheduleHeadline: event.target.value } })} />
+                  <input className="ev-field" value={modules.teamBlocks.rosterHeadline} onChange={(event) => setModules({ ...modules, teamBlocks: { ...modules.teamBlocks, rosterHeadline: event.target.value } })} />
+                </div>
+                <textarea className="ev-textarea mt-3" value={modules.teamBlocks.scheduleBody} onChange={(event) => setModules({ ...modules, teamBlocks: { ...modules.teamBlocks, scheduleBody: event.target.value } })} />
+                <textarea className="ev-textarea mt-3" value={modules.teamBlocks.rosterBody} onChange={(event) => setModules({ ...modules, teamBlocks: { ...modules.teamBlocks, rosterBody: event.target.value } })} />
+                <input className="ev-field mt-3" value={modules.teamBlocks.announcementsHeadline} onChange={(event) => setModules({ ...modules, teamBlocks: { ...modules.teamBlocks, announcementsHeadline: event.target.value } })} />
+                <textarea className="ev-textarea mt-3" value={modules.teamBlocks.announcementsBody} onChange={(event) => setModules({ ...modules, teamBlocks: { ...modules.teamBlocks, announcementsBody: event.target.value } })} />
+              </div>
+
+              <div>
+                <div className="text-sm font-medium text-white/78">Store promo</div>
+                <div className="mt-3 grid gap-3 md:grid-cols-2">
+                  <input className="ev-field" value={modules.storePromo.eyebrow} onChange={(event) => setModules({ ...modules, storePromo: { ...modules.storePromo, eyebrow: event.target.value } })} />
+                  <input className="ev-field" value={modules.storePromo.headline} onChange={(event) => setModules({ ...modules, storePromo: { ...modules.storePromo, headline: event.target.value } })} />
+                </div>
+                <textarea className="ev-textarea mt-3" value={modules.storePromo.body} onChange={(event) => setModules({ ...modules, storePromo: { ...modules.storePromo, body: event.target.value } })} />
+                <div className="mt-3 grid gap-3 md:grid-cols-2">
+                  <input className="ev-field" value={modules.storePromo.ctaLabel} onChange={(event) => setModules({ ...modules, storePromo: { ...modules.storePromo, ctaLabel: event.target.value } })} />
+                  <input className="ev-field" value={modules.storePromo.ctaHref} onChange={(event) => setModules({ ...modules, storePromo: { ...modules.storePromo, ctaHref: event.target.value } })} />
+                </div>
+              </div>
+
+              <div>
+                <div className="text-sm font-medium text-white/78">Sponsor blocks</div>
+                <div className="mt-3 grid gap-3 md:grid-cols-2">
+                  <input className="ev-field" value={modules.sponsorBlock.eyebrow} onChange={(event) => setModules({ ...modules, sponsorBlock: { ...modules.sponsorBlock, eyebrow: event.target.value } })} />
+                  <input className="ev-field" value={modules.sponsorBlock.footerHeadline} onChange={(event) => setModules({ ...modules, sponsorBlock: { ...modules.sponsorBlock, footerHeadline: event.target.value } })} />
+                </div>
+                <input className="ev-field mt-3" value={modules.sponsorBlock.headline} onChange={(event) => setModules({ ...modules, sponsorBlock: { ...modules.sponsorBlock, headline: event.target.value } })} />
+                <textarea className="ev-textarea mt-3" value={modules.sponsorBlock.body} onChange={(event) => setModules({ ...modules, sponsorBlock: { ...modules.sponsorBlock, body: event.target.value } })} />
+              </div>
+
+              <div>
+                <div className="text-sm font-medium text-white/78">Opportunities feature</div>
+                <div className="mt-3 grid gap-3 md:grid-cols-2">
+                  <input className="ev-field" value={modules.opportunitiesBlock.eyebrow} onChange={(event) => setModules({ ...modules, opportunitiesBlock: { ...modules.opportunitiesBlock, eyebrow: event.target.value } })} />
+                  <input className="ev-field" value={modules.opportunitiesBlock.headline} onChange={(event) => setModules({ ...modules, opportunitiesBlock: { ...modules.opportunitiesBlock, headline: event.target.value } })} />
+                </div>
+                <textarea className="ev-textarea mt-3" value={modules.opportunitiesBlock.body} onChange={(event) => setModules({ ...modules, opportunitiesBlock: { ...modules.opportunitiesBlock, body: event.target.value } })} />
+              </div>
+
+              <button
+                type="button"
+                className="ev-button-primary"
+                disabled={saving === "public.modules"}
+                onClick={() =>
+                  saveContent(
+                    "public.modules",
+                    {
+                      citySpotlight: modules.citySpotlight,
+                      teamBlocks: modules.teamBlocks,
+                      storePromo: modules.storePromo,
+                      sponsorBlock: modules.sponsorBlock,
+                      opportunitiesBlock: modules.opportunitiesBlock,
+                    },
+                    "Public Modules",
+                  )
+                }
+              >
+                {saving === "public.modules" ? "Saving..." : "Save public modules"}
+              </button>
+            </div>
+          </div>
+
+          <div className="ev-panel">
             <div className="ev-section-kicker">Listing controls</div>
             <p className="mt-3 text-sm text-white/65">
               Curate native EVNTSZN discovery priority, source labeling, and featured status without compromising layout integrity.
@@ -550,6 +671,7 @@ export default function DiscoveryAdminClient() {
                     ["showTeams", "Show Teams"],
                     ["showStandings", "Show Standings"],
                     ["showStore", "Show Store"],
+                    ["showOpportunities", "Show Opportunities"],
                     ["showDraftCountdown", "Show Draft Countdown"],
                     ["showFaq", "Show FAQ"],
                   ].map(([key, label]) => (

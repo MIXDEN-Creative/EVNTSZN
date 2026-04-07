@@ -3,7 +3,9 @@ import EplNav from "@/components/epl/EplNav";
 import DraftCountdown from "@/components/epl/DraftCountdown";
 import Link from "next/link";
 import { EPL_TEAM_PROFILES } from "@/lib/epl-teams";
-import { getEplPublicContent } from "@/lib/site-content";
+import { getEplPublicContent, getPublicModulesContent } from "@/lib/site-content";
+import { getPublicSponsorPlacements } from "@/lib/sponsor-placements";
+import SponsorPlacementStrip from "@/components/public/SponsorPlacementStrip";
 
 export const metadata: Metadata = {
   title: "EPL | EVNTSZN Prime League",
@@ -15,7 +17,11 @@ export const metadata: Metadata = {
 };
 
 export default async function EplPage() {
-  const content = await getEplPublicContent();
+  const [content, modules, placements] = await Promise.all([
+    getEplPublicContent(),
+    getPublicModulesContent(),
+    getPublicSponsorPlacements("epl"),
+  ]);
 
   return (
     <main className="min-h-screen bg-black text-white">
@@ -197,26 +203,64 @@ export default async function EplPage() {
             <p className="mt-4 max-w-3xl text-base leading-7 text-white/72">
               {content.sections.standingsBody}
             </p>
+            <div className="mt-6">
+              <Link href="/epl/standings" className="rounded-full bg-white px-5 py-3 text-sm font-semibold text-black transition hover:opacity-90">
+                Open standings
+              </Link>
+            </div>
+          </section>
+        ) : null}
+
+        {content.menu.showOpportunities ? (
+          <section id="opportunities" className="mt-10 rounded-[32px] border border-white/10 bg-[#0c0c15] p-6 md:p-8">
+            <div className="text-xs font-semibold uppercase tracking-[0.24em] text-[#b899ff]">
+              {modules.opportunitiesBlock.eyebrow}
+            </div>
+            <h2 className="mt-3 text-3xl font-black tracking-tight text-white md:text-5xl">
+              {modules.opportunitiesBlock.headline}
+            </h2>
+            <p className="mt-4 max-w-3xl text-base leading-7 text-white/72">
+              {modules.opportunitiesBlock.body}
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link href="/epl/opportunities" className="rounded-full bg-white px-5 py-3 text-sm font-semibold text-black transition hover:opacity-90">
+                Explore opportunities
+              </Link>
+              <Link href="/epl/opportunities#application" className="rounded-full border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10">
+                Start an application
+              </Link>
+            </div>
           </section>
         ) : null}
 
         {content.menu.showStore ? (
           <section id="store" className="mt-10 rounded-[32px] border border-white/10 bg-[#0c0c15] p-6 md:p-8">
             <div className="text-xs font-semibold uppercase tracking-[0.24em] text-[#b899ff]">
-              Store
+              {modules.storePromo.eyebrow}
             </div>
             <h2 className="mt-3 text-3xl font-black tracking-tight text-white md:text-5xl">
-              {content.sections.storeHeadline}
+              {modules.storePromo.headline || content.sections.storeHeadline}
             </h2>
             <p className="mt-4 max-w-3xl text-base leading-7 text-white/72">
-              {content.sections.storeBody}
+              {modules.storePromo.body || content.sections.storeBody}
             </p>
             <div className="mt-6">
-              <Link href="/epl/store" className="rounded-full bg-white px-5 py-3 text-sm font-semibold text-black transition hover:opacity-90">
-                Shop EPL Store
+              <Link href={modules.storePromo.ctaHref || "/epl/store"} className="rounded-full bg-white px-5 py-3 text-sm font-semibold text-black transition hover:opacity-90">
+                {modules.storePromo.ctaLabel || "Shop EPL Store"}
               </Link>
             </div>
           </section>
+        ) : null}
+
+        {placements.length ? (
+          <div className="mt-10">
+            <SponsorPlacementStrip
+              placements={placements}
+              eyebrow={modules.sponsorBlock.eyebrow}
+              headline={modules.sponsorBlock.headline}
+              body={modules.sponsorBlock.body}
+            />
+          </div>
         ) : null}
 
         {content.menu.showFaq ? (

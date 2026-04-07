@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { getFounderSession } from "@/lib/founder-session";
 import { getLoginUrl, getRestrictedSurfaceForPath, getRestrictedUrl } from "@/lib/domains";
 
 export async function getCurrentUser() {
@@ -12,7 +13,43 @@ export async function getCurrentUser() {
   return user || null;
 }
 
-export async function getAdminMemberships(userId: string) {
+async function getAccessUser() {
+  const user = await getCurrentUser();
+  if (user) {
+    return { user, isFounder: false };
+  }
+
+  const founder = await getFounderSession();
+  if (founder) {
+    return {
+      user: {
+        id: founder.id,
+        email: founder.email,
+      },
+      isFounder: true,
+    };
+  }
+
+  return { user: null, isFounder: false };
+}
+
+export async function getAdminMemberships(userId: string, options?: { isFounder?: boolean }) {
+  if (options?.isFounder) {
+    return [
+      {
+        id: "founder-membership",
+        is_owner: true,
+        is_active: true,
+        role_id: "founder",
+        admin_roles: {
+          id: "founder",
+          name: "Founder",
+          description: "Full-system override across EVNTSZN and EPL.",
+        },
+      },
+    ];
+  }
+
   const { data, error } = await supabaseAdmin
     .from("admin_memberships")
     .select(`
@@ -37,20 +74,20 @@ export async function getAdminMemberships(userId: string) {
 }
 
 export async function isAdminAuthorized() {
-  const user = await getCurrentUser();
+  const { user } = await getAccessUser();
   if (!user) return false;
 
-  const memberships = await getAdminMemberships(user.id);
+  const memberships = await getAdminMemberships(user.id, { isFounder: user.id.startsWith("founder:") });
   return memberships.length > 0;
 }
 
 export async function requireAdmin(nextPath = "/epl/admin") {
-  const user = await getCurrentUser();
+  const { user, isFounder } = await getAccessUser();
   if (!user) {
     redirect(getLoginUrl(nextPath));
   }
 
-  const memberships = await getAdminMemberships(user.id);
+  const memberships = await getAdminMemberships(user.id, { isFounder });
   if (!memberships.length) {
     redirect(
       getRestrictedUrl(getRestrictedSurfaceForPath(nextPath), {
@@ -65,6 +102,24 @@ export async function requireAdmin(nextPath = "/epl/admin") {
 }
 
 export async function getAdminPermissions(userId: string) {
+  if (userId.startsWith("founder:")) {
+    return [
+      "admin.manage",
+      "orders.view",
+      "orders.manage",
+      "rewards.view",
+      "rewards.manage",
+      "catalog.manage",
+      "customers.view",
+      "analytics.view",
+      "approvals.manage",
+      "sponsors.manage",
+      "store.manage",
+      "content.manage",
+      "scanner.manage",
+    ];
+  }
+
   const { data, error } = await supabaseAdmin
     .from("admin_memberships")
     .select(`

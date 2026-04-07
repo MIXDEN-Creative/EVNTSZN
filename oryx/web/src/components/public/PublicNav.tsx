@@ -12,6 +12,8 @@ export default function PublicNav() {
     { label: "Discover", href: `${getWebOrigin()}/` },
     { label: "Cities", href: `${getWebOrigin()}/#cities` },
     { label: "EPL", href: `${getEplOrigin()}/` },
+    { label: "Hosts", href: "https://hosts.evntszn.com/" },
+    { label: "Partners", href: `${getWebOrigin()}/partners/packages` },
     { label: "Store", href: `${getEplOrigin()}/store` },
   ];
 

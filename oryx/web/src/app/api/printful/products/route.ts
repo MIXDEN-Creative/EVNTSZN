@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { logSystemIssue } from "@/lib/system-logs";
 
 type PrintfulStoreProduct = {
   id: number;
@@ -26,11 +27,28 @@ type PrintfulProductsResponse = {
 
 export async function GET() {
   try {
+    const apiKey = process.env.PRINTFUL_API_KEY;
+    if (!apiKey) {
+      await logSystemIssue({
+        source: "printful.products",
+        severity: "warning",
+        code: "missing_api_key",
+        message: "PRINTFUL_API_KEY is not configured.",
+      });
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "PRINTFUL_API_KEY is not configured.",
+        },
+        { status: 503 }
+      );
+    }
+
     const [printfulRes, catalogRes] = await Promise.all([
       fetch("https://api.printful.com/store/products", {
         method: "GET",
         headers: {
-          Authorization: `Bearer ${process.env.PRINTFUL_API_KEY}`,
+          Authorization: `Bearer ${apiKey}`,
         },
         cache: "no-store",
       }),
@@ -44,6 +62,12 @@ export async function GET() {
     const printfulData = (await printfulRes.json()) as PrintfulProductsResponse;
 
     if (!printfulRes.ok) {
+      await logSystemIssue({
+        source: "printful.products",
+        severity: "error",
+        code: "printful_fetch_failed",
+        message: printfulData?.error?.message || "Failed to load Printful products",
+      });
       return NextResponse.json(
         {
           ok: false,
@@ -77,11 +101,39 @@ export async function GET() {
       })
       .filter(Boolean);
 
+    const fallbackProducts = products.map((product, index) => ({
+      id: product.id,
+      name: product.name,
+      thumbnail_url: product.thumbnail_url,
+      category: "EPL Merch",
+      badge: null,
+      is_featured: index < 6,
+      subtitle: "Official Printful-backed product",
+      sort_order: index,
+    }));
+
+    const catalogErrorMessage = catalogRes.error?.message || "";
+    const missingCatalogTable =
+      Boolean(catalogRes.error) &&
+      /merch_storefront_catalog|schema cache|relation/i.test(String(catalogErrorMessage));
+
+    const finalProducts =
+      curated.length > 0
+        ? curated
+        : fallbackProducts;
+
     return NextResponse.json({
       ok: true,
-      products: curated,
+      catalogReady: !missingCatalogTable,
+      products: finalProducts,
     });
   } catch (error) {
+    await logSystemIssue({
+      source: "printful.products",
+      severity: "error",
+      code: "unexpected_failure",
+      message: error instanceof Error ? error.message : "Failed to load products",
+    });
     return NextResponse.json(
       {
         ok: false,

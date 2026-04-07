@@ -86,8 +86,43 @@ export type EplMenuVisibilityContent = {
   showTeams: boolean;
   showStandings: boolean;
   showStore: boolean;
+  showOpportunities: boolean;
   showDraftCountdown: boolean;
   showFaq: boolean;
+};
+
+export type PublicModulesContent = {
+  citySpotlight: {
+    eyebrow: string;
+    headline: string;
+    body: string;
+  };
+  teamBlocks: {
+    scheduleHeadline: string;
+    scheduleBody: string;
+    rosterHeadline: string;
+    rosterBody: string;
+    announcementsHeadline: string;
+    announcementsBody: string;
+  };
+  storePromo: {
+    eyebrow: string;
+    headline: string;
+    body: string;
+    ctaLabel: string;
+    ctaHref: string;
+  };
+  sponsorBlock: {
+    eyebrow: string;
+    headline: string;
+    body: string;
+    footerHeadline: string;
+  };
+  opportunitiesBlock: {
+    eyebrow: string;
+    headline: string;
+    body: string;
+  };
 };
 
 type SiteContentRow = {
@@ -118,10 +153,18 @@ const EPL_PUBLIC_CONTENT_KEYS = [
   "epl.menu",
 ] as const;
 
+const PUBLIC_MODULE_CONTENT_KEYS = [
+  "public.modules",
+] as const;
+
 export type EplPublicContent = {
   hero: EplHeroContent;
   sections: EplSectionContent;
   menu: EplMenuVisibilityContent;
+  storageReady: boolean;
+};
+
+export type PublicModules = PublicModulesContent & {
   storageReady: boolean;
 };
 
@@ -240,8 +283,43 @@ export const DEFAULT_EPL_PUBLIC_CONTENT: Omit<EplPublicContent, "storageReady"> 
     showTeams: true,
     showStandings: true,
     showStore: true,
+    showOpportunities: true,
     showDraftCountdown: true,
     showFaq: true,
+  },
+};
+
+export const DEFAULT_PUBLIC_MODULES: Omit<PublicModules, "storageReady"> = {
+  citySpotlight: {
+    eyebrow: "City spotlight",
+    headline: "Move through the strongest nights, venues, and city moments without wasting time.",
+    body: "Use EVNTSZN to start with the strongest city pulse first, then widen the search when you want more range.",
+  },
+  teamBlocks: {
+    scheduleHeadline: "Team schedule",
+    scheduleBody: "Official fixtures and weekly match rhythm will lock here as the season schedule publishes.",
+    rosterHeadline: "Roster",
+    rosterBody: "Final rosters and player identity will surface here once registration, draft movement, and confirmations are complete.",
+    announcementsHeadline: "Announcements",
+    announcementsBody: "Team news, league updates, and match-day notes stack here once the season cycle is active.",
+  },
+  storePromo: {
+    eyebrow: "Merchandise",
+    headline: "Official EPL merch with real product drops, not filler blocks.",
+    body: "Run featured products, collection visibility, and store messaging from the dashboard while Printful stays behind the order flow.",
+    ctaLabel: "Open store",
+    ctaHref: "/epl/store",
+  },
+  sponsorBlock: {
+    eyebrow: "Presented with",
+    headline: "Sponsors and partners can go live across EVNTSZN once placements are actually ready.",
+    body: "Only approved, active placements render publicly, with dashboard control over dates, locations, and order priority.",
+    footerHeadline: "Trusted by sponsors, partners, and city builders who are live in the system.",
+  },
+  opportunitiesBlock: {
+    eyebrow: "Opportunities",
+    headline: "Open EPL roles stay visible here while hiring stays inside the dashboard pipeline.",
+    body: "Publish only the roles you need now, then move applicants through review, interviews, and decisions without leaving the operating layer.",
   },
 };
 
@@ -303,8 +381,19 @@ function normalizeEplMenu(value: Record<string, unknown> | null | undefined): Ep
     showTeams: value?.showTeams !== false,
     showStandings: value?.showStandings !== false,
     showStore: value?.showStore !== false,
+    showOpportunities: value?.showOpportunities !== false,
     showDraftCountdown: value?.showDraftCountdown !== false,
     showFaq: value?.showFaq !== false,
+  };
+}
+
+function normalizePublicModules(value: Record<string, unknown> | null | undefined): PublicModulesContent {
+  return {
+    citySpotlight: mergeObject(DEFAULT_PUBLIC_MODULES.citySpotlight, (value?.citySpotlight as Record<string, unknown> | undefined) || undefined),
+    teamBlocks: mergeObject(DEFAULT_PUBLIC_MODULES.teamBlocks, (value?.teamBlocks as Record<string, unknown> | undefined) || undefined),
+    storePromo: mergeObject(DEFAULT_PUBLIC_MODULES.storePromo, (value?.storePromo as Record<string, unknown> | undefined) || undefined),
+    sponsorBlock: mergeObject(DEFAULT_PUBLIC_MODULES.sponsorBlock, (value?.sponsorBlock as Record<string, unknown> | undefined) || undefined),
+    opportunitiesBlock: mergeObject(DEFAULT_PUBLIC_MODULES.opportunitiesBlock, (value?.opportunitiesBlock as Record<string, unknown> | undefined) || undefined),
   };
 }
 
@@ -421,6 +510,53 @@ export async function getEplPublicContent(): Promise<EplPublicContent> {
     console.error("[epl] public content load failed", error);
     return {
       ...DEFAULT_EPL_PUBLIC_CONTENT,
+      storageReady: false,
+    };
+  }
+}
+
+export async function getPublicModulesContent(): Promise<PublicModules> {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from("site_content_entries")
+      .select("key, content")
+      .in("key", [...PUBLIC_MODULE_CONTENT_KEYS])
+      .eq("is_active", true);
+
+    if (error) {
+      if (isMissingContentTableError(error)) {
+        return {
+          ...DEFAULT_PUBLIC_MODULES,
+          storageReady: false,
+        };
+      }
+
+      throw new Error(error.message);
+    }
+
+    const rows = ((data || []) as SiteContentRow[]).reduce<Record<string, Record<string, unknown>>>((acc, row) => {
+      if (row.key && row.content) {
+        acc[row.key] = row.content;
+      }
+      return acc;
+    }, {});
+
+    return {
+      ...normalizePublicModules(rows["public.modules"]),
+      storageReady: true,
+    };
+  } catch (error) {
+    if (isMissingContentTableError(error)) {
+      console.warn("[public-modules] content controls unavailable, using fallback content");
+      return {
+        ...DEFAULT_PUBLIC_MODULES,
+        storageReady: false,
+      };
+    }
+
+    console.error("[public-modules] content load failed", error);
+    return {
+      ...DEFAULT_PUBLIC_MODULES,
       storageReady: false,
     };
   }

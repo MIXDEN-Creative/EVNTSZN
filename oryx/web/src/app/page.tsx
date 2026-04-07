@@ -4,9 +4,10 @@ import PublicNav from "@/components/public/PublicNav";
 import PublicFooter from "@/components/public/PublicFooter";
 import DiscoveryLanding from "@/components/public/DiscoveryLanding";
 import { getDiscoveryNativeEvents, groupDiscoveryEventsBySource } from "@/lib/discovery";
-import { getHomepageContent } from "@/lib/site-content";
+import { getHomepageContent, getPublicModulesContent } from "@/lib/site-content";
 import { getTicketmasterShowcase } from "@/lib/ticketmaster";
 import { getWebOrigin } from "@/lib/domains";
+import { getPublicSponsorPlacements } from "@/lib/sponsor-placements";
 
 export const metadata: Metadata = {
   title: "EVNTSZN | Discover nightlife, live music, sports, and the best things to do",
@@ -75,10 +76,12 @@ function formatHomepageJsonLd() {
 }
 
 export default async function HomePage() {
-  const [content, nativeResult, externalShowcase] = await Promise.all([
+  const [content, modules, nativeResult, externalShowcase, homepagePlacements] = await Promise.all([
     getHomepageContent(),
+    getPublicModulesContent(),
     getDiscoveryNativeEvents({ limit: 12 }),
     getTicketmasterShowcase().catch(() => []),
+    getPublicSponsorPlacements("homepage"),
   ]);
 
   const nativeSections = groupDiscoveryEventsBySource(nativeResult.events);
@@ -134,9 +137,11 @@ export default async function HomePage() {
       <PublicNav />
       <DiscoveryLanding
         content={content}
+        modules={modules}
         initialPopular={initialPopular}
         initialNativeSections={nativeSections}
         initialExternal={externalShowcase}
+        sponsorPlacements={homepagePlacements}
       />
       <PublicFooter />
     </main>

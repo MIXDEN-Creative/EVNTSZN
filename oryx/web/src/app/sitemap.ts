@@ -26,6 +26,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.9,
     },
     {
+      url: "https://hosts.evntszn.com/",
+      changeFrequency: "weekly",
+      priority: 0.7,
+    },
+    {
+      url: `${origin}/partners/packages`,
+      changeFrequency: "weekly",
+      priority: 0.6,
+    },
+    {
       url: `${origin}/privacy`,
       changeFrequency: "monthly",
       priority: 0.4,
@@ -62,6 +72,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.7,
     });
   }
+
+  entries.push({
+    url: "https://epl.evntszn.com/standings",
+    changeFrequency: "daily",
+    priority: 0.7,
+  });
+
+  entries.push({
+    url: "https://epl.evntszn.com/opportunities",
+    changeFrequency: "daily",
+    priority: 0.7,
+  });
 
   for (const event of events || []) {
     entries.push({

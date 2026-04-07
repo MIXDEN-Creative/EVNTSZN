@@ -61,6 +61,7 @@ export default function EPLStorePage() {
 
   const [productsError, setProductsError] = useState("");
   const [variantsError, setVariantsError] = useState("");
+  const [catalogReady, setCatalogReady] = useState(true);
 
   const loadProducts = useCallback(async () => {
     setLoadingProducts(true);
@@ -78,9 +79,11 @@ export default function EPLStorePage() {
       }
 
       setProducts(data.products || []);
+      setCatalogReady(data.catalogReady !== false);
     } catch (error) {
       console.error("STORE PRODUCTS LOAD ERROR:", error);
       setProducts([]);
+      setCatalogReady(false);
       setProductsError(
         error instanceof Error ? error.message : "Failed to load products"
       );
@@ -230,6 +233,12 @@ export default function EPLStorePage() {
       </section>
 
       <section className="mx-auto max-w-7xl px-6 py-8">
+        {!catalogReady ? (
+          <div className="mb-6 rounded-2xl border border-[#A259FF]/25 bg-[#A259FF]/10 px-4 py-3 text-sm text-[#e1d0ff]">
+            Catalog controls are still syncing, so the store is showing live Printful inventory directly.
+          </div>
+        ) : null}
+
         <div className="mb-6 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           <div className="flex flex-wrap gap-3">
             {categories.map((category) => (
@@ -272,7 +281,9 @@ export default function EPLStorePage() {
                 </button>
               </div>
             ) : visibleProducts.length === 0 ? (
-              <div className="text-white/50">No products found in this category.</div>
+              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 text-sm leading-6 text-white/60">
+                No products are live in this category yet. Refresh the store or switch collections to check the latest Printful inventory.
+              </div>
             ) : (
               <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
                 {visibleProducts.map((product) => (
@@ -295,8 +306,8 @@ export default function EPLStorePage() {
                           className="max-h-full max-w-full object-contain transition duration-300 group-hover:scale-[1.02]"
                         />
                       ) : (
-                        <div className="flex h-full items-center justify-center text-black/40">
-                          No image
+                        <div className="flex h-full items-center justify-center px-6 text-center text-sm font-medium text-black/45">
+                          Product art is being prepared.
                         </div>
                       )}
                     </div>

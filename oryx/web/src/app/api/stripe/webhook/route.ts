@@ -5,6 +5,7 @@ import { buildTicketCode, logEventActivity } from "@/lib/evntszn";
 import { stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { sendMerchConfirmationEmail } from "@/lib/send-merch-email";
+import { logSystemIssue } from "@/lib/system-logs";
 
 type PrintfulOrderResponse = {
   result?: {
@@ -202,6 +203,83 @@ async function handleEplRegistrationCheckout(session: Stripe.Checkout.Session) {
   return true;
 }
 
+async function handleSponsorPackageCheckout(session: Stripe.Checkout.Session) {
+  const metadata = session.metadata || {};
+
+  if (metadata.checkout_kind !== "sponsor_package") {
+    return false;
+  }
+
+  const orderId = metadata.sponsor_package_order_id;
+  if (!orderId) {
+    throw new Error("Sponsor package order metadata is incomplete.");
+  }
+
+  const { data: order, error: orderError } = await supabaseAdmin
+    .from("evntszn_sponsor_package_orders")
+    .select("*")
+    .eq("id", orderId)
+    .maybeSingle();
+
+  if (orderError || !order) {
+    throw new Error(orderError?.message || "Sponsor package order not found.");
+  }
+
+  if (order.status === "paid") {
+    return true;
+  }
+
+  let sponsorPartnerId = order.sponsor_partner_id as string | null;
+
+  if (!sponsorPartnerId) {
+    const [{ data: league }, { data: season }] = await Promise.all([
+      supabaseAdmin.schema("epl").from("leagues").select("id").eq("slug", "epl").single(),
+      supabaseAdmin.schema("epl").from("seasons").select("id").eq("slug", "season-1").single(),
+    ]);
+
+    const { data: sponsorPartner, error: sponsorError } = await supabaseAdmin
+      .schema("epl")
+      .from("sponsor_partners")
+      .insert({
+        league_id: league?.id,
+        season_id: season?.id || null,
+        company_name: order.company_name,
+        contact_name: order.contact_name,
+        contact_email: order.contact_email,
+        contact_phone: order.contact_phone,
+        package_name: order.package_name,
+        cash_value_cents: order.amount_cents,
+        status: "active",
+        notes: "Created automatically from sponsor package checkout.",
+      })
+      .select("id")
+      .single();
+
+    if (sponsorError || !sponsorPartner) {
+      throw new Error(sponsorError?.message || "Could not create sponsor record from package payment.");
+    }
+
+    sponsorPartnerId = sponsorPartner.id;
+  }
+
+  const { error: updateError } = await supabaseAdmin
+    .from("evntszn_sponsor_package_orders")
+    .update({
+      status: "paid",
+      sponsor_partner_id: sponsorPartnerId,
+      stripe_checkout_session_id: session.id,
+      stripe_payment_intent_id:
+        typeof session.payment_intent === "string" ? session.payment_intent : null,
+    })
+    .eq("id", orderId);
+
+  if (updateError) {
+    throw new Error(updateError.message);
+  }
+
+  return true;
+}
+
 export async function POST(request: Request) {
   const body = await request.text();
   const signature = (await headers()).get("stripe-signature");
@@ -236,6 +314,10 @@ export async function POST(request: Request) {
       }
 
       if (await handleEplRegistrationCheckout(session)) {
+        return NextResponse.json({ received: true });
+      }
+
+      if (await handleSponsorPackageCheckout(session)) {
         return NextResponse.json({ received: true });
       }
 
@@ -471,6 +553,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ received: true });
   } catch (error) {
     console.error("Webhook handler error:", error);
+    await logSystemIssue({
+      source: "stripe.webhook",
+      severity: "critical",
+      code: "webhook_failure",
+      message: error instanceof Error ? error.message : "Webhook handler failed.",
+    });
     return new NextResponse("Webhook handler failed", { status: 500 });
   }
 }

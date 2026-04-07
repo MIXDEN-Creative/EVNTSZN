@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireAdminPermission } from "@/lib/admin-auth";
 import { getSupabaseAdmin } from "@/lib/epl/supabase-admin";
 
 export async function GET(req: NextRequest) {
+  await requireAdminPermission("catalog.manage", "/epl/admin/operations");
   const seasonSlug = req.nextUrl.searchParams.get("seasonSlug") || "season-1";
   const supabase = getSupabaseAdmin();
 
@@ -26,6 +28,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  await requireAdminPermission("catalog.manage", "/epl/admin/operations");
   const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
   const supabase = getSupabaseAdmin();
 
@@ -45,7 +48,7 @@ export async function POST(req: NextRequest) {
     contact_name: body.contactName || null,
     contact_email: body.contactEmail || null,
     package_name: body.packageName || null,
-    partner_status: body.partnerStatus || "lead",
+    status: body.partnerStatus || "lead",
     cash_value_cents: Number(body.cashValueCents || 0),
     in_kind_value_cents: Number(body.inKindValueCents || 0),
     notes: body.notes || null,

@@ -2,9 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import EplNav from "@/components/epl/EplNav";
+import SponsorPlacementStrip from "@/components/public/SponsorPlacementStrip";
 import { getEplTeamProfile, EPL_TEAM_PROFILES } from "@/lib/epl-teams";
-import { getEplPublicContent } from "@/lib/site-content";
+import { getEplPublicContent, getPublicModulesContent } from "@/lib/site-content";
 import { getEplOrigin } from "@/lib/domains";
+import { getPublicSponsorPlacements } from "@/lib/sponsor-placements";
 
 type TeamPageProps = {
   params: Promise<{ teamSlug: string }>;
@@ -37,7 +39,11 @@ export default async function EplTeamPage({ params }: TeamPageProps) {
     notFound();
   }
 
-  const content = await getEplPublicContent();
+  const [content, modules, sponsorPlacements] = await Promise.all([
+    getEplPublicContent(),
+    getPublicModulesContent(),
+    getPublicSponsorPlacements([`team:${team.slug}`, "team", "epl"]),
+  ]);
 
   return (
     <main className="min-h-screen bg-black text-white">
@@ -72,16 +78,16 @@ export default async function EplTeamPage({ params }: TeamPageProps) {
         <div className="mt-8 grid gap-6 lg:grid-cols-3">
           {[
             {
-              title: "Team schedule",
-              body: "Fixtures will surface here as the official slate is published and weekly matchups lock.",
+              title: modules.teamBlocks.scheduleHeadline,
+              body: modules.teamBlocks.scheduleBody,
             },
             {
-              title: "Roster",
-              body: "Roster visibility lands after draft results and final registration confirmations are complete.",
+              title: modules.teamBlocks.rosterHeadline,
+              body: modules.teamBlocks.rosterBody,
             },
             {
-              title: "Announcements",
-              body: "Team news, match-day notes, and league updates will stack here once the club cycle is live.",
+              title: modules.teamBlocks.announcementsHeadline,
+              body: modules.teamBlocks.announcementsBody,
             },
           ].map((section) => (
             <section key={section.title} className="ev-panel p-5">
@@ -99,6 +105,18 @@ export default async function EplTeamPage({ params }: TeamPageProps) {
             Register for Season 1
           </Link>
         </div>
+
+        {sponsorPlacements.length ? (
+          <div className="mt-10">
+            <SponsorPlacementStrip
+              placements={sponsorPlacements}
+              eyebrow={modules.sponsorBlock.eyebrow}
+              headline={`${team.name} partner placements`}
+              body={modules.sponsorBlock.body}
+              compact
+            />
+          </div>
+        ) : null}
       </section>
     </main>
   );

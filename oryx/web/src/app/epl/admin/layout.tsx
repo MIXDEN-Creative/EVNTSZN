@@ -45,6 +45,12 @@ export default async function AdminLayout({
               {isHqSurface ? "HQ Overview" : "Overview"}
             </Link>
 
+            {canManageAdmins ? (
+              <Link href={`${getAdminOrigin(host)}/control-center`} className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 hover:bg-white/[0.08]">
+                Control Center
+              </Link>
+            ) : null}
+
             {canViewOrders ? (
               <Link href={`${getAdminOrigin(host)}/merch-orders`} className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 hover:bg-white/[0.08]">
                 Merch Orders
@@ -78,6 +84,54 @@ export default async function AdminLayout({
             {canManageAdmins ? (
               <Link href={`${getAdminOrigin(host)}/team`} className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 hover:bg-white/[0.08]">
                 Team & Access
+              </Link>
+            ) : null}
+
+            {canManageAdmins ? (
+              <Link href={`${getAdminOrigin(host)}/users`} className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 hover:bg-white/[0.08]">
+                Users
+              </Link>
+            ) : null}
+
+            {canManageAdmins ? (
+              <Link href={`${getAdminOrigin(host)}/approvals`} className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 hover:bg-white/[0.08]">
+                Approvals
+              </Link>
+            ) : null}
+
+            {canManageAdmins ? (
+              <Link href={`${getAdminOrigin(host)}/city-office`} className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 hover:bg-white/[0.08]">
+                City Office
+              </Link>
+            ) : null}
+
+            {canManageAdmins ? (
+              <Link href={`${getAdminOrigin(host)}/hiring`} className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 hover:bg-white/[0.08]">
+                Hiring Pipeline
+              </Link>
+            ) : null}
+
+            {canManageAdmins ? (
+              <Link href={`${getAdminOrigin(host)}/opportunities`} className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 hover:bg-white/[0.08]">
+                Opportunities
+              </Link>
+            ) : null}
+
+            {canManageCatalog ? (
+              <Link href={`${getAdminOrigin(host)}/sponsors`} className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 hover:bg-white/[0.08]">
+                Sponsors & Packages
+              </Link>
+            ) : null}
+
+            {canManageAdmins ? (
+              <Link href={`${getAdminOrigin(host)}/scanner`} className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 hover:bg-white/[0.08]">
+                Scanner Access
+              </Link>
+            ) : null}
+
+            {canManageAdmins ? (
+              <Link href={`${getAdminOrigin(host)}/issues`} className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 hover:bg-white/[0.08]">
+                Issues & Health
               </Link>
             ) : null}
           </nav>

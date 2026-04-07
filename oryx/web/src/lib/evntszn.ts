@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { getFounderSession } from "@/lib/founder-session";
 import { getAppOrigin, getLoginUrl, getRestrictedSurfaceForPath, getRestrictedUrl } from "@/lib/domains";
 
 export type PlatformRole = "attendee" | "organizer" | "venue" | "scanner" | "admin";
@@ -12,6 +13,24 @@ export type PlatformProfile = {
   city: string | null;
   state: string | null;
   referral_code: string | null;
+  is_active: boolean;
+};
+
+export type OperatorProfile = {
+  user_id: string;
+  role_key: string;
+  job_title: string | null;
+  functions: string[];
+  city_scope: string[];
+  dashboard_access: string[];
+  surface_access: string[];
+  module_access: string[];
+  approval_authority: string[];
+  can_manage_content: boolean;
+  can_manage_discovery: boolean;
+  can_manage_store: boolean;
+  can_manage_sponsors: boolean;
+  can_access_scanner: boolean;
   is_active: boolean;
 };
 
@@ -37,30 +56,65 @@ export async function getPlatformViewer() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
+  const founder = !user ? await getFounderSession() : null;
+
+  if (!user && !founder) {
     return {
       user: null,
       profile: null,
+      operatorProfile: null,
       isPlatformAdmin: false,
     };
   }
 
-  const [{ data: profile }, { data: memberships }] = await Promise.all([
+  if (founder) {
+    return {
+      user: {
+        id: founder.id,
+        email: founder.email,
+        user_metadata: {
+          full_name: founder.full_name,
+        },
+      },
+      profile: null,
+      operatorProfile: null,
+      isPlatformAdmin: true,
+    };
+  }
+
+  if (!user) {
+    return {
+      user: null,
+      profile: null,
+      operatorProfile: null,
+      isPlatformAdmin: false,
+    };
+  }
+
+  const authedUser = user;
+
+  const [{ data: profile }, { data: memberships }, { data: operatorProfile }] = await Promise.all([
     supabaseAdmin
       .from("evntszn_profiles")
       .select("user_id, full_name, primary_role, city, state, referral_code, is_active")
-      .eq("user_id", user.id)
+      .eq("user_id", authedUser.id)
       .maybeSingle(),
     supabaseAdmin
       .from("admin_memberships")
       .select("id")
-      .eq("user_id", user.id)
+      .eq("user_id", authedUser.id)
       .eq("is_active", true),
+    supabaseAdmin
+      .from("evntszn_operator_profiles")
+      .select("*")
+      .eq("user_id", authedUser.id)
+      .maybeSingle(),
   ]);
 
   return {
-    user,
+    user: authedUser,
     profile: (profile as PlatformProfile | null) ?? null,
+    operatorProfile: (operatorProfile as OperatorProfile | null) ?? null,
     isPlatformAdmin: Boolean(memberships?.length),
   };
 }
@@ -162,6 +216,9 @@ export async function getEventAccessForUser(userId: string, eventSlug: string) {
 
 export async function requireEventScannerAccess(eventSlug: string) {
   const viewer = await requirePlatformUser(`/scanner/${eventSlug}`);
+  if (viewer.user?.id?.startsWith("founder:")) {
+    return viewer;
+  }
   const accessRows = await getEventAccessForUser(viewer.user!.id, eventSlug);
   const { data: event } = await supabaseAdmin
     .from("evntszn_events")

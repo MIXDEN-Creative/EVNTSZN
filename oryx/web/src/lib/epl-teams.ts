@@ -67,3 +67,34 @@ export const EPL_TEAM_PROFILES: EplTeamProfile[] = [
 export function getEplTeamProfile(slug: string) {
   return EPL_TEAM_PROFILES.find((team) => team.slug === slug) || null;
 }
+
+const TEAM_ALIAS_MAP = new Map(
+  EPL_TEAM_PROFILES.flatMap((team) => {
+    const aliases = [
+      team.slug,
+      team.name,
+      team.neighborhood,
+      team.neighborhood.toLowerCase(),
+      team.name.toLowerCase(),
+      team.slug.replace(/-chargers|-sentinels|-raiders|-rebels|-titans|-royals/g, ""),
+    ];
+
+    return aliases.map((alias) => [alias.trim().toLowerCase(), team] as const);
+  }),
+);
+
+export function resolveEplTeamProfile(input: {
+  slug?: string | null;
+  teamName?: string | null;
+}) {
+  const candidates = [input.slug, input.teamName]
+    .filter((value): value is string => Boolean(value))
+    .map((value) => value.trim().toLowerCase());
+
+  for (const candidate of candidates) {
+    const direct = TEAM_ALIAS_MAP.get(candidate);
+    if (direct) return direct;
+  }
+
+  return null;
+}

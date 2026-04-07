@@ -5,12 +5,15 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { useMemo, useState } from "react";
 import type { DiscoveryNativeEvent } from "@/lib/discovery";
-import type { HomepageContent } from "@/lib/site-content";
+import type { HomepageContent, PublicModules } from "@/lib/site-content";
 import type { TicketmasterEvent } from "@/lib/ticketmaster";
 import { PUBLIC_CITIES } from "@/lib/public-cities";
+import type { SponsorPlacement } from "@/lib/sponsor-placements";
+import SponsorPlacementStrip from "@/components/public/SponsorPlacementStrip";
 
 type DiscoveryLandingProps = {
   content: HomepageContent;
+  modules: PublicModules;
   initialPopular: DiscoveryListing[];
   initialNativeSections: {
     evntszn: DiscoveryNativeEvent[];
@@ -18,6 +21,7 @@ type DiscoveryLandingProps = {
     independent_organizer: DiscoveryNativeEvent[];
   };
   initialExternal: TicketmasterEvent[];
+  sponsorPlacements: SponsorPlacement[];
 };
 
 type DiscoveryListing = {
@@ -195,9 +199,11 @@ function DiscoveryCard({
 
 export default function DiscoveryLanding({
   content,
+  modules,
   initialPopular,
   initialNativeSections,
   initialExternal,
+  sponsorPlacements,
 }: DiscoveryLandingProps) {
   const [query, setQuery] = useState("");
   const [city, setCity] = useState("");
@@ -474,6 +480,18 @@ export default function DiscoveryLanding({
           </div>
         )}
       </section>
+      ) : null}
+
+      {sponsorPlacements.length ? (
+        <section className="mx-auto max-w-7xl px-4 pb-10 md:px-6 lg:px-8">
+          <SponsorPlacementStrip
+            placements={sponsorPlacements}
+            eyebrow={modules.sponsorBlock.eyebrow}
+            headline={modules.sponsorBlock.headline}
+            body={modules.sponsorBlock.body}
+            compact
+          />
+        </section>
       ) : null}
 
       {content.visibility.showCategoryBlocks ? (

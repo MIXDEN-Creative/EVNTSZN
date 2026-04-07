@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireAdminPermission } from "@/lib/admin-auth";
 import { getSupabaseAdmin } from "@/lib/epl/supabase-admin";
 
 export async function GET() {
+  await requireAdminPermission("admin.manage", "/epl/admin/opportunities");
   const supabase = getSupabaseAdmin();
 
   const { data, error } = await supabase
     .schema("epl")
     .from("opportunities")
     .select("*")
+    .order("priority_score", { ascending: true })
     .order("display_order", { ascending: true });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -15,6 +18,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  await requireAdminPermission("admin.manage", "/epl/admin/opportunities");
   const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
   const supabase = getSupabaseAdmin();
 
@@ -54,6 +58,9 @@ export async function POST(req: NextRequest) {
     pay_label: body.payLabel || null,
     status: body.status || "open",
     is_public: body.isPublic ?? true,
+    location_city: body.locationCity || null,
+    location_state: body.locationState || null,
+    priority_score: Number(body.priorityScore || 100),
     display_order: Number(body.displayOrder || 100),
   };
 
