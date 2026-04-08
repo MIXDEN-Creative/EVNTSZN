@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import OpportunitiesClient from "./OpportunitiesClient";
 import { getEplOrigin } from "@/lib/domains";
-import { getPublicModulesContent } from "@/lib/site-content";
+import { getEplPublicContent, getPublicModulesContent } from "@/lib/site-content";
+import EplNav from "@/components/epl/EplNav";
+import PublicFooter from "@/components/public/PublicFooter";
 
 export const metadata: Metadata = {
   title: "EPL Opportunities | EVNTSZN",
@@ -12,6 +14,13 @@ export const metadata: Metadata = {
 };
 
 export default async function EplOpportunitiesPage() {
-  const modules = await getPublicModulesContent();
-  return <OpportunitiesClient modules={modules} />;
+  const [modules, content] = await Promise.all([getPublicModulesContent(), getEplPublicContent()]);
+
+  return (
+    <main className="min-h-screen bg-black text-white">
+      <EplNav menu={content.menu} />
+      <OpportunitiesClient modules={modules} />
+      <PublicFooter />
+    </main>
+  );
 }

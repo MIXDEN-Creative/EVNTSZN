@@ -60,6 +60,11 @@ export default async function AdminHomePage() {
       description: "Publish or close current EPL volunteer and paid roles without touching code.",
     },
     permissions.includes("admin.manage") && {
+      title: "Events",
+      href: `${getAdminOrigin(host)}/events`,
+      description: "Create EVNTSZN and EPL events, publish them into discovery, and keep league-specific event setup separate when needed.",
+    },
+    permissions.includes("admin.manage") && {
       title: "Scanner Access",
       href: `${getAdminOrigin(host)}/scanner`,
       description: "See who can work the gate, what city they cover, and which events they can scan.",

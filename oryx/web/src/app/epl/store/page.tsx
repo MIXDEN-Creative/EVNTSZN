@@ -1,6 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import PublicFooterShell from "@/components/public/PublicFooterShell";
+import { DEFAULT_PUBLIC_MODULES } from "@/lib/site-content";
 
 type Product = {
   id: number;
@@ -111,6 +114,10 @@ export default function EPLStorePage() {
     if (selectedCategory === "All") return products;
     return products.filter((p) => p.category === selectedCategory);
   }, [products, selectedCategory]);
+  const featuredProducts = useMemo(
+    () => products.filter((product) => product.is_featured).slice(0, 4),
+    [products],
+  );
 
   async function loadVariants(productId: number, productName: string, image?: string) {
     setSelectedProductId(productId);
@@ -227,8 +234,17 @@ export default function EPLStorePage() {
           </h1>
 
           <p className="mt-3 max-w-2xl text-lg text-white/70">
-            Official EVNTSZN Prime League merch.
+            Official EVNTSZN Prime League merch with featured drops, real categories, and a cleaner route from browsing to checkout.
           </p>
+
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Link href="https://evntszn.com" className="ev-button-secondary">
+              Homepage
+            </Link>
+            <Link href="https://epl.evntszn.com" className="ev-button-secondary">
+              Back to EPL
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -237,6 +253,27 @@ export default function EPLStorePage() {
           <div className="mb-6 rounded-2xl border border-[#A259FF]/25 bg-[#A259FF]/10 px-4 py-3 text-sm text-[#e1d0ff]">
             Catalog controls are still syncing, so the store is showing live Printful inventory directly.
           </div>
+        ) : null}
+
+        {featuredProducts.length ? (
+          <section className="mb-8 rounded-[32px] border border-white/10 bg-[#0c0c15] p-6">
+            <div className="ev-section-kicker">Featured products</div>
+            <h2 className="mt-3 text-3xl font-black tracking-tight text-white">The strongest league merch lives at the top.</h2>
+            <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+              {featuredProducts.map((product) => (
+                <button
+                  key={`featured-${product.id}`}
+                  type="button"
+                  onClick={() => loadVariants(product.id, product.name, product.thumbnail_url)}
+                  className="rounded-[24px] border border-white/10 bg-black/30 p-4 text-left transition hover:bg-white/[0.08]"
+                >
+                  <div className="text-[11px] uppercase tracking-[0.18em] text-[#caa7ff]">{product.badge || "Featured"}</div>
+                  <div className="mt-2 text-lg font-semibold text-white">{product.name}</div>
+                  <div className="mt-2 text-sm text-white/55">{product.category || "EPL Merch"}</div>
+                </button>
+              ))}
+            </div>
+          </section>
         ) : null}
 
         <div className="mb-6 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
@@ -264,7 +301,27 @@ export default function EPLStorePage() {
           </button>
         </div>
 
-        <div className={`grid gap-8 ${selectedProductId ? "lg:grid-cols-[1.5fr_.9fr]" : "lg:grid-cols-1"}`}>
+        <div className={`grid gap-8 ${selectedProductId ? "xl:grid-cols-[220px_1.2fr_.9fr]" : "xl:grid-cols-[220px_1fr]"}`}>
+          <aside className="rounded-[28px] border border-white/10 bg-[#0c0c15] p-5">
+            <div className="text-xs uppercase tracking-[0.18em] text-white/45">Collections</div>
+            <div className="mt-4 grid gap-2">
+              {categories.map((category) => (
+                <button
+                  key={`side-${category}`}
+                  type="button"
+                  onClick={() => setSelectedCategory(category)}
+                  className={`rounded-2xl px-4 py-3 text-left text-sm font-semibold transition ${
+                    selectedCategory === category
+                      ? "bg-[#A259FF] text-white"
+                      : "border border-white/10 bg-black/30 text-white/75 hover:bg-white/[0.08]"
+                  }`}
+                >
+                  {category}
+                </button>
+              ))}
+            </div>
+          </aside>
+
           <div>
             <h2 className="mb-4 text-xl font-semibold">Shop Merch</h2>
 
@@ -405,6 +462,7 @@ export default function EPLStorePage() {
           ) : null}
         </div>
       </section>
+      <PublicFooterShell placements={[]} modules={{ ...DEFAULT_PUBLIC_MODULES, storageReady: false }} />
     </main>
   );
 }

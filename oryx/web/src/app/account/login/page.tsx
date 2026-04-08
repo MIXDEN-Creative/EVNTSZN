@@ -18,6 +18,9 @@ export default async function AccountLoginPage({ searchParams }: LoginPageProps)
     <main className="min-h-screen bg-black text-white">
       <div className="mx-auto grid min-h-screen max-w-7xl gap-8 px-4 py-10 md:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:px-8">
         <section className="relative overflow-hidden rounded-[32px] border border-white/10 bg-[#0c0c15] p-8">
+          <Link href="/" className="relative z-10 inline-flex text-lg font-black tracking-tight text-white">
+            EVNTSZN
+          </Link>
           <img
             src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=1600&q=80"
             alt="EVNTSZN member access"

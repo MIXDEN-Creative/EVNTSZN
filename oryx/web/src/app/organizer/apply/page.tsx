@@ -1,8 +1,9 @@
 import Link from "next/link";
+import PublicPageFrame from "@/components/public/PublicPageFrame";
 
 export default function OrganizerApplyPage() {
   return (
-    <main className="ev-surface ev-surface--web min-h-screen text-white">
+    <PublicPageFrame>
       <div className="mx-auto max-w-3xl px-4 py-12 md:px-6">
         <div className="ev-kicker">Organizer application</div>
         <h1 className="ev-title">Apply for independent organizer access.</h1>
@@ -58,6 +59,6 @@ export default function OrganizerApplyPage() {
           </div>
         </div>
       </div>
-    </main>
+    </PublicPageFrame>
   );
 }

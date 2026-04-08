@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDiscoveryNativeEvents, groupDiscoveryEventsBySource } from "@/lib/discovery";
 import { searchTicketmasterEvents } from "@/lib/ticketmaster";
+import { normalizeCitySearchInput } from "@/lib/external-integrations";
 
 function getWindowRange(when: string) {
   const now = new Date();
@@ -38,7 +39,8 @@ function scoreExternalResult(
   event: {
     title: string | null;
     city: string | null;
-    venueName: string | null;
+    venueName?: string | null;
+    venue?: string | null;
     startAt: string | null;
   },
   query: string,
@@ -47,7 +49,7 @@ function scoreExternalResult(
   let score = 0;
   const normalizedQuery = query.toLowerCase();
   const normalizedCity = city.toLowerCase();
-  const haystack = [event.title, event.venueName, event.city].filter(Boolean).join(" ").toLowerCase();
+  const haystack = [event.title, event.venueName || event.venue, event.city].filter(Boolean).join(" ").toLowerCase();
 
   if (normalizedQuery) {
     if (haystack.includes(normalizedQuery)) score += 24;
@@ -69,6 +71,45 @@ function scoreExternalResult(
   return score;
 }
 
+function scoreNativeResult(
+  event: {
+    title: string;
+    city: string;
+    summary: string;
+    source: string;
+    startAt: string | null;
+    featured?: boolean;
+  },
+  query: string,
+  city: string,
+) {
+  let score = 0;
+  const normalizedQuery = query.toLowerCase();
+  const normalizedCity = city.toLowerCase();
+  const haystack = [event.title, event.city, event.summary, event.source].join(" ").toLowerCase();
+
+  if (normalizedQuery) {
+    if (haystack.includes(normalizedQuery)) score += 26;
+    if (event.title.toLowerCase().includes(normalizedQuery)) score += 18;
+  }
+
+  if (normalizedCity) {
+    if (event.city.toLowerCase() === normalizedCity) score += 34;
+    else if (event.city.toLowerCase().includes(normalizedCity)) score += 18;
+  }
+
+  if (event.featured) score += 12;
+  if (event.source === "evntszn") score += 8;
+  if (event.source === "host") score += 4;
+
+  if (event.startAt) {
+    const delta = new Date(event.startAt).getTime() - Date.now();
+    if (delta > 0) score += Math.max(0, 14 - Math.floor(delta / (1000 * 60 * 60 * 24)));
+  }
+
+  return score;
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
 
@@ -78,17 +119,20 @@ export async function GET(request: NextRequest) {
   const latitude = Number(searchParams.get("lat") || "");
   const longitude = Number(searchParams.get("lng") || "");
   const { startAt, endAt } = getWindowRange(when);
+  const normalizedCity = city ? await normalizeCitySearchInput(city) : null;
+  const effectiveCity = normalizedCity?.city || city;
+
   const [nativeResult, externalEvents] = await Promise.all([
     getDiscoveryNativeEvents({
       query,
-      city,
+      city: effectiveCity,
       startAt,
       endAt,
       limit: query || city ? 12 : 10,
     }),
     searchTicketmasterEvents({
       query,
-      city,
+      city: effectiveCity,
       startAt,
       endAt,
       latitude: Number.isFinite(latitude) ? latitude : undefined,
@@ -138,7 +182,11 @@ export async function GET(request: NextRequest) {
         "Broader city demand pulled into EVNTSZN discovery without crowding out EVNTSZN-led inventory.",
       isPrimary: false,
     })),
-  ];
+  ].sort((a, b) => {
+    const left = a.source === "ticketmaster" ? scoreExternalResult(a, query, effectiveCity) : scoreNativeResult(a, query, effectiveCity);
+    const right = b.source === "ticketmaster" ? scoreExternalResult(b, query, effectiveCity) : scoreNativeResult(b, query, effectiveCity);
+    return right - left;
+  });
 
   return NextResponse.json({
     ok: true,
@@ -150,5 +198,6 @@ export async function GET(request: NextRequest) {
       isPrimary: false,
     })),
     results: mergedResults,
+    normalizedCity,
   });
 }

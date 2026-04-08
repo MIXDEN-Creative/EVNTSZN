@@ -15,6 +15,7 @@ export default function SponsorPackagesClient({ packages }: { packages: SponsorP
   const [contactName, setContactName] = useState("");
   const [contactEmail, setContactEmail] = useState("");
   const [contactPhone, setContactPhone] = useState("");
+  const [notes, setNotes] = useState("");
   const [message, setMessage] = useState("");
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
@@ -34,6 +35,7 @@ export default function SponsorPackagesClient({ packages }: { packages: SponsorP
         contactName,
         contactEmail,
         contactPhone,
+        notes,
       }),
     });
 
@@ -42,6 +44,34 @@ export default function SponsorPackagesClient({ packages }: { packages: SponsorP
       setMessage(data.error || "Could not submit sponsor inquiry.");
     } else {
       setMessage("Your sponsorship inquiry has been captured for review.");
+    }
+
+    setLoadingId(null);
+  }
+
+  async function submitGeneralInquiry() {
+    setLoadingId("general");
+    setMessage("");
+
+    const response = await fetch("/api/sponsors/inquiries", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        companyName,
+        contactName,
+        contactEmail,
+        contactPhone,
+        notes,
+      }),
+    });
+
+    const data = (await response.json()) as { error?: string };
+    if (!response.ok) {
+      setMessage(data.error || "Could not submit partner inquiry.");
+    } else {
+      setMessage("Your partner inquiry has been captured for review.");
     }
 
     setLoadingId(null);
@@ -85,6 +115,20 @@ export default function SponsorPackagesClient({ packages }: { packages: SponsorP
           <input className="ev-field" placeholder="Contact name" value={contactName} onChange={(e) => setContactName(e.target.value)} />
           <input className="ev-field" type="email" placeholder="Contact email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} />
           <input className="ev-field" placeholder="Contact phone" value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} />
+        </div>
+        <textarea className="ev-textarea mt-4" rows={4} placeholder="What kind of partnership, city activation, or sponsor package are you exploring?" value={notes} onChange={(e) => setNotes(e.target.value)} />
+        <div className="mt-4 flex flex-wrap gap-3">
+          <button
+            type="button"
+            onClick={submitGeneralInquiry}
+            disabled={loadingId === "general" || !companyName || !contactEmail}
+            className="ev-button-primary disabled:opacity-50"
+          >
+            {loadingId === "general" ? "Submitting..." : "Submit partner inquiry"}
+          </button>
+          <div className="text-sm leading-6 text-white/62">
+            Use this if you want a partnership conversation first. Package-specific inquiry and checkout still remain available below.
+          </div>
         </div>
         {message ? <div className="mt-4 rounded-2xl border border-white/10 bg-black/30 p-4 text-sm text-white/75">{message}</div> : null}
       </section>

@@ -2,6 +2,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { getBaseDomain, isLocalHost } from "@/lib/domains";
+import { getFounderPasswordConfig } from "@/lib/founder-auth";
 
 const FOUNDER_COOKIE = "evntszn_founder_session";
 export const FOUNDER_EMAIL = "hello@mixdencreative.com";
@@ -15,7 +16,7 @@ export type FounderSession = {
 };
 
 function getSecret() {
-  return process.env.ADMIN_ACCESS_PASSWORD || "";
+  return getFounderPasswordConfig().value;
 }
 
 function sign(value: string) {

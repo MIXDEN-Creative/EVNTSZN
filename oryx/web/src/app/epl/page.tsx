@@ -12,6 +12,7 @@ import {
 import { getPublicSponsorPlacements } from "@/lib/sponsor-placements";
 import SponsorPlacementStrip from "@/components/public/SponsorPlacementStrip";
 import { safePublicLoad } from "@/lib/public-safe-load";
+import PublicFooter from "@/components/public/PublicFooter";
 
 export const metadata: Metadata = {
   title: "EPL | EVNTSZN Prime League",
@@ -41,8 +42,8 @@ export default async function EplPage() {
 
       <section className="relative overflow-hidden border-b border-white/10">
         <img
-          src="https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&w=1800&q=80"
-          alt="EVNTSZN Prime League"
+          src="https://images.unsplash.com/photo-1518604666860-9ed391f76460?auto=format&fit=crop&w=1800&q=80"
+          alt="EVNTSZN Prime League flag football"
           className="absolute inset-0 h-full w-full object-cover"
         />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(162,89,255,0.30),transparent_35%),linear-gradient(180deg,rgba(0,0,0,0.40),rgba(0,0,0,0.84))]" />
@@ -98,15 +99,15 @@ export default async function EplPage() {
             {[
               {
                 label: "League shape",
-                body: "Registration, player review, draft-night anticipation, team identity, and standings pressure all belong in one public-facing league surface.",
+                body: "Registration, rosters, quarterback pressure, flag pulls, and standings pressure all belong in one public-facing league surface.",
               },
               {
                 label: "Why it matters",
-                body: "EPL gives EVNTSZN a sports vertical people can actually discover, follow, and join instead of a one-off registration page with no momentum.",
+                body: "EPL gives EVNTSZN a flag football vertical people can actually discover, follow, and join instead of a one-off registration page with no momentum.",
               },
               {
                 label: "Built for pull",
-                body: "Fans, players, and curious city traffic should all have a reason to come back before, during, and after the season.",
+                body: "Players, team communities, and curious city traffic should all have a reason to come back before, during, and after the season.",
               },
             ].map((item) => (
               <div key={item.label} className="rounded-[24px] border border-white/10 bg-white/8 p-5 backdrop-blur-xl">
@@ -304,6 +305,8 @@ export default async function EplPage() {
           </section>
         ) : null}
       </div>
+
+      <PublicFooter />
     </main>
   );
 }

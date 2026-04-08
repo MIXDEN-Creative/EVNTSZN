@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import EplNav from "@/components/epl/EplNav";
 import SponsorPlacementStrip from "@/components/public/SponsorPlacementStrip";
+import PublicFooter from "@/components/public/PublicFooter";
 import { getEplTeamProfile, EPL_TEAM_PROFILES } from "@/lib/epl-teams";
 import { getEplPublicContent, getPublicModulesContent } from "@/lib/site-content";
 import { getEplOrigin } from "@/lib/domains";
@@ -118,6 +119,7 @@ export default async function EplTeamPage({ params }: TeamPageProps) {
           </div>
         ) : null}
       </section>
+      <PublicFooter />
     </main>
   );
 }

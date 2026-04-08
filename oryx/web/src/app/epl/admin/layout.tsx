@@ -34,6 +34,15 @@ export default async function AdminLayout({
             {isHqSurface ? "EVNTSZN HQ" : "EVNTSZN Admin"}
           </div>
 
+          <div className="mt-4 flex flex-wrap gap-3">
+            <Link href="https://evntszn.com" className="text-lg font-black tracking-tight text-white">
+              EVNTSZN
+            </Link>
+            <Link href="https://app.evntszn.com/account" className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs font-semibold text-white/80 hover:bg-white/[0.08]">
+              App hub
+            </Link>
+          </div>
+
           <div className="mt-5">
             <div className="text-2xl font-black">{isHqSurface ? "Command Deck" : "Command Center"}</div>
             <div className="mt-2 text-sm text-white/60">{user.email}</div>
@@ -120,6 +129,12 @@ export default async function AdminLayout({
             {canManageAdmins ? (
               <Link href={`${getAdminOrigin(host)}/opportunities`} className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 hover:bg-white/[0.08]">
                 Opportunities
+              </Link>
+            ) : null}
+
+            {canManageAdmins ? (
+              <Link href={`${getAdminOrigin(host)}/events`} className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 hover:bg-white/[0.08]">
+                Events
               </Link>
             ) : null}
 

@@ -7,10 +7,10 @@ import { PUBLIC_CITIES } from "@/lib/public-cities";
 
 export default function PublicNav() {
   const [open, setOpen] = useState(false);
+  const [citiesOpen, setCitiesOpen] = useState(false);
 
   const navLinks = [
     { label: "Discover", href: `${getWebOrigin()}/` },
-    { label: "Cities", href: `${getWebOrigin()}/#cities` },
     { label: "EPL", href: `${getEplOrigin()}/` },
     { label: "Hosts", href: "https://hosts.evntszn.com/" },
     { label: "Partners", href: `${getWebOrigin()}/partners/packages` },
@@ -20,7 +20,7 @@ export default function PublicNav() {
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-black/72 backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 md:px-6 lg:px-8">
-        <Link href="/" className="text-lg font-black tracking-tight text-white">
+        <Link href={getWebOrigin()} className="text-lg font-black tracking-tight text-white">
           EVNTSZN
         </Link>
 
@@ -30,6 +30,30 @@ export default function PublicNav() {
               {link.label}
             </a>
           ))}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setCitiesOpen((value) => !value)}
+              className="text-sm font-medium text-white/78 transition hover:text-white"
+            >
+              Cities
+            </button>
+            {citiesOpen ? (
+              <div className="absolute left-0 top-full mt-3 min-w-[220px] rounded-[24px] border border-white/10 bg-black/95 p-3 shadow-[0_18px_50px_rgba(0,0,0,0.35)]">
+                <div className="grid gap-2">
+                  {PUBLIC_CITIES.map((city) => (
+                    <a
+                      key={city.slug}
+                      href={`${getWebOrigin()}/${city.slug}`}
+                      className="rounded-2xl px-3 py-2 text-sm font-semibold text-white/80 transition hover:bg-white/8 hover:text-white"
+                    >
+                      {city.name}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+          </div>
         </nav>
 
         <div className="hidden items-center gap-3 lg:flex">

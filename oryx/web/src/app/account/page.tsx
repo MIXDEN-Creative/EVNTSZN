@@ -67,6 +67,12 @@ function buildQuickLinks(viewer: Awaited<ReturnType<typeof getPlatformViewer>>) 
         href: "/epl/admin/hiring",
         label: "Open hiring",
       },
+      {
+        title: "Events desk",
+        body: "Create EVNTSZN and EPL events, publish them into discovery, and keep league event setup moving without code edits.",
+        href: "/epl/admin/events",
+        label: "Open events",
+      },
     );
   }
 

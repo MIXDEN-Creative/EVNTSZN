@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { DiscoveryNativeEvent } from "@/lib/discovery";
 import type { HomepageContent, PublicModules } from "@/lib/site-content";
 import type { TicketmasterEvent } from "@/lib/ticketmaster";
@@ -45,12 +45,17 @@ type DiscoveryResponse = {
   native?: DiscoveryNativeEvent[];
   external?: TicketmasterEvent[];
   results?: DiscoveryListing[];
+  normalizedCity?: {
+    city?: string;
+    state?: string;
+    label?: string;
+  } | null;
 };
 
 const FALLBACK_DISCOVERY_IMAGE =
   "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=1800&q=80";
 const FALLBACK_EPL_IMAGE =
-  "https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&w=1800&q=80";
+  "https://images.unsplash.com/photo-1518604666860-9ed391f76460?auto=format&fit=crop&w=1800&q=80";
 
 function formatEventDate(value: string | null | undefined) {
   if (!value) return "Date coming soon";
@@ -212,6 +217,7 @@ export default function DiscoveryLanding({
   const [hasSearched, setHasSearched] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [results, setResults] = useState<DiscoveryListing[]>(initialPopular);
+  const [normalizedLocationLabel, setNormalizedLocationLabel] = useState<string | null>(null);
 
   const groupedNative = useMemo(
     () => ({
@@ -223,54 +229,66 @@ export default function DiscoveryLanding({
     [initialExternal, initialNativeSections],
   );
 
-  async function runSearch(next?: {
-    query?: string;
-    city?: string;
-    when?: "" | "tonight" | "week" | "weekend";
-    lat?: number;
-    lng?: number;
-  }) {
-    const nextQuery = next?.query ?? query;
-    const nextCity = next?.city ?? city;
-    const nextWhen = next?.when ?? when;
+  const runSearch = useCallback(
+    async (next?: {
+      query?: string;
+      city?: string;
+      when?: "" | "tonight" | "week" | "weekend";
+      lat?: number;
+      lng?: number;
+    }) => {
+      const nextQuery = next?.query ?? query;
+      const nextCity = next?.city ?? city;
+      const nextWhen = next?.when ?? when;
 
-    setLoading(true);
-    setHasSearched(true);
-    setMessage(null);
+      setLoading(true);
+      setHasSearched(true);
+      setMessage(null);
 
-    try {
-      const params = new URLSearchParams();
-      if (nextQuery.trim()) params.set("q", nextQuery.trim());
-      if (nextCity.trim()) params.set("city", nextCity.trim());
-      if (nextWhen) params.set("when", nextWhen);
-      if (typeof next?.lat === "number" && typeof next?.lng === "number") {
-        params.set("lat", String(next.lat));
-        params.set("lng", String(next.lng));
+      try {
+        const params = new URLSearchParams();
+        if (nextQuery.trim()) params.set("q", nextQuery.trim());
+        if (nextCity.trim()) params.set("city", nextCity.trim());
+        if (nextWhen) params.set("when", nextWhen);
+        if (typeof next?.lat === "number" && typeof next?.lng === "number") {
+          params.set("lat", String(next.lat));
+          params.set("lng", String(next.lng));
+        }
+
+        const response = await fetch(`/api/discovery/search?${params.toString()}`, {
+          cache: "no-store",
+        });
+        const payload = (await response.json()) as DiscoveryResponse;
+
+        const nextResults =
+          payload.results ||
+          [
+            ...((payload.native || []).map(normalizeNativeEvent)),
+            ...((payload.external || []).map(normalizeExternalEvent)),
+          ];
+
+        setResults(nextResults);
+        setNormalizedLocationLabel(payload.normalizedCity?.label || null);
+        if (!nextResults.length) {
+          setMessage(createEmptyState(nextQuery, nextCity).body);
+        }
+      } catch {
+        setResults([]);
+        setMessage("Search is taking a beat. Try again in a moment.");
+      } finally {
+        setLoading(false);
       }
+    },
+    [city, query, when],
+  );
 
-      const response = await fetch(`/api/discovery/search?${params.toString()}`, {
-        cache: "no-store",
-      });
-      const payload = (await response.json()) as DiscoveryResponse;
-
-      const nextResults =
-        payload.results ||
-        [
-          ...((payload.native || []).map(normalizeNativeEvent)),
-          ...((payload.external || []).map(normalizeExternalEvent)),
-        ];
-
-      setResults(nextResults);
-      if (!nextResults.length) {
-        setMessage(createEmptyState(nextQuery, nextCity).body);
-      }
-    } catch {
-      setResults([]);
-      setMessage("Search is taking a beat. Try again in a moment.");
-    } finally {
-      setLoading(false);
-    }
-  }
+  useEffect(() => {
+    if (!query.trim() && !city.trim()) return;
+    const timeout = window.setTimeout(() => {
+      void runSearch();
+    }, 250);
+    return () => window.clearTimeout(timeout);
+  }, [query, city, when, runSearch]);
 
   async function useNearMe() {
     if (!navigator.geolocation) {
@@ -443,7 +461,7 @@ export default function DiscoveryLanding({
             </p>
           </div>
           <div className="max-w-md text-sm leading-6 text-white/55">
-            {message || content.discovery.disclosure}
+            {message || (normalizedLocationLabel ? `Using ${normalizedLocationLabel} for the strongest city match.` : content.discovery.disclosure)}
           </div>
         </div>
 

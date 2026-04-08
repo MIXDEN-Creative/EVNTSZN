@@ -1,7 +1,9 @@
 import Link from "next/link";
+import PublicPageFrame from "@/components/public/PublicPageFrame";
 
 export default function HostApplyPage() {
   return (
+    <PublicPageFrame>
     <main className="ev-surface ev-surface--web min-h-screen text-white">
       <div className="mx-auto max-w-3xl px-4 py-12 md:px-6">
         <div className="ev-kicker">Host Network application</div>
@@ -40,5 +42,6 @@ export default function HostApplyPage() {
         </div>
       </div>
     </main>
+    </PublicPageFrame>
   );
 }
