@@ -130,6 +130,19 @@ type DiscoveryListing = {
   promoCollection: string | null;
 };
 
+type ExternalDiscoveryListing = {
+  id: string;
+  title: string;
+  city: string | null;
+  state: string | null;
+  startAt: string | null;
+  venueName: string | null;
+  description: string | null;
+  moderationStatus: "active" | "featured" | "deprioritized" | "hidden" | "unsuitable";
+  priorityAdjustment: number;
+  notes?: string | null;
+};
+
 function parseLines(value: string, mode: "category" | "city") {
   return value
     .split("\n")
@@ -166,6 +179,7 @@ export default function DiscoveryAdminClient() {
   const [eplContent, setEplContent] = useState<ManagedEplContent | null>(null);
   const [modules, setModules] = useState<ManagedPublicModules | null>(null);
   const [listings, setListings] = useState<DiscoveryListing[]>([]);
+  const [externalListings, setExternalListings] = useState<ExternalDiscoveryListing[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -190,6 +204,7 @@ export default function DiscoveryAdminClient() {
     setEplContent(nextEpl);
     setModules(nextModules);
     setListings((payload.listings as DiscoveryListing[]) || []);
+    setExternalListings((payload.externalListings as ExternalDiscoveryListing[]) || []);
     setTaxonomyCategories(serializeCategories(nextContent.taxonomy.categories));
     setTaxonomyCities(serializeCities(nextContent.taxonomy.cities));
     setMessage(nextContent.storageReady && nextEpl.storageReady && nextModules.storageReady ? null : "Public-surface controls are running on fallback content until the discovery controls migration is applied.");
@@ -259,6 +274,42 @@ export default function DiscoveryAdminClient() {
     }
 
     setMessage(`Updated discovery controls for ${listing.title}.`);
+    await load();
+  }
+
+  async function saveExternalListing(listing: ExternalDiscoveryListing) {
+    setSaving(`external:${listing.id}`);
+    setMessage(null);
+
+    const response = await fetch("/api/admin/discovery", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        kind: "external",
+        source: "ticketmaster",
+        externalEventId: listing.id,
+        title: listing.title,
+        city: listing.city,
+        state: listing.state,
+        startsAt: listing.startAt,
+        status: listing.moderationStatus,
+        priorityAdjustment: listing.priorityAdjustment,
+        overrideSummary: listing.description,
+        notes: listing.notes || null,
+      }),
+    });
+
+    const payload = (await response.json()) as Record<string, unknown>;
+    setSaving(null);
+
+    if (!response.ok) {
+      setMessage(String(payload.error || "Could not save external moderation controls."));
+      return;
+    }
+
+    setMessage(`Updated external moderation for ${listing.title}.`);
     await load();
   }
 
@@ -605,6 +656,96 @@ export default function DiscoveryAdminClient() {
                         onClick={() => saveListing(listing)}
                       >
                         {saving === listing.id ? "Saving..." : "Save listing"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="ev-panel">
+            <div className="ev-section-kicker">External moderation</div>
+            <p className="mt-3 text-sm text-white/65">
+              Moderate external discovery inventory with real controls for featuring, hiding, de-prioritizing, and copy overrides without treating Ticketmaster/Eventbrite inventory like native EVNTSZN events.
+            </p>
+            <div className="mt-5 space-y-4">
+              {externalListings.map((listing) => (
+                <div key={listing.id} className="ev-meta-card">
+                  <div className="flex flex-col gap-4">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <div className="text-lg font-semibold text-white">{listing.title}</div>
+                        <div className="mt-1 text-sm text-white/55">
+                          {listing.venueName || "External venue"}{listing.city ? ` · ${listing.city}` : ""}{listing.state ? `, ${listing.state}` : ""}
+                        </div>
+                      </div>
+                      <span className="ev-chip ev-chip--external">{listing.moderationStatus.replace(/_/g, " ")}</span>
+                    </div>
+
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <select
+                        className="ev-select"
+                        value={listing.moderationStatus}
+                        onChange={(event) =>
+                          setExternalListings((current) =>
+                            current.map((item) =>
+                              item.id === listing.id
+                                ? { ...item, moderationStatus: event.target.value as ExternalDiscoveryListing["moderationStatus"] }
+                                : item,
+                            ),
+                          )
+                        }
+                      >
+                        <option value="active">Active</option>
+                        <option value="featured">Featured</option>
+                        <option value="deprioritized">De-prioritized</option>
+                        <option value="hidden">Hidden</option>
+                        <option value="unsuitable">Unsuitable</option>
+                      </select>
+                      <input
+                        type="number"
+                        className="ev-field"
+                        value={listing.priorityAdjustment}
+                        onChange={(event) =>
+                          setExternalListings((current) =>
+                            current.map((item) =>
+                              item.id === listing.id
+                                ? { ...item, priorityAdjustment: Number(event.target.value || 0) }
+                                : item,
+                            ),
+                          )
+                        }
+                      />
+                      <textarea
+                        className="ev-textarea md:col-span-2"
+                        value={listing.description || ""}
+                        onChange={(event) =>
+                          setExternalListings((current) =>
+                            current.map((item) =>
+                              item.id === listing.id ? { ...item, description: event.target.value } : item,
+                            ),
+                          )
+                        }
+                      />
+                      <textarea
+                        className="ev-textarea md:col-span-2"
+                        value={listing.notes || ""}
+                        onChange={(event) =>
+                          setExternalListings((current) =>
+                            current.map((item) =>
+                              item.id === listing.id ? { ...item, notes: event.target.value } : item,
+                            ),
+                          )
+                        }
+                      />
+                      <button
+                        type="button"
+                        className="ev-button-secondary"
+                        disabled={saving === `external:${listing.id}`}
+                        onClick={() => saveExternalListing(listing)}
+                      >
+                        {saving === `external:${listing.id}` ? "Saving..." : "Save moderation"}
                       </button>
                     </div>
                   </div>

@@ -3,11 +3,12 @@ export type EvntsznSurface =
   | "app"
   | "scanner"
   | "epl"
+  | "hosts"
   | "ops"
   | "hq"
   | "admin";
 
-export type RestrictedSurface = Exclude<EvntsznSurface, "web">;
+export type RestrictedSurface = Exclude<EvntsznSurface, "web" | "hosts">;
 
 const DEFAULT_BASE_DOMAIN = "evntszn.com";
 const DEFAULT_DEV_ORIGIN = "http://localhost:3000";
@@ -17,6 +18,7 @@ const DEFAULT_ORIGINS: Record<EvntsznSurface, string> = {
   app: "https://app.evntszn.com",
   scanner: "https://scanner.evntszn.com",
   epl: "https://epl.evntszn.com",
+  hosts: "https://hosts.evntszn.com",
   ops: "https://ops.evntszn.com",
   hq: "https://hq.evntszn.com",
   admin: "https://admin.evntszn.com",
@@ -27,6 +29,7 @@ const SURFACE_ENV_KEYS: Record<EvntsznSurface, string[]> = {
   app: ["NEXT_PUBLIC_APP_ORIGIN", "NEXT_PUBLIC_APP_URL"],
   scanner: ["NEXT_PUBLIC_SCANNER_ORIGIN"],
   epl: ["NEXT_PUBLIC_EPL_ORIGIN"],
+  hosts: ["NEXT_PUBLIC_HOSTS_ORIGIN"],
   ops: ["NEXT_PUBLIC_OPS_ORIGIN"],
   hq: ["NEXT_PUBLIC_HQ_ORIGIN"],
   admin: ["NEXT_PUBLIC_ADMIN_ORIGIN"],
@@ -62,6 +65,8 @@ function getExpectedHost(surface: EvntsznSurface) {
       return `epl.${baseDomain}`;
     case "ops":
       return `ops.${baseDomain}`;
+    case "hosts":
+      return `hosts.${baseDomain}`;
     case "hq":
       return `hq.${baseDomain}`;
     case "admin":
@@ -144,11 +149,7 @@ export function getAdminOrigin(runtimeHost?: string) {
 }
 
 export function getHostsOrigin(runtimeHost?: string) {
-  if (runtimeHost && isLocalHost(runtimeHost)) {
-    return cleanOrigin(process.env.NEXT_PUBLIC_DEV_ORIGIN || DEFAULT_DEV_ORIGIN);
-  }
-
-  return `https://hosts.${getBaseDomain()}`;
+  return getCanonicalOrigin("hosts", runtimeHost);
 }
 
 export function getSurfaceHost(surface: EvntsznSurface) {
@@ -193,7 +194,7 @@ export function normalizeNextPath(next?: string | null) {
       return nextPath;
     }
 
-    return nextPath;
+    return "/account";
   } catch {
     // Relative paths fall through.
   }
@@ -263,6 +264,11 @@ export function getCanonicalPath(path: string, surface: EvntsznSurface) {
     return trimmed || "/";
   }
 
+  if (surface === "hosts") {
+    const trimmed = normalized.replace(/^\/hosts(?=\/|$)/, "");
+    return trimmed || "/";
+  }
+
   if (surface === "admin") {
     if (normalized === "/epl/admin") return "/";
     if (normalized.startsWith("/epl/admin/")) {
@@ -308,13 +314,21 @@ export function getLoginRedirectOrigin(next?: string | null, runtimeHost?: strin
 
 export function getLoginUrl(next?: string | null, runtimeHost?: string) {
   const nextPath = normalizeNextPath(next);
+  const surface = inferSurfaceForNext(nextPath, runtimeHost);
+  const internalAccessSurfaces: RestrictedSurface[] = ["scanner", "ops", "hq", "admin"];
+  const loginPath = internalAccessSurfaces.includes(surface as RestrictedSurface)
+    ? `/admin-login?next=${encodeURIComponent(nextPath)}`
+    : `/account/login?next=${encodeURIComponent(nextPath)}`;
+
   if (!runtimeHost) {
-    return `/account/login?next=${encodeURIComponent(nextPath)}`;
+    return loginPath;
   }
-  return new URL(
-    `/account/login?next=${encodeURIComponent(nextPath)}`,
-    getLoginRedirectOrigin(nextPath, runtimeHost),
-  ).toString();
+
+  const origin = internalAccessSurfaces.includes(surface as RestrictedSurface)
+    ? getAppOrigin(runtimeHost)
+    : getLoginRedirectOrigin(nextPath, runtimeHost);
+
+  return new URL(loginPath, origin).toString();
 }
 
 export function getSurfaceLabel(surface: RestrictedSurface) {
@@ -336,7 +350,11 @@ export function getSurfaceLabel(surface: RestrictedSurface) {
 
 export function getRestrictedSurfaceForPath(path: string): RestrictedSurface {
   const surface = getSurfaceForPath(path);
-  return surface === "web" ? "app" : surface;
+  if (surface === "web" || surface === "hosts") {
+    return "app";
+  }
+
+  return surface;
 }
 
 export function getSurfaceFallback(

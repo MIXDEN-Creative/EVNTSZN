@@ -11,6 +11,18 @@ export const metadata: Metadata = {
   alternates: {
     canonical: `${getEplOrigin()}/opportunities`,
   },
+  openGraph: {
+    title: "EPL Opportunities | EVNTSZN",
+    description: "Apply for active EPL volunteer and paid opportunities across league operations, partnerships, audience growth, and game-day execution.",
+    url: `${getEplOrigin()}/opportunities`,
+    siteName: "EVNTSZN",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "EPL Opportunities | EVNTSZN",
+    description: "Apply for active EPL volunteer and paid opportunities across league operations, partnerships, audience growth, and game-day execution.",
+  },
 };
 
 export default async function EplOpportunitiesPage() {

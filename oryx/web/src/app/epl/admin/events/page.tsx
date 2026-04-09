@@ -4,6 +4,6 @@ import EventsAdminClient from "./EventsAdminClient";
 export const dynamic = "force-dynamic";
 
 export default async function AdminEventsPage() {
-  await requireAdminPermission("admin.manage", "/epl/admin/events");
+  await requireAdminPermission("events.manage", "/epl/admin/events");
   return <EventsAdminClient />;
 }

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdminPermission } from "@/lib/admin-auth";
+import { getLoginUrl } from "@/lib/domains";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { inferOrganizerClassification, normalizeStringArray } from "@/lib/operator-access";
 
@@ -68,7 +69,7 @@ export async function POST(request: Request) {
   }
 
   if (!contentType.includes("application/json")) {
-    return NextResponse.redirect(new URL("/account/login?next=/ops", new URL(request.url).origin), 303);
+    return NextResponse.redirect(getLoginUrl("/ops", new URL(request.url).host), 303);
   }
 
   return NextResponse.json({ ok: true, application: data });

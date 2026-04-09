@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { getFounderSession } from "@/lib/founder-session";
 import { getAppOrigin, getLoginUrl, getRestrictedSurfaceForPath, getRestrictedUrl } from "@/lib/domains";
+import { isMissingRbacTableError } from "@/lib/admin-auth";
 
 export type PlatformRole = "attendee" | "organizer" | "venue" | "scanner" | "admin";
 
@@ -104,14 +105,14 @@ export async function getPlatformViewer() {
 
   const authedUser = user;
 
-  const [{ data: profile }, { data: memberships }, { data: operatorProfile }] = await Promise.all([
+  const [{ data: profile }, membershipsResponse, { data: operatorProfile }] = await Promise.all([
     supabaseAdmin
       .from("evntszn_profiles")
       .select("user_id, full_name, primary_role, city, state, referral_code, is_active")
       .eq("user_id", authedUser.id)
       .maybeSingle(),
     supabaseAdmin
-      .from("admin_memberships")
+      .from("user_roles")
       .select("id")
       .eq("user_id", authedUser.id)
       .eq("is_active", true),
@@ -122,11 +123,30 @@ export async function getPlatformViewer() {
       .maybeSingle(),
   ]);
 
+  if (membershipsResponse.error && !isMissingRbacTableError(membershipsResponse.error)) {
+    throw new Error(membershipsResponse.error.message);
+  }
+
+  let isPlatformAdmin = Boolean(membershipsResponse.data?.length);
+  if (!isPlatformAdmin) {
+    const legacyMemberships = await supabaseAdmin
+      .from("admin_memberships")
+      .select("id")
+      .eq("user_id", authedUser.id)
+      .eq("is_active", true);
+
+    if (legacyMemberships.error && !isMissingRbacTableError(legacyMemberships.error)) {
+      throw new Error(legacyMemberships.error.message);
+    }
+
+    isPlatformAdmin = Boolean(legacyMemberships.data?.length);
+  }
+
   return {
     user: authedUser,
     profile: (profile as PlatformProfile | null) ?? null,
     operatorProfile: (operatorProfile as OperatorProfile | null) ?? null,
-    isPlatformAdmin: Boolean(memberships?.length),
+    isPlatformAdmin,
   };
 }
 

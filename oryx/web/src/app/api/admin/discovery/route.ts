@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdminPermission } from "@/lib/admin-auth";
 import { getDiscoveryNativeEvents } from "@/lib/discovery";
+import { applyExternalDiscoveryControls } from "@/lib/external-discovery-controls";
 import {
   getHomepageContent,
   DEFAULT_HOMEPAGE_CONTENT,
@@ -10,6 +11,7 @@ import {
   getPublicModulesContent,
 } from "@/lib/site-content";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { getTicketmasterShowcase } from "@/lib/ticketmaster";
 
 type DiscoveryContentUpdateBody = {
   kind: "content";
@@ -39,7 +41,22 @@ type DiscoveryListingUpdateBody = {
   isDiscoverable?: boolean;
 };
 
-type DiscoveryUpdateBody = DiscoveryContentUpdateBody | DiscoveryListingUpdateBody;
+type DiscoveryExternalUpdateBody = {
+  kind: "external";
+  source: "ticketmaster" | "eventbrite";
+  externalEventId: string;
+  title?: string | null;
+  city?: string | null;
+  state?: string | null;
+  startsAt?: string | null;
+  status: "active" | "featured" | "deprioritized" | "hidden" | "unsuitable";
+  priorityAdjustment?: number;
+  overrideTitle?: string | null;
+  overrideSummary?: string | null;
+  notes?: string | null;
+};
+
+type DiscoveryUpdateBody = DiscoveryContentUpdateBody | DiscoveryListingUpdateBody | DiscoveryExternalUpdateBody;
 
 function isMissingDiscoveryTableError(error: unknown) {
   const code = typeof error === "object" && error !== null && "code" in error ? String((error as { code?: unknown }).code) : "";
@@ -48,17 +65,18 @@ function isMissingDiscoveryTableError(error: unknown) {
       ? String((error as { message?: unknown }).message)
       : "";
 
-  return code === "42P01" || code === "PGRST205" || /site_content_entries|discovery_listing_controls/i.test(message);
+  return code === "42P01" || code === "PGRST205" || /site_content_entries|discovery_listing_controls|external_discovery_controls/i.test(message);
 }
 
 export async function GET() {
   await requireAdminPermission("catalog.manage", "/epl/admin/discovery");
 
-  const [homepage, discoveryListings, epl, modules] = await Promise.all([
+  const [homepage, discoveryListings, epl, modules, moderatedExternal] = await Promise.all([
     getHomepageContent(),
     getDiscoveryNativeEvents({ limit: 50 }),
     getEplPublicContent(),
     getPublicModulesContent(),
+    getTicketmasterShowcase().then((events) => applyExternalDiscoveryControls("ticketmaster", events)),
   ]);
 
   return NextResponse.json({
@@ -73,11 +91,12 @@ export async function GET() {
     epl,
     modules,
     listings: discoveryListings.events,
+    externalListings: moderatedExternal,
   });
 }
 
 export async function POST(request: Request) {
-  await requireAdminPermission("catalog.manage", "/epl/admin/discovery");
+  const { user } = await requireAdminPermission("catalog.manage", "/epl/admin/discovery");
 
   const body = (await request.json()) as DiscoveryUpdateBody;
 
@@ -126,6 +145,39 @@ export async function POST(request: Request) {
       if (isMissingDiscoveryTableError(error)) {
         return NextResponse.json(
           { error: "Discovery listing controls are not available until the discovery controls migration is applied." },
+          { status: 503 },
+        );
+      }
+
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ ok: true });
+  }
+
+  if (body.kind === "external") {
+    const { error } = await supabaseAdmin.from("external_discovery_controls").upsert(
+      {
+        source: body.source,
+        external_event_id: body.externalEventId,
+        title: body.title || null,
+        city: body.city || null,
+        state: body.state || null,
+        starts_at: body.startsAt || null,
+        status: body.status,
+        priority_adjustment: Number(body.priorityAdjustment || 0),
+        override_title: body.overrideTitle || null,
+        override_summary: body.overrideSummary || null,
+        notes: body.notes || null,
+        updated_by_user_id: user.id.startsWith("founder:") ? null : user.id,
+      },
+      { onConflict: "source,external_event_id" },
+    );
+
+    if (error) {
+      if (isMissingDiscoveryTableError(error)) {
+        return NextResponse.json(
+          { error: "External moderation controls are not available until the external discovery controls migration is applied." },
           { status: 503 },
         );
       }

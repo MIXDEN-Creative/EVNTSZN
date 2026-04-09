@@ -45,7 +45,7 @@ function slugify(value: string) {
 }
 
 export async function GET(request: Request) {
-  await requireAdminPermission("admin.manage", "/epl/admin/events");
+  await requireAdminPermission("events.manage", "/epl/admin/events");
 
   const { searchParams } = new URL(request.url);
   const vertical = searchParams.get("vertical");

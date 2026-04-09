@@ -15,6 +15,7 @@ export default function PublicNav() {
     { label: "Hosts", href: "https://hosts.evntszn.com/" },
     { label: "Partners", href: `${getWebOrigin()}/partners/packages` },
     { label: "Store", href: `${getEplOrigin()}/store` },
+    { label: "Support", href: `${getWebOrigin()}/support` },
   ];
 
   return (

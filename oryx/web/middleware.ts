@@ -121,6 +121,7 @@ export function middleware(request: NextRequest) {
     "/checkout/cancel",
     "/coming-soon",
     "/hosts",
+    "/support",
     "/privacy",
     "/terms",
     "/refund-policy",
@@ -135,6 +136,7 @@ export function middleware(request: NextRequest) {
       /^\/api\/discovery\/search$/,
       /^\/api\/public\/applications$/,
       /^\/api\/programs\/applications$/,
+      /^\/api\/support\/tickets$/,
       /^\/api\/sponsors\/checkout$/,
       /^\/api\/sponsors\/inquiries$/,
     ];
@@ -190,11 +192,13 @@ export function middleware(request: NextRequest) {
 
   if (surface === "scanner") {
     if (pathname === "/") {
-      url.pathname = "/account/login";
+      url.pathname = "/admin-login";
+      url.search = `?next=${encodeURIComponent("/scanner")}`;
       return NextResponse.redirect(url);
     }
 
     if (
+      pathname.startsWith("/admin-login") ||
       pathname.startsWith("/account") ||
       pathname.startsWith("/auth/callback") ||
       pathname.startsWith("/api/evntszn") ||
@@ -218,6 +222,7 @@ export function middleware(request: NextRequest) {
     }
 
     if (
+      pathname.startsWith("/admin-login") ||
       pathname.startsWith("/account") ||
       pathname.startsWith("/auth/callback") ||
       pathname.startsWith("/api/epl") ||
@@ -251,6 +256,7 @@ export function middleware(request: NextRequest) {
     }
 
     if (
+      pathname.startsWith("/admin-login") ||
       pathname.startsWith("/account") ||
       pathname.startsWith("/auth/callback") ||
       pathname.startsWith("/api/admin") ||
@@ -279,6 +285,7 @@ export function middleware(request: NextRequest) {
     }
 
     if (
+      pathname.startsWith("/admin-login") ||
       pathname.startsWith("/account") ||
       pathname.startsWith("/auth/callback") ||
       pathname.startsWith("/api/admin") ||

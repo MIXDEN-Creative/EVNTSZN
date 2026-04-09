@@ -7,7 +7,7 @@ function normalizeCity(value: string | null | undefined) {
 }
 
 export async function GET(request: NextRequest) {
-  await requireAdminPermission("admin.manage", "/epl/admin/city-office");
+  await requireAdminPermission("city.manage", "/epl/admin/city-office");
 
   const cityFilter = request.nextUrl.searchParams.get("city");
 

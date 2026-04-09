@@ -30,16 +30,17 @@ export default function ControlCenterClient() {
   const opportunityCounts = data?.opportunityCounts || null;
   const hostOrganizerMix = data?.hostOrganizerMix || { hosts: 0, independentOrganizers: 0 };
   const cityReadinessCounts = data?.cityReadinessCounts || [];
+  const supportCountsByType = data?.supportCountsByType || [];
 
   return (
     <main className="mx-auto max-w-7xl">
       <section className="ev-shell-hero">
         <div className="ev-shell-hero-grid">
           <div>
-            <div className="ev-kicker">Control center</div>
-            <h1 className="ev-title">Run EVNTSZN from one executive command layer.</h1>
+            <div className="ev-kicker">Operations summary</div>
+            <h1 className="ev-title">See what needs attention today.</h1>
             <p className="ev-subtitle">
-              Monitor users, approvals, discovery inventory, sponsorship money, and operational issues without leaving the dashboard.
+              Review the live queues, open issues, support load, revenue movement, and staffing pressure without bouncing between desks.
             </p>
           </div>
         </div>
@@ -65,6 +66,8 @@ export default function ControlCenterClient() {
           ["Active sponsors", stats?.activeSponsors ?? "—"],
           ["Program members", stats?.programMembers ?? "—"],
           ["Pending program reviews", stats?.pendingProgramReviews ?? "—"],
+          ["Open support tickets", stats?.supportTicketsOpen ?? "—"],
+          ["Escalated support", stats?.supportTicketsEscalated ?? "—"],
           ["Operator profiles", stats?.operatorProfiles ?? "—"],
           ["Active hosts", stats?.activeHosts ?? "—"],
           ["Independent organizers", stats?.independentOrganizers ?? "—"],
@@ -188,7 +191,7 @@ export default function ControlCenterClient() {
         </section>
 
         <section className="ev-panel p-6">
-          <div className="ev-section-kicker">Issue distribution</div>
+          <div className="ev-section-kicker">Issues & support</div>
           <div className="mt-5 grid gap-4 md:grid-cols-2">
             <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
               <div className="text-sm font-semibold text-white">By source</div>
@@ -214,6 +217,21 @@ export default function ControlCenterClient() {
                   issueCountsBySeverity.map((row: any) => (
                     <div key={row.severity} className="flex items-center justify-between gap-3">
                       <span>{row.severity}</span>
+                      <span className="font-semibold text-white">{row.count}</span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
+              <div className="text-sm font-semibold text-white">Support by type</div>
+              <div className="mt-3 space-y-2 text-sm text-white/65">
+                {supportCountsByType.length === 0 ? (
+                  <div>No support tickets logged yet.</div>
+                ) : (
+                  supportCountsByType.map((row: any) => (
+                    <div key={row.type} className="flex items-center justify-between gap-3">
+                      <span>{String(row.type).replace(/_/g, " ")}</span>
                       <span className="font-semibold text-white">{row.count}</span>
                     </div>
                   ))

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 
 type Opportunity = {
   id: string;
+  role_code?: string | null;
   title: string;
   department: string | null;
   opportunity_type: string;
@@ -18,6 +19,14 @@ type Opportunity = {
   location_state?: string | null;
   priority_score?: number;
   display_order?: number;
+  access_role_id?: string | null;
+  assignment_permission_codes?: string[] | null;
+  assignment_logic?: { notes?: string | null } | null;
+};
+
+type AccessRole = {
+  id: string;
+  name: string;
 };
 
 function parseList(value: string) {
@@ -29,6 +38,7 @@ function parseList(value: string) {
 
 export default function OpportunitiesAdminClient() {
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
+  const [accessRoles, setAccessRoles] = useState<AccessRole[]>([]);
   const [message, setMessage] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [form, setForm] = useState<Record<string, any>>({
@@ -48,18 +58,28 @@ export default function OpportunitiesAdminClient() {
     priorityScore: 100,
     displayOrder: 100,
     seasonSlug: "season-1",
+    accessRoleId: "",
+    assignmentPermissionCodes: "",
+    assignmentLogic: "",
   });
 
   async function load() {
-    const res = await fetch("/api/epl/admin/opportunities", { cache: "no-store" });
-    const json = (await res.json()) as { opportunities?: Opportunity[]; error?: string };
-    if (!res.ok) {
+    const [opportunitiesRes, rolesRes] = await Promise.all([
+      fetch("/api/epl/admin/opportunities", { cache: "no-store" }),
+      fetch("/api/admin/roles", { cache: "no-store" }),
+    ]);
+    const [opportunitiesJson, rolesJson] = await Promise.all([opportunitiesRes.json(), rolesRes.json()]);
+    const json = opportunitiesJson as { opportunities?: Opportunity[]; error?: string };
+    if (!opportunitiesRes.ok) {
       setMessage(json.error || "Could not load opportunities.");
       return;
     }
     const next = json.opportunities || [];
     setOpportunities(next);
     if (!selectedId && next[0]?.id) setSelectedId(next[0].id);
+    if (rolesRes.ok) {
+      setAccessRoles(((rolesJson as { roles?: AccessRole[] }).roles || []).map((role) => ({ id: role.id, name: role.name })));
+    }
   }
 
   useEffect(() => {
@@ -91,6 +111,9 @@ export default function OpportunitiesAdminClient() {
       locationState: selectedOpportunity.location_state || "",
       priorityScore: selectedOpportunity.priority_score || 100,
       displayOrder: selectedOpportunity.display_order || 100,
+      accessRoleId: selectedOpportunity.access_role_id || "",
+      assignmentPermissionCodes: (selectedOpportunity.assignment_permission_codes || []).join(", "),
+      assignmentLogic: selectedOpportunity.assignment_logic?.notes || "",
     });
   }, [selectedOpportunity]);
 
@@ -104,6 +127,10 @@ export default function OpportunitiesAdminClient() {
         ...form,
         requirements: parseList(form.requirements || ""),
         perks: parseList(form.perks || ""),
+        assignmentPermissionCodes: String(form.assignmentPermissionCodes || "")
+          .split(",")
+          .map((value) => value.trim())
+          .filter(Boolean),
       }),
     });
     const json = (await res.json()) as { error?: string };
@@ -130,6 +157,9 @@ export default function OpportunitiesAdminClient() {
         priorityScore: 100,
         displayOrder: 100,
         seasonSlug: "season-1",
+        accessRoleId: "",
+        assignmentPermissionCodes: "",
+        assignmentLogic: "",
       });
     }
     await load();
@@ -214,6 +244,29 @@ export default function OpportunitiesAdminClient() {
                 Publicly visible
               </label>
             </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              <select className="ev-field" value={form.accessRoleId} onChange={(e) => setForm({ ...form, accessRoleId: e.target.value })}>
+                <option value="">No linked access role</option>
+                {accessRoles.map((role) => (
+                  <option key={role.id} value={role.id}>
+                    {role.name}
+                  </option>
+                ))}
+              </select>
+              <input
+                className="ev-field"
+                placeholder="Assignment permission codes, comma separated"
+                value={form.assignmentPermissionCodes}
+                onChange={(e) => setForm({ ...form, assignmentPermissionCodes: e.target.value })}
+              />
+            </div>
+            <textarea
+              className="ev-textarea"
+              rows={3}
+              placeholder="Assignment logic or onboarding notes"
+              value={form.assignmentLogic}
+              onChange={(e) => setForm({ ...form, assignmentLogic: e.target.value })}
+            />
             <div className="flex flex-wrap gap-3">
               <button type="submit" className="ev-button-primary">{form.id ? "Save opportunity" : "Create opportunity"}</button>
               {form.id ? (

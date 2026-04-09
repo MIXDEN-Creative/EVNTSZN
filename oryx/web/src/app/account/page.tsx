@@ -1,8 +1,28 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { getAppOrigin, getEplOrigin, getHostsOrigin, getWebOrigin } from "@/lib/domains";
 import { getPlatformViewer } from "@/lib/evntszn";
 
 export const dynamic = "force-dynamic";
+export const metadata: Metadata = {
+  title: "Account Hub | EVNTSZN",
+  description: "Open your EVNTSZN account hub for discovery, orders, league access, and role-based internal tools.",
+  alternates: {
+    canonical: `${getAppOrigin()}/account`,
+  },
+  openGraph: {
+    title: "EVNTSZN Account Hub",
+    description: "Open your EVNTSZN account hub for discovery, orders, league access, and role-based internal tools.",
+    url: `${getAppOrigin()}/account`,
+    siteName: "EVNTSZN",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "EVNTSZN Account Hub",
+    description: "Open your EVNTSZN account hub for discovery, orders, league access, and role-based internal tools.",
+  },
+};
 
 function buildQuickLinks(viewer: Awaited<ReturnType<typeof getPlatformViewer>>) {
   const classification = viewer.operatorProfile?.organizer_classification;
@@ -51,6 +71,13 @@ function buildQuickLinks(viewer: Awaited<ReturnType<typeof getPlatformViewer>>) 
     body: "Follow purchases, confirmations, and order status without leaving the account surface.",
     href: "/orders/track",
     label: "Track orders",
+  });
+
+  links.push({
+    title: "Support",
+    body: "Open the support desk for ticketing, login, event, scanner, sponsor, or website issues with the right context attached.",
+    href: `${getWebOrigin()}/support`,
+    label: "Get support",
   });
 
   if (viewer.isPlatformAdmin) {
@@ -203,6 +230,14 @@ export default async function AccountPage() {
   return (
     <main className="min-h-screen bg-black text-white">
       <div className="mx-auto max-w-7xl px-4 py-10 md:px-6 lg:px-8">
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+          <Link href={`${getWebOrigin()}/`} className="text-lg font-black tracking-tight text-white">
+            EVNTSZN
+          </Link>
+          <Link href={`${getWebOrigin()}/`} className="rounded-full border border-white/12 bg-white/5 px-4 py-2 text-sm font-semibold text-white/84 transition hover:bg-white/10">
+            Return to homepage
+          </Link>
+        </div>
         <div className="rounded-[32px] border border-white/10 bg-gradient-to-br from-[#120f2a] via-[#0c0c15] to-black p-8 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
           <div className="text-xs font-semibold uppercase tracking-[0.24em] text-[#b899ff]">
             {viewer.user ? "App hub" : "EVNTSZN account"}

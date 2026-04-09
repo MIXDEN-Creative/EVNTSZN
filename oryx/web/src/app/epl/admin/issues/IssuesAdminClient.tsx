@@ -30,8 +30,8 @@ export default function IssuesAdminClient() {
         <div className="ev-shell-hero-grid">
           <div>
             <div className="ev-kicker">Issues & health</div>
-            <h1 className="ev-title">Track operational failures without leaving the command layer.</h1>
-            <p className="ev-subtitle">Webhook failures, store fetch issues, and system events can be monitored here and marked as monitoring or resolved.</p>
+            <h1 className="ev-title">Review and resolve platform issues.</h1>
+            <p className="ev-subtitle">Use this queue for system-health problems like webhook failures, store fetch issues, or platform errors. Customer and staff requests should go to the support desk.</p>
           </div>
         </div>
       </section>

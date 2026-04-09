@@ -16,7 +16,14 @@ export async function POST(request: Request) {
   const founderPassword = getFounderPasswordConfig();
   const expectedPassword = founderPassword.value;
 
-  if (!isFounderIdentity(email) || !expectedPassword || password !== expectedPassword) {
+  if (!founderPassword.configured) {
+    console.error("[founder-login] founder password missing in runtime", {
+      source: founderPassword.source,
+    });
+    return NextResponse.json({ error: "Founder login is not configured in this runtime." }, { status: 503 });
+  }
+
+  if (!isFounderIdentity(email) || password !== expectedPassword) {
     console.warn("[founder-login] invalid founder login attempt", {
       email,
       configured: founderPassword.configured,

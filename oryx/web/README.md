@@ -30,6 +30,7 @@ Set the values in `.env.local` from `.env.example`.
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
+- `ADMIN_ACCESS_PASSWORD`
 - `STRIPE_SECRET_KEY`
 - `STRIPE_WEBHOOK_SECRET`
 - `PRINTFUL_API_KEY`
@@ -42,6 +43,7 @@ Important:
 
 - Treat any previously committed or shared local secrets as compromised and rotate them.
 - `SUPABASE_SERVICE_ROLE_KEY` must stay server-side only.
+- `ADMIN_ACCESS_PASSWORD` is required for founder-session access on deployed runtime.
 - `PUBLIC_HOST` is the public EVNTSZN domain. `PREVIEW_HOST` is the full-access operational host.
 
 ## Local Development

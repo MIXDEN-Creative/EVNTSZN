@@ -22,57 +22,62 @@ export default async function AdminHomePage() {
     permissions.includes("admin.manage") && {
       title: "Team & Access",
       href: `${getAdminOrigin(host)}/team`,
-      description: "Invite admins, assign roles, and control permissions.",
+      description: "Create roles, send invites, and manage internal access.",
     },
     permissions.includes("admin.manage") && {
       title: "Control Center",
       href: `${getAdminOrigin(host)}/control-center`,
-      description: "Monitor approvals, open issues, sponsorship money, and operator coverage from one executive summary.",
+      description: "See revenue, approvals, open issues, and what needs attention today.",
     },
     permissions.includes("admin.manage") && {
       title: "Users",
       href: `${getAdminOrigin(host)}/users`,
-      description: "Create users, assign operator roles, and manage city or surface access.",
+      description: "Create users and update city, scanner, and operator access.",
     },
     permissions.includes("admin.manage") && {
       title: "Approvals",
       href: `${getAdminOrigin(host)}/approvals`,
-      description: "Review host, organizer, and partner applications and approve discovery eligibility.",
+      description: "Review applications and approve the right access path.",
     },
-    permissions.includes("admin.manage") && {
+    permissions.includes("city.manage") && {
       title: "City Office",
       href: `${getAdminOrigin(host)}/city-office`,
-      description: "Track market-level events, revenue, host coverage, and pending approvals city by city.",
+      description: "Review city queues, operator coverage, and local revenue.",
     },
-    permissions.includes("admin.manage") && {
-      title: "Signal & Ambassador",
+    (permissions.includes("admin.manage") || permissions.includes("city.manage")) && {
+      title: "Programs",
       href: `${getAdminOrigin(host)}/programs`,
-      description: "Manage Signal and Ambassador pipelines as distinct internal programs with city-aware activation and review status.",
+      description: "Review Signal and Ambassador applicants and update status.",
     },
     permissions.includes("admin.manage") && {
-      title: "Hiring Pipeline",
+      title: "Hiring",
       href: `${getAdminOrigin(host)}/hiring`,
-      description: "Review EPL applications, assign interviews, capture notes, and convert hired applicants into users.",
+      description: "Review applications, interviews, and hiring decisions.",
     },
-    permissions.includes("admin.manage") && {
+    permissions.includes("opportunities.manage") && {
       title: "Opportunities",
       href: `${getAdminOrigin(host)}/opportunities`,
-      description: "Publish or close current EPL volunteer and paid roles without touching code.",
+      description: "Open, close, and publish current roles.",
     },
-    permissions.includes("admin.manage") && {
+    permissions.includes("events.manage") && {
       title: "Events",
       href: `${getAdminOrigin(host)}/events`,
-      description: "Create EVNTSZN and EPL events, publish them into discovery, and keep league-specific event setup separate when needed.",
+      description: "Create, publish, and update events and ticketing.",
     },
-    permissions.includes("admin.manage") && {
-      title: "Scanner Access",
+    permissions.includes("scanner.manage") && {
+      title: "Scanner",
       href: `${getAdminOrigin(host)}/scanner`,
-      description: "See who can work the gate, what city they cover, and which events they can scan.",
+      description: "Manage gate access and event scan coverage.",
+    },
+    (permissions.includes("support.manage") || permissions.includes("support.respond")) && {
+      title: "Support Desk",
+      href: `${getAdminOrigin(host)}/support`,
+      description: "Review support tickets, assign owners, and close the loop.",
     },
     permissions.includes("admin.manage") && {
-      title: "Issues & Health",
+      title: "System Issues",
       href: `${getAdminOrigin(host)}/issues`,
-      description: "Review operational failures, webhook trouble, and store issues from one monitored queue.",
+      description: "Review and resolve platform, store, and webhook issues.",
     },
     permissions.includes("catalog.manage") && {
       title: "Storefront",
@@ -82,12 +87,12 @@ export default async function AdminHomePage() {
     permissions.includes("catalog.manage") && {
       title: "Discovery Control",
       href: `${getAdminOrigin(host)}/discovery`,
-      description: "Manage homepage hero content, featured listings, taxonomy blocks, and public discovery hierarchy.",
+      description: "Manage public copy, featured listings, and external moderation.",
     },
     permissions.includes("catalog.manage") && {
       title: "Sponsors & Packages",
       href: `${getAdminOrigin(host)}/sponsors`,
-      description: "Manage sponsor placements, package orders, live readiness, and payment-backed partner operations.",
+      description: "Manage sponsor accounts, placements, and package orders.",
     },
   ].filter(Boolean) as { title: string; href: string; description: string }[];
 
@@ -96,20 +101,20 @@ export default async function AdminHomePage() {
       <section className="ev-shell-hero">
         <div className="ev-shell-hero-grid">
           <div>
-            <div className="ev-kicker">Admin Overview</div>
-            <h1 className="ev-title">Executive control across EVNTSZN.</h1>
+            <div className="ev-kicker">Admin dashboard</div>
+            <h1 className="ev-title">Run daily EVNTSZN operations from one place.</h1>
             <p className="ev-subtitle">
-              One place to run merch, customer rewards, and access control while keeping attendee, scanner, and ops experiences separated.
+              Pick a system area, handle the next action, and move back out. This dashboard is for daily work, not a product overview.
             </p>
           </div>
           <div className="ev-hero-meta">
             <div className="ev-meta-card">
-              <div className="ev-meta-label">Permissions live</div>
-              <div className="ev-meta-value">{permissions.length} permission codes active for this account.</div>
+              <div className="ev-meta-label">Permissions</div>
+              <div className="ev-meta-value">{permissions.length} permission codes are active for this account.</div>
             </div>
             <div className="ev-meta-card">
-              <div className="ev-meta-label">Surface</div>
-              <div className="ev-meta-value">Administrative tools remain distinct from HQ and public league surfaces.</div>
+              <div className="ev-meta-label">Use</div>
+              <div className="ev-meta-value">Open a desk, complete the task, then move to the next queue.</div>
             </div>
           </div>
         </div>
@@ -122,7 +127,7 @@ export default async function AdminHomePage() {
               href={card.href}
               className="ev-panel hover:bg-white/[0.05]"
             >
-              <div className="ev-section-kicker">Control surface</div>
+              <div className="ev-section-kicker">System area</div>
               <div className="mt-3 text-2xl font-bold">{card.title}</div>
               <div className="mt-3 text-white/65">{card.description}</div>
             </Link>

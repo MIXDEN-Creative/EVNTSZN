@@ -1,14 +1,27 @@
 import { NextResponse } from "next/server";
-import { requireAdminPermission } from "@/lib/admin-auth";
+import { isMissingRbacTableError, requireAdminPermission } from "@/lib/admin-auth";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { ensurePlatformProfile } from "@/lib/evntszn";
 import { getOperatorPreset, inferOrganizerClassification, normalizeStringArray } from "@/lib/operator-access";
 import { logSystemIssue } from "@/lib/system-logs";
 
+type RbacMembershipRow = {
+  user_id: string;
+  is_active: boolean;
+  roles: { name?: string | null; code?: string | null }[] | { name?: string | null; code?: string | null } | null;
+};
+
+type LegacyMembershipRow = {
+  user_id: string;
+  is_owner: boolean;
+  is_active: boolean;
+  admin_roles: { name?: string | null }[] | { name?: string | null } | null;
+};
+
 export async function GET() {
   await requireAdminPermission("admin.manage", "/epl/admin/users");
 
-  const [{ data: profiles, error: profilesError }, { data: operatorProfiles, error: operatorError }, { data: memberships, error: membershipError }] =
+  const [{ data: profiles, error: profilesError }, { data: operatorProfiles, error: operatorError }, rbacMembershipResponse] =
     await Promise.all([
       supabaseAdmin
         .from("evntszn_profiles")
@@ -18,10 +31,23 @@ export async function GET() {
         .from("evntszn_operator_profiles")
         .select("*"),
       supabaseAdmin
-        .from("admin_memberships")
-        .select("user_id, is_owner, is_active, admin_roles(name)")
+        .from("user_roles")
+        .select("user_id, is_active, roles(name, code)")
         .eq("is_active", true),
     ]);
+
+  let memberships = (rbacMembershipResponse.data || []) as (RbacMembershipRow | LegacyMembershipRow)[];
+  let membershipError = rbacMembershipResponse.error;
+
+  if (membershipError && isMissingRbacTableError(membershipError)) {
+    const legacyMembershipResponse = await supabaseAdmin
+      .from("admin_memberships")
+      .select("user_id, is_owner, is_active, admin_roles(name)")
+      .eq("is_active", true);
+
+    memberships = (legacyMembershipResponse.data || []) as LegacyMembershipRow[];
+    membershipError = legacyMembershipResponse.error;
+  }
 
   const error = profilesError || operatorError || membershipError;
   if (error) {
@@ -33,10 +59,20 @@ export async function GET() {
 
   for (const membership of memberships || []) {
     const current = membershipMap.get(membership.user_id) || { isOwner: false, roles: [] };
-    current.isOwner = current.isOwner || Boolean(membership.is_owner);
-    const roleName = Array.isArray(membership.admin_roles)
-      ? membership.admin_roles[0]?.name
-      : (membership.admin_roles as { name?: string } | null)?.name;
+    current.isOwner = current.isOwner || ("is_owner" in membership ? Boolean(membership.is_owner) : false);
+    let roleName: string | null = null;
+    let roleCode: string | null = null;
+
+    if ("roles" in membership) {
+      const roleSource = membership.roles;
+      roleName = Array.isArray(roleSource) ? roleSource[0]?.name || null : roleSource?.name || null;
+      roleCode = Array.isArray(roleSource) ? roleSource[0]?.code || null : roleSource?.code || null;
+    } else {
+      const roleSource = membership.admin_roles;
+      roleName = Array.isArray(roleSource) ? roleSource[0]?.name || null : roleSource?.name || null;
+    }
+
+    current.isOwner = current.isOwner || roleCode === "platform_admin";
     if (roleName) current.roles.push(roleName);
     membershipMap.set(membership.user_id, current);
   }

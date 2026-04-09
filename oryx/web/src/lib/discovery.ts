@@ -1,5 +1,6 @@
 import { supabaseAdmin } from "@/lib/supabase-admin";
-import { getSupabaseRuntimeSnapshot, isSupabaseCredentialError } from "@/lib/runtime-env";
+import { supabasePublicServer } from "@/lib/supabase-public-server";
+import { formatRuntimeError, getSupabaseRuntimeSnapshot, isSupabaseCredentialError } from "@/lib/runtime-env";
 
 export type DiscoverySourceType =
   | "evntszn"
@@ -193,8 +194,8 @@ export async function getDiscoveryNativeEvents(input: {
   const limit = input.limit || 12;
 
   try {
-    const runNativeQuery = async (selectColumns: string) => {
-      let builder = supabaseAdmin
+    const runNativeQuery = async (client: typeof supabaseAdmin, selectColumns: string) => {
+      let builder = client
         .from("evntszn_events")
         .select(selectColumns)
         .eq("visibility", "published")
@@ -220,16 +221,30 @@ export async function getDiscoveryNativeEvents(input: {
       return builder;
     };
 
-    const primaryResponse = await runNativeQuery(
+    let primaryResponse = await runNativeQuery(
+      supabaseAdmin,
       "id, title, slug, subtitle, description, city, state, start_at, hero_note, banner_image_url, organizer_user_id, event_class",
     );
+    if (primaryResponse.error && isSupabaseCredentialError(primaryResponse.error)) {
+      primaryResponse = await runNativeQuery(
+        supabasePublicServer,
+        "id, title, slug, subtitle, description, city, state, start_at, hero_note, banner_image_url, organizer_user_id, event_class",
+      );
+    }
     let rawEvents = primaryResponse.data as NativeEventRow[] | null;
     let rawEventsError = primaryResponse.error;
 
     if (rawEventsError && isMissingEventClassColumnError(rawEventsError)) {
-      const fallbackResponse = await runNativeQuery(
+      let fallbackResponse = await runNativeQuery(
+        supabaseAdmin,
         "id, title, slug, subtitle, description, city, state, start_at, hero_note, banner_image_url, organizer_user_id",
       );
+      if (fallbackResponse.error && isSupabaseCredentialError(fallbackResponse.error)) {
+        fallbackResponse = await runNativeQuery(
+          supabasePublicServer,
+          "id, title, slug, subtitle, description, city, state, start_at, hero_note, banner_image_url, organizer_user_id",
+        );
+      }
       rawEvents = fallbackResponse.data as NativeEventRow[] | null;
       rawEventsError = fallbackResponse.error;
     }
@@ -247,10 +262,19 @@ export async function getDiscoveryNativeEvents(input: {
     }
 
     const eventIds = events.map((event) => event.id);
-    const { data: rawControls, error: rawControlsError } = await supabaseAdmin
+    let { data: rawControls, error: rawControlsError } = await supabaseAdmin
       .from("discovery_listing_controls")
       .select("event_id, source_type, badge_label, featured, listing_priority, promo_collection, is_discoverable")
       .in("event_id", eventIds);
+
+    if (rawControlsError && isSupabaseCredentialError(rawControlsError)) {
+      const fallbackControls = await supabasePublicServer
+        .from("discovery_listing_controls")
+        .select("event_id, source_type, badge_label, featured, listing_priority, promo_collection, is_discoverable")
+        .in("event_id", eventIds);
+      rawControls = fallbackControls.data;
+      rawControlsError = fallbackControls.error;
+    }
 
     const storageReady = !rawControlsError || !isMissingDiscoveryControlsError(rawControlsError);
 
@@ -304,12 +328,27 @@ export async function getDiscoveryNativeEvents(input: {
       console.warn("[discovery] listing controls unavailable, using inferred native discovery ordering");
 
       try {
-        const { data: rawEvents } = await supabaseAdmin
+        let { data: rawEvents, error: rawEventsError } = await supabaseAdmin
           .from("evntszn_events")
           .select("id, title, slug, subtitle, description, city, state, start_at, hero_note, banner_image_url, organizer_user_id")
           .eq("visibility", "published")
           .order("start_at", { ascending: true })
           .limit(limit);
+
+        if (rawEventsError && isSupabaseCredentialError(rawEventsError)) {
+          const fallbackEvents = await supabasePublicServer
+            .from("evntszn_events")
+            .select("id, title, slug, subtitle, description, city, state, start_at, hero_note, banner_image_url, organizer_user_id")
+            .eq("visibility", "published")
+            .order("start_at", { ascending: true })
+            .limit(limit);
+          rawEvents = fallbackEvents.data;
+          rawEventsError = fallbackEvents.error;
+        }
+
+        if (rawEventsError) {
+          throw rawEventsError;
+        }
 
         const events = ((rawEvents || []) as NativeEventRow[])
           .map<DiscoveryNativeEvent>((event) => {
@@ -344,7 +383,7 @@ export async function getDiscoveryNativeEvents(input: {
         };
       } catch (fallbackError) {
         console.error("[discovery] fallback native discovery load failed", {
-          error: fallbackError,
+          error: formatRuntimeError(fallbackError),
           supabase: getSupabaseRuntimeSnapshot(),
         });
         return {
@@ -355,7 +394,7 @@ export async function getDiscoveryNativeEvents(input: {
     }
 
     console.error("[discovery] native discovery load failed", {
-      error,
+      error: formatRuntimeError(error),
       route: "public-discovery",
       credentialIssue: isSupabaseCredentialError(error),
       supabase: getSupabaseRuntimeSnapshot(),

@@ -4,6 +4,7 @@ import PublicNav from "@/components/public/PublicNav";
 import PublicFooter from "@/components/public/PublicFooter";
 import DiscoveryLanding from "@/components/public/DiscoveryLanding";
 import { getDiscoveryNativeEvents, groupDiscoveryEventsBySource } from "@/lib/discovery";
+import { applyExternalDiscoveryControls } from "@/lib/external-discovery-controls";
 import {
   DEFAULT_HOMEPAGE_CONTENT,
   DEFAULT_PUBLIC_MODULES,
@@ -111,7 +112,7 @@ export default async function HomePage() {
       events: [],
       storageReady: false,
     }),
-    safePublicLoad("homepage-ticketmaster-showcase", () => getTicketmasterShowcase(), []),
+    safePublicLoad("homepage-ticketmaster-showcase", async () => applyExternalDiscoveryControls("ticketmaster", await getTicketmasterShowcase()), []),
     safePublicLoad("homepage-sponsor-placements", () => getPublicSponsorPlacements("homepage"), []),
   ]);
 

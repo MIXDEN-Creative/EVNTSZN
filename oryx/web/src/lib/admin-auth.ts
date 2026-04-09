@@ -3,6 +3,76 @@ import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { getFounderSession } from "@/lib/founder-session";
 import { getLoginUrl, getRestrictedSurfaceForPath, getRestrictedUrl } from "@/lib/domains";
+import { DEFAULT_ADMIN_PERMISSION_CODES } from "@/lib/access-control";
+
+type RbacRole = {
+  id: string;
+  code?: string | null;
+  name?: string | null;
+  description?: string | null;
+  is_system?: boolean | null;
+};
+
+type RbacMembership = {
+  id: string;
+  is_active: boolean;
+  role_id: string;
+  roles: RbacRole | RbacRole[] | null;
+};
+
+type LegacyMembership = {
+  id: string;
+  is_owner: boolean;
+  is_active: boolean;
+  role_id: string;
+  admin_roles: {
+    id?: string | null;
+    name?: string | null;
+    description?: string | null;
+  } | null;
+};
+
+type RbacPermissionMembership = {
+  is_active: boolean;
+  roles:
+    | {
+        id?: string | null;
+        code?: string | null;
+        name?: string | null;
+        role_permissions?:
+          | {
+              permissions?: {
+                code?: string | null;
+                label?: string | null;
+              } | null;
+            }[]
+          | null;
+      }
+    | {
+        id?: string | null;
+        code?: string | null;
+        name?: string | null;
+        role_permissions?:
+          | {
+              permissions?: {
+                code?: string | null;
+                label?: string | null;
+              } | null;
+            }[]
+          | null;
+      }[]
+    | null;
+};
+
+export function isMissingRbacTableError(error: unknown) {
+  const code = typeof error === "object" && error !== null && "code" in error ? String((error as { code?: unknown }).code) : "";
+  const message =
+    typeof error === "object" && error !== null && "message" in error
+      ? String((error as { message?: unknown }).message)
+      : "";
+
+  return code === "42P01" || code === "PGRST205" || /roles|permissions|user_roles|role_permissions/i.test(message);
+}
 
 export async function getCurrentUser() {
   const supabase = await createClient();
@@ -41,6 +111,11 @@ export async function getAdminMemberships(userId: string, options?: { isFounder?
         is_owner: true,
         is_active: true,
         role_id: "founder",
+        roles: {
+          id: "founder",
+          name: "Founder",
+          description: "Full-system override across EVNTSZN and EPL.",
+        },
         admin_roles: {
           id: "founder",
           name: "Founder",
@@ -48,6 +123,41 @@ export async function getAdminMemberships(userId: string, options?: { isFounder?
         },
       },
     ];
+  }
+
+  const rbacResponse = await supabaseAdmin
+    .from("user_roles")
+    .select(`
+      id,
+      is_active,
+      role_id,
+      roles (
+        id,
+        code,
+        name,
+        description,
+        is_system
+      )
+    `)
+    .eq("user_id", userId)
+    .eq("is_active", true);
+
+  if (!rbacResponse.error) {
+    return ((rbacResponse.data || []) as RbacMembership[]).map((membership) => {
+      const role = Array.isArray(membership.roles) ? membership.roles[0] || null : membership.roles;
+      return {
+      id: membership.id,
+      is_owner: role?.code === "platform_admin" || role?.name === "Platform Admin",
+      is_active: membership.is_active,
+      role_id: membership.role_id,
+      roles: role,
+      admin_roles: role,
+    };
+    });
+  }
+
+  if (!isMissingRbacTableError(rbacResponse.error)) {
+    throw new Error(rbacResponse.error.message);
   }
 
   const { data, error } = await supabaseAdmin
@@ -70,7 +180,10 @@ export async function getAdminMemberships(userId: string, options?: { isFounder?
     throw new Error(error.message);
   }
 
-  return data || [];
+  return ((data || []) as LegacyMembership[]).map((membership) => ({
+    ...membership,
+    roles: membership.admin_roles,
+  }));
 }
 
 export async function isAdminAuthorized() {
@@ -103,21 +216,48 @@ export async function requireAdmin(nextPath = "/epl/admin") {
 
 export async function getAdminPermissions(userId: string) {
   if (userId.startsWith("founder:")) {
-    return [
-      "admin.manage",
-      "orders.view",
-      "orders.manage",
-      "rewards.view",
-      "rewards.manage",
-      "catalog.manage",
-      "customers.view",
-      "analytics.view",
-      "approvals.manage",
-      "sponsors.manage",
-      "store.manage",
-      "content.manage",
-      "scanner.manage",
-    ];
+    return [...DEFAULT_ADMIN_PERMISSION_CODES];
+  }
+
+  const rbacResponse = await supabaseAdmin
+    .from("user_roles")
+    .select(`
+      is_active,
+      roles (
+        id,
+        code,
+        name,
+        role_permissions (
+          permissions (
+            code,
+            label
+          )
+        )
+      )
+    `)
+    .eq("user_id", userId)
+    .eq("is_active", true);
+
+  if (!rbacResponse.error) {
+    const codes = new Set<string>();
+    for (const membership of (rbacResponse.data || []) as RbacPermissionMembership[]) {
+      const role = Array.isArray(membership.roles) ? membership.roles[0] || null : membership.roles;
+      if (role?.code === "platform_admin") {
+        DEFAULT_ADMIN_PERMISSION_CODES.forEach((code) => codes.add(code));
+      }
+
+      const perms = role?.role_permissions || [];
+      for (const rp of perms) {
+        const code = rp?.permissions?.code;
+        if (code) codes.add(code);
+      }
+    }
+
+    return Array.from(codes);
+  }
+
+  if (!isMissingRbacTableError(rbacResponse.error)) {
+    throw new Error(rbacResponse.error.message);
   }
 
   const { data, error } = await supabaseAdmin
@@ -125,8 +265,6 @@ export async function getAdminPermissions(userId: string) {
     .select(`
       is_owner,
       admin_roles (
-        id,
-        name,
         admin_role_permissions (
           admin_permissions (
             code,
@@ -204,7 +342,11 @@ export async function requireAdminPermission(permissionCode: string, nextPath = 
 
 export async function requireHq(nextPath = "/epl/admin/operations") {
   const { user, memberships } = await requireAdmin(nextPath);
-  const hasHqAccess = memberships.some((membership: { is_owner?: boolean | null }) => membership.is_owner);
+  const permissions = await getAdminPermissions(user.id);
+  const hasHqAccess =
+    user.id.startsWith("founder:") ||
+    permissions.includes("hq.manage") ||
+    memberships.some((membership: { is_owner?: boolean | null }) => membership.is_owner);
 
   if (!hasHqAccess) {
     redirect(
@@ -216,5 +358,5 @@ export async function requireHq(nextPath = "/epl/admin/operations") {
     );
   }
 
-  return { user, memberships };
+  return { user, memberships, permissions };
 }

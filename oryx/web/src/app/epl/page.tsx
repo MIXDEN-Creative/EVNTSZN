@@ -21,6 +21,20 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "https://epl.evntszn.com",
   },
+  openGraph: {
+    title: "EPL | EVNTSZN Prime League",
+    description:
+      "Explore EVNTSZN Prime League, a premium coed flag football league with draft-night energy, team pride, standings movement, and game-day momentum.",
+    url: "https://epl.evntszn.com",
+    siteName: "EVNTSZN",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "EPL | EVNTSZN Prime League",
+    description:
+      "Explore EVNTSZN Prime League, a premium coed flag football league with draft-night energy, team pride, standings movement, and game-day momentum.",
+  },
 };
 
 export default async function EplPage() {

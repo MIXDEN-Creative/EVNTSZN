@@ -48,7 +48,7 @@ export default function PublicFooterShell({
           <div>
             <Link href={`${getWebOrigin()}/`} className="text-2xl font-black tracking-tight text-white">EVNTSZN™</Link>
             <p className="mt-4 max-w-md text-sm leading-7 text-white/68">
-              Premium event discovery for nightlife, music, sports, city moments, and league energy. Powered by ORYX. ORYX is a product of MIXDEN Creative.
+              Premium discovery for nightlife, live music, sports, city moments, and league nights worth planning around. Powered by ORYX. ORYX is a product of MIXDEN Creative.
             </p>
           </div>
 
@@ -64,6 +64,7 @@ export default function PublicFooterShell({
               <Link href={`${getWebOrigin()}/ambassador/apply`}>Ambassador</Link>
               <Link href={`${getWebOrigin()}/partners/packages`}>Sponsor Packages</Link>
               <Link href={`${getEplOrigin()}/store`}>Store</Link>
+              <Link href={`${getWebOrigin()}/support`}>Support</Link>
             </div>
           </div>
 
@@ -83,10 +84,11 @@ export default function PublicFooterShell({
             <div className="mt-4 flex flex-col gap-3 text-sm text-white/78">
               <Link href={`${getAppOrigin()}/account/login`}>Sign In</Link>
               <Link href={`${getAppOrigin()}/account/login?mode=signup&next=/account`}>Create Account</Link>
-              <Link href="/privacy">Privacy Policy</Link>
-              <Link href="/terms">Terms</Link>
-              <Link href="/refund-policy">Refund Policy</Link>
-              <Link href="/liability-notice">Liability Notice</Link>
+              <Link href={`${getWebOrigin()}/privacy`}>Privacy Policy</Link>
+              <Link href={`${getWebOrigin()}/terms`}>Terms</Link>
+              <Link href={`${getWebOrigin()}/refund-policy`}>Refund Policy</Link>
+              <Link href={`${getWebOrigin()}/liability-notice`}>Liability Notice</Link>
+              <Link href={`${getWebOrigin()}/support`}>Support Desk</Link>
             </div>
           </div>
         </div>

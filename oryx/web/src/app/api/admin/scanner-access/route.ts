@@ -3,7 +3,7 @@ import { requireAdminPermission } from "@/lib/admin-auth";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export async function GET() {
-  await requireAdminPermission("admin.manage", "/epl/admin/scanner");
+  await requireAdminPermission("scanner.manage", "/epl/admin/scanner");
 
   const [operatorsRes, staffRes] = await Promise.all([
     supabaseAdmin
@@ -26,7 +26,7 @@ export async function GET() {
 }
 
 export async function PATCH(request: Request) {
-  await requireAdminPermission("admin.manage", "/epl/admin/scanner");
+  await requireAdminPermission("scanner.manage", "/epl/admin/scanner");
   const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
   const userId = String(body.userId || "");
 

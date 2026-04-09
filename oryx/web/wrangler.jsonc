@@ -44,6 +44,11 @@
       "custom_domain": true
     },
     {
+      "pattern": "hosts.evntszn.com",
+      "zone_name": "evntszn.com",
+      "custom_domain": true
+    },
+    {
       "pattern": "ops.evntszn.com",
       "zone_name": "evntszn.com",
       "custom_domain": true
@@ -66,6 +71,7 @@
     "NEXT_PUBLIC_APP_ORIGIN": "https://app.evntszn.com",
     "NEXT_PUBLIC_SCANNER_ORIGIN": "https://scanner.evntszn.com",
     "NEXT_PUBLIC_EPL_ORIGIN": "https://epl.evntszn.com",
+    "NEXT_PUBLIC_HOSTS_ORIGIN": "https://hosts.evntszn.com",
     "NEXT_PUBLIC_OPS_ORIGIN": "https://ops.evntszn.com",
     "NEXT_PUBLIC_HQ_ORIGIN": "https://hq.evntszn.com",
     "NEXT_PUBLIC_ADMIN_ORIGIN": "https://admin.evntszn.com",

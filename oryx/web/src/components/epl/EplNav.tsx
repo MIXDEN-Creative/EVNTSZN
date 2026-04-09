@@ -46,6 +46,9 @@ export default function EplNav({ menu }: { menu: EplMenuVisibilityContent }) {
               Store
             </Link>
           ) : null}
+          <Link href={`${getWebOrigin()}/support`} className="text-sm font-medium text-white/80 transition hover:text-white">
+            Support
+          </Link>
           {menu.showRegister ? (
             <Link href="/epl/season-1/register" className="text-sm font-medium text-white/80 transition hover:text-white">
               Register
@@ -59,6 +62,12 @@ export default function EplNav({ menu }: { menu: EplMenuVisibilityContent }) {
             className="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10"
           >
             Homepage
+          </a>
+          <a
+            href={`${getWebOrigin()}/support`}
+            className="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10"
+          >
+            Support
           </a>
           {menu.showRegister ? (
             <Link

@@ -1,6 +1,28 @@
 import Link from "next/link";
+import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import CustomerLoginForm from "./CustomerLoginForm";
-import FounderLoginForm from "./FounderLoginForm";
+import { getAppOrigin, getSurfaceForPath } from "@/lib/domains";
+
+export const metadata: Metadata = {
+  title: "Member Login | EVNTSZN",
+  description: "Sign in to EVNTSZN for tickets, order tracking, saved activity, and member access.",
+  alternates: {
+    canonical: `${getAppOrigin()}/account/login`,
+  },
+  openGraph: {
+    title: "EVNTSZN Member Login",
+    description: "Sign in for EVNTSZN tickets, order tracking, saved activity, and member access.",
+    url: `${getAppOrigin()}/account/login`,
+    siteName: "EVNTSZN",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "EVNTSZN Member Login",
+    description: "Sign in for EVNTSZN tickets, order tracking, saved activity, and member access.",
+  },
+};
 
 type LoginPageProps = {
   searchParams?: Promise<{
@@ -13,6 +35,11 @@ export default async function AccountLoginPage({ searchParams }: LoginPageProps)
   const nextValue = Array.isArray(resolvedSearchParams.next)
     ? resolvedSearchParams.next[0] ?? "/account"
     : resolvedSearchParams.next ?? "/account";
+  const nextSurface = getSurfaceForPath(nextValue);
+
+  if (["admin", "hq", "ops", "scanner"].includes(nextSurface)) {
+    redirect(`${getAppOrigin()}/admin-login?next=${encodeURIComponent(nextValue)}`);
+  }
 
   return (
     <main className="min-h-screen bg-black text-white">
@@ -55,6 +82,12 @@ export default async function AccountLoginPage({ searchParams }: LoginPageProps)
               >
                 Explore EPL
               </a>
+              <a
+                href={`${getAppOrigin()}/admin-login?next=${encodeURIComponent(nextValue)}`}
+                className="rounded-full border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+              >
+                Internal access
+              </a>
             </div>
           </div>
         </section>
@@ -74,9 +107,6 @@ export default async function AccountLoginPage({ searchParams }: LoginPageProps)
             <CustomerLoginForm next={nextValue} />
           </div>
 
-          <div className="mt-6">
-            <FounderLoginForm next={nextValue} />
-          </div>
         </section>
       </div>
     </main>

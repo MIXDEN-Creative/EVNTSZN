@@ -1,5 +1,6 @@
 import { supabaseAdmin } from "@/lib/supabase-admin";
-import { getSupabaseRuntimeSnapshot, isSupabaseCredentialError } from "@/lib/runtime-env";
+import { supabasePublicServer } from "@/lib/supabase-public-server";
+import { formatRuntimeError, getSupabaseRuntimeSnapshot, isSupabaseCredentialError } from "@/lib/runtime-env";
 
 type ContentCategory = {
   title: string;
@@ -174,7 +175,7 @@ export const DEFAULT_HOMEPAGE_CONTENT: Omit<HomepageContent, "storageReady"> = {
     eyebrow: "EVNTSZN live discovery",
     title: "Find the event worth leaving the house for.",
     description:
-      "Discover nightlife, sports, concerts, league nights, and city experiences across Baltimore, Atlanta, Miami, New York, DC, and the next market up without digging through noise.",
+      "Search the city for nights out, live music, league energy, and the plans people will actually talk about tomorrow.",
     primaryCtaLabel: "Start discovering",
     primaryCtaHref: "/events",
     secondaryCtaLabel: "Create attendee account",
@@ -184,12 +185,12 @@ export const DEFAULT_HOMEPAGE_CONTENT: Omit<HomepageContent, "storageReady"> = {
   },
   banner: {
     eyebrow: "Built for real nights out",
-    title: "Search the city cleanly and move on the right plan faster.",
-    body: "EVNTSZN puts strong native inventory first, widens the field when it helps, and keeps the path from discovery to tickets, account, and league activity tight.",
+    title: "Start with the strongest move, not the loudest listing.",
+    body: "EVNTSZN puts the best event options in front first, widens the field when it actually helps, and keeps the path from discovery to tickets clean.",
   },
   discovery: {
-    headline: "Search the city and surface the strongest options first.",
-    body: "Search nightlife, concerts, sports, live entertainment, and what is worth doing tonight. EVNTSZN leads with its own premium inventory first, then expands into the city's broader pulse when more range actually helps.",
+    headline: "Search the city and pull the strongest options first.",
+    body: "Search nightlife, concerts, sports, live entertainment, and what is worth doing tonight. EVNTSZN leads with the sharpest native inventory first, then widens into the city when that gives you a better answer.",
     disclosure:
       "EVNTSZN-led inventory still gets priority. External discovery only widens the field when it actually helps the search.",
     searchPlaceholder: "Search artist, event, venue, vibe, or something happening tonight",
@@ -267,13 +268,13 @@ export const DEFAULT_EPL_PUBLIC_CONTENT: Omit<EplPublicContent, "storageReady"> 
       "Structured registration, player review, draft-night presentation, and team identity make EPL feel like a real league product instead of a one-off rec run.",
     scheduleHeadline: "Schedule visibility that supports players, fans, and weekly momentum.",
     scheduleBody:
-      "Use the public league page as the clean front door for season rhythm, marquee matchups, and the nights that define the table.",
+      "Use the public league page as the front door for season rhythm, signature game nights, and the moments that move the standings.",
     teamsHeadline: "Six teams. Strong identity. Real city pull.",
     teamsBody:
       "Canton Chargers, Federal Hill Sentinels, Fells Point Raiders, Hampden Rebels, Harbor Titans, and Mount Vernon Royals drive the league's competitive personality.",
     standingsHeadline: "Standings that make every week matter.",
     standingsBody:
-      "The public league surface is built to support competitive tension, weekly movement, and a table that fans can actually follow.",
+      "The public league surface is built for standings pressure, weekly storylines, and game-day movement fans can actually follow.",
     storeHeadline: "League merch should feel collectible, not generic.",
     storeBody:
       "The EPL store keeps branded gear, drop moments, and team identity aligned with the same premium EVNTSZN presentation standard.",
@@ -302,7 +303,7 @@ export const DEFAULT_PUBLIC_MODULES: Omit<PublicModules, "storageReady"> = {
     rosterHeadline: "Roster",
     rosterBody: "Final rosters and player identity will surface here once registration, draft movement, and confirmations are complete.",
     announcementsHeadline: "Announcements",
-    announcementsBody: "Team news, league updates, and match-day notes stack here once the season cycle is active.",
+    announcementsBody: "Team updates, league notes, and game-day information stack here once the season cycle is active.",
   },
   storePromo: {
     eyebrow: "Merchandise",
@@ -418,11 +419,20 @@ function isMissingContentTableError(error: unknown) {
 
 export async function getHomepageContent(): Promise<HomepageContent> {
   try {
-    const { data, error } = await supabaseAdmin
-      .from("site_content_entries")
-      .select("key, content")
-      .in("key", [...HOMEPAGE_CONTENT_KEYS])
-      .eq("is_active", true);
+    const runQuery = async (client: typeof supabaseAdmin) =>
+      client
+        .from("site_content_entries")
+        .select("key, content")
+        .in("key", [...HOMEPAGE_CONTENT_KEYS])
+        .eq("is_active", true);
+
+    let { data, error } = await runQuery(supabaseAdmin);
+
+    if (error && isSupabaseCredentialError(error)) {
+      const fallbackResponse = await runQuery(supabasePublicServer);
+      data = fallbackResponse.data;
+      error = fallbackResponse.error;
+    }
 
     if (error) {
       if (isMissingContentTableError(error)) {
@@ -460,7 +470,7 @@ export async function getHomepageContent(): Promise<HomepageContent> {
     }
 
     console.error("[discovery] homepage content load failed", {
-      error,
+      error: formatRuntimeError(error),
       credentialIssue: isSupabaseCredentialError(error),
       supabase: getSupabaseRuntimeSnapshot(),
     });
@@ -473,11 +483,20 @@ export async function getHomepageContent(): Promise<HomepageContent> {
 
 export async function getEplPublicContent(): Promise<EplPublicContent> {
   try {
-    const { data, error } = await supabaseAdmin
-      .from("site_content_entries")
-      .select("key, content")
-      .in("key", [...EPL_PUBLIC_CONTENT_KEYS])
-      .eq("is_active", true);
+    const runQuery = async (client: typeof supabaseAdmin) =>
+      client
+        .from("site_content_entries")
+        .select("key, content")
+        .in("key", [...EPL_PUBLIC_CONTENT_KEYS])
+        .eq("is_active", true);
+
+    let { data, error } = await runQuery(supabaseAdmin);
+
+    if (error && isSupabaseCredentialError(error)) {
+      const fallbackResponse = await runQuery(supabasePublicServer);
+      data = fallbackResponse.data;
+      error = fallbackResponse.error;
+    }
 
     if (error) {
       if (isMissingContentTableError(error)) {
@@ -513,7 +532,7 @@ export async function getEplPublicContent(): Promise<EplPublicContent> {
     }
 
     console.error("[epl] public content load failed", {
-      error,
+      error: formatRuntimeError(error),
       credentialIssue: isSupabaseCredentialError(error),
       supabase: getSupabaseRuntimeSnapshot(),
     });
@@ -526,11 +545,20 @@ export async function getEplPublicContent(): Promise<EplPublicContent> {
 
 export async function getPublicModulesContent(): Promise<PublicModules> {
   try {
-    const { data, error } = await supabaseAdmin
-      .from("site_content_entries")
-      .select("key, content")
-      .in("key", [...PUBLIC_MODULE_CONTENT_KEYS])
-      .eq("is_active", true);
+    const runQuery = async (client: typeof supabaseAdmin) =>
+      client
+        .from("site_content_entries")
+        .select("key, content")
+        .in("key", [...PUBLIC_MODULE_CONTENT_KEYS])
+        .eq("is_active", true);
+
+    let { data, error } = await runQuery(supabaseAdmin);
+
+    if (error && isSupabaseCredentialError(error)) {
+      const fallbackResponse = await runQuery(supabasePublicServer);
+      data = fallbackResponse.data;
+      error = fallbackResponse.error;
+    }
 
     if (error) {
       if (isMissingContentTableError(error)) {
@@ -564,7 +592,7 @@ export async function getPublicModulesContent(): Promise<PublicModules> {
     }
 
     console.error("[public-modules] content load failed", {
-      error,
+      error: formatRuntimeError(error),
       credentialIssue: isSupabaseCredentialError(error),
       supabase: getSupabaseRuntimeSnapshot(),
     });

@@ -28,9 +28,14 @@ export default function SurfaceShell({
           <Link href={getWebOrigin()} className="text-lg font-black tracking-tight text-white">
             EVNTSZN
           </Link>
-          <Link href={getWebOrigin()} className="rounded-full border border-white/12 bg-white/5 px-4 py-2 text-sm font-semibold text-white/84 transition hover:bg-white/10">
-            Return to homepage
-          </Link>
+          <div className="flex flex-wrap gap-3">
+            <Link href={`${getWebOrigin()}/support`} className="rounded-full border border-white/12 bg-white/5 px-4 py-2 text-sm font-semibold text-white/84 transition hover:bg-white/10">
+              Support
+            </Link>
+            <Link href={getWebOrigin()} className="rounded-full border border-white/12 bg-white/5 px-4 py-2 text-sm font-semibold text-white/84 transition hover:bg-white/10">
+              Return to homepage
+            </Link>
+          </div>
         </div>
         <section className="ev-shell-hero">
           <div className="ev-shell-hero-grid">

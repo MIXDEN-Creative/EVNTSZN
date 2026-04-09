@@ -1,0 +1,63 @@
+import { Resend } from "resend";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
+const OPS_FROM_EMAIL = process.env.OPS_FROM_EMAIL || "EVNTSZN Ops <ops@evntszn.com>";
+
+export async function sendAccessInviteEmail({
+  to,
+  fullName,
+  roleName,
+  acceptUrl,
+}: {
+  to: string;
+  fullName?: string | null;
+  roleName: string;
+  acceptUrl: string;
+}) {
+  if (!to || !process.env.RESEND_API_KEY) {
+    return;
+  }
+
+  await resend.emails.send({
+    from: OPS_FROM_EMAIL,
+    to,
+    subject: `You’ve been invited to EVNTSZN as ${roleName}`,
+    html: `
+      <div style="margin:0;padding:0;background:#050507;color:#ffffff;font-family:Inter,Arial,Helvetica,sans-serif;">
+        <div style="max-width:640px;margin:0 auto;padding:40px 24px;">
+          <div style="border:1px solid rgba(255,255,255,0.08);border-radius:28px;overflow:hidden;background:linear-gradient(180deg,#0f0f16 0%,#060608 100%);box-shadow:0 30px 80px rgba(0,0,0,0.45);">
+            <div style="padding:32px 32px 20px;border-bottom:1px solid rgba(255,255,255,0.08);background:radial-gradient(circle at top, rgba(162,89,255,0.22), transparent 40%), #09090c;">
+              <div style="font-size:12px;letter-spacing:0.24em;text-transform:uppercase;color:#caa7ff;font-weight:700;">EVNTSZN access invite</div>
+              <div style="margin-top:14px;font-size:34px;line-height:1.02;font-weight:800;">You’ve been invited into the EVNTSZN operating system.</div>
+              <div style="margin-top:14px;font-size:16px;line-height:1.7;color:rgba(255,255,255,0.78);">
+                ${fullName ? `Hi ${fullName},` : "Hi,"} an EVNTSZN administrator assigned you the <strong style="color:#ffffff;">${roleName}</strong> role.
+                Accept the invite to activate your access and move into the right dashboard surfaces.
+              </div>
+            </div>
+
+            <div style="padding:28px 32px 32px;">
+              <div style="border:1px solid rgba(255,255,255,0.08);border-radius:22px;padding:18px 20px;background:rgba(255,255,255,0.03);">
+                <div style="font-size:12px;letter-spacing:0.18em;text-transform:uppercase;color:rgba(255,255,255,0.55);font-weight:700;">Assigned role</div>
+                <div style="margin-top:10px;font-size:24px;font-weight:700;color:#ffffff;">${roleName}</div>
+                <div style="margin-top:10px;font-size:14px;line-height:1.7;color:rgba(255,255,255,0.72);">
+                  This invite is secure, tied to your email address, and will attach your role after you sign in or create your account.
+                </div>
+              </div>
+
+              <div style="margin-top:24px;">
+                <a href="${acceptUrl}" style="display:inline-block;padding:15px 22px;border-radius:999px;background:#ffffff;color:#050507;text-decoration:none;font-weight:800;font-size:14px;">
+                  Accept access
+                </a>
+              </div>
+
+              <div style="margin-top:18px;font-size:13px;line-height:1.7;color:rgba(255,255,255,0.58);">
+                If you already have an EVNTSZN account, sign in with this email and complete the invite.
+                If not, you’ll be able to create your account first and continue the same flow.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `,
+  });
+}

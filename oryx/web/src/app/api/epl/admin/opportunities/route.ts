@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdminPermission } from "@/lib/admin-auth";
 import { getSupabaseAdmin } from "@/lib/epl/supabase-admin";
+import { normalizePermissionCodes } from "@/lib/access-control";
 
 export async function GET() {
-  await requireAdminPermission("admin.manage", "/epl/admin/opportunities");
+  await requireAdminPermission("opportunities.manage", "/epl/admin/opportunities");
   const supabase = getSupabaseAdmin();
 
   const { data, error } = await supabase
@@ -18,7 +19,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  await requireAdminPermission("admin.manage", "/epl/admin/opportunities");
+  await requireAdminPermission("opportunities.manage", "/epl/admin/opportunities");
   const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
   const supabase = getSupabaseAdmin();
 
@@ -62,6 +63,13 @@ export async function POST(req: NextRequest) {
     location_state: body.locationState || null,
     priority_score: Number(body.priorityScore || 100),
     display_order: Number(body.displayOrder || 100),
+    access_role_id: body.accessRoleId || null,
+    assignment_permission_codes: normalizePermissionCodes(body.assignmentPermissionCodes),
+    assignment_logic: typeof body.assignmentLogic === "string" && body.assignmentLogic.trim()
+      ? { notes: body.assignmentLogic.trim() }
+      : typeof body.assignmentLogic === "object" && body.assignmentLogic !== null
+        ? body.assignmentLogic
+        : {},
   };
 
   if (body.id) {

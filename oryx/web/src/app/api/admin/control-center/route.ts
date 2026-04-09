@@ -21,6 +21,7 @@ export async function GET() {
     scannerOperatorsRes,
     scannerAssignmentsRes,
     cityProfilesRes,
+    supportTicketsRes,
   ] = await Promise.all([
     supabaseAdmin.from("evntszn_profiles").select("user_id", { count: "exact", head: true }),
     supabaseAdmin.from("evntszn_operator_profiles").select("user_id", { count: "exact", head: true }),
@@ -37,6 +38,7 @@ export async function GET() {
     supabaseAdmin.from("evntszn_operator_profiles").select("user_id, can_access_scanner"),
     supabaseAdmin.from("evntszn_event_staff").select("id, can_scan, status"),
     supabaseAdmin.from("evntszn_operator_profiles").select("city_scope, organizer_classification, is_active"),
+    supabaseAdmin.from("support_tickets").select("id, status, issue_type, severity"),
   ]);
 
   const applications = appsRes.data || [];
@@ -153,6 +155,8 @@ export async function GET() {
       independentOrganizers: hostOrganizerMix.independentOrganizers,
       sponsorProspects: sponsorLifecycle.prospects,
       activeSponsors: sponsorLifecycle.active,
+      supportTicketsOpen: (supportTicketsRes.data || []).filter((row) => row.status === "open" || row.status === "in_progress" || row.status === "escalated").length,
+      supportTicketsEscalated: (supportTicketsRes.data || []).filter((row) => row.status === "escalated").length,
       checkInTotal,
       scannerCapableOperators: (scannerOperatorsRes.data || []).filter((row) => row.can_access_scanner).length,
       activeScanAssignments: (scannerAssignmentsRes.data || []).filter((row) => row.can_scan && row.status === "active").length,
@@ -171,5 +175,12 @@ export async function GET() {
     opportunityCounts,
     hostOrganizerMix,
     cityReadinessCounts,
+    supportCountsByType: Object.entries(
+      (supportTicketsRes.data || []).reduce<Record<string, number>>((acc, row) => {
+        const key = String(row.issue_type || "other");
+        acc[key] = (acc[key] || 0) + 1;
+        return acc;
+      }, {}),
+    ).map(([type, count]) => ({ type, count })),
   });
 }

@@ -6,16 +6,17 @@ import { getAdminOrigin, getLoginUrl } from "@/lib/domains";
 export default function AdminInviteAcceptPage({
   searchParams,
 }: {
-  searchParams: { token?: string };
+  searchParams: { token?: string; email?: string };
 }) {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
   const token = searchParams?.token || "";
+  const email = searchParams?.email || "";
   const loginHref =
     typeof window === "undefined"
-      ? `/account/login?next=${encodeURIComponent(`/admin-invite/accept?token=${token}`)}`
-      : getLoginUrl(`/admin-invite/accept?token=${token}`, window.location.host);
+      ? `/account/login?next=${encodeURIComponent(`/admin-invite/accept?token=${token}&email=${encodeURIComponent(email)}`)}`
+      : getLoginUrl(`/admin-invite/accept?token=${token}&email=${encodeURIComponent(email)}`, window.location.host);
 
   async function acceptInvite() {
     setLoading(true);
@@ -46,8 +47,10 @@ export default function AdminInviteAcceptPage({
       <div className="w-full max-w-md rounded-3xl border border-white/10 bg-white/[0.03] p-6">
         <h1 className="text-3xl font-black">Accept Admin Invite</h1>
         <p className="mt-2 text-white/65">
-          You need to be signed in with the invited email first.
+          Sign in with the invited email first. If the account does not exist yet, the secure access link will create it and bring you back here to finish the role assignment.
         </p>
+
+        {email ? <div className="mt-4 rounded-2xl border border-white/10 bg-black/40 p-4 text-sm text-white/72">Invited email: {email}</div> : null}
 
         <div className="mt-5 grid gap-3">
           <a

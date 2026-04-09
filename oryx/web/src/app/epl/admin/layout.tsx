@@ -1,25 +1,64 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { headers } from "next/headers";
-import { requireAdmin, getAdminPermissions } from "@/lib/admin-auth";
+import { getAdminPermissions, requireAdmin, requireHq } from "@/lib/admin-auth";
 import { getAdminOrigin, getEplOrigin, getHqOrigin, getSurfaceFromHost } from "@/lib/domains";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const host = (await headers()).get("host") || undefined;
+  const surface = getSurfaceFromHost(host || "") || "admin";
+  const isHqSurface = surface === "hq";
+  const origin = isHqSurface ? getHqOrigin(host) : getAdminOrigin(host);
+  const title = isHqSurface ? "HQ Workspace | EVNTSZN" : "Admin Workspace | EVNTSZN";
+  const description = isHqSurface
+    ? "Global EVNTSZN HQ workspace for company-wide operations, overrides, approvals, and system control."
+    : "EVNTSZN admin workspace for team access, discovery, events, support, and operating workflows.";
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: origin,
+    },
+    openGraph: {
+      title,
+      description,
+      url: origin,
+      siteName: "EVNTSZN",
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+    },
+  };
+}
 
 export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { user, memberships } = await requireAdmin("/epl/admin");
   const host = (await headers()).get("host") || undefined;
-  const permissions = await getAdminPermissions(user.id);
   const surface = getSurfaceFromHost(host || "") || "admin";
   const isHqSurface = surface === "hq";
+  const access = isHqSurface ? await requireHq("/epl/admin/operations") : await requireAdmin("/epl/admin");
+  const { user, memberships } = access;
+  const permissions = await getAdminPermissions(user.id);
 
   const canManageAdmins = permissions.includes("admin.manage");
   const canViewOrders = permissions.includes("orders.view");
   const canViewRewards = permissions.includes("rewards.view");
   const canManageCatalog = permissions.includes("catalog.manage");
+  const canManageEvents = permissions.includes("events.manage");
+  const canManageOpportunities = permissions.includes("opportunities.manage");
+  const canManageScanner = permissions.includes("scanner.manage");
+  const canManageCity = permissions.includes("city.manage");
+  const canManageSupport = permissions.includes("support.manage") || permissions.includes("support.respond");
+  const canManagePrograms = permissions.includes("admin.manage") || permissions.includes("city.manage");
 
   const roleNames = memberships
     .map((m: any) => m.admin_roles?.name)
@@ -30,9 +69,7 @@ export default async function AdminLayout({
     <div className={`ev-surface ${isHqSurface ? "ev-surface--hq" : "ev-surface--admin"} text-white`}>
       <div className="relative z-10 grid min-h-screen lg:grid-cols-[300px_1fr]">
         <aside className="border-r border-white/10 bg-[linear-gradient(180deg,rgba(9,9,12,0.96),rgba(5,5,8,0.96))] p-6">
-          <div className="ev-kicker">
-            {isHqSurface ? "EVNTSZN HQ" : "EVNTSZN Admin"}
-          </div>
+          <div className="ev-kicker">{isHqSurface ? "EVNTSZN HQ" : "EVNTSZN Admin"}</div>
 
           <div className="mt-4 flex flex-wrap gap-3">
             <Link href="https://evntszn.com" className="text-lg font-black tracking-tight text-white">
@@ -44,7 +81,7 @@ export default async function AdminLayout({
           </div>
 
           <div className="mt-5">
-            <div className="text-2xl font-black">{isHqSurface ? "Command Deck" : "Command Center"}</div>
+            <div className="text-2xl font-black">{isHqSurface ? "HQ workspace" : "Admin workspace"}</div>
             <div className="mt-2 text-sm text-white/60">{user.email}</div>
             <div className="mt-1 text-sm text-[#A259FF]">{roleNames || "Admin"}</div>
           </div>
@@ -56,7 +93,7 @@ export default async function AdminLayout({
 
             {canManageAdmins ? (
               <Link href={`${getAdminOrigin(host)}/control-center`} className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 hover:bg-white/[0.08]">
-                Control Center
+                Operations summary
               </Link>
             ) : null}
 
@@ -80,7 +117,7 @@ export default async function AdminLayout({
 
             {canManageCatalog ? (
               <Link href={`${getAdminOrigin(host)}/discovery`} className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 hover:bg-white/[0.08]">
-                Discovery Control
+                Discovery visibility
               </Link>
             ) : null}
 
@@ -108,31 +145,31 @@ export default async function AdminLayout({
               </Link>
             ) : null}
 
-            {canManageAdmins ? (
+            {canManageCity ? (
               <Link href={`${getAdminOrigin(host)}/city-office`} className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 hover:bg-white/[0.08]">
                 City Office
               </Link>
             ) : null}
 
-            {canManageAdmins ? (
+            {canManagePrograms ? (
               <Link href={`${getAdminOrigin(host)}/programs`} className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 hover:bg-white/[0.08]">
-                Signal & Ambassador
+                Programs
               </Link>
             ) : null}
 
             {canManageAdmins ? (
               <Link href={`${getAdminOrigin(host)}/hiring`} className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 hover:bg-white/[0.08]">
-                Hiring Pipeline
+                Hiring
               </Link>
             ) : null}
 
-            {canManageAdmins ? (
+            {canManageOpportunities ? (
               <Link href={`${getAdminOrigin(host)}/opportunities`} className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 hover:bg-white/[0.08]">
                 Opportunities
               </Link>
             ) : null}
 
-            {canManageAdmins ? (
+            {canManageEvents ? (
               <Link href={`${getAdminOrigin(host)}/events`} className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 hover:bg-white/[0.08]">
                 Events
               </Link>
@@ -144,15 +181,21 @@ export default async function AdminLayout({
               </Link>
             ) : null}
 
-            {canManageAdmins ? (
+            {canManageScanner ? (
               <Link href={`${getAdminOrigin(host)}/scanner`} className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 hover:bg-white/[0.08]">
-                Scanner Access
+                Scanner
+              </Link>
+            ) : null}
+
+            {canManageSupport ? (
+              <Link href={`${getAdminOrigin(host)}/support`} className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 hover:bg-white/[0.08]">
+                Support Desk
               </Link>
             ) : null}
 
             {canManageAdmins ? (
               <Link href={`${getAdminOrigin(host)}/issues`} className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 hover:bg-white/[0.08]">
-                Issues & Health
+                System Issues
               </Link>
             ) : null}
           </nav>

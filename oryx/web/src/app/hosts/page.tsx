@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import PublicPageFrame from "@/components/public/PublicPageFrame";
-import { getAppOrigin, getHostsOrigin, getWebOrigin } from "@/lib/domains";
+import { getHostsOrigin, getLoginUrl, getWebOrigin } from "@/lib/domains";
 
 export const metadata: Metadata = {
   title: "EVNTSZN Host Network",
@@ -9,6 +9,20 @@ export const metadata: Metadata = {
     "Learn how the EVNTSZN Host Network works, what host operators do, and how approved operators move into city-level event execution.",
   alternates: {
     canonical: `${getHostsOrigin()}/`,
+  },
+  openGraph: {
+    title: "EVNTSZN Host Network",
+    description:
+      "Learn how the EVNTSZN Host Network works, what host operators do, and how approved operators move into city-level event execution.",
+    url: `${getHostsOrigin()}/`,
+    siteName: "EVNTSZN",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "EVNTSZN Host Network",
+    description:
+      "Learn how the EVNTSZN Host Network works, what host operators do, and how approved operators move into city-level event execution.",
   },
 };
 
@@ -29,7 +43,7 @@ export default function HostsPage() {
             <Link href={`${getHostsOrigin()}/apply`} className="ev-button-primary">
               Start operator application
             </Link>
-            <Link href={`${getAppOrigin()}/account/login?next=/ops`} className="ev-button-secondary">
+            <Link href={getLoginUrl("/ops", "app.evntszn.com")} className="ev-button-secondary">
               Already approved? Enter ops
             </Link>
             <Link href={`${getWebOrigin()}/organizer/apply`} className="ev-button-secondary">

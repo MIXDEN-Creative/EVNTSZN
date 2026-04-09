@@ -1,5 +1,6 @@
 import { supabaseAdmin } from "@/lib/supabase-admin";
-import { getSupabaseRuntimeSnapshot, isSupabaseCredentialError } from "@/lib/runtime-env";
+import { supabasePublicServer } from "@/lib/supabase-public-server";
+import { formatRuntimeError, getSupabaseRuntimeSnapshot, isSupabaseCredentialError } from "@/lib/runtime-env";
 
 export type SponsorPlacement = {
   id: string;
@@ -25,10 +26,19 @@ function isMissingPlacementsTableError(error: unknown) {
 
 export async function getPublicSponsorPlacements(location: string | string[]) {
   try {
-    const { data, error } = await supabaseAdmin
-      .from("evntszn_sponsor_placements")
-      .select("*")
-      .order("display_order", { ascending: true });
+    const runQuery = async (client: typeof supabaseAdmin) =>
+      client
+        .from("evntszn_sponsor_placements")
+        .select("*")
+        .order("display_order", { ascending: true });
+
+    let { data, error } = await runQuery(supabaseAdmin);
+
+    if (error && isSupabaseCredentialError(error)) {
+      const fallbackResponse = await runQuery(supabasePublicServer);
+      data = fallbackResponse.data;
+      error = fallbackResponse.error;
+    }
 
     if (error) {
       if (isMissingPlacementsTableError(error)) {
@@ -49,7 +59,7 @@ export async function getPublicSponsorPlacements(location: string | string[]) {
     });
   } catch (error) {
     console.error("[sponsor-placements] public placement load failed", {
-      error,
+      error: formatRuntimeError(error),
       credentialIssue: isSupabaseCredentialError(error),
       supabase: getSupabaseRuntimeSnapshot(),
       location,

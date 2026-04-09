@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDiscoveryNativeEvents, groupDiscoveryEventsBySource } from "@/lib/discovery";
+import { applyExternalDiscoveryControls } from "@/lib/external-discovery-controls";
 import { searchTicketmasterEvents } from "@/lib/ticketmaster";
 import { normalizeCitySearchInput } from "@/lib/external-integrations";
 
@@ -43,6 +44,8 @@ function scoreExternalResult(
     venue?: string | null;
     startAt: string | null;
     description?: string | null;
+    moderationStatus?: "active" | "featured" | "deprioritized" | "hidden" | "unsuitable";
+    priorityAdjustment?: number;
   },
   query: string,
   city: string,
@@ -68,6 +71,10 @@ function scoreExternalResult(
       score += Math.max(0, 18 - Math.floor(delta / (1000 * 60 * 60 * 24)));
     }
   }
+
+  if (event.moderationStatus === "featured") score += 22;
+  if (event.moderationStatus === "deprioritized") score -= 18;
+  score += Number(event.priorityAdjustment || 0);
 
   return score;
 }
@@ -157,7 +164,8 @@ export async function GET(request: NextRequest) {
     }).catch(() => []),
   ]);
 
-  const rankedExternal = [...externalEvents].sort(
+  const moderatedExternal = await applyExternalDiscoveryControls("ticketmaster", externalEvents);
+  const rankedExternal = [...moderatedExternal].sort(
     (a, b) => scoreExternalResult(b, query, city) - scoreExternalResult(a, query, city),
   );
   const mergedResults = [

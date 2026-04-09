@@ -14,7 +14,7 @@ export const EPL_TEAM_PROFILES: EplTeamProfile[] = [
     neighborhood: "Canton",
     headline: "Canton speed, late-game pressure, and clean execution.",
     description:
-      "The Canton Chargers carry a fast, sharp city identity built for players and supporters who want the league to feel intense from the first whistle.",
+      "The Canton Chargers bring fast cuts, clean pulls, and a city identity built for players and supporters who want every snap to feel live.",
     notes: ["Draft-built roster identity", "Waterfront crowd pull", "Fast-transition style"],
   },
   {
@@ -23,8 +23,8 @@ export const EPL_TEAM_PROFILES: EplTeamProfile[] = [
     neighborhood: "Federal Hill",
     headline: "Federal Hill discipline with a polished, high-pressure edge.",
     description:
-      "The Sentinels project structure, control, and big-moment poise across every week of the table race.",
-    notes: ["Structured shape", "Defensive composure", "Table-pressure football"],
+      "The Sentinels project structure, control, and big-moment poise across every week of the standings race.",
+    notes: ["Structured coverage", "Defensive composure", "Standings pressure"],
   },
   {
     slug: "fells-point-raiders",
@@ -32,7 +32,7 @@ export const EPL_TEAM_PROFILES: EplTeamProfile[] = [
     neighborhood: "Fells Point",
     headline: "Harbor energy, pressure moments, and a side built to steal the night.",
     description:
-      "The Fells Point Raiders lean into nightlife-edge personality and a match-day identity that feels loud, dangerous, and worth showing up for.",
+      "The Fells Point Raiders lean into nightlife-edge personality and a game-night identity that feels loud, dangerous, and worth showing up for.",
     notes: ["Crowd energy", "Attacking confidence", "Harbor-night identity"],
   },
   {
@@ -41,17 +41,17 @@ export const EPL_TEAM_PROFILES: EplTeamProfile[] = [
     neighborhood: "Hampden",
     headline: "Independent spirit, hard minutes, and a side that refuses to look generic.",
     description:
-      "The Hampden Rebels give the league an unmistakable club personality with a style rooted in grit and city pride.",
-    notes: ["Independent edge", "Hard-running midfield", "City-pride identity"],
+      "The Hampden Rebels give the league an unmistakable team personality with a style rooted in grit, pursuit speed, and city pride.",
+    notes: ["Independent edge", "Hard-running defense", "City-pride identity"],
   },
   {
     slug: "harbor-titans",
     name: "Harbor Titans",
     neighborhood: "Harbor",
-    headline: "Big-stage presence, heavy-match energy, and a club built to look the part.",
+    headline: "Big-stage presence, heavy game-night energy, and a team built to look the part.",
     description:
       "The Harbor Titans bring scale and spectacle into the league with a premium public-facing identity meant to feel imposing.",
-    notes: ["Big-match feel", "Physical identity", "Premium club presence"],
+    notes: ["Big-game feel", "Physical identity", "Premium team presence"],
   },
   {
     slug: "mount-vernon-royals",
