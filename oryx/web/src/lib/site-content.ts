@@ -172,9 +172,9 @@ export type PublicModules = PublicModulesContent & {
 export const DEFAULT_HOMEPAGE_CONTENT: Omit<HomepageContent, "storageReady"> = {
   hero: {
     eyebrow: "EVNTSZN live discovery",
-    title: "Find the night, the match, the concert, or the city plan worth moving on.",
+    title: "Find the event worth leaving the house for.",
     description:
-      "EVNTSZN helps people find the strongest nightlife, live music, sports, league energy, and things to do across Baltimore, Atlanta, Miami, New York, DC, and the next city up.",
+      "Discover nightlife, sports, concerts, league nights, and city experiences across Baltimore, Atlanta, Miami, New York, DC, and the next market up without digging through noise.",
     primaryCtaLabel: "Start discovering",
     primaryCtaHref: "/events",
     secondaryCtaLabel: "Create attendee account",
@@ -184,12 +184,12 @@ export const DEFAULT_HOMEPAGE_CONTENT: Omit<HomepageContent, "storageReady"> = {
   },
   banner: {
     eyebrow: "Built for real nights out",
-    title: "Discover what is actually happening without digging through junk.",
-    body: "Search the city fast, surface the strongest listings first, and move from discovery to account, tickets, and league action without getting pulled into clutter.",
+    title: "Search the city cleanly and move on the right plan faster.",
+    body: "EVNTSZN puts strong native inventory first, widens the field when it helps, and keeps the path from discovery to tickets, account, and league activity tight.",
   },
   discovery: {
-    headline: "Search the city and get to the best options fast.",
-    body: "Search nightlife, concerts, sports, live entertainment, and things to do right now. EVNTSZN leads with its own premium inventory first, then expands into the city's broader pulse when you want more range.",
+    headline: "Search the city and surface the strongest options first.",
+    body: "Search nightlife, concerts, sports, live entertainment, and what is worth doing tonight. EVNTSZN leads with its own premium inventory first, then expands into the city's broader pulse when more range actually helps.",
     disclosure:
       "EVNTSZN-led inventory still gets priority. External discovery only widens the field when it actually helps the search.",
     searchPlaceholder: "Search artist, event, venue, vibe, or something happening tonight",

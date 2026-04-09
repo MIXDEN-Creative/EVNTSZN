@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { ensurePlatformProfile, logEventActivity, requirePlatformUser } from "@/lib/evntszn";
 import { requireAdminPermission } from "@/lib/admin-auth";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { getTicketAvailabilityState } from "@/lib/ticketing";
 
 type CreateEventBody = {
   title?: string;
@@ -28,6 +29,11 @@ type CreateEventBody = {
   eventCollection?: string;
   homeSideLabel?: string;
   awaySideLabel?: string;
+  eventClass?: "evntszn" | "independent_organizer" | "mml";
+  salesStartAt?: string;
+  salesEndAt?: string;
+  ticketVisibilityMode?: "visible" | "hidden";
+  ticketSortOrder?: number | string;
 };
 
 function slugify(value: string) {
@@ -43,6 +49,7 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const vertical = searchParams.get("vertical");
+  const eventClass = searchParams.get("eventClass");
 
   let query = supabaseAdmin
     .from("evntszn_events")
@@ -59,6 +66,7 @@ export async function GET(request: Request) {
       end_at,
       banner_image_url,
       event_vertical,
+      event_class,
       event_collection,
       home_side_label,
       away_side_label,
@@ -72,6 +80,9 @@ export async function GET(request: Request) {
   if (vertical === "evntszn" || vertical === "epl") {
     query = query.eq("event_vertical", vertical);
   }
+  if (eventClass === "evntszn" || eventClass === "independent_organizer" || eventClass === "mml") {
+    query = query.eq("event_class", eventClass);
+  }
 
   const { data, error } = await query;
 
@@ -79,11 +90,37 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
+  const eventIds = (data || []).map((event: any) => event.id);
+  const { data: ticketTypes } = eventIds.length
+    ? await supabaseAdmin
+        .from("evntszn_ticket_types")
+        .select("id, event_id, quantity_total, quantity_sold, sales_start_at, sales_end_at, is_active, visibility_mode")
+        .in("event_id", eventIds)
+    : { data: [] as any[] };
+
+  const ticketsByEventId = new Map<string, any[]>();
+  for (const ticket of ticketTypes || []) {
+    const current = ticketsByEventId.get(ticket.event_id) || [];
+    current.push(ticket);
+    ticketsByEventId.set(ticket.event_id, current);
+  }
+
   return NextResponse.json({
     ok: true,
     events: (data || []).map((event: any) => ({
       ...event,
       venue_name: event.venues?.name || null,
+      ticket_summary: (ticketsByEventId.get(event.id) || []).reduce(
+        (summary, ticket) => {
+          summary.total += 1;
+          const state = getTicketAvailabilityState(ticket);
+          if (state === "active") summary.active += 1;
+          if (state === "scheduled") summary.scheduled += 1;
+          if (state === "sold_out") summary.soldOut += 1;
+          return summary;
+        },
+        { total: 0, active: 0, scheduled: 0, soldOut: 0 },
+      ),
     })),
   });
 }
@@ -98,6 +135,19 @@ export async function POST(request: Request) {
   const state = String(body.state || "").trim();
   const venueName = String(body.venueName || "").trim();
   const eventVertical = body.eventVertical === "epl" ? "epl" : "evntszn";
+  const eventClass =
+    eventVertical === "epl"
+      ? "evntszn"
+      : viewer.isPlatformAdmin
+        ? body.eventClass === "mml"
+          ? "mml"
+          : body.eventClass === "independent_organizer"
+            ? "independent_organizer"
+            : "evntszn"
+        : viewer.operatorProfile?.organizer_classification === "evntszn_host" ||
+            viewer.operatorProfile?.organizer_classification === "city_host"
+          ? "evntszn"
+          : "independent_organizer";
   const eventCollection = String(body.eventCollection || "").trim() || null;
   const bannerImageUrl = String(body.bannerImageUrl || "").trim() || null;
   const timezone = String(body.timezone || "").trim() || "America/New_York";
@@ -168,6 +218,7 @@ export async function POST(request: Request) {
       payout_account_label: body.payoutAccountLabel || "ORYX Event Ops",
       scanner_status: "ready",
       event_vertical: eventVertical,
+      event_class: eventClass,
       event_collection: eventCollection,
       home_side_label: homeSideLabel,
       away_side_label: awaySideLabel,
@@ -191,6 +242,10 @@ export async function POST(request: Request) {
       price_cents: priceCents,
       quantity_total: quantityTotal,
       max_per_order: Number(body.maxPerOrder || 4),
+      sales_start_at: body.salesStartAt || null,
+      sales_end_at: body.salesEndAt || null,
+      visibility_mode: body.ticketVisibilityMode === "hidden" ? "hidden" : "visible",
+      sort_order: Number(body.ticketSortOrder || 10),
       is_active: true,
     });
 
@@ -218,6 +273,7 @@ export async function POST(request: Request) {
     slug: event.slug,
     publishNow: Boolean(body.publishNow),
     eventVertical,
+    eventClass,
   });
 
   return NextResponse.json({ ok: true, event });

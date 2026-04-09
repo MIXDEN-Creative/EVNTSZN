@@ -3,6 +3,7 @@ import { buildTicketCode, ensurePlatformProfile, logEventActivity, requirePlatfo
 import { getAppOrigin, getCanonicalUrl } from "@/lib/domains";
 import { stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { canPurchaseTicketType, getTicketAvailabilityState } from "@/lib/ticketing";
 
 type Params = Promise<{ eventId: string }>;
 
@@ -21,10 +22,9 @@ export async function POST(request: Request, { params }: { params: Params }) {
       .maybeSingle(),
     supabaseAdmin
       .from("evntszn_ticket_types")
-      .select("id, name, description, price_cents, quantity_total, quantity_sold, max_per_order")
+      .select("id, name, description, price_cents, quantity_total, quantity_sold, max_per_order, sales_start_at, sales_end_at, is_active, visibility_mode")
       .eq("id", body.ticketTypeId)
       .eq("event_id", eventId)
-      .eq("is_active", true)
       .maybeSingle(),
   ]);
 
@@ -34,6 +34,21 @@ export async function POST(request: Request, { params }: { params: Params }) {
 
   if (quantity > ticketType.max_per_order) {
     return NextResponse.json({ error: "Quantity exceeds per-order limit." }, { status: 400 });
+  }
+
+  if (!canPurchaseTicketType(ticketType)) {
+    const state = getTicketAvailabilityState(ticketType);
+    return NextResponse.json(
+      {
+        error:
+          state === "scheduled"
+            ? "Ticket sales have not opened yet."
+            : state === "sold_out"
+              ? "Ticket inventory is sold out."
+              : "This ticket type is not currently available.",
+      },
+      { status: state === "sold_out" ? 409 : 400 },
+    );
   }
 
   const remaining = ticketType.quantity_total - ticketType.quantity_sold;

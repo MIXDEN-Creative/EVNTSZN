@@ -110,6 +110,15 @@ function buildQuickLinks(viewer: Awaited<ReturnType<typeof getPlatformViewer>>) 
     });
   }
 
+  if (viewer.isPlatformAdmin) {
+    links.push({
+      title: "Event desk",
+      body: "Create native events, manage ticket releases, update run of show, and keep discovery inventory moving from one protected desk.",
+      href: "/epl/admin/events",
+      label: "Open event desk",
+    });
+  }
+
   if (classification === "evntszn_host" || classification === "city_host") {
     links.push(
       {

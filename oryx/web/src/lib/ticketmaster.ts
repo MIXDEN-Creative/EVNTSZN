@@ -7,6 +7,7 @@ export type TicketmasterEvent = {
   city: string | null;
   state: string | null;
   imageUrl: string | null;
+  description: string | null;
   source: "ticketmaster";
 };
 
@@ -22,6 +23,8 @@ type TicketmasterDiscoveryResponse = {
           localDate?: string;
         };
       };
+      info?: string;
+      pleaseNote?: string;
       images?: Array<{
         url?: string;
         width?: number;
@@ -114,6 +117,7 @@ export async function searchTicketmasterEvents(input: {
       city: venue?.city?.name || null,
       state: venue?.state?.stateCode || null,
       imageUrl: pickEventImage(event.images),
+      description: event.info || event.pleaseNote || null,
       source: "ticketmaster" as const,
     };
   });

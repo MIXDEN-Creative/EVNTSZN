@@ -42,6 +42,7 @@ function scoreExternalResult(
     venueName?: string | null;
     venue?: string | null;
     startAt: string | null;
+    description?: string | null;
   },
   query: string,
   city: string,
@@ -69,6 +70,21 @@ function scoreExternalResult(
   }
 
   return score;
+}
+
+function dedupeResults<T extends { title: string; city?: string; state?: string; startAt?: string | null }>(items: T[]) {
+  const seen = new Set<string>();
+  return items.filter((item) => {
+    const day = item.startAt ? item.startAt.slice(0, 10) : "unknown";
+    const key = [item.title, item.city || "", item.state || "", day]
+      .join("|")
+      .toLowerCase()
+      .replace(/\s+/g, " ")
+      .trim();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 function scoreNativeResult(
@@ -179,7 +195,8 @@ export async function GET(request: NextRequest) {
       source: "ticketmaster" as const,
       badgeLabel: "External listing",
       summary:
-        "Broader city demand pulled into EVNTSZN discovery without crowding out EVNTSZN-led inventory.",
+        event.description ||
+        `${event.venueName || "Live city listing"}${event.city ? ` · ${event.city}` : ""}`,
       isPrimary: false,
     })),
   ].sort((a, b) => {
@@ -197,7 +214,7 @@ export async function GET(request: NextRequest) {
       ...event,
       isPrimary: false,
     })),
-    results: mergedResults,
+    results: dedupeResults(mergedResults),
     normalizedCity,
   });
 }

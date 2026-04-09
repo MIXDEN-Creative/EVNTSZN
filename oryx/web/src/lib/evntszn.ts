@@ -52,6 +52,15 @@ export type EventAccessRow = {
   } | null;
 };
 
+export type ManagedEventRecord = {
+  id: string;
+  organizer_user_id: string | null;
+  city: string | null;
+  state?: string | null;
+  event_class?: string | null;
+  event_vertical?: string | null;
+};
+
 export async function getPlatformViewer() {
   const supabase = await createClient();
   const {
@@ -256,6 +265,34 @@ export async function requireEventScannerAccess(eventSlug: string) {
   }
 
   return viewer;
+}
+
+export function canManageEventWithViewer(
+  viewer: Awaited<ReturnType<typeof getPlatformViewer>>,
+  event: ManagedEventRecord,
+) {
+  if (viewer.isPlatformAdmin) return true;
+  if (!viewer.user) return false;
+  if (event.organizer_user_id === viewer.user.id) return true;
+
+  const operator = viewer.operatorProfile;
+  if (!operator?.is_active) return false;
+  if (!operator.surface_access.includes("ops") && !operator.dashboard_access.includes("city")) {
+    return false;
+  }
+  if (event.event_class === "independent_organizer") {
+    return false;
+  }
+
+  const scopedCities = operator.city_scope.map((entry) => entry.toLowerCase());
+  const eventCity = (event.city || "").toLowerCase();
+  const cityRoleKeys = new Set(["city_commissioner", "city_deputy", "city_leader", "city_host"]);
+
+  if (cityRoleKeys.has(operator.role_key) && eventCity && scopedCities.includes(eventCity)) {
+    return true;
+  }
+
+  return false;
 }
 
 export function getBaseUrl() {

@@ -36,7 +36,7 @@ export async function GET(request: Request, { params }: { params: Params }) {
 
   const { data, error } = await supabaseAdmin
     .from("evntszn_tickets")
-    .select("id, attendee_name, attendee_email, ticket_code, status, checked_in_at")
+    .select("id, attendee_name, attendee_email, ticket_code, status, checked_in_at, evntszn_ticket_types(name)")
     .eq("event_id", eventId)
     .or(`ticket_code.ilike.%${query}%,attendee_name.ilike.%${query}%,attendee_email.ilike.%${query}%`)
     .limit(12);
@@ -45,5 +45,12 @@ export async function GET(request: Request, { params }: { params: Params }) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ results: data || [] });
+  return NextResponse.json({
+    results: (data || []).map((ticket: any) => ({
+      ...ticket,
+      ticket_type_name: Array.isArray(ticket.evntszn_ticket_types)
+        ? ticket.evntszn_ticket_types[0]?.name || null
+        : ticket.evntszn_ticket_types?.name || null,
+    })),
+  });
 }

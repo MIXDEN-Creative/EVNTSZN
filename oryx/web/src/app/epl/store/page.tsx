@@ -326,7 +326,27 @@ export default function EPLStorePage() {
             <h2 className="mb-4 text-xl font-semibold">Shop Merch</h2>
 
             {loadingProducts ? (
-              <div className="text-white/60">Loading products...</div>
+              <div className="rounded-[28px] border border-white/10 bg-white/[0.03] p-6">
+                <div className="ev-section-kicker">Storefront loading</div>
+                <div className="mt-3 text-2xl font-black tracking-tight text-white">
+                  Pulling the latest league merch.
+                </div>
+                <p className="mt-3 max-w-xl text-sm leading-6 text-white/68">
+                  The storefront is connecting to the live Printful catalog now. Featured products and collections will appear here as soon as the feed resolves.
+                </p>
+                <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                  {Array.from({ length: 6 }).map((_, index) => (
+                    <div key={index} className="overflow-hidden rounded-2xl border border-white/10 bg-black/25">
+                      <div className="h-52 animate-pulse bg-white/10" />
+                      <div className="space-y-3 p-4">
+                        <div className="h-3 w-24 animate-pulse rounded bg-white/10" />
+                        <div className="h-5 w-3/4 animate-pulse rounded bg-white/10" />
+                        <div className="h-4 w-1/2 animate-pulse rounded bg-white/10" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             ) : productsError ? (
               <div className="rounded-2xl border border-red-500/20 bg-red-500/10 p-4 text-red-200">
                 <div>{productsError}</div>

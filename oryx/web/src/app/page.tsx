@@ -81,6 +81,22 @@ function formatHomepageJsonLd() {
   };
 }
 
+function dedupeHomepageListings<
+  T extends { title: string; city?: string; state?: string; startAt?: string | null }
+>(items: T[]) {
+  const seen = new Set<string>();
+  return items.filter((item) => {
+    const key = [item.title, item.city || "", item.state || "", item.startAt?.slice(0, 10) || "unknown"]
+      .join("|")
+      .toLowerCase()
+      .replace(/\s+/g, " ")
+      .trim();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 export default async function HomePage() {
   const [content, modules, nativeResult, externalShowcase, homepagePlacements] = await Promise.all([
     safePublicLoad("homepage-content", () => getHomepageContent(), {
@@ -100,7 +116,7 @@ export default async function HomePage() {
   ]);
 
   const nativeSections = groupDiscoveryEventsBySource(nativeResult.events);
-  const initialPopular = [
+  const initialPopular = dedupeHomepageListings([
     ...nativeResult.events.slice(0, 4).map((event) => ({
       id: event.id,
       title: event.title,
@@ -135,10 +151,11 @@ export default async function HomePage() {
       source: "ticketmaster" as const,
       badgeLabel: "External listing",
       summary:
-        "Broader city demand pulled into EVNTSZN discovery without crowding out EVNTSZN-led inventory.",
+        event.description ||
+        `${event.venueName || "Live city listing"}${event.city ? ` · ${event.city}` : ""}`,
       isPrimary: false,
     })),
-  ].slice(0, 8);
+  ]).slice(0, 8);
 
   return (
     <main className="min-h-screen bg-black text-white">

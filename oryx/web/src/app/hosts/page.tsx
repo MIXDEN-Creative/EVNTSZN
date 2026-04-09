@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import PublicPageFrame from "@/components/public/PublicPageFrame";
-import { getAppOrigin, getHostsOrigin } from "@/lib/domains";
+import { getAppOrigin, getHostsOrigin, getWebOrigin } from "@/lib/domains";
 
 export const metadata: Metadata = {
   title: "EVNTSZN Host Network",
@@ -32,7 +32,7 @@ export default function HostsPage() {
             <Link href={`${getAppOrigin()}/account/login?next=/ops`} className="ev-button-secondary">
               Already approved? Enter ops
             </Link>
-            <Link href="/organizer/apply" className="ev-button-secondary">
+            <Link href={`${getWebOrigin()}/organizer/apply`} className="ev-button-secondary">
               Independent Organizer instead?
             </Link>
           </div>
@@ -98,7 +98,7 @@ export default function HostsPage() {
               Signal is for controlled support, activation, and city help. It is separate from Ambassador and it does not automatically grant broad operator privileges.
             </p>
             <div className="mt-5">
-              <Link href="/signal/apply" className="ev-button-secondary">Request Signal consideration</Link>
+              <Link href={`${getWebOrigin()}/signal/apply`} className="ev-button-secondary">Request Signal consideration</Link>
             </div>
           </section>
 
@@ -109,7 +109,7 @@ export default function HostsPage() {
               Ambassador is the public-facing growth path for referral pull and city presence. It is not the same program as Signal and it is not the same track as approved EVNTSZN Hosts.
             </p>
             <div className="mt-5">
-              <Link href="/ambassador/apply" className="ev-button-secondary">Apply to Ambassador</Link>
+              <Link href={`${getWebOrigin()}/ambassador/apply`} className="ev-button-secondary">Apply to Ambassador</Link>
             </div>
           </section>
         </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { getTicketAvailabilityLabel } from "@/lib/ticketing";
 
 type TicketType = {
   id: string;
@@ -10,6 +11,11 @@ type TicketType = {
   quantity_total: number;
   quantity_sold: number;
   max_per_order: number;
+  sales_start_at?: string | null;
+  sales_end_at?: string | null;
+  is_active?: boolean;
+  visibility_mode?: "visible" | "hidden";
+  availability_state: "active" | "scheduled" | "hidden" | "sold_out" | "ended";
 };
 
 type TicketPurchaseCardProps = {
@@ -31,6 +37,17 @@ export default function TicketPurchaseCard({
   const [message, setMessage] = useState("");
 
   const selectedTicketType = ticketTypes.find((ticketType) => ticketType.id === ticketTypeId) || ticketTypes[0];
+  const isPurchasable = selectedTicketType?.availability_state === "active";
+  const maxSelectableQuantity = Math.max(
+    1,
+    Math.min(
+      selectedTicketType?.max_per_order || 1,
+      Math.max(
+        1,
+        (selectedTicketType?.quantity_total || 0) - (selectedTicketType?.quantity_sold || 0),
+      ),
+    ),
+  );
 
   async function handleCheckout() {
     if (!selectedTicketType) return;
@@ -91,7 +108,7 @@ export default function TicketPurchaseCard({
           >
             {ticketTypes.map((ticketType) => (
               <option key={ticketType.id} value={ticketType.id}>
-                {ticketType.name} · ${(ticketType.price_cents / 100).toFixed(2)}
+                {ticketType.name} · {getTicketAvailabilityLabel(ticketType.availability_state)} · ${(ticketType.price_cents / 100).toFixed(2)}
               </option>
             ))}
           </select>
@@ -104,7 +121,7 @@ export default function TicketPurchaseCard({
             onChange={(e) => setQuantity(Number(e.target.value))}
             className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none"
           >
-            {Array.from({ length: Math.max(1, selectedTicketType?.max_per_order || 1) }).map((_, index) => {
+            {Array.from({ length: maxSelectableQuantity }).map((_, index) => {
               const nextQuantity = index + 1;
               return (
                 <option key={nextQuantity} value={nextQuantity}>
@@ -117,6 +134,9 @@ export default function TicketPurchaseCard({
 
         <div className="rounded-2xl border border-white/10 bg-black/30 p-4 text-sm text-white/70">
           <div>{selectedTicketType?.description || "Premium EVNTSZN access."}</div>
+          <div className="mt-2 text-[#d8c2ff]">
+            Status: {selectedTicketType ? getTicketAvailabilityLabel(selectedTicketType.availability_state) : "Unavailable"}
+          </div>
           <div className="mt-2">
             Remaining:{" "}
             {Math.max(
@@ -124,15 +144,26 @@ export default function TicketPurchaseCard({
               (selectedTicketType?.quantity_total || 0) - (selectedTicketType?.quantity_sold || 0)
             )}
           </div>
+          {selectedTicketType?.sales_start_at && selectedTicketType.availability_state === "scheduled" ? (
+            <div className="mt-2">
+              On sale: {new Date(selectedTicketType.sales_start_at).toLocaleString()}
+            </div>
+          ) : null}
         </div>
 
         <button
           onClick={handleCheckout}
-          disabled={!selectedTicketType || loading}
+          disabled={!selectedTicketType || loading || !isPurchasable}
           className="rounded-2xl bg-white px-5 py-4 font-semibold text-black disabled:opacity-50"
         >
           {loading
             ? "Processing..."
+            : !isPurchasable
+              ? selectedTicketType?.availability_state === "scheduled"
+                ? "Not on sale yet"
+                : selectedTicketType?.availability_state === "sold_out"
+                  ? "Sold out"
+                  : "Unavailable"
             : selectedTicketType?.price_cents
             ? `Checkout · $${((selectedTicketType.price_cents * quantity) / 100).toFixed(2)}`
             : "Reserve complimentary access"}

@@ -7,8 +7,17 @@ type ScannerResult = {
   attendee_name: string | null;
   attendee_email: string | null;
   ticket_code: string;
+  ticket_type_name?: string | null;
   status: string;
   checked_in_at: string | null;
+};
+
+type TicketBreakdownRow = {
+  id: string;
+  name: string;
+  sold: number;
+  checkedIn: number;
+  remainingNotCheckedIn: number;
 };
 
 export default function ScannerConsole({
@@ -17,12 +26,14 @@ export default function ScannerConsole({
   eventTitle,
   checkedInCount,
   ticketCapacity,
+  ticketBreakdown,
 }: {
   eventId: string;
   eventSlug: string;
   eventTitle: string;
   checkedInCount: number;
   ticketCapacity: number;
+  ticketBreakdown: TicketBreakdownRow[];
 }) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<ScannerResult[]>([]);
@@ -30,6 +41,8 @@ export default function ScannerConsole({
   const [messageTone, setMessageTone] = useState<"neutral" | "success" | "error">("neutral");
   const [loading, setLoading] = useState(false);
   const [count, setCount] = useState(checkedInCount);
+  const [statsOpen, setStatsOpen] = useState(false);
+  const [breakdown, setBreakdown] = useState(ticketBreakdown);
 
   async function searchTickets(nextQuery = query) {
     setLoading(true);
@@ -77,6 +90,20 @@ export default function ScannerConsole({
             : ticket
         )
       );
+      const checkedTicket = results.find((ticket) => ticket.id === ticketId);
+      if (checkedTicket?.ticket_type_name) {
+        setBreakdown((current) =>
+          current.map((row) =>
+            row.name === checkedTicket.ticket_type_name
+              ? {
+                  ...row,
+                  checkedIn: row.checkedIn + 1,
+                  remainingNotCheckedIn: Math.max(row.remainingNotCheckedIn - 1, 0),
+                }
+              : row,
+          ),
+        );
+      }
       setMessageTone("success");
       setMessage("Ticket checked in.");
     } catch (error) {
@@ -96,6 +123,13 @@ export default function ScannerConsole({
             <div className="text-sm font-semibold">{eventTitle}</div>
           </div>
           <div className="flex gap-2 text-xs text-white/70">
+            <button
+              type="button"
+              onClick={() => setStatsOpen((value) => !value)}
+              className="rounded-full border border-white/10 px-3 py-2 hover:bg-white/5"
+            >
+              {statsOpen ? "Hide ticket stats" : "Show ticket stats"}
+            </button>
             <div className="rounded-full border border-white/10 px-3 py-2">Checked in: {count}</div>
             <div className="rounded-full border border-white/10 px-3 py-2">
               Remaining: {Math.max(ticketCapacity - count, 0)}
@@ -106,6 +140,21 @@ export default function ScannerConsole({
 
       <div className="mx-auto grid max-w-5xl gap-6 px-4 py-6 lg:grid-cols-[1.1fr_0.9fr]">
         <section className="rounded-[32px] border border-white/10 bg-white/[0.03] p-4">
+          {statsOpen ? (
+            <div className="mb-4 rounded-[24px] border border-white/10 bg-black/35 p-4">
+              <div className="text-[11px] uppercase tracking-[0.22em] text-[#A259FF]">Ticket stats</div>
+              <div className="mt-4 grid gap-3 md:grid-cols-2">
+                {breakdown.map((row) => (
+                  <div key={row.id} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm">
+                    <div className="font-semibold text-white">{row.name}</div>
+                    <div className="mt-2 text-white/65">Sold: {row.sold}</div>
+                    <div className="text-white/65">Checked in: {row.checkedIn}</div>
+                    <div className="text-white/65">Waiting: {row.remainingNotCheckedIn}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
           <div className="overflow-hidden rounded-[28px] border border-white/10 bg-[radial-gradient(circle_at_top,rgba(162,89,255,0.18),transparent_35%),linear-gradient(180deg,#060606_0%,#000_100%)]">
             <div className="flex min-h-[420px] items-end justify-between p-5">
               <div className="max-w-sm">
@@ -180,6 +229,11 @@ export default function ScannerConsole({
                     </div>
                     <div className="text-sm text-white/62">{ticket.attendee_email || "No email"}</div>
                     <div className="mt-2 text-sm text-[#A259FF]">{ticket.ticket_code}</div>
+                    {ticket.ticket_type_name ? (
+                      <div className="mt-2 text-xs uppercase tracking-[0.18em] text-white/45">
+                        {ticket.ticket_type_name}
+                      </div>
+                    ) : null}
                   </div>
                   <button
                     onClick={() => checkIn(ticket.id)}

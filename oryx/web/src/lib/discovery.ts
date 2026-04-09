@@ -29,6 +29,7 @@ type NativeEventRow = {
   hero_note: string | null;
   banner_image_url: string | null;
   organizer_user_id: string | null;
+  event_class: string | null;
 };
 
 export type DiscoveryNativeEvent = {
@@ -117,9 +118,21 @@ function isMissingDiscoveryControlsError(error: unknown) {
   );
 }
 
+function isMissingEventClassColumnError(error: unknown) {
+  const message =
+    typeof error === "object" && error !== null && "message" in error
+      ? String((error as { message?: unknown }).message)
+      : "";
+  return /event_class/i.test(message) && /does not exist/i.test(message);
+}
+
 function inferSourceType(row: NativeEventRow, control?: DiscoveryControlRow | null): Exclude<DiscoverySourceType, "ticketmaster"> {
   if (control?.source_type) {
     return control.source_type;
+  }
+
+  if (row.event_class === "independent_organizer") {
+    return "independent_organizer";
   }
 
   if (!row.organizer_user_id) {
@@ -180,30 +193,46 @@ export async function getDiscoveryNativeEvents(input: {
   const limit = input.limit || 12;
 
   try {
-    const nativeQuery = supabaseAdmin
-      .from("evntszn_events")
-      .select("id, title, slug, subtitle, description, city, state, start_at, hero_note, banner_image_url, organizer_user_id")
-      .eq("visibility", "published")
-      .order("start_at", { ascending: true })
-      .limit(limit);
+    const runNativeQuery = async (selectColumns: string) => {
+      let builder = supabaseAdmin
+        .from("evntszn_events")
+        .select(selectColumns)
+        .eq("visibility", "published")
+        .order("start_at", { ascending: true })
+        .limit(limit);
 
-    if (query) {
-      nativeQuery.or(`title.ilike.%${query}%,subtitle.ilike.%${query}%,description.ilike.%${query}%`);
+      if (query) {
+        builder = builder.or(`title.ilike.%${query}%,subtitle.ilike.%${query}%,description.ilike.%${query}%`);
+      }
+
+      if (city) {
+        builder = builder.ilike("city", `%${city}%`);
+      }
+
+      if (input.startAt) {
+        builder = builder.gte("start_at", input.startAt);
+      }
+
+      if (input.endAt) {
+        builder = builder.lte("start_at", input.endAt);
+      }
+
+      return builder;
+    };
+
+    const primaryResponse = await runNativeQuery(
+      "id, title, slug, subtitle, description, city, state, start_at, hero_note, banner_image_url, organizer_user_id, event_class",
+    );
+    let rawEvents = primaryResponse.data as NativeEventRow[] | null;
+    let rawEventsError = primaryResponse.error;
+
+    if (rawEventsError && isMissingEventClassColumnError(rawEventsError)) {
+      const fallbackResponse = await runNativeQuery(
+        "id, title, slug, subtitle, description, city, state, start_at, hero_note, banner_image_url, organizer_user_id",
+      );
+      rawEvents = fallbackResponse.data as NativeEventRow[] | null;
+      rawEventsError = fallbackResponse.error;
     }
-
-    if (city) {
-      nativeQuery.ilike("city", `%${city}%`);
-    }
-
-    if (input.startAt) {
-      nativeQuery.gte("start_at", input.startAt);
-    }
-
-    if (input.endAt) {
-      nativeQuery.lte("start_at", input.endAt);
-    }
-
-    const { data: rawEvents, error: rawEventsError } = await nativeQuery;
 
     if (rawEventsError) {
       throw new Error(rawEventsError.message);

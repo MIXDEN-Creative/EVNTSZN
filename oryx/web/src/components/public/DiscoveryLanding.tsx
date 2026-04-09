@@ -106,9 +106,24 @@ function normalizeExternalEvent(event: TicketmasterEvent): DiscoveryListing {
     source: "ticketmaster",
     badgeLabel: "External listing",
     summary:
-      "Broader city demand pulled into EVNTSZN discovery without crowding out EVNTSZN-led inventory.",
+      event.description ||
+      `${event.venueName || "Live city listing"}${event.city ? ` · ${event.city}` : ""}`,
     isPrimary: false,
   };
+}
+
+function dedupeListings(items: DiscoveryListing[]) {
+  const seen = new Set<string>();
+  return items.filter((item) => {
+    const key = [item.title, item.city, item.state, item.startAt?.slice(0, 10) || "unknown"]
+      .join("|")
+      .toLowerCase()
+      .replace(/\s+/g, " ")
+      .trim();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 function getSourceChipClass(source: DiscoveryListing["source"]) {
@@ -315,7 +330,7 @@ export default function DiscoveryLanding({
     );
   }
 
-  const visibleResults = results.slice(0, 8);
+  const visibleResults = dedupeListings(results).slice(0, 8);
   const spotlight = visibleResults[0] || null;
   const rail = visibleResults.slice(spotlight ? 1 : 0);
   const emptyState = createEmptyState(query, city);
