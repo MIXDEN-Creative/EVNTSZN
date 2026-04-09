@@ -86,6 +86,16 @@ export default function OpportunitiesAdminClient() {
     load();
   }, []);
 
+  const stats = useMemo(
+    () => ({
+      total: opportunities.length,
+      open: opportunities.filter((item) => item.status === "open").length,
+      public: opportunities.filter((item) => item.is_public !== false).length,
+      linkedRoles: opportunities.filter((item) => item.access_role_id).length,
+    }),
+    [opportunities],
+  );
+
   const selectedOpportunity = useMemo(
     () => opportunities.find((item) => item.id === selectedId) || null,
     [opportunities, selectedId],
@@ -171,10 +181,23 @@ export default function OpportunitiesAdminClient() {
         <div className="ev-shell-hero-grid">
           <div>
             <div className="ev-kicker">EPL opportunities</div>
-            <h1 className="ev-title">Control the live staffing and volunteer openings the public can actually apply for.</h1>
+            <h1 className="ev-title">Open roles, review the queue, and keep staffing needs current.</h1>
             <p className="ev-subtitle">
-              Create paid and volunteer roles, decide what is public, order the listings, and keep the league hiring funnel aligned with current operational needs.
+              Use the left queue to track every opening. Use the detail panel to update the listing, link access roles, and control what applicants see.
             </p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {[
+              ["Roles", stats.total],
+              ["Open", stats.open],
+              ["Public", stats.public],
+              ["Linked access", stats.linkedRoles],
+            ].map(([label, value]) => (
+              <div key={String(label)} className="ev-meta-card">
+                <div className="ev-meta-label">{label}</div>
+                <div className="ev-meta-value">{value}</div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -208,43 +231,56 @@ export default function OpportunitiesAdminClient() {
           <div className="ev-section-kicker">{form.id ? "Edit role" : "Create role"}</div>
           <h2 className="mt-3 text-2xl font-bold text-white">{form.id ? "Update opportunity" : "Open a new opportunity"}</h2>
           <form onSubmit={saveOpportunity} className="mt-5 grid gap-4">
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="rounded-2xl border border-white/10 bg-black/25 p-5">
+              <div className="text-xs uppercase tracking-[0.22em] text-[#caa7ff]">Step 1</div>
+              <div className="mt-2 text-lg font-semibold text-white">Role basics</div>
+              <div className="mt-4 grid gap-4 md:grid-cols-2">
               <input className="ev-field" placeholder="Role title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
               <input className="ev-field" placeholder="Role code" value={form.roleCode} onChange={(e) => setForm({ ...form, roleCode: e.target.value })} />
-            </div>
-            <div className="grid gap-4 md:grid-cols-2">
+              </div>
+              <div className="mt-4 grid gap-4 md:grid-cols-2">
               <input className="ev-field" placeholder="Department" value={form.department} onChange={(e) => setForm({ ...form, department: e.target.value })} />
               <select className="ev-field" value={form.opportunityType} onChange={(e) => setForm({ ...form, opportunityType: e.target.value })}>
                 <option value="volunteer">Volunteer</option>
                 <option value="paid">Paid</option>
               </select>
+              </div>
+              <input className="ev-field mt-4" placeholder="Short summary" value={form.summary} onChange={(e) => setForm({ ...form, summary: e.target.value })} />
+              <textarea className="ev-textarea mt-4" rows={4} placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
             </div>
-            <input className="ev-field" placeholder="Short summary" value={form.summary} onChange={(e) => setForm({ ...form, summary: e.target.value })} />
-            <textarea className="ev-textarea" rows={4} placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-            <div className="grid gap-4 md:grid-cols-2">
-              <textarea className="ev-textarea" rows={4} placeholder="Requirements, one per line" value={form.requirements} onChange={(e) => setForm({ ...form, requirements: e.target.value })} />
-              <textarea className="ev-textarea" rows={4} placeholder="Perks, one per line" value={form.perks} onChange={(e) => setForm({ ...form, perks: e.target.value })} />
+
+            <div className="rounded-2xl border border-white/10 bg-black/25 p-5">
+              <div className="text-xs uppercase tracking-[0.22em] text-[#caa7ff]">Step 2</div>
+              <div className="mt-2 text-lg font-semibold text-white">Public listing</div>
+              <div className="mt-4 grid gap-4 md:grid-cols-2">
+                <textarea className="ev-textarea" rows={4} placeholder="Requirements, one per line" value={form.requirements} onChange={(e) => setForm({ ...form, requirements: e.target.value })} />
+                <textarea className="ev-textarea" rows={4} placeholder="Perks, one per line" value={form.perks} onChange={(e) => setForm({ ...form, perks: e.target.value })} />
+              </div>
+              <div className="mt-4 grid gap-4 md:grid-cols-4">
+                <input className="ev-field" placeholder="Pay label" value={form.payLabel} onChange={(e) => setForm({ ...form, payLabel: e.target.value })} />
+                <input className="ev-field" placeholder="City" value={form.locationCity} onChange={(e) => setForm({ ...form, locationCity: e.target.value })} />
+                <input className="ev-field" placeholder="State" value={form.locationState} onChange={(e) => setForm({ ...form, locationState: e.target.value })} />
+                <select className="ev-field" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
+                  <option value="draft">Draft</option>
+                  <option value="open">Open</option>
+                  <option value="closed">Closed</option>
+                  <option value="filled">Filled</option>
+                </select>
+              </div>
+              <div className="mt-4 grid gap-4 md:grid-cols-3">
+                <input className="ev-field" type="number" placeholder="Priority" value={form.priorityScore} onChange={(e) => setForm({ ...form, priorityScore: Number(e.target.value || 100) })} />
+                <input className="ev-field" type="number" placeholder="Display order" value={form.displayOrder} onChange={(e) => setForm({ ...form, displayOrder: Number(e.target.value || 100) })} />
+                <label className="flex items-center gap-3 rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/75">
+                  <input type="checkbox" checked={Boolean(form.isPublic)} onChange={(e) => setForm({ ...form, isPublic: e.target.checked })} />
+                  Publicly visible
+                </label>
+              </div>
             </div>
-            <div className="grid gap-4 md:grid-cols-4">
-              <input className="ev-field" placeholder="Pay label" value={form.payLabel} onChange={(e) => setForm({ ...form, payLabel: e.target.value })} />
-              <input className="ev-field" placeholder="City" value={form.locationCity} onChange={(e) => setForm({ ...form, locationCity: e.target.value })} />
-              <input className="ev-field" placeholder="State" value={form.locationState} onChange={(e) => setForm({ ...form, locationState: e.target.value })} />
-              <select className="ev-field" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
-                <option value="draft">Draft</option>
-                <option value="open">Open</option>
-                <option value="closed">Closed</option>
-                <option value="filled">Filled</option>
-              </select>
-            </div>
-            <div className="grid gap-4 md:grid-cols-3">
-              <input className="ev-field" type="number" placeholder="Priority" value={form.priorityScore} onChange={(e) => setForm({ ...form, priorityScore: Number(e.target.value || 100) })} />
-              <input className="ev-field" type="number" placeholder="Display order" value={form.displayOrder} onChange={(e) => setForm({ ...form, displayOrder: Number(e.target.value || 100) })} />
-              <label className="flex items-center gap-3 rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/75">
-                <input type="checkbox" checked={Boolean(form.isPublic)} onChange={(e) => setForm({ ...form, isPublic: e.target.checked })} />
-                Publicly visible
-              </label>
-            </div>
-            <div className="grid gap-4 md:grid-cols-2">
+
+            <div className="rounded-2xl border border-white/10 bg-black/25 p-5">
+              <div className="text-xs uppercase tracking-[0.22em] text-[#caa7ff]">Step 3</div>
+              <div className="mt-2 text-lg font-semibold text-white">Assignment rules</div>
+              <div className="mt-4 grid gap-4 md:grid-cols-2">
               <select className="ev-field" value={form.accessRoleId} onChange={(e) => setForm({ ...form, accessRoleId: e.target.value })}>
                 <option value="">No linked access role</option>
                 {accessRoles.map((role) => (
@@ -259,14 +295,15 @@ export default function OpportunitiesAdminClient() {
                 value={form.assignmentPermissionCodes}
                 onChange={(e) => setForm({ ...form, assignmentPermissionCodes: e.target.value })}
               />
+              </div>
+              <textarea
+                className="ev-textarea mt-4"
+                rows={3}
+                placeholder="Assignment logic or onboarding notes"
+                value={form.assignmentLogic}
+                onChange={(e) => setForm({ ...form, assignmentLogic: e.target.value })}
+              />
             </div>
-            <textarea
-              className="ev-textarea"
-              rows={3}
-              placeholder="Assignment logic or onboarding notes"
-              value={form.assignmentLogic}
-              onChange={(e) => setForm({ ...form, assignmentLogic: e.target.value })}
-            />
             <div className="flex flex-wrap gap-3">
               <button type="submit" className="ev-button-primary">{form.id ? "Save opportunity" : "Create opportunity"}</button>
               {form.id ? (

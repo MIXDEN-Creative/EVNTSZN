@@ -186,6 +186,13 @@ export default function DiscoveryAdminClient() {
   const [taxonomyCategories, setTaxonomyCategories] = useState("");
   const [taxonomyCities, setTaxonomyCities] = useState("");
 
+  const discoveryStats = {
+    native: listings.filter((listing) => listing.source === "evntszn").length,
+    hosts: listings.filter((listing) => listing.source === "host").length,
+    independent: listings.filter((listing) => listing.source === "independent_organizer").length,
+    externalHidden: externalListings.filter((listing) => listing.moderationStatus === "hidden").length,
+  };
+
   async function load() {
     setLoading(true);
     const response = await fetch("/api/admin/discovery", { cache: "no-store" });
@@ -327,19 +334,25 @@ export default function DiscoveryAdminClient() {
         <div className="ev-shell-hero-grid">
           <div>
             <div className="ev-kicker">Discovery Control</div>
-            <h1 className="ev-title">Shape the public EVNTSZN discovery experience.</h1>
+            <h1 className="ev-title">Edit homepage messaging, feature native events, and moderate external inventory.</h1>
             <p className="ev-subtitle">
-              Keep layout integrity in code while controlling the homepage hero, promoted discovery messaging, taxonomy blocks, and native listing priority from inside the admin surface.
+              Work section by section. Update homepage copy, adjust city/category blocks, set native event visibility, and keep external inventory clean without turning this into a page builder.
             </p>
           </div>
           <div className="ev-hero-meta">
             <div className="ev-meta-card">
-              <div className="ev-meta-label">Discovery hierarchy</div>
-              <div className="ev-meta-value">Official EVNTSZN events rank first, then hosted network events, then verified independent organizer listings.</div>
+              <div className="ev-meta-label">Native listings</div>
+              <div className="ev-meta-value">
+                {discoveryStats.native} EVNTSZN · {discoveryStats.hosts} host · {discoveryStats.independent} independent
+              </div>
             </div>
             <div className="ev-meta-card">
               <div className="ev-meta-label">Status</div>
               <div className="ev-meta-value">{message || "Discovery controls are connected."}</div>
+            </div>
+            <div className="ev-meta-card">
+              <div className="ev-meta-label">External hidden</div>
+              <div className="ev-meta-value">{discoveryStats.externalHidden} listings are currently suppressed.</div>
             </div>
           </div>
         </div>
@@ -568,20 +581,20 @@ export default function DiscoveryAdminClient() {
           <div className="ev-panel">
             <div className="ev-section-kicker">Listing controls</div>
             <p className="mt-3 text-sm text-white/65">
-              Curate native EVNTSZN discovery priority, source labeling, and featured status without compromising layout integrity.
+              Adjust native event positioning without opening every event record. Keep this list focused on what should surface first.
             </p>
             <div className="mt-5 space-y-4">
               {listings.map((listing) => (
-                <div key={listing.id} className="ev-meta-card">
-                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div key={listing.id} className="rounded-2xl border border-white/10 bg-black/30 p-4">
+                  <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                     <div>
-                      <div className="text-lg font-semibold text-white">{listing.title}</div>
+                      <div className="text-base font-semibold text-white">{listing.title}</div>
                       <div className="mt-1 text-sm text-white/55">
                         {listing.city}, {listing.state}
                       </div>
                     </div>
 
-                    <div className="grid flex-1 gap-3 md:grid-cols-2">
+                    <div className="grid flex-1 gap-3 md:grid-cols-[minmax(0,1fr)_180px_140px_160px_auto]">
                       <select
                         className="ev-select"
                         value={listing.source}
@@ -602,6 +615,7 @@ export default function DiscoveryAdminClient() {
                       <input
                         className="ev-field"
                         value={listing.badgeLabel}
+                        placeholder="Badge label"
                         onChange={(event) =>
                           setListings((current) =>
                             current.map((item) =>
@@ -613,6 +627,7 @@ export default function DiscoveryAdminClient() {
                       <input
                         type="number"
                         className="ev-field"
+                        placeholder="Priority"
                         value={listing.listingPriority}
                         onChange={(event) =>
                           setListings((current) =>
@@ -626,6 +641,7 @@ export default function DiscoveryAdminClient() {
                       />
                       <input
                         className="ev-field"
+                        placeholder="Collection"
                         value={listing.promoCollection || ""}
                         onChange={(event) =>
                           setListings((current) =>
@@ -635,7 +651,7 @@ export default function DiscoveryAdminClient() {
                           )
                         }
                       />
-                      <label className="flex items-center gap-3 text-sm text-white/72">
+                      <label className="flex items-center gap-3 rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white/72">
                         <input
                           type="checkbox"
                           checked={listing.featured}
@@ -647,7 +663,7 @@ export default function DiscoveryAdminClient() {
                             )
                           }
                         />
-                        Featured on discovery
+                        Featured
                       </label>
                       <button
                         type="button"
@@ -655,7 +671,7 @@ export default function DiscoveryAdminClient() {
                         disabled={saving === listing.id}
                         onClick={() => saveListing(listing)}
                       >
-                        {saving === listing.id ? "Saving..." : "Save listing"}
+                        {saving === listing.id ? "Saving..." : "Save"}
                       </button>
                     </div>
                   </div>
@@ -667,15 +683,15 @@ export default function DiscoveryAdminClient() {
           <div className="ev-panel">
             <div className="ev-section-kicker">External moderation</div>
             <p className="mt-3 text-sm text-white/65">
-              Moderate external discovery inventory with real controls for featuring, hiding, de-prioritizing, and copy overrides without treating Ticketmaster/Eventbrite inventory like native EVNTSZN events.
+              Use compact controls here. Change status, adjust rank, and only open override fields when you need to correct a source issue.
             </p>
             <div className="mt-5 space-y-4">
               {externalListings.map((listing) => (
-                <div key={listing.id} className="ev-meta-card">
+                <div key={listing.id} className="rounded-2xl border border-white/10 bg-black/30 p-4">
                   <div className="flex flex-col gap-4">
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
-                        <div className="text-lg font-semibold text-white">{listing.title}</div>
+                        <div className="text-base font-semibold text-white">{listing.title}</div>
                         <div className="mt-1 text-sm text-white/55">
                           {listing.venueName || "External venue"}{listing.city ? ` · ${listing.city}` : ""}{listing.state ? `, ${listing.state}` : ""}
                         </div>
@@ -683,7 +699,7 @@ export default function DiscoveryAdminClient() {
                       <span className="ev-chip ev-chip--external">{listing.moderationStatus.replace(/_/g, " ")}</span>
                     </div>
 
-                    <div className="grid gap-3 md:grid-cols-2">
+                    <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_140px_auto]">
                       <select
                         className="ev-select"
                         value={listing.moderationStatus}
@@ -706,6 +722,7 @@ export default function DiscoveryAdminClient() {
                       <input
                         type="number"
                         className="ev-field"
+                        placeholder="Rank"
                         value={listing.priorityAdjustment}
                         onChange={(event) =>
                           setExternalListings((current) =>
@@ -717,37 +734,47 @@ export default function DiscoveryAdminClient() {
                           )
                         }
                       />
-                      <textarea
-                        className="ev-textarea md:col-span-2"
-                        value={listing.description || ""}
-                        onChange={(event) =>
-                          setExternalListings((current) =>
-                            current.map((item) =>
-                              item.id === listing.id ? { ...item, description: event.target.value } : item,
-                            ),
-                          )
-                        }
-                      />
-                      <textarea
-                        className="ev-textarea md:col-span-2"
-                        value={listing.notes || ""}
-                        onChange={(event) =>
-                          setExternalListings((current) =>
-                            current.map((item) =>
-                              item.id === listing.id ? { ...item, notes: event.target.value } : item,
-                            ),
-                          )
-                        }
-                      />
                       <button
                         type="button"
                         className="ev-button-secondary"
                         disabled={saving === `external:${listing.id}`}
                         onClick={() => saveExternalListing(listing)}
                       >
-                        {saving === `external:${listing.id}` ? "Saving..." : "Save moderation"}
+                        {saving === `external:${listing.id}` ? "Saving..." : "Save"}
                       </button>
                     </div>
+
+                    <details className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                      <summary className="cursor-pointer text-sm font-semibold text-white">Override summary and notes</summary>
+                      <div className="mt-4 grid gap-3">
+                        <textarea
+                          className="ev-textarea"
+                          rows={4}
+                          placeholder="Optional public summary override"
+                          value={listing.description || ""}
+                          onChange={(event) =>
+                            setExternalListings((current) =>
+                              current.map((item) =>
+                                item.id === listing.id ? { ...item, description: event.target.value } : item,
+                              ),
+                            )
+                          }
+                        />
+                        <textarea
+                          className="ev-textarea"
+                          rows={3}
+                          placeholder="Internal moderation note"
+                          value={listing.notes || ""}
+                          onChange={(event) =>
+                            setExternalListings((current) =>
+                              current.map((item) =>
+                                item.id === listing.id ? { ...item, notes: event.target.value } : item,
+                              ),
+                            )
+                          }
+                        />
+                      </div>
+                    </details>
                   </div>
                 </div>
               ))}

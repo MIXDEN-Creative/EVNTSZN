@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { useMemo, useState } from "react";
 
 type ScannerResult = {
   id: string;
@@ -43,6 +44,17 @@ export default function ScannerConsole({
   const [count, setCount] = useState(checkedInCount);
   const [statsOpen, setStatsOpen] = useState(false);
   const [breakdown, setBreakdown] = useState(ticketBreakdown);
+  const [flashState, setFlashState] = useState<"idle" | "success" | "error">("idle");
+
+  const remainingCount = useMemo(() => Math.max(ticketCapacity - count, 0), [count, ticketCapacity]);
+
+  function triggerFlash(state: "success" | "error") {
+    setFlashState(state);
+    if (state === "success" && typeof navigator !== "undefined" && "vibrate" in navigator) {
+      navigator.vibrate?.(60);
+    }
+    setTimeout(() => setFlashState("idle"), 750);
+  }
 
   async function searchTickets(nextQuery = query) {
     setLoading(true);
@@ -63,6 +75,7 @@ export default function ScannerConsole({
     } catch (error) {
       setMessageTone("error");
       setMessage(error instanceof Error ? error.message : "Search failed.");
+      triggerFlash("error");
     } finally {
       setLoading(false);
     }
@@ -105,10 +118,12 @@ export default function ScannerConsole({
         );
       }
       setMessageTone("success");
-      setMessage("Ticket checked in.");
+      setMessage("Check-in complete.");
+      triggerFlash("success");
     } catch (error) {
       setMessageTone("error");
       setMessage(error instanceof Error ? error.message : "Check-in failed.");
+      triggerFlash("error");
     } finally {
       setLoading(false);
     }
@@ -116,6 +131,18 @@ export default function ScannerConsole({
 
   return (
     <div className="min-h-screen bg-black text-white">
+      <AnimatePresence>
+        {flashState !== "idle" ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className={`pointer-events-none fixed inset-0 z-30 ${
+              flashState === "success" ? "bg-emerald-500/12" : "bg-red-500/12"
+            }`}
+          />
+        ) : null}
+      </AnimatePresence>
       <div className="sticky top-0 z-20 border-b border-white/10 bg-black/85 backdrop-blur">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3">
           <div>
@@ -130,9 +157,16 @@ export default function ScannerConsole({
             >
               {statsOpen ? "Hide ticket stats" : "Show ticket stats"}
             </button>
-            <div className="rounded-full border border-white/10 px-3 py-2">Checked in: {count}</div>
+            <motion.div
+              key={count}
+              initial={{ scale: 0.95, opacity: 0.8 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="rounded-full border border-white/10 px-3 py-2"
+            >
+              Checked in: {count}
+            </motion.div>
             <div className="rounded-full border border-white/10 px-3 py-2">
-              Remaining: {Math.max(ticketCapacity - count, 0)}
+              Remaining: {remainingCount}
             </div>
           </div>
         </div>
@@ -197,19 +231,25 @@ export default function ScannerConsole({
             </button>
           </div>
 
-          {message ? (
-            <div
-              className={`mt-4 rounded-2xl border p-4 text-sm ${
-                messageTone === "success"
-                  ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-100"
-                  : messageTone === "error"
-                    ? "border-red-500/20 bg-red-500/10 text-red-100"
-                    : "border-white/10 bg-black/40 text-white/72"
-              }`}
-            >
-              {message}
-            </div>
-          ) : null}
+          <AnimatePresence mode="wait">
+            {message ? (
+              <motion.div
+                key={message}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                className={`mt-4 rounded-2xl border p-4 text-sm ${
+                  messageTone === "success"
+                    ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-100"
+                    : messageTone === "error"
+                      ? "border-red-500/20 bg-red-500/10 text-red-100"
+                      : "border-white/10 bg-black/40 text-white/72"
+                }`}
+              >
+                {messageTone === "success" ? "Checked in. Guest is good to enter." : message}
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
 
           <div className="mt-4 flex items-center justify-between gap-3 text-xs uppercase tracking-[0.18em] text-white/45">
             <span>Results</span>
@@ -217,8 +257,28 @@ export default function ScannerConsole({
           </div>
 
           <div className="mt-5 grid gap-3">
+            {loading && !results.length ? (
+              Array.from({ length: 3 }).map((_, index) => (
+                <div key={`skeleton-${index}`} className="animate-pulse rounded-2xl border border-white/10 bg-black/30 p-4">
+                  <div className="h-3 w-24 rounded bg-white/10" />
+                  <div className="mt-3 h-5 w-40 rounded bg-white/10" />
+                  <div className="mt-2 h-4 w-48 rounded bg-white/10" />
+                </div>
+              ))
+            ) : null}
+
             {results.map((ticket) => (
-              <div key={ticket.id} className="rounded-2xl border border-white/10 bg-black/30 p-4">
+              <motion.div
+                key={ticket.id}
+                layout
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`rounded-2xl border p-4 ${
+                  ticket.status === "checked_in"
+                    ? "border-emerald-500/20 bg-emerald-500/10"
+                    : "border-white/10 bg-black/30"
+                }`}
+              >
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <div className="text-xs uppercase tracking-[0.2em] text-white/45">
@@ -243,10 +303,10 @@ export default function ScannerConsole({
                     {ticket.status === "checked_in" ? "Checked in" : "Check in"}
                   </button>
                 </div>
-              </div>
+              </motion.div>
             ))}
 
-            {!results.length ? (
+            {!results.length && !loading ? (
               <div className="rounded-2xl border border-dashed border-white/15 bg-black/30 p-4 text-sm text-white/52">
                 Search results appear here immediately with direct check-in actions and clear ticket status.
               </div>

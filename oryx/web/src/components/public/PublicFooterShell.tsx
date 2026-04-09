@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { getAppOrigin, getEplOrigin, getHostsOrigin, getWebOrigin } from "@/lib/domains";
 import { PUBLIC_CITIES } from "@/lib/public-cities";
@@ -29,9 +30,12 @@ export default function PublicFooterShell({
                   className="rounded-[22px] border border-white/10 bg-black/30 p-4 transition hover:bg-white/[0.08]"
                 >
                   {placement.logo_url || placement.website_url ? (
-                    <img
+                    <Image
                       src={placement.logo_url || getLogoFallbackUrl(placement.website_url) || getFaviconFallbackUrl(placement.website_url) || ""}
                       alt={placement.name}
+                      width={160}
+                      height={48}
+                      unoptimized
                       className="h-12 w-auto max-w-[160px] object-contain"
                     />
                   ) : (

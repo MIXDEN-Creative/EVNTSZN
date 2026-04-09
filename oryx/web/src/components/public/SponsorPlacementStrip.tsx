@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import type { SponsorPlacement } from "@/lib/sponsor-placements";
 import { getFaviconFallbackUrl, getLogoFallbackUrl } from "@/lib/external-integrations";
@@ -32,17 +33,23 @@ export default function SponsorPlacementStrip({
               <div className="rounded-[24px] border border-white/10 bg-white/5 p-5 transition hover:bg-white/[0.08]">
                 {placement.logo_url ? (
                   <div className="flex h-16 items-center">
-                    <img
+                    <Image
                       src={placement.logo_url || getLogoFallbackUrl(placement.website_url) || getFaviconFallbackUrl(placement.website_url) || ""}
                       alt={placement.name}
+                      width={180}
+                      height={56}
+                      unoptimized
                       className="max-h-14 w-auto max-w-[180px] object-contain"
                     />
                   </div>
                 ) : placement.website_url ? (
                   <div className="flex h-16 items-center">
-                    <img
+                    <Image
                       src={getLogoFallbackUrl(placement.website_url) || getFaviconFallbackUrl(placement.website_url) || ""}
                       alt={placement.name}
+                      width={180}
+                      height={56}
+                      unoptimized
                       className="max-h-14 w-auto max-w-[180px] object-contain"
                     />
                   </div>

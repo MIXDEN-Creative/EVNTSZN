@@ -63,6 +63,12 @@ export default function OrganizerDashboard({ canOperate, events }: OrganizerDash
     isActive: true,
   });
 
+  const stats = {
+    total: events.length,
+    published: events.filter((event) => event.status === "published").length,
+    checkIns: events.reduce((total, event) => total + (event.check_in_count || 0), 0),
+  };
+
   useEffect(() => {
     if (!selectedEventId) return;
     void loadManagedEvent(selectedEventId);
@@ -241,42 +247,68 @@ export default function OrganizerDashboard({ canOperate, events }: OrganizerDash
     <div className="grid gap-8 xl:grid-cols-[0.8fr_1fr_0.95fr]">
       <section className="rounded-[32px] border border-white/10 bg-white/[0.03] p-6">
         <p className="text-xs uppercase tracking-[0.26em] text-[#A259FF]">Create event</p>
-        <h2 className="mt-3 text-3xl font-semibold">Launch a premium ticketed experience</h2>
+        <h2 className="mt-3 text-3xl font-semibold">Launch the next event</h2>
+        <p className="mt-2 text-sm text-white/60">
+          Start with event identity, set the first ticket, then publish when the page is ready.
+        </p>
         <form onSubmit={createEvent} className="mt-6 grid gap-4">
-          {[
-            ["title", "Event title"],
-            ["subtitle", "Subtitle"],
-            ["venueName", "Venue name"],
-            ["city", "City"],
-            ["state", "State"],
-            ["startAt", "Start ISO datetime"],
-            ["endAt", "End ISO datetime"],
-            ["capacity", "Capacity"],
-            ["ticketTypeName", "Ticket type"],
-            ["ticketPriceCents", "Ticket price cents"],
-            ["ticketQuantityTotal", "Ticket quantity"],
-            ["salesStartAt", "Ticket sales start ISO"],
-            ["salesEndAt", "Ticket sales end ISO"],
-          ].map(([key, label]) => (
-            <input
-              key={key}
-              value={form[key as keyof typeof form] as string}
-              onChange={(e) => setForm({ ...form, [key]: e.target.value })}
-              placeholder={label}
-              className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none"
-              required={["title", "venueName", "city", "state", "startAt", "endAt"].includes(key)}
-            />
-          ))}
+          <div className="rounded-[24px] border border-white/10 bg-black/25 p-5">
+            <div className="text-xs uppercase tracking-[0.22em] text-[#caa7ff]">Step 1</div>
+            <div className="mt-2 text-lg font-semibold text-white">Event basics</div>
+            <div className="mt-4 grid gap-4">
+              {[
+                ["title", "Event title"],
+                ["subtitle", "Subtitle"],
+                ["venueName", "Venue name"],
+                ["city", "City"],
+                ["state", "State"],
+                ["startAt", "Start ISO datetime"],
+                ["endAt", "End ISO datetime"],
+                ["capacity", "Capacity"],
+              ].map(([key, label]) => (
+                <input
+                  key={key}
+                  value={form[key as keyof typeof form] as string}
+                  onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+                  placeholder={label}
+                  className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none"
+                  required={["title", "venueName", "city", "state", "startAt", "endAt"].includes(key)}
+                />
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-[24px] border border-white/10 bg-black/25 p-5">
+            <div className="text-xs uppercase tracking-[0.22em] text-[#caa7ff]">Step 2</div>
+            <div className="mt-2 text-lg font-semibold text-white">Opening ticket release</div>
+            <div className="mt-4 grid gap-4">
+              {[
+                ["ticketTypeName", "Ticket type"],
+                ["ticketPriceCents", "Ticket price cents"],
+                ["ticketQuantityTotal", "Ticket quantity"],
+                ["salesStartAt", "Ticket sales start ISO"],
+                ["salesEndAt", "Ticket sales end ISO"],
+              ].map(([key, label]) => (
+                <input
+                  key={key}
+                  value={form[key as keyof typeof form] as string}
+                  onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+                  placeholder={label}
+                  className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none"
+                />
+              ))}
+            </div>
+          </div>
           <textarea
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
-            placeholder="Operational description"
+            placeholder="Public description"
             className="min-h-[140px] rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none"
           />
           <textarea
             value={form.heroNote}
             onChange={(e) => setForm({ ...form, heroNote: e.target.value })}
-            placeholder="Premium hero note"
+            placeholder="Hero note"
             className="min-h-[120px] rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none"
           />
           <label className="inline-flex items-center gap-3 text-sm text-white/72">
@@ -300,7 +332,19 @@ export default function OrganizerDashboard({ canOperate, events }: OrganizerDash
 
       <section className="rounded-[32px] border border-white/10 bg-white/[0.03] p-6">
         <p className="text-xs uppercase tracking-[0.26em] text-[#A259FF]">Control tower</p>
-        <h2 className="mt-3 text-3xl font-semibold">Organizer command center</h2>
+        <h2 className="mt-3 text-3xl font-semibold">Your live event queue</h2>
+        <div className="mt-5 grid gap-3 sm:grid-cols-3">
+          {[
+            ["Events", stats.total],
+            ["Published", stats.published],
+            ["Check-ins", stats.checkIns],
+          ].map(([label, value]) => (
+            <div key={String(label)} className="rounded-2xl border border-white/10 bg-black/25 p-4">
+              <div className="text-xs uppercase tracking-[0.18em] text-white/45">{label}</div>
+              <div className="mt-2 text-2xl font-semibold text-white">{value}</div>
+            </div>
+          ))}
+        </div>
         <div className="mt-6 grid gap-4">
           {events.map((event) => (
             <div key={event.id} className="rounded-[28px] border border-white/10 bg-black/30 p-5">
@@ -352,7 +396,7 @@ export default function OrganizerDashboard({ canOperate, events }: OrganizerDash
       <section className="grid gap-6">
         <div className="rounded-[32px] border border-white/10 bg-white/[0.03] p-6">
           <p className="text-xs uppercase tracking-[0.26em] text-[#A259FF]">Ticketing</p>
-          <h2 className="mt-3 text-3xl font-semibold">Live inventory controls</h2>
+          <h2 className="mt-3 text-3xl font-semibold">Ticket release controls</h2>
           {!selectedEventId ? (
             <div className="mt-6 text-sm text-white/60">Select one of your events to manage ticket releases.</div>
           ) : (
@@ -402,7 +446,7 @@ export default function OrganizerDashboard({ canOperate, events }: OrganizerDash
 
         <div className="rounded-[32px] border border-white/10 bg-white/[0.03] p-6">
           <p className="text-xs uppercase tracking-[0.26em] text-[#A259FF]">Event operations</p>
-          <h2 className="mt-3 text-3xl font-semibold">Run of show</h2>
+          <h2 className="mt-3 text-3xl font-semibold">Run of show and notes</h2>
           {!selectedEventId ? (
             <div className="mt-6 text-sm text-white/60">Select one of your events to manage event operations.</div>
           ) : (

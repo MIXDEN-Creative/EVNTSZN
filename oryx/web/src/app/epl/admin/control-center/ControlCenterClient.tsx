@@ -31,6 +31,28 @@ export default function ControlCenterClient() {
   const hostOrganizerMix = data?.hostOrganizerMix || { hosts: 0, independentOrganizers: 0 };
   const cityReadinessCounts = data?.cityReadinessCounts || [];
   const supportCountsByType = data?.supportCountsByType || [];
+  const todayQueue = [
+    {
+      label: "Support waiting",
+      value: stats?.supportTicketsOpen ?? 0,
+      note: "Open the support desk and work the oldest waiting tickets first.",
+    },
+    {
+      label: "Approvals waiting",
+      value: stats?.pendingApprovals ?? 0,
+      note: "Review host, organizer, and partner requests before they stall.",
+    },
+    {
+      label: "Program reviews",
+      value: stats?.pendingProgramReviews ?? 0,
+      note: "Move Signal and Ambassador applicants to the next stage.",
+    },
+    {
+      label: "Open issues",
+      value: stats?.openIssues ?? 0,
+      note: "Check the issue desk for anything affecting payments, store, or webhooks.",
+    },
+  ];
 
   return (
     <main className="mx-auto max-w-7xl">
@@ -51,6 +73,41 @@ export default function ControlCenterClient() {
           {message}
         </div>
       ) : null}
+
+      {!data && !message ? (
+        <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {Array.from({ length: 8 }).map((_, index) => (
+            <div key={`command-skeleton-${index}`} className="animate-pulse rounded-2xl border border-white/10 bg-black/30 p-5">
+              <div className="h-3 w-24 rounded bg-white/10" />
+              <div className="mt-4 h-8 w-20 rounded bg-white/10" />
+              <div className="mt-3 h-4 w-40 rounded bg-white/10" />
+            </div>
+          ))}
+        </div>
+      ) : null}
+
+      <section className="mt-6 ev-panel p-6">
+        <div className="ev-section-kicker">Today</div>
+        <h2 className="mt-3 text-2xl font-bold text-white">Start with the queues that can block the day.</h2>
+        <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {todayQueue.map((item) => (
+            <div key={item.label} className="rounded-2xl border border-white/10 bg-black/30 p-4">
+              <div className="text-xs uppercase tracking-[0.18em] text-white/45">{item.label}</div>
+              <div className="mt-2 text-3xl font-semibold text-white">{item.value}</div>
+              <div className="mt-2 text-sm leading-6 text-white/60">{item.note}</div>
+              {Number(item.value) > 0 ? (
+                <div className="mt-3 inline-flex rounded-full border border-[#A259FF]/30 bg-[#A259FF]/10 px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-[#d8c2ff]">
+                  Needs attention
+                </div>
+              ) : (
+                <div className="mt-3 inline-flex rounded-full border border-emerald-400/20 bg-emerald-500/10 px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-emerald-100">
+                  You&apos;re ahead of schedule
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </section>
 
       <div className="mt-6 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
         {[

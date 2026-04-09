@@ -25,6 +25,32 @@ const roleOptions = getOperatorRoleOptions();
 const organizerClassificationOptions = getOrganizerClassificationOptions();
 const primaryRoles = ["attendee", "organizer", "venue", "scanner", "admin"];
 
+const emptyCreateForm = {
+  email: "",
+  full_name: "",
+  password: "",
+  primary_role: "attendee",
+  role_key: "host",
+  organizer_classification: "evntszn_host",
+  network_status: "active",
+  city: "",
+  state: "",
+  job_title: "",
+  functions: "",
+  city_scope: "",
+  dashboard_access: "",
+  surface_access: "",
+  module_access: "",
+  approval_authority: "",
+  team_scope: "",
+  sponsor_scope: "",
+  can_manage_content: false,
+  can_manage_discovery: false,
+  can_manage_store: false,
+  can_manage_sponsors: false,
+  can_access_scanner: false,
+};
+
 function parseList(value: string) {
   return value
     .split(",")
@@ -41,32 +67,11 @@ export default function UsersAdminClient() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-  const [createForm, setCreateForm] = useState({
-    email: "",
-    full_name: "",
-    password: "",
-    primary_role: "attendee",
-    role_key: "host",
-    organizer_classification: "evntszn_host",
-    network_status: "active",
-    city: "",
-    state: "",
-    job_title: "",
-    functions: "",
-    city_scope: "",
-    dashboard_access: "",
-    surface_access: "",
-    module_access: "",
-    approval_authority: "",
-    team_scope: "",
-    sponsor_scope: "",
-    can_manage_content: false,
-    can_manage_discovery: false,
-    can_manage_store: false,
-    can_manage_sponsors: false,
-    can_access_scanner: false,
-  });
+  const [createForm, setCreateForm] = useState(emptyCreateForm);
   const [editor, setEditor] = useState<Record<string, any> | null>(null);
+  const [savingCreate, setSavingCreate] = useState(false);
+  const [savingUser, setSavingUser] = useState(false);
+  const [query, setQuery] = useState("");
 
   async function load() {
     setLoading(true);
@@ -91,6 +96,35 @@ export default function UsersAdminClient() {
   const selectedUser = useMemo(
     () => users.find((user) => user.user_id === selectedUserId) || null,
     [selectedUserId, users],
+  );
+
+  const filteredUsers = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
+    if (!normalizedQuery) return users;
+    return users.filter((user) =>
+      [
+        user.full_name,
+        user.primary_role,
+        user.city,
+        user.state,
+        user.operator_profile?.role_key,
+        user.operator_profile?.job_title,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase()
+        .includes(normalizedQuery),
+    );
+  }, [query, users]);
+
+  const stats = useMemo(
+    () => ({
+      total: users.length,
+      active: users.filter((user) => user.is_active).length,
+      scanner: users.filter((user) => Boolean(user.operator_profile?.can_access_scanner)).length,
+      hq: users.filter((user) => user.admin_membership?.roles?.includes("hq_operator")).length,
+    }),
+    [users],
   );
 
   useEffect(() => {
@@ -130,6 +164,7 @@ export default function UsersAdminClient() {
 
   async function createUser(event: React.FormEvent) {
     event.preventDefault();
+    setSavingCreate(true);
     setMessage("");
 
     const res = await fetch("/api/admin/operator-users", {
@@ -149,41 +184,20 @@ export default function UsersAdminClient() {
     });
 
     const data = (await res.json()) as { error?: string };
+    setSavingCreate(false);
     if (!res.ok) {
       setMessage(data.error || "Could not create user.");
       return;
     }
 
-    setCreateForm({
-      email: "",
-      full_name: "",
-      password: "",
-      primary_role: "attendee",
-      role_key: "host",
-      organizer_classification: "evntszn_host",
-      network_status: "active",
-      city: "",
-      state: "",
-      job_title: "",
-      functions: "",
-      city_scope: "",
-      dashboard_access: "",
-      surface_access: "",
-      module_access: "",
-      approval_authority: "",
-      team_scope: "",
-      sponsor_scope: "",
-      can_manage_content: false,
-      can_manage_discovery: false,
-      can_manage_store: false,
-      can_manage_sponsors: false,
-      can_access_scanner: false,
-    });
+    setCreateForm(emptyCreateForm);
+    setMessage("User created.");
     await load();
   }
 
   async function saveSelectedUser() {
     if (!selectedUser || !editor) return;
+    setSavingUser(true);
     setMessage("");
 
     const res = await fetch(`/api/admin/operator-users/${selectedUser.user_id}`, {
@@ -202,6 +216,7 @@ export default function UsersAdminClient() {
       }),
     });
     const data = (await res.json()) as { error?: string };
+    setSavingUser(false);
     if (!res.ok) {
       setMessage(data.error || "Could not update user.");
       return;
@@ -216,21 +231,24 @@ export default function UsersAdminClient() {
       <section className="ev-shell-hero">
         <div className="ev-shell-hero-grid">
           <div>
-            <div className="ev-kicker">Operator directory</div>
-            <h1 className="ev-title">Run access, job function, and operating scope from one user surface.</h1>
+            <div className="ev-kicker">User directory</div>
+            <h1 className="ev-title">Create staff accounts, assign scope, and keep access clean.</h1>
             <p className="ev-subtitle">
-              Provision users, set role and job identity, define city and module scope, and control who can access admin, ops, scanner, content, discovery, store, and sponsor workflows.
+              Use this workspace to provision operator accounts, define the operating track, and control who can reach dashboards, modules, and scanner access.
             </p>
           </div>
-          <div className="ev-hero-meta">
-            <div className="ev-meta-card">
-              <div className="ev-meta-label">Visible users</div>
-              <div className="ev-meta-value">{users.length} profiles loaded into the command layer.</div>
-            </div>
-            <div className="ev-meta-card">
-              <div className="ev-meta-label">Operator presets</div>
-              <div className="ev-meta-value">{roleOptions.length} role presets available for assignment and override.</div>
-            </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {[
+              ["Profiles", stats.total],
+              ["Active", stats.active],
+              ["Scanner", stats.scanner],
+              ["HQ roles", stats.hq],
+            ].map(([label, value]) => (
+              <div key={String(label)} className="ev-meta-card">
+                <div className="ev-meta-label">{label}</div>
+                <div className="ev-meta-value">{value}</div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -239,82 +257,235 @@ export default function UsersAdminClient() {
         <div className="mt-4 rounded-2xl border border-white/10 bg-black/30 p-4 text-sm text-white/78">{message}</div>
       ) : null}
 
-      <div className="mt-6 grid gap-6 xl:grid-cols-[380px_1fr]">
-        <section className="ev-panel p-6">
-          <div className="ev-section-kicker">Create user</div>
-          <h2 className="mt-3 text-2xl font-bold text-white">Provision a platform operator or staff account</h2>
-          <form onSubmit={createUser} className="mt-5 grid gap-4">
-            <input className="ev-field" placeholder="Full name" value={createForm.full_name} onChange={(e) => setCreateForm({ ...createForm, full_name: e.target.value })} />
-            <input className="ev-field" type="email" placeholder="Email" value={createForm.email} onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })} required />
-            <input className="ev-field" type="password" placeholder="Temporary password" value={createForm.password} onChange={(e) => setCreateForm({ ...createForm, password: e.target.value })} required />
-            <div className="grid gap-4 md:grid-cols-2">
-              <select className="ev-field" value={createForm.primary_role} onChange={(e) => setCreateForm({ ...createForm, primary_role: e.target.value })}>
-                {primaryRoles.map((role) => (
-                  <option key={role} value={role}>{role}</option>
-                ))}
-              </select>
-              <select className="ev-field" value={createForm.role_key} onChange={(e) => setCreateForm({ ...createForm, role_key: e.target.value })}>
-                {roleOptions.map((role) => (
-                  <option key={role.value} value={role.value}>{role.label}</option>
-                ))}
-              </select>
-            </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <select className="ev-field" value={createForm.organizer_classification} onChange={(e) => setCreateForm({ ...createForm, organizer_classification: e.target.value })}>
-                {organizerClassificationOptions.map((classification) => (
-                  <option key={classification.value} value={classification.value}>{classification.label}</option>
-                ))}
-              </select>
-              <select className="ev-field" value={createForm.network_status} onChange={(e) => setCreateForm({ ...createForm, network_status: e.target.value })}>
-                {["prospect", "active", "paused", "alumni"].map((status) => (
-                  <option key={status} value={status}>{status}</option>
-                ))}
-              </select>
-            </div>
-            <input className="ev-field" placeholder="Job title" value={createForm.job_title} onChange={(e) => setCreateForm({ ...createForm, job_title: e.target.value })} />
-            <input className="ev-field" placeholder="Functions (comma separated)" value={createForm.functions} onChange={(e) => setCreateForm({ ...createForm, functions: e.target.value })} />
-            <div className="grid gap-4 md:grid-cols-2">
-              <input className="ev-field" placeholder="City" value={createForm.city} onChange={(e) => setCreateForm({ ...createForm, city: e.target.value })} />
-              <input className="ev-field" placeholder="State" value={createForm.state} onChange={(e) => setCreateForm({ ...createForm, state: e.target.value })} />
-            </div>
-            <textarea className="ev-textarea" rows={2} placeholder="City scope (comma separated)" value={createForm.city_scope} onChange={(e) => setCreateForm({ ...createForm, city_scope: e.target.value })} />
-            <textarea className="ev-textarea" rows={2} placeholder="Dashboards (hq, admin, city, ops, scanner, hosts, analytics...)" value={createForm.dashboard_access} onChange={(e) => setCreateForm({ ...createForm, dashboard_access: e.target.value })} />
-            <textarea className="ev-textarea" rows={2} placeholder="Surfaces (admin, hq, ops, scanner, hosts...)" value={createForm.surface_access} onChange={(e) => setCreateForm({ ...createForm, surface_access: e.target.value })} />
-            <textarea className="ev-textarea" rows={2} placeholder="Modules (users, discovery, epl, sponsors, store...)" value={createForm.module_access} onChange={(e) => setCreateForm({ ...createForm, module_access: e.target.value })} />
-            <textarea className="ev-textarea" rows={2} placeholder="Approval authority (host, organizer, partner, all...)" value={createForm.approval_authority} onChange={(e) => setCreateForm({ ...createForm, approval_authority: e.target.value })} />
-            <div className="grid gap-4 md:grid-cols-2">
-              <textarea className="ev-textarea" rows={2} placeholder="Team scope" value={createForm.team_scope} onChange={(e) => setCreateForm({ ...createForm, team_scope: e.target.value })} />
-              <textarea className="ev-textarea" rows={2} placeholder="Sponsor scope" value={createForm.sponsor_scope} onChange={(e) => setCreateForm({ ...createForm, sponsor_scope: e.target.value })} />
-            </div>
-            <div className="grid gap-3 md:grid-cols-2">
-              {[
-                ["can_manage_content", "Content"],
-                ["can_manage_discovery", "Discovery"],
-                ["can_manage_store", "Store"],
-                ["can_manage_sponsors", "Sponsors"],
-                ["can_access_scanner", "Scanner"],
-              ].map(([key, label]) => (
-                <label key={key} className="flex items-center gap-3 text-sm text-white/72">
+      <div className="mt-6 grid gap-6 xl:grid-cols-[0.92fr_1.08fr]">
+        <section className="grid gap-6">
+          <section className="ev-panel p-6">
+            <div className="ev-section-kicker">Create user</div>
+            <h2 className="mt-3 text-2xl font-bold text-white">Provision a new internal account</h2>
+            <p className="mt-2 text-sm text-white/60">
+              Move left to right: identity first, then access, then scope. Advanced notes stay collapsed until needed.
+            </p>
+
+            <form onSubmit={createUser} className="mt-6 grid gap-6">
+              <div className="rounded-2xl border border-white/10 bg-black/25 p-5">
+                <div className="text-xs uppercase tracking-[0.22em] text-[#caa7ff]">Step 1</div>
+                <div className="mt-2 text-lg font-semibold text-white">Identity</div>
+                <div className="mt-4 grid gap-4 md:grid-cols-2">
                   <input
-                    type="checkbox"
-                    checked={Boolean(createForm[key as keyof typeof createForm])}
-                    onChange={(e) => setCreateForm({ ...createForm, [key]: e.target.checked })}
+                    className="ev-field"
+                    placeholder="Full name"
+                    value={createForm.full_name}
+                    onChange={(e) => setCreateForm({ ...createForm, full_name: e.target.value })}
                   />
-                  {label} capability
-                </label>
-              ))}
-            </div>
-            <button type="submit" className="ev-button-primary">Create user</button>
-          </form>
+                  <input
+                    className="ev-field"
+                    type="email"
+                    placeholder="Email"
+                    value={createForm.email}
+                    onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-white/10 bg-black/25 p-5">
+                <div className="text-xs uppercase tracking-[0.22em] text-[#caa7ff]">Step 2</div>
+                <div className="mt-2 text-lg font-semibold text-white">Access</div>
+                <div className="mt-4 grid gap-4 md:grid-cols-2">
+                  <select
+                    className="ev-field"
+                    value={createForm.primary_role}
+                    onChange={(e) => setCreateForm({ ...createForm, primary_role: e.target.value })}
+                  >
+                    {primaryRoles.map((role) => (
+                      <option key={role} value={role}>
+                        {role}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    className="ev-field"
+                    value={createForm.role_key}
+                    onChange={(e) => setCreateForm({ ...createForm, role_key: e.target.value })}
+                  >
+                    {roleOptions.map((role) => (
+                      <option key={role.value} value={role.value}>
+                        {role.label}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    className="ev-field"
+                    value={createForm.organizer_classification}
+                    onChange={(e) =>
+                      setCreateForm({ ...createForm, organizer_classification: e.target.value })
+                    }
+                  >
+                    {organizerClassificationOptions.map((classification) => (
+                      <option key={classification.value} value={classification.value}>
+                        {classification.label}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    className="ev-field"
+                    value={createForm.network_status}
+                    onChange={(e) => setCreateForm({ ...createForm, network_status: e.target.value })}
+                  >
+                    {["prospect", "active", "paused", "alumni"].map((status) => (
+                      <option key={status} value={status}>
+                        {status}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-white/10 bg-black/25 p-5">
+                <div className="text-xs uppercase tracking-[0.22em] text-[#caa7ff]">Step 3</div>
+                <div className="mt-2 text-lg font-semibold text-white">Scope</div>
+                <div className="mt-4 grid gap-4 md:grid-cols-2">
+                  <input
+                    className="ev-field"
+                    placeholder="City"
+                    value={createForm.city}
+                    onChange={(e) => setCreateForm({ ...createForm, city: e.target.value })}
+                  />
+                  <input
+                    className="ev-field"
+                    placeholder="State"
+                    value={createForm.state}
+                    onChange={(e) => setCreateForm({ ...createForm, state: e.target.value })}
+                  />
+                  <input
+                    className="ev-field"
+                    placeholder="Job title"
+                    value={createForm.job_title}
+                    onChange={(e) => setCreateForm({ ...createForm, job_title: e.target.value })}
+                  />
+                  <input
+                    className="ev-field"
+                    placeholder="Functions, comma separated"
+                    value={createForm.functions}
+                    onChange={(e) => setCreateForm({ ...createForm, functions: e.target.value })}
+                  />
+                  <input
+                    className="ev-field"
+                    placeholder="City scope"
+                    value={createForm.city_scope}
+                    onChange={(e) => setCreateForm({ ...createForm, city_scope: e.target.value })}
+                  />
+                  <input
+                    className="ev-field"
+                    placeholder="Dashboards"
+                    value={createForm.dashboard_access}
+                    onChange={(e) => setCreateForm({ ...createForm, dashboard_access: e.target.value })}
+                  />
+                  <input
+                    className="ev-field"
+                    placeholder="Surfaces"
+                    value={createForm.surface_access}
+                    onChange={(e) => setCreateForm({ ...createForm, surface_access: e.target.value })}
+                  />
+                  <input
+                    className="ev-field"
+                    placeholder="Modules"
+                    value={createForm.module_access}
+                    onChange={(e) => setCreateForm({ ...createForm, module_access: e.target.value })}
+                  />
+                </div>
+
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  {[
+                    ["can_manage_content", "Content"],
+                    ["can_manage_discovery", "Discovery"],
+                    ["can_manage_store", "Store"],
+                    ["can_manage_sponsors", "Sponsors"],
+                    ["can_access_scanner", "Scanner"],
+                  ].map(([key, label]) => (
+                    <label
+                      key={key}
+                      className="flex items-center gap-3 rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/78"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={Boolean(createForm[key as keyof typeof createForm])}
+                        onChange={(e) => setCreateForm({ ...createForm, [key]: e.target.checked })}
+                      />
+                      {label} access
+                    </label>
+                  ))}
+                </div>
+
+                <details className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4">
+                  <summary className="cursor-pointer text-sm font-semibold text-white">Advanced</summary>
+                  <div className="mt-4 grid gap-4">
+                    <input
+                      className="ev-field"
+                      type="password"
+                      placeholder="Temporary password"
+                      value={createForm.password}
+                      onChange={(e) => setCreateForm({ ...createForm, password: e.target.value })}
+                      required
+                    />
+                    <textarea
+                      className="ev-textarea"
+                      rows={2}
+                      placeholder="Approval authority"
+                      value={createForm.approval_authority}
+                      onChange={(e) => setCreateForm({ ...createForm, approval_authority: e.target.value })}
+                    />
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <textarea
+                        className="ev-textarea"
+                        rows={2}
+                        placeholder="Team scope"
+                        value={createForm.team_scope}
+                        onChange={(e) => setCreateForm({ ...createForm, team_scope: e.target.value })}
+                      />
+                      <textarea
+                        className="ev-textarea"
+                        rows={2}
+                        placeholder="Sponsor scope"
+                        value={createForm.sponsor_scope}
+                        onChange={(e) => setCreateForm({ ...createForm, sponsor_scope: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                </details>
+              </div>
+
+              <button type="submit" disabled={savingCreate} className="ev-button-primary">
+                {savingCreate ? "Creating..." : "Create user"}
+              </button>
+            </form>
+          </section>
         </section>
 
         <section className="grid gap-6">
-          <div className="grid gap-6 xl:grid-cols-[320px_1fr]">
-            <section className="ev-panel p-5">
-              <div className="ev-section-kicker">Roster</div>
-              <div className="mt-4 space-y-3">
-                {loading ? <div className="text-white/60">Loading users...</div> : null}
-                {users.map((user) => (
+          <section className="ev-panel p-5">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <div className="ev-section-kicker">Roster</div>
+                <div className="mt-2 text-xl font-bold text-white">Find an operator and update scope</div>
+              </div>
+              <input
+                className="ev-field max-w-xs"
+                placeholder="Search name, role, city"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+              />
+            </div>
+
+            <div className="mt-5 grid gap-6 xl:grid-cols-[320px_1fr]">
+              <div className="space-y-3">
+                {loading ? <div className="text-sm text-white/60">Loading users...</div> : null}
+                {!loading && !filteredUsers.length ? (
+                  <div className="rounded-2xl border border-white/10 bg-black/30 p-4 text-sm text-white/55">
+                    No users match the current search.
+                  </div>
+                ) : null}
+                {filteredUsers.map((user) => (
                   <button
                     key={user.user_id}
                     type="button"
@@ -322,7 +493,7 @@ export default function UsersAdminClient() {
                     className={`w-full rounded-2xl border p-4 text-left transition ${
                       user.user_id === selectedUserId
                         ? "border-[#A259FF]/40 bg-[#A259FF]/10"
-                        : "border-white/10 bg-black/30 hover:bg-white/[0.05]"
+                        : "border-white/10 bg-black/30 hover:bg-white/[0.04]"
                     }`}
                   >
                     <div className="text-base font-semibold text-white">{user.full_name || user.user_id}</div>
@@ -335,126 +506,162 @@ export default function UsersAdminClient() {
                       )}
                     </div>
                     <div className="mt-2 text-sm text-white/55">
-                      {user.city || "No city"}{user.state ? `, ${user.state}` : ""}
+                      {user.city || "No city"}
+                      {user.state ? `, ${user.state}` : ""}
                     </div>
                   </button>
                 ))}
               </div>
-            </section>
 
-            <section className="ev-panel p-6">
-              {!selectedUser || !editor ? (
-                <div className="rounded-2xl border border-white/10 bg-black/30 p-5 text-white/60">
-                  Select a user to edit role, job, functions, and scope.
-                </div>
-              ) : (
-                <>
-                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                    <div>
-                      <div className="ev-section-kicker">Selected operator</div>
-                      <h2 className="mt-3 text-2xl font-bold text-white">{selectedUser.full_name || selectedUser.user_id}</h2>
-                    <div className="mt-2 flex flex-wrap gap-2 text-xs uppercase tracking-[0.18em] text-[#caa7ff]">
-                      <span>{selectedUser.admin_membership?.isOwner ? "Founder override" : selectedUser.operator_preset?.label || "Custom operator"}</span>
-                      <span>{selectedUser.is_active ? "active" : "disabled"}</span>
-                      <span>{getOrganizerClassificationLabel(String(editor.organizer_classification || "evntszn_host"))}</span>
-                      <span>{String(editor.network_status || "active").replace(/_/g, " ")}</span>
-                      {selectedUser.admin_membership?.roles?.map((role) => (
-                        <span key={role}>{role}</span>
-                      ))}
+              <div>
+                {!selectedUser || !editor ? (
+                  <div className="rounded-2xl border border-white/10 bg-black/30 p-5 text-white/60">
+                    Select a user to update their role, operating track, scope, and access flags.
+                  </div>
+                ) : (
+                  <div className="grid gap-6">
+                    <div className="rounded-2xl border border-white/10 bg-black/30 p-5">
+                      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                        <div>
+                          <div className="ev-section-kicker">Selected user</div>
+                          <h2 className="mt-3 text-2xl font-bold text-white">
+                            {selectedUser.full_name || selectedUser.user_id}
+                          </h2>
+                          <div className="mt-3 flex flex-wrap gap-2 text-[11px] uppercase tracking-[0.18em] text-[#caa7ff]">
+                            <span>
+                              {selectedUser.admin_membership?.isOwner
+                                ? "Founder override"
+                                : selectedUser.operator_preset?.label || "Custom operator"}
+                            </span>
+                            <span>{selectedUser.is_active ? "active" : "disabled"}</span>
+                            <span>
+                              {getOrganizerClassificationLabel(
+                                String(editor.organizer_classification || "evntszn_host"),
+                              )}
+                            </span>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => void saveSelectedUser()}
+                          disabled={savingUser}
+                          className="ev-button-primary"
+                        >
+                          {savingUser ? "Saving..." : "Save user"}
+                        </button>
                       </div>
                     </div>
-                    <button onClick={saveSelectedUser} className="ev-button-primary">
-                      Save changes
-                    </button>
-                  </div>
 
-                  <div className="mt-6 grid gap-4 md:grid-cols-2">
-                    <input className="ev-field" value={editor.full_name} onChange={(e) => setEditor({ ...editor, full_name: e.target.value })} />
-                    <select className="ev-field" value={editor.primary_role} onChange={(e) => setEditor({ ...editor, primary_role: e.target.value })}>
-                      {primaryRoles.map((role) => (
-                        <option key={role} value={role}>{role}</option>
-                      ))}
-                    </select>
-                    <select className="ev-field" value={editor.role_key} onChange={(e) => setEditor({ ...editor, role_key: e.target.value })}>
-                      {roleOptions.map((role) => (
-                        <option key={role.value} value={role.value}>{role.label}</option>
-                      ))}
-                    </select>
-                    <select className="ev-field" value={editor.organizer_classification} onChange={(e) => setEditor({ ...editor, organizer_classification: e.target.value })}>
-                      {organizerClassificationOptions.map((classification) => (
-                        <option key={classification.value} value={classification.value}>{classification.label}</option>
-                      ))}
-                    </select>
-                    <select className="ev-field" value={editor.network_status} onChange={(e) => setEditor({ ...editor, network_status: e.target.value })}>
-                      {["prospect", "active", "paused", "alumni"].map((status) => (
-                        <option key={status} value={status}>{status}</option>
-                      ))}
-                    </select>
-                    <input className="ev-field" value={editor.job_title} placeholder="Job title" onChange={(e) => setEditor({ ...editor, job_title: e.target.value })} />
-                    <input className="ev-field" value={editor.city} placeholder="City" onChange={(e) => setEditor({ ...editor, city: e.target.value })} />
-                    <input className="ev-field" value={editor.state} placeholder="State" onChange={(e) => setEditor({ ...editor, state: e.target.value })} />
-                    <input className="ev-field" value={editor.phone} placeholder="Phone" onChange={(e) => setEditor({ ...editor, phone: e.target.value })} />
-                    <input className="ev-field" value={editor.notes} placeholder="Internal notes" onChange={(e) => setEditor({ ...editor, notes: e.target.value })} />
-                  </div>
+                    <div className="grid gap-6 lg:grid-cols-2">
+                      <div className="rounded-2xl border border-white/10 bg-black/30 p-5">
+                        <div className="text-xs uppercase tracking-[0.22em] text-white/45">Identity</div>
+                        <div className="mt-4 grid gap-4">
+                          <input className="ev-field" value={editor.full_name} onChange={(e) => setEditor({ ...editor, full_name: e.target.value })} />
+                          <div className="grid gap-4 md:grid-cols-2">
+                            <input className="ev-field" value={editor.city} placeholder="City" onChange={(e) => setEditor({ ...editor, city: e.target.value })} />
+                            <input className="ev-field" value={editor.state} placeholder="State" onChange={(e) => setEditor({ ...editor, state: e.target.value })} />
+                          </div>
+                          <div className="grid gap-4 md:grid-cols-2">
+                            <input className="ev-field" value={editor.phone} placeholder="Phone" onChange={(e) => setEditor({ ...editor, phone: e.target.value })} />
+                            <input className="ev-field" value={editor.job_title} placeholder="Job title" onChange={(e) => setEditor({ ...editor, job_title: e.target.value })} />
+                          </div>
+                        </div>
+                      </div>
 
-                  <div className="mt-6 grid gap-4 md:grid-cols-2">
-                    <textarea className="ev-textarea" rows={3} value={editor.functions} placeholder="Functions" onChange={(e) => setEditor({ ...editor, functions: e.target.value })} />
-                    <textarea className="ev-textarea" rows={3} value={editor.city_scope} placeholder="City scope" onChange={(e) => setEditor({ ...editor, city_scope: e.target.value })} />
-                    <textarea className="ev-textarea" rows={3} value={editor.dashboard_access} placeholder="Dashboard access" onChange={(e) => setEditor({ ...editor, dashboard_access: e.target.value })} />
-                    <textarea className="ev-textarea" rows={3} value={editor.surface_access} placeholder="Surface access" onChange={(e) => setEditor({ ...editor, surface_access: e.target.value })} />
-                    <textarea className="ev-textarea" rows={3} value={editor.module_access} placeholder="Module access" onChange={(e) => setEditor({ ...editor, module_access: e.target.value })} />
-                    <textarea className="ev-textarea" rows={3} value={editor.approval_authority} placeholder="Approval authority" onChange={(e) => setEditor({ ...editor, approval_authority: e.target.value })} />
-                    <textarea className="ev-textarea" rows={2} value={editor.team_scope} placeholder="Team scope" onChange={(e) => setEditor({ ...editor, team_scope: e.target.value })} />
-                    <textarea className="ev-textarea" rows={2} value={editor.sponsor_scope} placeholder="Sponsor scope" onChange={(e) => setEditor({ ...editor, sponsor_scope: e.target.value })} />
-                  </div>
+                      <div className="rounded-2xl border border-white/10 bg-black/30 p-5">
+                        <div className="text-xs uppercase tracking-[0.22em] text-white/45">Access</div>
+                        <div className="mt-4 grid gap-4">
+                          <div className="grid gap-4 md:grid-cols-2">
+                            <select className="ev-field" value={editor.primary_role} onChange={(e) => setEditor({ ...editor, primary_role: e.target.value })}>
+                              {primaryRoles.map((role) => (
+                                <option key={role} value={role}>
+                                  {role}
+                                </option>
+                              ))}
+                            </select>
+                            <select className="ev-field" value={editor.role_key} onChange={(e) => setEditor({ ...editor, role_key: e.target.value })}>
+                              {roleOptions.map((role) => (
+                                <option key={role.value} value={role.value}>
+                                  {role.label}
+                                </option>
+                              ))}
+                            </select>
+                            <select className="ev-field" value={editor.organizer_classification} onChange={(e) => setEditor({ ...editor, organizer_classification: e.target.value })}>
+                              {organizerClassificationOptions.map((classification) => (
+                                <option key={classification.value} value={classification.value}>
+                                  {classification.label}
+                                </option>
+                              ))}
+                            </select>
+                            <select className="ev-field" value={editor.network_status} onChange={(e) => setEditor({ ...editor, network_status: e.target.value })}>
+                              {["prospect", "active", "paused", "alumni"].map((status) => (
+                                <option key={status} value={status}>
+                                  {status}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="grid gap-3 sm:grid-cols-2">
+                            {[
+                              ["can_manage_content", "Content"],
+                              ["can_manage_discovery", "Discovery"],
+                              ["can_manage_store", "Store"],
+                              ["can_manage_sponsors", "Sponsors"],
+                              ["can_access_scanner", "Scanner"],
+                              ["is_active", "User active"],
+                            ].map(([key, label]) => (
+                              <label
+                                key={key}
+                                className="flex items-center gap-3 rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white/78"
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={Boolean(editor[key])}
+                                  onChange={(e) => setEditor({ ...editor, [key]: e.target.checked })}
+                                />
+                                {label}
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
 
-                  <div className="mt-6 grid gap-3 md:grid-cols-3">
-                    {[
-                      ["can_manage_content", "Content control"],
-                      ["can_manage_discovery", "Discovery control"],
-                      ["can_manage_store", "Store control"],
-                      ["can_manage_sponsors", "Sponsors control"],
-                      ["can_access_scanner", "Scanner access"],
-                      ["is_active", "User active"],
-                    ].map(([key, label]) => (
-                      <label key={key} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/78">
-                        <input
-                          type="checkbox"
-                          checked={Boolean(editor[key])}
-                          onChange={(e) => setEditor({ ...editor, [key]: e.target.checked })}
+                    <div className="grid gap-6 lg:grid-cols-2">
+                      <div className="rounded-2xl border border-white/10 bg-black/30 p-5">
+                        <div className="text-xs uppercase tracking-[0.22em] text-white/45">Scope</div>
+                        <div className="mt-4 grid gap-4">
+                          <input className="ev-field" value={editor.functions} placeholder="Functions" onChange={(e) => setEditor({ ...editor, functions: e.target.value })} />
+                          <input className="ev-field" value={editor.city_scope} placeholder="City scope" onChange={(e) => setEditor({ ...editor, city_scope: e.target.value })} />
+                          <input className="ev-field" value={editor.dashboard_access} placeholder="Dashboard access" onChange={(e) => setEditor({ ...editor, dashboard_access: e.target.value })} />
+                          <input className="ev-field" value={editor.surface_access} placeholder="Surface access" onChange={(e) => setEditor({ ...editor, surface_access: e.target.value })} />
+                          <input className="ev-field" value={editor.module_access} placeholder="Module access" onChange={(e) => setEditor({ ...editor, module_access: e.target.value })} />
+                        </div>
+                      </div>
+
+                      <div className="rounded-2xl border border-white/10 bg-black/30 p-5">
+                        <div className="text-xs uppercase tracking-[0.22em] text-white/45">Review</div>
+                        <div className="mt-3 space-y-2 text-sm text-white/72">
+                          <div>Approval authority: {editor.approval_authority || "None assigned"}</div>
+                          <div>Team scope: {editor.team_scope || "No team scope"}</div>
+                          <div>Sponsor scope: {editor.sponsor_scope || "No sponsor scope"}</div>
+                          <div>Functions: {editor.functions || "No function tags"}</div>
+                          <div>Dashboard access: {editor.dashboard_access || "No dashboards set"}</div>
+                        </div>
+                        <textarea
+                          className="ev-textarea mt-4"
+                          rows={4}
+                          value={editor.notes}
+                          placeholder="Internal notes"
+                          onChange={(e) => setEditor({ ...editor, notes: e.target.value })}
                         />
-                        {label}
-                      </label>
-                    ))}
-                  </div>
-
-                  <div className="mt-6 grid gap-4 lg:grid-cols-2">
-                    <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
-                      <div className="text-xs uppercase tracking-[0.18em] text-white/45">Permission summary</div>
-                      <div className="mt-3 text-sm leading-7 text-white/72">
-                        <div>Dashboards: {editor.dashboard_access || "None assigned"}</div>
-                        <div>Surfaces: {editor.surface_access || "None assigned"}</div>
-                        <div>Modules: {editor.module_access || "None assigned"}</div>
-                        <div>Approvals: {editor.approval_authority || "No approval authority"}</div>
-                        <div>Program class: {getOrganizerClassificationLabel(String(editor.organizer_classification || "evntszn_host"))}</div>
-                      </div>
-                    </div>
-                    <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
-                      <div className="text-xs uppercase tracking-[0.18em] text-white/45">Operating identity</div>
-                      <div className="mt-3 text-sm leading-7 text-white/72">
-                        <div>Role: {editor.role_key}</div>
-                        <div>Classification: {getOrganizerClassificationLabel(String(editor.organizer_classification || "evntszn_host"))}</div>
-                        <div>Network status: {String(editor.network_status || "active").replace(/_/g, " ")}</div>
-                        <div>Job title: {editor.job_title || "Not assigned"}</div>
-                        <div>Functions: {editor.functions || "None assigned"}</div>
-                        <div>City scope: {editor.city_scope || "No city scope"}</div>
                       </div>
                     </div>
                   </div>
-                </>
-              )}
-            </section>
-          </div>
+                )}
+              </div>
+            </div>
+          </section>
         </section>
       </div>
     </main>

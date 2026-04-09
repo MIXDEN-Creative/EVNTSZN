@@ -1,5 +1,6 @@
 "use client";
 
+import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 
 type SupportTicket = {
@@ -145,19 +146,25 @@ export default function SupportDeskClient() {
         </div>
       </section>
 
-      {message ? (
-        <div
-          className={`mt-4 rounded-2xl border p-4 text-sm ${
-            messageTone === "error"
-              ? "border-red-400/20 bg-red-500/10 text-red-100"
-              : messageTone === "success"
-                ? "border-emerald-400/20 bg-emerald-500/10 text-emerald-100"
-                : "border-white/10 bg-black/30 text-white/75"
-          }`}
-        >
-          {message}
-        </div>
-      ) : null}
+      <AnimatePresence mode="wait">
+        {message ? (
+          <motion.div
+            key={message}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            className={`mt-4 rounded-2xl border p-4 text-sm ${
+              messageTone === "error"
+                ? "border-red-400/20 bg-red-500/10 text-red-100"
+                : messageTone === "success"
+                  ? "border-emerald-400/20 bg-emerald-500/10 text-emerald-100"
+                  : "border-white/10 bg-black/30 text-white/75"
+            }`}
+          >
+            {message}
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
 
       <div className="mt-6 grid gap-6 xl:grid-cols-[340px_1fr]">
         <section className="ev-panel p-5">
@@ -213,10 +220,21 @@ export default function SupportDeskClient() {
           </div>
 
           <div className="mt-4 space-y-3">
-            {filteredTickets.length ? (
+            {!tickets.length ? (
+              Array.from({ length: 4 }).map((_, index) => (
+                <div key={`support-skeleton-${index}`} className="animate-pulse rounded-2xl border border-white/10 bg-black/30 p-4">
+                  <div className="h-3 w-24 rounded bg-white/10" />
+                  <div className="mt-3 h-5 w-40 rounded bg-white/10" />
+                  <div className="mt-2 h-4 w-56 rounded bg-white/10" />
+                </div>
+              ))
+            ) : filteredTickets.length ? (
               filteredTickets.map((ticket) => (
-                <button
+                <motion.button
                   key={ticket.id}
+                  layout
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
                   type="button"
                   onClick={() => setSelectedId(ticket.id)}
                   className={`w-full rounded-2xl border p-4 text-left ${
@@ -227,7 +245,7 @@ export default function SupportDeskClient() {
                   <div className="mt-2 text-base font-semibold text-white">{ticket.issue_type.replace(/_/g, " ")}</div>
                   <div className="mt-1 text-sm text-white/58">{ticket.name || ticket.email || "Unknown requester"}</div>
                   <div className="mt-2 text-xs text-white/50">{ticket.status} • {ticket.severity} • {formatDate(ticket.created_at)}</div>
-                </button>
+                </motion.button>
               ))
             ) : (
               <div className="rounded-2xl border border-dashed border-white/10 bg-black/20 p-5 text-sm text-white/48">

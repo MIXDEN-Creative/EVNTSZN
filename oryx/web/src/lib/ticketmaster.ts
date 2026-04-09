@@ -11,6 +11,8 @@ export type TicketmasterEvent = {
   source: "ticketmaster";
 };
 
+const ticketmasterCache = new Map<string, { expiresAt: number; value: TicketmasterEvent[] }>();
+
 type TicketmasterDiscoveryResponse = {
   _embedded?: {
     events?: Array<{
@@ -95,9 +97,19 @@ export async function searchTicketmasterEvents(input: {
     params.set("endDateTime", input.endAt);
   }
 
+  const cacheKey = params.toString();
+  const cached = ticketmasterCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.value;
+  }
+
   const response = await fetch(`https://app.ticketmaster.com/discovery/v2/events.json?${params.toString()}`, {
     next: { revalidate: 300 },
   });
+
+  if (response.status === 429) {
+    return cached?.value || [];
+  }
 
   if (!response.ok) {
     throw new Error(`Ticketmaster Discovery API failed: ${response.status}`);
@@ -106,7 +118,7 @@ export async function searchTicketmasterEvents(input: {
   const payload = (await response.json()) as TicketmasterDiscoveryResponse;
   const events = payload._embedded?.events || [];
 
-  return events.map((event) => {
+  const normalized = events.map((event) => {
     const venue = event._embedded?.venues?.[0];
     return {
       id: event.id || crypto.randomUUID(),
@@ -121,6 +133,13 @@ export async function searchTicketmasterEvents(input: {
       source: "ticketmaster" as const,
     };
   });
+
+  ticketmasterCache.set(cacheKey, {
+    expiresAt: Date.now() + 1000 * 60 * 5,
+    value: normalized,
+  });
+
+  return normalized;
 }
 
 export async function getTicketmasterShowcase(cities: string[] = ["Baltimore", "Atlanta", "New York", "Miami", "Washington"]) {
