@@ -25,7 +25,7 @@ export async function GET(_request: Request, { params }: { params: Params }) {
     return NextResponse.json({ error: "Forbidden." }, { status: 403 });
   }
 
-  const [{ data: ticketTypes }, { data: operations }] = await Promise.all([
+  const [{ data: ticketTypes }, { data: operations }, { data: revenueProfile }, { data: revenueRecords }, { data: revenueLedger }, { data: revenueAudits }] = await Promise.all([
     supabaseAdmin
       .from("evntszn_ticket_types")
       .select("*")
@@ -36,7 +36,54 @@ export async function GET(_request: Request, { params }: { params: Params }) {
       .select("*")
       .eq("event_id", eventId)
       .maybeSingle(),
+    supabaseAdmin
+      .from("event_revenue_profiles")
+      .select("id, event_type, city_office_id, is_independent, independent_origin")
+      .eq("event_id", eventId)
+      .maybeSingle(),
+    supabaseAdmin
+      .from("ticket_revenue_records")
+      .select("gross_amount, platform_fee_amount, net_amount")
+      .eq("event_id", eventId),
+    supabaseAdmin
+      .from("revenue_ledger")
+      .select("recipient_type, amount, status, source_type")
+      .eq("event_id", eventId),
+    supabaseAdmin
+      .from("revenue_audit_runs")
+      .select("is_balanced, created_at")
+      .eq("event_id", eventId)
+      .order("created_at", { ascending: false })
+      .limit(1),
   ]);
+
+  const grossTicketRevenue = (revenueRecords || []).reduce((sum: number, row: any) => sum + Number(row.gross_amount || 0), 0);
+  const platformFeeTotal = (revenueRecords || []).reduce((sum: number, row: any) => sum + Number(row.platform_fee_amount || 0), 0);
+  const netRevenueTotal = (revenueRecords || []).reduce((sum: number, row: any) => sum + Number(row.net_amount || 0), 0);
+  const hostShare = (revenueLedger || [])
+    .filter((row: any) => row.recipient_type === "host")
+    .reduce((sum: number, row: any) => sum + Number(row.amount || 0), 0);
+  const cityLeaderShare = (revenueLedger || [])
+    .filter((row: any) => row.recipient_type === "city_leader")
+    .reduce((sum: number, row: any) => sum + Number(row.amount || 0), 0);
+  const cityOfficeShare = (revenueLedger || [])
+    .filter((row: any) => row.recipient_type === "city_office")
+    .reduce((sum: number, row: any) => sum + Number(row.amount || 0), 0);
+  const hqShare = (revenueLedger || [])
+    .filter((row: any) => row.recipient_type === "hq")
+    .reduce((sum: number, row: any) => sum + Number(row.amount || 0), 0);
+  const overrideTotal = (revenueLedger || [])
+    .filter((row: any) => row.source_type === "override")
+    .reduce((sum: number, row: any) => sum + Number(row.amount || 0), 0);
+  const ledgerStatuses = (revenueLedger || []).reduce(
+    (summary: Record<string, number>, row: any) => {
+      const key = String(row.status || "pending");
+      summary[key] = (summary[key] || 0) + 1;
+      return summary;
+    },
+    { pending: 0, locked: 0, void: 0 },
+  );
+  const latestAudit = revenueAudits?.[0] || null;
 
   return NextResponse.json({
     ok: true,
@@ -48,6 +95,21 @@ export async function GET(_request: Request, { params }: { params: Params }) {
     },
     ticketTypes: ticketTypes || [],
     operations: operations || null,
+    revenue: {
+      profile: revenueProfile || null,
+      totals: {
+        grossTicketRevenue,
+        platformFeeTotal,
+        netRevenueTotal,
+        hostShare,
+        cityLeaderShare,
+        cityOfficeShare,
+        hqShare,
+        overrideTotal,
+      },
+      auditStatus: latestAudit ? (latestAudit.is_balanced ? "balanced" : "unbalanced") : "pending",
+      ledgerStatuses,
+    },
   });
 }
 

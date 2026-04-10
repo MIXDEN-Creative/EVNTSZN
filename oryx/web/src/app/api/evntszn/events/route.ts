@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { ensurePlatformProfile, logEventActivity, requirePlatformUser } from "@/lib/evntszn";
 import { requireAdminPermission } from "@/lib/admin-auth";
+import { ensureEventRevenueProfileForEvent, type RevenueEventType } from "@/lib/revenue-engine";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { getTicketAvailabilityState } from "@/lib/ticketing";
 
@@ -34,6 +35,9 @@ type CreateEventBody = {
   salesEndAt?: string;
   ticketVisibilityMode?: "visible" | "hidden";
   ticketSortOrder?: number | string;
+  revenueEventType?: RevenueEventType;
+  cityOfficeId?: string;
+  independentOrigin?: "city" | "hq";
 };
 
 function slugify(value: string) {
@@ -72,6 +76,13 @@ export async function GET(request: Request) {
       away_side_label,
       payout_account_label,
       scanner_status,
+      revenue_profile:event_revenue_profiles (
+        id,
+        event_type,
+        city_office_id,
+        is_independent,
+        independent_origin
+      ),
       venues:evntszn_venues(name)
     `)
     .order("start_at", { ascending: false })
@@ -110,6 +121,7 @@ export async function GET(request: Request) {
     events: (data || []).map((event: any) => ({
       ...event,
       venue_name: event.venues?.name || null,
+      revenue_profile: Array.isArray(event.revenue_profile) ? event.revenue_profile[0] || null : event.revenue_profile || null,
       ticket_summary: (ticketsByEventId.get(event.id) || []).reduce(
         (summary, ticket) => {
           summary.total += 1;
@@ -251,6 +263,33 @@ export async function POST(request: Request) {
 
   if (ticketTypeError) {
     return NextResponse.json({ error: ticketTypeError.message }, { status: 500 });
+  }
+
+  try {
+    await ensureEventRevenueProfileForEvent(
+      {
+        id: event.id,
+        city,
+        organizer_user_id: actingUserId,
+        event_class: eventClass,
+      },
+      {
+        eventType: body.revenueEventType || null,
+        cityOfficeId: body.cityOfficeId ? String(body.cityOfficeId).trim() || null : null,
+        createdByRole: viewer.isPlatformAdmin ? "admin" : "organizer",
+        independentOrigin: body.independentOrigin || null,
+      },
+    );
+  } catch (revenueError) {
+    return NextResponse.json(
+      {
+        error:
+          revenueError instanceof Error
+            ? revenueError.message
+            : "Event was created, but the revenue model could not be attached.",
+      },
+      { status: 500 },
+    );
   }
 
   if (actingUserId) {

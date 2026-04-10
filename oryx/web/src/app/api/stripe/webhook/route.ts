@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { buildTicketCode, logEventActivity } from "@/lib/evntszn";
+import { ensureTicketRevenueAllocation } from "@/lib/revenue-engine";
 import { stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { sendMerchConfirmationEmail } from "@/lib/send-merch-email";
@@ -46,23 +47,19 @@ async function handleEventTicketCheckout(session: Stripe.Checkout.Session) {
 
   const { data: existingOrder } = await supabaseAdmin
     .from("evntszn_ticket_orders")
-    .select("id")
+    .select("id, event_id, ticket_type_id, quantity, amount_total_cents")
     .eq("stripe_checkout_session_id", session.id)
     .maybeSingle();
-
-  if (existingOrder) {
-    return true;
-  }
 
   const [{ data: event }, { data: ticketType }] = await Promise.all([
     supabaseAdmin
       .from("evntszn_events")
-      .select("id, slug, title")
+      .select("id, slug, title, organizer_user_id, city, event_class")
       .eq("id", eventId)
       .single(),
     supabaseAdmin
       .from("evntszn_ticket_types")
-      .select("id, quantity_total, quantity_sold")
+      .select("id, name, price_cents, quantity_total, quantity_sold")
       .eq("id", ticketTypeId)
       .single(),
   ]);
@@ -76,59 +73,86 @@ async function handleEventTicketCheckout(session: Stripe.Checkout.Session) {
     throw new Error("Ticket inventory is no longer available.");
   }
 
-  const { data: order, error: orderError } = await supabaseAdmin
-    .from("evntszn_ticket_orders")
-    .insert({
-      stripe_checkout_session_id: session.id,
-      stripe_payment_intent_id:
-        typeof session.payment_intent === "string"
-          ? session.payment_intent
-          : null,
+  let order = existingOrder;
+
+  if (!order) {
+    const { data: createdOrder, error: orderError } = await supabaseAdmin
+      .from("evntszn_ticket_orders")
+      .insert({
+        stripe_checkout_session_id: session.id,
+        stripe_payment_intent_id:
+          typeof session.payment_intent === "string"
+            ? session.payment_intent
+            : null,
+        event_id: event.id,
+        ticket_type_id: ticketTypeId,
+        purchaser_user_id: purchaserUserId,
+        purchaser_email: customerEmail,
+        purchaser_name: purchaserName,
+        quantity,
+        amount_total_cents: session.amount_total || 0,
+        currency_code: session.currency || "usd",
+        status: "paid",
+      })
+      .select("id, event_id, ticket_type_id, quantity, amount_total_cents")
+      .single();
+
+    if (orderError || !createdOrder) {
+      throw new Error(orderError?.message || "Could not create ticket order.");
+    }
+
+    order = createdOrder;
+
+    const tickets = Array.from({ length: quantity }).map(() => ({
       event_id: event.id,
       ticket_type_id: ticketTypeId,
+      order_id: createdOrder.id,
       purchaser_user_id: purchaserUserId,
-      purchaser_email: customerEmail,
-      purchaser_name: purchaserName,
+      attendee_name: purchaserName,
+      attendee_email: customerEmail,
+      ticket_code: buildTicketCode("EVN"),
+      share_code: buildTicketCode("SHARE"),
+      referral_code: buildTicketCode("REF"),
+      status: "issued",
+    }));
+
+    const { error: ticketError } = await supabaseAdmin.from("evntszn_tickets").insert(tickets);
+
+    if (ticketError) {
+      throw new Error(ticketError.message);
+    }
+
+    await supabaseAdmin
+      .from("evntszn_ticket_types")
+      .update({ quantity_sold: (ticketType.quantity_sold || 0) + quantity })
+      .eq("id", ticketTypeId);
+
+    await logEventActivity(event.id, purchaserUserId, "ticket_paid", "Ticket order paid via Stripe webhook", {
       quantity,
-      amount_total_cents: session.amount_total || 0,
-      currency_code: session.currency || "usd",
-      status: "paid",
-    })
+      orderId: createdOrder.id,
+    });
+  }
+
+  const { data: orderTickets, error: orderTicketsError } = await supabaseAdmin
+    .from("evntszn_tickets")
     .select("id")
-    .single();
+    .eq("order_id", order.id)
+    .order("created_at", { ascending: true });
 
-  if (orderError || !order) {
-    throw new Error(orderError?.message || "Could not create ticket order.");
+  if (orderTicketsError) {
+    throw new Error(orderTicketsError.message);
   }
 
-  const tickets = Array.from({ length: quantity }).map(() => ({
-    event_id: event.id,
-    ticket_type_id: ticketTypeId,
-    order_id: order.id,
-    purchaser_user_id: purchaserUserId,
-    attendee_name: purchaserName,
-    attendee_email: customerEmail,
-    ticket_code: buildTicketCode("EVN"),
-    share_code: buildTicketCode("SHARE"),
-    referral_code: buildTicketCode("REF"),
-    status: "issued",
-  }));
-
-  const { error: ticketError } = await supabaseAdmin.from("evntszn_tickets").insert(tickets);
-
-  if (ticketError) {
-    throw new Error(ticketError.message);
+  const unitGrossAmount = Number(ticketType.price_cents || 0) / 100;
+  for (const ticket of orderTickets || []) {
+    await ensureTicketRevenueAllocation({
+      ticketId: ticket.id,
+      eventId: event.id,
+      ticketTypeName: ticketType.name || "General Access",
+      unitGrossAmount,
+      auditType: existingOrder ? "rebuild" : "purchase",
+    });
   }
-
-  await supabaseAdmin
-    .from("evntszn_ticket_types")
-    .update({ quantity_sold: (ticketType.quantity_sold || 0) + quantity })
-    .eq("id", ticketTypeId);
-
-  await logEventActivity(event.id, purchaserUserId, "ticket_paid", "Ticket order paid via Stripe webhook", {
-    quantity,
-    orderId: order.id,
-  });
 
   return true;
 }
