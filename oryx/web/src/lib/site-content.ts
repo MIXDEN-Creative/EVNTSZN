@@ -172,74 +172,74 @@ export type PublicModules = PublicModulesContent & {
 
 export const DEFAULT_HOMEPAGE_CONTENT: Omit<HomepageContent, "storageReady"> = {
   hero: {
-    eyebrow: "EVNTSZN live discovery",
-    title: "Find the event worth leaving the house for.",
+    eyebrow: "Live City Pulse",
+    title: "Don't just go out. Land exactly where the energy is.",
     description:
-      "Search the city for nights out, live music, league energy, and the plans people will actually talk about tomorrow.",
-    primaryCtaLabel: "Start discovering",
+      "Access exclusive nightlife, headline concerts, and the city's most competitive sports. EVNTSZN connects you to the moments that actually matter.",
+    primaryCtaLabel: "Explore the movement",
     primaryCtaHref: "/events",
-    secondaryCtaLabel: "Create attendee account",
+    secondaryCtaLabel: "Claim your access",
     secondaryCtaHref: "/account/login?mode=signup&next=/account",
-    tertiaryCtaLabel: "Member login",
+    tertiaryCtaLabel: "Member Login",
     tertiaryCtaHref: "/account/login?next=/account",
   },
   banner: {
-    eyebrow: "Built for real nights out",
-    title: "Start with the strongest move, not the loudest listing.",
-    body: "EVNTSZN puts the best event options in front first, widens the field when it actually helps, and keeps the path from discovery to tickets clean.",
+    eyebrow: "The Premium Standard",
+    title: "Stop searching. Start arriving.",
+    body: "EVNTSZN cuts through the noise to surface the city's strongest moves. From discovery to tickets, we keep the path clean so you never miss a beat.",
   },
   discovery: {
-    headline: "Search the city and pull the strongest options first.",
-    body: "Search nightlife, concerts, sports, live entertainment, and what is worth doing tonight. EVNTSZN leads with the sharpest native inventory first, then widens into the city when that gives you a better answer.",
+    headline: "The city is moving. Find your next move.",
+    body: "Filter for the elite experiences—nightlife, concerts, and sports that define the city calendar. We prioritize native EVNTSZN inventory so you get the strongest options first.",
     disclosure:
-      "EVNTSZN-led inventory still gets priority. External discovery only widens the field when it actually helps the search.",
-    searchPlaceholder: "Search artist, event, venue, vibe, or something happening tonight",
+      "Priority is given to EVNTSZN-native events to ensure the highest quality experience.",
+    searchPlaceholder: "Search artist, venue, vibe, or the night's headline event",
     keywordPlaceholder: "Keyword",
     cityPlaceholder: "City",
-    nativeHeadline: "Official EVNTSZN events",
-    hostHeadline: "EVNTSZN Host events",
-    independentHeadline: "Independent Organizer events",
-    externalHeadline: "Expanded city discovery",
+    nativeHeadline: "Official EVNTSZN Events",
+    hostHeadline: "Hosted Experiences",
+    independentHeadline: "Independent Organizers",
+    externalHeadline: "Extended City Discovery",
   },
   taxonomy: {
     categories: [
       {
         title: "Music",
-        description: "Concerts, DJ nights, artist drops, and live performances.",
+        description: "Headline performances, artist drops, and the city's best live sessions.",
       },
       {
         title: "Nightlife",
-        description: "Late-night sessions, premium parties, and city after-dark experiences.",
+        description: "Premium sessions and exclusive after-dark energy.",
       },
       {
         title: "Sports",
-        description: "League nights, sports entertainment, tournaments, and fan experiences.",
+        description: "League nights, high-stakes competition, and fan-driven momentum.",
       },
       {
-        title: "Things to Do",
-        description: "Curated city energy for people looking for the best events right now.",
+        title: "Curated",
+        description: "Hand-picked city energy for those who demand the best.",
       },
     ],
     cities: [
       {
         name: "New York",
-        description: "Flagship market for high-density nightlife, entertainment, and premium event discovery.",
+        description: "The global standard for nightlife and headline entertainment.",
       },
       {
         name: "Baltimore",
-        description: "League, culture, and city-community events with EVNTSZN-native energy.",
+        description: "League pride and community-rooted events with real momentum.",
       },
       {
         name: "Atlanta",
-        description: "Music, nightlife, sports culture, and standout hosted experiences.",
+        description: "The heartbeat of music, sports culture, and hosted vibes.",
       },
       {
         name: "Miami",
-        description: "High-velocity nightlife and destination-event demand.",
+        description: "High-velocity energy and destination-defining events.",
       },
       {
         name: "Dover",
-        description: "Delaware league nights, local events, and community discovery with a cleaner premium surface.",
+        description: "Clean, premium access to local leagues and community discovery.",
       },
     ],
   },
@@ -257,31 +257,31 @@ export const DEFAULT_HOMEPAGE_CONTENT: Omit<HomepageContent, "storageReady"> = {
 
 export const DEFAULT_EPL_PUBLIC_CONTENT: Omit<EplPublicContent, "storageReady"> = {
   hero: {
-    eyebrow: "EVNTSZN Prime League",
-    title: "Baltimore flag football with draft-night energy, team pride, and real game-week pull.",
+    eyebrow: "Elite Competition",
+    title: "More than a league. A Baltimore legacy in the making.",
     description:
-      "Follow the clubs, lock in your registration, track the standings, and stay close to the moments that make Season 1 feel live.",
-    primaryCtaLabel: "Register",
+      "Forge your club's identity, track the standings, and command the field. Season 1 starts now—don't just watch the game, own it.",
+    primaryCtaLabel: "Join the Ranks",
     primaryCtaHref: "/epl/season-1/register",
-    secondaryCtaLabel: "View schedule",
+    secondaryCtaLabel: "View the Schedule",
     secondaryCtaHref: "#schedule",
   },
   sections: {
-    seasonHeadline: "Season 1 is built for game-day momentum, city pride, and a league people want to follow.",
+    seasonHeadline: "Forged in Baltimore. Built for the Bold.",
     seasonBody:
-      "Registration, draft night, club identity, and weekly standings pressure all feed one league front door that stays alive from sign-up through the stretch run.",
-    scheduleHeadline: "The schedule keeps every week moving.",
+      "From draft night to the championship stretch, every snap carries the weight of city pride and club identity. This is where athletes become legends.",
+    scheduleHeadline: "The Road to the Title.",
     scheduleBody:
-      "Follow statement nights, rivalry matchups, and the games that change the table without having to guess where league updates live.",
-    teamsHeadline: "Six clubs. Distinct identity. Real Baltimore pull.",
+      "Follow the rivalries, the statement nights, and the games that will define the season. No guessing, just momentum.",
+    teamsHeadline: "Six Clubs. One Throne.",
     teamsBody:
-      "Each team carries its own neighborhood edge, draft-night storyline, and game-day feel so the league stays easy to follow all season.",
-    standingsHeadline: "A standings table that makes every game matter.",
+      "Every team carries a neighborhood edge and a drive to dominate. Choose your side and follow the journey.",
+    standingsHeadline: "Where Respect is Earned.",
     standingsBody:
-      "Wins, losses, and weekly movement belong in one clean league table that players and supporters can check after every big night.",
-    storeHeadline: "Merch that feels like league gear, not filler.",
+      "The table never lies. Track every win, every loss, and the relentless pursuit of the top spot.",
+    storeHeadline: "Wear the Pride.",
     storeBody:
-      "Shop official EPL drops built around club identity, league nights, and the kind of gear people actually want to wear on game day.",
+      "Elite gear for players and supporters. Shop official EPL drops built for the field and the street.",
   },
   menu: {
     showRegister: true,
@@ -297,35 +297,35 @@ export const DEFAULT_EPL_PUBLIC_CONTENT: Omit<EplPublicContent, "storageReady"> 
 
 export const DEFAULT_PUBLIC_MODULES: Omit<PublicModules, "storageReady"> = {
   citySpotlight: {
-    eyebrow: "City spotlight",
-    headline: "Move through the strongest nights, venues, and city moments without wasting time.",
-    body: "Use EVNTSZN to start with the strongest city pulse first, then widen the search when you want more range.",
+    eyebrow: "City Spotlight",
+    headline: "Move through the strongest nights without wasting a second.",
+    body: "We surface the city's pulse so you can spend less time searching and more time arriving.",
   },
   teamBlocks: {
-    scheduleHeadline: "Team schedule",
-    scheduleBody: "Official fixtures and weekly match rhythm will lock here as the season schedule publishes.",
-    rosterHeadline: "Roster",
-    rosterBody: "Final rosters and player identity will surface here once registration, draft movement, and confirmations are complete.",
-    announcementsHeadline: "Announcements",
-    announcementsBody: "Team updates, league notes, and game-day information stack here once the season cycle is active.",
+    scheduleHeadline: "Match Rhythm",
+    scheduleBody: "The official path to the playoffs locks here as the season goes live.",
+    rosterHeadline: "The Roster",
+    rosterBody: "The elite lineup of players ready to represent their colors this season.",
+    announcementsHeadline: "League Pulse",
+    announcementsBody: "Real-time updates, scouting notes, and game-day intel for the inner circle.",
   },
   storePromo: {
-    eyebrow: "Merchandise",
-    headline: "Official EPL merch built for players, supporters, and team pride.",
-    body: "Shop the latest league gear, club-inspired drops, and everyday pieces that keep EPL visible off the field too.",
-    ctaLabel: "Open store",
+    eyebrow: "Official Gear",
+    headline: "EPL Signature Collection.",
+    body: "Club-inspired drops and league-standard gear built for those who show up.",
+    ctaLabel: "Shop the Drop",
     ctaHref: "/epl/store",
   },
   sponsorBlock: {
-    eyebrow: "Presented with",
-    headline: "Sponsors and partners backing the league show up here when placements are live.",
-    body: "League partners, city brands, and event-day supporters appear here once placements are approved and active.",
-    footerHeadline: "Trusted by sponsors, partners, and city builders showing up for league nights.",
+    eyebrow: "Backed by the Best",
+    headline: "Partners in Progress.",
+    body: "The brands and city builders showing up to power the season.",
+    footerHeadline: "Trusted by the city's most influential partners.",
   },
   opportunitiesBlock: {
-    eyebrow: "Opportunities",
-    headline: "Work league nights, support the teams, and help build the season from inside the action.",
-    body: "Explore current paid and volunteer openings across game-day operations, sideline coverage, check-in, and community support.",
+    eyebrow: "Own the Sideline",
+    headline: "Drive the Season from the Inside.",
+    body: "Get closer to the pulse. From high-stakes game-day operations to capturing the city’s loudest moments, this is your seat at the table. Don’t just watch the season—command it.",
   },
 };
 

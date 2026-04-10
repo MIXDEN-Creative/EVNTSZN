@@ -155,14 +155,14 @@ function getSourceLabel(source: DiscoveryListing["source"]) {
 function createEmptyState(query: string, city: string) {
   if (query || city) {
     return {
-      title: "No strong matches yet.",
-      body: `Try a broader search, switch cities, or jump into Baltimore, Atlanta, New York, Miami, or DC to widen the field.`,
+      title: "No results for this search",
+      body: `Try a different city or a broader search term to find more events. You can also jump into Baltimore, Atlanta, or NYC to see what’s trending.`,
     };
   }
 
   return {
-    title: "Discovery is warming up.",
-    body: "Search a city, artist, venue, or nightlife mood to pull live results into the rail below.",
+    title: "Start your search",
+    body: "Search for a city, artist, or nightlife vibe to see the best events and headline plans in the feed below.",
   };
 }
 
@@ -210,7 +210,7 @@ function DiscoveryCard({
           href={event.href}
           className="mt-5 inline-flex rounded-full bg-white px-4 py-2 text-sm font-semibold text-black transition hover:opacity-90"
         >
-          View event
+          Get Access
         </Link>
       </div>
     </article>
