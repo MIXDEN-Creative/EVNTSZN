@@ -61,7 +61,7 @@ export default function PublicNav() {
           <a href={`${getAppOrigin()}/account/login`} className="text-sm font-medium text-white/78 transition hover:text-white">
             Sign In
           </a>
-          <a href={`${getAppOrigin()}/account/login?next=/account`} className="ev-button-primary px-4 py-2 text-sm">
+          <a href={`${getAppOrigin()}/account/login?next=/account`} className="ev-button-primary">
             Create Account
           </a>
         </div>

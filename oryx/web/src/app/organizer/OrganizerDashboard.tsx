@@ -29,11 +29,15 @@ type ManagedTicketType = {
 };
 
 export default function OrganizerDashboard({ canOperate, events }: OrganizerDashboardProps) {
+  const [activeTab, setActiveTab] = useState<"queue" | "create" | "manage">("queue");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(events[0]?.id || null);
   const [ticketTypes, setTicketTypes] = useState<ManagedTicketType[]>([]);
   const [operations, setOperations] = useState({ objective: "", runOfShow: "", opsNotes: "" });
+  
+  // ... (rest of states)
+  
   const [form, setForm] = useState({
     title: "",
     subtitle: "",
@@ -156,6 +160,7 @@ export default function OrganizerDashboard({ canOperate, events }: OrganizerDash
 
   async function manageEvent(eventId: string) {
     setSelectedEventId(eventId);
+    setActiveTab("manage");
     setLoading(true);
     setMessage("");
     try {
@@ -226,241 +231,269 @@ export default function OrganizerDashboard({ canOperate, events }: OrganizerDash
   if (!canOperate) {
     return (
       <div className="rounded-[32px] border border-white/10 bg-white/[0.03] p-6">
-        <h2 className="text-2xl font-semibold">Activate organizer mode</h2>
-        <p className="mt-3 max-w-2xl text-white/65">
-          Turn this workspace into the EVNTSZN organizer operating system for event buildout,
-          ticket inventory, scanner links, and venue coordination.
+        <h2 className="text-2xl font-bold">Organizer Access Required</h2>
+        <p className="mt-3 max-w-2xl text-white/70">
+          Activate your organizer profile to build events, manage ticket inventory, 
+          and coordinate with venues and staffing teams.
         </p>
         <button
           onClick={activateOrganizerWorkspace}
           disabled={loading}
-          className="mt-6 rounded-2xl bg-white px-5 py-3 font-semibold text-black disabled:opacity-50"
+          className="mt-6 rounded-2xl bg-white px-5 py-3 font-bold text-black active:scale-95 disabled:opacity-50"
         >
-          {loading ? "Activating..." : "Activate organizer workspace"}
+          {loading ? "Activating..." : "Set up organizer access"}
         </button>
         {message ? <div className="mt-4 text-sm text-red-300">{message}</div> : null}
       </div>
     );
   }
 
+  const selectedEvent = events.find((e) => e.id === selectedEventId);
+
   return (
-    <div className="grid gap-8 xl:grid-cols-[0.8fr_1fr_0.95fr]">
-      <section className="rounded-[32px] border border-white/10 bg-white/[0.03] p-6">
-        <p className="text-xs uppercase tracking-[0.26em] text-[#A259FF]">Create event</p>
-        <h2 className="mt-3 text-3xl font-semibold">Launch the next event</h2>
-        <p className="mt-2 text-sm text-white/60">
-          Start with event identity, set the first ticket, then publish when the page is ready.
-        </p>
-        <form onSubmit={createEvent} className="mt-6 grid gap-4">
-          <div className="rounded-[24px] border border-white/10 bg-black/25 p-5">
-            <div className="text-xs uppercase tracking-[0.22em] text-[#caa7ff]">Step 1</div>
-            <div className="mt-2 text-lg font-semibold text-white">Event basics</div>
-            <div className="mt-4 grid gap-4">
-              {[
-                ["title", "Event title"],
-                ["subtitle", "Subtitle"],
-                ["venueName", "Venue name"],
-                ["city", "City"],
-                ["state", "State"],
-                ["startAt", "Start ISO datetime"],
-                ["endAt", "End ISO datetime"],
-                ["capacity", "Capacity"],
-              ].map(([key, label]) => (
-                <input
-                  key={key}
-                  value={form[key as keyof typeof form] as string}
-                  onChange={(e) => setForm({ ...form, [key]: e.target.value })}
-                  placeholder={label}
-                  className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none"
-                  required={["title", "venueName", "city", "state", "startAt", "endAt"].includes(key)}
-                />
-              ))}
-            </div>
-          </div>
-
-          <div className="rounded-[24px] border border-white/10 bg-black/25 p-5">
-            <div className="text-xs uppercase tracking-[0.22em] text-[#caa7ff]">Step 2</div>
-            <div className="mt-2 text-lg font-semibold text-white">Opening ticket release</div>
-            <div className="mt-4 grid gap-4">
-              {[
-                ["ticketTypeName", "Ticket type"],
-                ["ticketPriceCents", "Ticket price cents"],
-                ["ticketQuantityTotal", "Ticket quantity"],
-                ["salesStartAt", "Ticket sales start ISO"],
-                ["salesEndAt", "Ticket sales end ISO"],
-              ].map(([key, label]) => (
-                <input
-                  key={key}
-                  value={form[key as keyof typeof form] as string}
-                  onChange={(e) => setForm({ ...form, [key]: e.target.value })}
-                  placeholder={label}
-                  className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none"
-                />
-              ))}
-            </div>
-          </div>
-          <textarea
-            value={form.description}
-            onChange={(e) => setForm({ ...form, description: e.target.value })}
-            placeholder="Public description"
-            className="min-h-[140px] rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none"
-          />
-          <textarea
-            value={form.heroNote}
-            onChange={(e) => setForm({ ...form, heroNote: e.target.value })}
-            placeholder="Hero note"
-            className="min-h-[120px] rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none"
-          />
-          <label className="inline-flex items-center gap-3 text-sm text-white/72">
-            <input
-              type="checkbox"
-              checked={form.publishNow}
-              onChange={(e) => setForm({ ...form, publishNow: e.target.checked })}
-            />
-            Publish immediately to the public events inventory
-          </label>
+    <div className="space-y-8">
+      <div className="flex flex-wrap gap-2 border-b border-white/10 pb-4">
+        {[
+          { id: "queue", label: "Event Queue" },
+          { id: "create", label: "Create Event" },
+          { id: "manage", label: "Manage Event" },
+        ].map((tab) => (
           <button
-            type="submit"
-            disabled={loading}
-            className="rounded-2xl bg-white px-5 py-4 font-semibold text-black disabled:opacity-50"
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id as any)}
+            className={`rounded-xl px-5 py-3 text-sm font-bold transition ${
+              activeTab === tab.id 
+                ? "bg-white text-black" 
+                : "border border-white/10 text-white/60 hover:bg-white/5"
+            }`}
           >
-            {loading ? "Creating..." : "Create event"}
+            {tab.label}
           </button>
-        </form>
-        {message ? <div className="mt-4 text-sm text-red-300">{message}</div> : null}
-      </section>
+        ))}
+      </div>
 
-      <section className="rounded-[32px] border border-white/10 bg-white/[0.03] p-6">
-        <p className="text-xs uppercase tracking-[0.26em] text-[#A259FF]">Control tower</p>
-        <h2 className="mt-3 text-3xl font-semibold">Your live event queue</h2>
-        <div className="mt-5 grid gap-3 sm:grid-cols-3">
-          {[
-            ["Events", stats.total],
-            ["Published", stats.published],
-            ["Check-ins", stats.checkIns],
-          ].map(([label, value]) => (
-            <div key={String(label)} className="rounded-2xl border border-white/10 bg-black/25 p-4">
-              <div className="text-xs uppercase tracking-[0.18em] text-white/45">{label}</div>
-              <div className="mt-2 text-2xl font-semibold text-white">{value}</div>
-            </div>
-          ))}
-        </div>
-        <div className="mt-6 grid gap-4">
-          {events.map((event) => (
-            <div key={event.id} className="rounded-[28px] border border-white/10 bg-black/30 p-5">
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+      <div className="grid gap-8">
+        {activeTab === "queue" && (
+          <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
+            <section className="rounded-[32px] border border-white/10 bg-white/[0.03] p-6">
+              <div className="flex items-end justify-between">
                 <div>
-                  <div className="text-xs uppercase tracking-[0.22em] text-white/45">
-                    {event.status} · {event.visibility}
-                  </div>
-                  <div className="mt-2 text-2xl font-semibold">{event.title}</div>
-                  <div className="mt-2 text-sm text-white/60">
-                    {new Date(event.start_at).toLocaleString()} · check-ins: {event.check_in_count || 0}
-                  </div>
+                  <div className="text-xs font-bold uppercase tracking-[0.26em] text-[#A259FF]">Queue</div>
+                  <h2 className="mt-3 text-3xl font-black">Live Event Timeline</h2>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  <a href={`/events/${event.slug}`} className="rounded-xl border border-white/15 px-3 py-2 text-sm">
-                    Open event
-                  </a>
-                  <a
-                    href={getCanonicalUrl(`/scanner/${event.slug}`, "scanner", window.location.host)}
-                    className="rounded-xl border border-white/15 px-3 py-2 text-sm"
-                  >
-                    Scanner
-                  </a>
-                  <button
-                    onClick={() => void manageEvent(event.id)}
-                    className="rounded-xl border border-white/15 px-3 py-2 text-sm"
-                  >
-                    Manage
-                  </button>
-                  <button
-                    onClick={() => void updateEvent(event.id, { status: "published", visibility: "published" })}
-                    className="rounded-xl border border-[#A259FF]/30 bg-[#A259FF]/10 px-3 py-2 text-sm text-[#dfd0ff]"
-                  >
-                    Publish
-                  </button>
-                </div>
+                <button 
+                  onClick={() => setActiveTab("create")}
+                  className="rounded-xl bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-widest text-white hover:bg-white/20"
+                >
+                  Add New
+                </button>
               </div>
-            </div>
-          ))}
-
-          {!events.length ? (
-            <div className="rounded-[28px] border border-dashed border-white/15 bg-black/30 p-5 text-white/58">
-              No organizer events yet. Create the first EVNTSZN production event from the panel.
-            </div>
-          ) : null}
-        </div>
-      </section>
-
-      <section className="grid gap-6">
-        <div className="rounded-[32px] border border-white/10 bg-white/[0.03] p-6">
-          <p className="text-xs uppercase tracking-[0.26em] text-[#A259FF]">Ticketing</p>
-          <h2 className="mt-3 text-3xl font-semibold">Ticket release controls</h2>
-          {!selectedEventId ? (
-            <div className="mt-6 text-sm text-white/60">Select one of your events to manage ticket releases.</div>
-          ) : (
-            <div className="mt-6 grid gap-4">
-              {ticketTypes.map((ticketType) => (
-                <div key={ticketType.id} className="rounded-[24px] border border-white/10 bg-black/30 p-4">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <div className="text-lg font-semibold text-white">{ticketType.name}</div>
-                      <div className="mt-1 text-sm text-white/60">
-                        {ticketType.quantity_sold}/{ticketType.quantity_total} sold · {ticketType.availability_state}
+              
+              <div className="mt-8 grid gap-4">
+                {events.map((event) => (
+                  <div key={event.id} className="rounded-[28px] border border-white/10 bg-black/30 p-5">
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                      <div>
+                        <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/40">
+                          {event.status} · {event.visibility}
+                        </div>
+                        <div className="mt-2 text-2xl font-black">{event.title}</div>
+                        <div className="mt-2 text-sm text-white/60">
+                          {new Date(event.start_at).toLocaleString()} · {event.check_in_count || 0} checked in
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          onClick={() => void manageEvent(event.id)}
+                          className="rounded-xl bg-white px-4 py-2 text-xs font-bold text-black"
+                        >
+                          Manage
+                        </button>
+                        <a
+                          href={getCanonicalUrl(`/scanner/${event.slug}`, "scanner", window.location.host)}
+                          className="rounded-xl border border-white/15 px-4 py-2 text-xs font-bold text-white"
+                        >
+                          Scanner
+                        </a>
                       </div>
                     </div>
-                    <div className="flex flex-wrap gap-2">
-                      <button onClick={() => void patchTicketType(ticketType.id, { isActive: !ticketType.is_active })} className="rounded-xl border border-white/15 px-3 py-2 text-sm">
-                        {ticketType.is_active ? "Turn off" : "Turn on"}
-                      </button>
-                      <button onClick={() => void patchTicketType(ticketType.id, { visibilityMode: ticketType.visibility_mode === "hidden" ? "visible" : "hidden" })} className="rounded-xl border border-white/15 px-3 py-2 text-sm">
-                        {ticketType.visibility_mode === "hidden" ? "Show" : "Hide"}
-                      </button>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <aside className="space-y-6">
+              <div className="rounded-[32px] border border-white/10 bg-white/[0.03] p-6">
+                <div className="text-[10px] font-bold uppercase tracking-widest text-white/40">Pulse</div>
+                <div className="mt-6 space-y-4">
+                  {[
+                    ["Total Events", stats.total],
+                    ["Published", stats.published],
+                    ["Total Check-ins", stats.checkIns],
+                  ].map(([label, value]) => (
+                    <div key={String(label)} className="flex items-center justify-between border-b border-white/5 pb-4 last:border-0">
+                      <div className="text-sm text-white/60">{label}</div>
+                      <div className="text-xl font-black">{value}</div>
                     </div>
+                  ))}
+                </div>
+              </div>
+            </aside>
+          </div>
+        )}
+
+        {activeTab === "create" && (
+          <div className="mx-auto max-w-4xl">
+            <section className="rounded-[32px] border border-white/10 bg-white/[0.03] p-8">
+              <div className="text-xs font-bold uppercase tracking-[0.26em] text-[#A259FF]">Setup</div>
+              <h2 className="mt-3 text-4xl font-black">Build your next move</h2>
+              <p className="mt-4 text-white/60">Set the identity, launch the tickets, and push it live.</p>
+              
+              <form onSubmit={createEvent} className="mt-10 space-y-8">
+                <div className="grid gap-6 md:grid-cols-2">
+                  {[
+                    ["title", "Event title"],
+                    ["subtitle", "Subtitle"],
+                    ["venueName", "Venue name"],
+                    ["city", "City"],
+                    ["state", "State"],
+                    ["startAt", "Start ISO"],
+                    ["endAt", "End ISO"],
+                    ["capacity", "Capacity"],
+                  ].map(([key, label]) => (
+                    <div key={key}>
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-white/40">{label}</label>
+                      <input
+                        value={form[key as keyof typeof form] as string}
+                        onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+                        className="mt-2 h-12 w-full rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none focus:border-[#A259FF]/50"
+                        required={["title", "venueName", "city", "state", "startAt", "endAt"].includes(key)}
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                <div className="space-y-4 rounded-3xl border border-white/5 bg-white/[0.02] p-6">
+                  <div className="text-sm font-bold">Initial Ticket Release</div>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {[
+                      ["ticketTypeName", "Ticket type"],
+                      ["ticketPriceCents", "Price (cents)"],
+                      ["ticketQuantityTotal", "Total quantity"],
+                    ].map(([key, label]) => (
+                      <input
+                        key={key}
+                        value={form[key as keyof typeof form] as string}
+                        onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+                        placeholder={label}
+                        className="h-12 rounded-xl border border-white/10 bg-black/40 px-4 text-sm"
+                      />
+                    ))}
                   </div>
                 </div>
-              ))}
 
-              <form onSubmit={createTicketType} className="rounded-[24px] border border-white/10 bg-black/25 p-4">
-                <div className="text-sm font-semibold text-white">Add ticket type</div>
-                <div className="mt-4 grid gap-3">
-                  <input value={ticketForm.name} onChange={(e) => setTicketForm({ ...ticketForm, name: e.target.value })} placeholder="Ticket name" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" required />
-                  <div className="grid gap-3 md:grid-cols-3">
-                    <input value={ticketForm.priceCents} onChange={(e) => setTicketForm({ ...ticketForm, priceCents: e.target.value })} placeholder="Price cents" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
-                    <input value={ticketForm.quantityTotal} onChange={(e) => setTicketForm({ ...ticketForm, quantityTotal: e.target.value })} placeholder="Inventory" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
-                    <input value={ticketForm.maxPerOrder} onChange={(e) => setTicketForm({ ...ticketForm, maxPerOrder: e.target.value })} placeholder="Max per order" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
-                  </div>
-                  <div className="grid gap-3 md:grid-cols-2">
-                    <input value={ticketForm.salesStartAt} onChange={(e) => setTicketForm({ ...ticketForm, salesStartAt: e.target.value })} placeholder="Sales start ISO" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
-                    <input value={ticketForm.salesEndAt} onChange={(e) => setTicketForm({ ...ticketForm, salesEndAt: e.target.value })} placeholder="Sales end ISO" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
-                  </div>
-                  <button type="submit" disabled={loading} className="rounded-2xl bg-white px-5 py-4 font-semibold text-black disabled:opacity-50">
-                    Add ticket type
+                <div className="space-y-6">
+                  <textarea
+                    value={form.description}
+                    onChange={(e) => setForm({ ...form, description: e.target.value })}
+                    placeholder="Public description"
+                    className="min-h-[160px] w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-4 text-white outline-none focus:border-[#A259FF]/50"
+                  />
+                  <label className="flex items-center gap-3 text-sm font-bold text-white/70">
+                    <input
+                      type="checkbox"
+                      checked={form.publishNow}
+                      onChange={(e) => setForm({ ...form, publishNow: e.target.checked })}
+                      className="h-5 w-5 rounded border-white/10 bg-black/40"
+                    />
+                    Publish immediately
+                  </label>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="h-14 w-full rounded-2xl bg-white font-black text-black active:scale-[0.98] disabled:opacity-50"
+                  >
+                    {loading ? "Creating..." : "Launch Event"}
                   </button>
                 </div>
               </form>
-            </div>
-          )}
-        </div>
+            </section>
+          </div>
+        )}
 
-        <div className="rounded-[32px] border border-white/10 bg-white/[0.03] p-6">
-          <p className="text-xs uppercase tracking-[0.26em] text-[#A259FF]">Event operations</p>
-          <h2 className="mt-3 text-3xl font-semibold">Run of show and notes</h2>
-          {!selectedEventId ? (
-            <div className="mt-6 text-sm text-white/60">Select one of your events to manage event operations.</div>
-          ) : (
-            <div className="mt-6 grid gap-4">
-              <textarea value={operations.objective} onChange={(e) => setOperations({ ...operations, objective: e.target.value })} placeholder="Objective" className="min-h-[100px] rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none" />
-              <textarea value={operations.runOfShow} onChange={(e) => setOperations({ ...operations, runOfShow: e.target.value })} placeholder="Run of show" className="min-h-[220px] rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none" />
-              <textarea value={operations.opsNotes} onChange={(e) => setOperations({ ...operations, opsNotes: e.target.value })} placeholder="Operational notes" className="min-h-[100px] rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none" />
-              <button onClick={() => void saveOperations()} disabled={loading} className="rounded-2xl bg-white px-5 py-4 font-semibold text-black disabled:opacity-50">
-                Save event operations
-              </button>
-            </div>
-          )}
+        {activeTab === "manage" && (
+          <div className="grid gap-8 lg:grid-cols-[1fr_420px]">
+            <section className="space-y-6">
+              <div className="rounded-[32px] border border-white/10 bg-white/[0.03] p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-xs font-bold uppercase tracking-[0.26em] text-[#A259FF]">Controls</div>
+                    <h2 className="mt-3 text-3xl font-black">{selectedEvent?.title || "Select Event"}</h2>
+                  </div>
+                  {selectedEvent && (
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={() => void updateEvent(selectedEvent.id, { status: "published", visibility: "published" })}
+                        className="rounded-xl bg-[#A259FF] px-4 py-2 text-xs font-bold text-white"
+                      >
+                        Publish Live
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <div className="mt-10 space-y-8">
+                  <div className="space-y-4">
+                    <div className="text-xs font-bold uppercase tracking-widest text-white/40">Ticket Releases</div>
+                    <div className="grid gap-4">
+                      {ticketTypes.map((tt) => (
+                        <div key={tt.id} className="flex items-center justify-between rounded-2xl border border-white/5 bg-black/20 p-5">
+                          <div>
+                            <div className="font-bold text-lg">{tt.name}</div>
+                            <div className="text-xs text-white/50">{tt.quantity_sold} / {tt.quantity_total} sold</div>
+                          </div>
+                          <div className="flex gap-2">
+                            <button onClick={() => void patchTicketType(tt.id, { isActive: !tt.is_active })} className="rounded-lg bg-white/5 px-3 py-2 text-xs font-bold hover:bg-white/10">
+                              {tt.is_active ? "Disable" : "Enable"}
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section className="rounded-[32px] border border-white/10 bg-white/[0.03] p-6">
+              <div className="text-xs font-bold uppercase tracking-widest text-[#A259FF]">Operations</div>
+              <div className="mt-6 space-y-6">
+                <div>
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-white/40">Run of Show</label>
+                  <textarea 
+                    value={operations.runOfShow} 
+                    onChange={(e) => setOperations({ ...operations, runOfShow: e.target.value })} 
+                    className="mt-2 min-h-[300px] w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-4 text-sm outline-none" 
+                  />
+                </div>
+                <button 
+                  onClick={() => void saveOperations()} 
+                  disabled={loading}
+                  className="w-full rounded-2xl bg-white py-4 font-black text-black active:scale-95"
+                >
+                  Save Ops
+                </button>
+              </div>
+            </section>
+          </div>
+        )}
+      </div>
+      
+      {message ? (
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 rounded-full bg-red-500/90 px-6 py-3 text-sm font-bold text-white shadow-2xl backdrop-blur">
+          {message}
         </div>
-      </section>
+      ) : null}
     </div>
   );
 }

@@ -15,72 +15,72 @@ export const PUBLIC_CITIES: PublicCity[] = [
     name: "Baltimore",
     stateLabel: "Maryland",
     shortLabel: "Baltimore",
-    headline: "Baltimore events, nightlife, sports, and things to do",
+    headline: "The home of EPL and high-stakes city energy.",
     description:
-      "Discover nightlife, sports, concerts, leagues, and standout city energy in Baltimore through EVNTSZN’s premium discovery layer.",
-    seoTitle: "Baltimore events, nightlife, sports, and things to do",
+      "From the first flag pull to the championship stretch, Baltimore is the heartbeat of EVNTSZN Prime League. Experience the city's most competitive sports and exclusive nightlife.",
+    seoTitle: "Baltimore Events, EPL Flag Football & Nightlife | EVNTSZN",
     seoDescription:
-      "Find Baltimore events, nightlife, live music, sports entertainment, and the best things to do through EVNTSZN.",
+      "Join the league in Baltimore. Discover high-stakes flag football, neighborhood team pride, and the city's strongest nightlife moves through EVNTSZN.",
   },
   {
     slug: "atlanta",
     name: "Atlanta",
     stateLabel: "Georgia",
     shortLabel: "Atlanta",
-    headline: "Atlanta events, music, nightlife, and live moments",
+    headline: "Atlanta's headline culture, captured in one pulse.",
     description:
-      "Search Atlanta concerts, nightlife, sports, and things to do with a cleaner premium event-discovery experience.",
-    seoTitle: "Atlanta events, nightlife, music, and things to do",
+      "Experience the high-velocity music and sports culture that defines Atlanta. EVNTSZN connects you to the city's destination-defining moments.",
+    seoTitle: "Atlanta Nightlife, Music Events & City Energy | EVNTSZN",
     seoDescription:
-      "Discover Atlanta nightlife, music events, sports, and things to do with EVNTSZN’s premium event-discovery platform.",
+      "Find your next move in Atlanta. Access headline concerts, premium nightlife, and the city's most electric live sessions first.",
   },
   {
     slug: "newyork",
     name: "New York",
     stateLabel: "New York",
     shortLabel: "NYC",
-    headline: "New York events, nightlife, concerts, and city discovery",
+    headline: "The global standard for exclusive nightlife and city plans.",
     description:
-      "Browse New York nightlife, headline events, live music, and premium city plans without fighting noisy discovery feeds.",
-    seoTitle: "New York events, nightlife, concerts, and things to do",
+      "Navigate the world's most dense entertainment market with clarity. EVNTSZN surfaces the headline sessions and artist drops that actually matter.",
+    seoTitle: "NYC Nightlife, Exclusive Events & Headline Concerts | EVNTSZN",
     seoDescription:
-      "Find New York events, nightlife, concerts, sports, and things to do with EVNTSZN.",
+      "The definitive source for NYC discovery. Access premium nightlife, exclusive artist events, and the plans worth arriving for.",
   },
   {
     slug: "miami",
     name: "Miami",
     stateLabel: "Florida",
     shortLabel: "Miami",
-    headline: "Miami events, nightlife, music, and destination energy",
+    headline: "Destination energy. Destination-defining events.",
     description:
-      "Discover Miami nightlife, live entertainment, concerts, and city-shaping events through a premium discovery layer.",
-    seoTitle: "Miami events, nightlife, music, and things to do",
+      "Miami isn't just a market; it's a statement. Experience high-velocity nightlife and destination-defining events through the premium EVNTSZN discovery layer.",
+    seoTitle: "Miami Destination Events, Premium Nightlife & Luxury Discovery | EVNTSZN",
     seoDescription:
-      "Discover Miami nightlife, music events, sports entertainment, and things to do with EVNTSZN.",
+      "Unlock Miami's elite event scene. From luxury destination energy to destination-shaping nightlife, land exactly where the energy is.",
   },
   {
     slug: "dc",
     name: "Washington",
     stateLabel: "District of Columbia",
     shortLabel: "DC",
-    headline: "DC events, nightlife, sports, and live entertainment",
+    headline: "Power plans. Direct access to Washington's live pulse.",
     description:
-      "Find DC nightlife, concerts, sports, and premium things to do across Washington’s live-event mix.",
-    seoTitle: "DC events, nightlife, sports, and things to do",
+      "Move through the District's live-event mix without the noise. Access high-stakes sports entertainment and Washington's strongest live plans first.",
+    seoTitle: "DC Live Events, Sports Entertainment & Washington Nightlife | EVNTSZN",
     seoDescription:
-      "Discover DC events, nightlife, sports, and live entertainment with EVNTSZN.",
+      "Connect to the capital's energy. EVNTSZN brings you direct access to Washington DC's live pulse, from sports to headline nightlife.",
   },
   {
     slug: "dover",
     name: "Dover",
     stateLabel: "Delaware",
     shortLabel: "Dover",
-    headline: "Dover events, nightlife, sports, and local things to do",
+    headline: "Community momentum. Clean, premium access to local leagues.",
     description:
-      "Find Dover events, league nights, nightlife, and local entertainment through the same EVNTSZN discovery layer used across the network.",
-    seoTitle: "Dover events, nightlife, sports, and things to do",
+      "Discover the local momentum in Dover. Access community-rooted events and league nights through the same premium discovery layer used across the network.",
+    seoTitle: "Dover Local Events, League Nights & Community Discovery | EVNTSZN",
     seoDescription:
-      "Discover Dover events, nightlife, sports entertainment, and things to do with EVNTSZN.",
+      "Find local Dover events and league nights worth following. EVNTSZN provides a cleaner, premium surface for community-rooted discovery.",
   },
 ];
 

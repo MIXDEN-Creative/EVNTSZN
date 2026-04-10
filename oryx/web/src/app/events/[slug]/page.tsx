@@ -69,8 +69,45 @@ export default async function EventDetailPage({ params }: { params: Params }) {
     }
   >;
 
+  const venueName = Array.isArray(event.evntszn_venues)
+    ? (event.evntszn_venues[0] as EventVenue | undefined)?.name
+    : (event.evntszn_venues as EventVenue | null)?.name || "EVNTSZN venue";
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Event",
+    "name": event.title,
+    "startDate": event.start_at,
+    "endDate": event.end_at,
+    "eventStatus": "https://schema.org/EventScheduled",
+    "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+    "location": {
+      "@type": "Place",
+      "name": venueName,
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": event.city,
+        "addressRegion": event.state,
+        "addressCountry": "US"
+      }
+    },
+    "description": event.description || event.subtitle,
+    "offers": visibleTicketTypes.map(tt => ({
+      "@type": "Offer",
+      "name": tt.name,
+      "price": (tt.price_cents / 100).toFixed(2),
+      "priceCurrency": "USD",
+      "availability": tt.availability_state === 'active' ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+      "validFrom": tt.sales_start_at
+    }))
+  };
+
   return (
     <main className="min-h-screen bg-black px-6 py-12 text-white">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <div className="mx-auto max-w-7xl">
         <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
           <section>

@@ -208,7 +208,7 @@ function DiscoveryCard({
         <p className="mt-4 line-clamp-3 text-sm leading-6 text-white/72">{event.summary}</p>
         <Link
           href={event.href}
-          className="mt-5 inline-flex rounded-full bg-white px-4 py-2 text-sm font-semibold text-black transition hover:opacity-90"
+          className="mt-5 ev-button-primary w-full"
         >
           Get Access
         </Link>
@@ -464,34 +464,34 @@ export default function DiscoveryLanding({
       </section>
 
       {content.visibility.showPopularSection ? (
-      <section className="mx-auto max-w-7xl px-4 py-10 md:px-6 lg:px-8">
-        <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-          <div>
-            <div className="ev-section-kicker">{hasSearched ? "Matching results" : "Popular right now"}</div>
-            <h2 className="mt-3 text-3xl font-black tracking-[-0.04em] text-white md:text-5xl">
-              {hasSearched ? "Results that actually match what you asked for." : "The strongest plans in the city, surfaced first."}
+      <section className="mx-auto max-w-7xl px-4 py-16 md:px-6 lg:px-8 lg:py-24">
+        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div className="max-w-4xl">
+            <div className="ev-section-kicker">{hasSearched ? "Top results" : "Trending Now"}</div>
+            <h2 className="mt-4 text-4xl font-black tracking-[-0.04em] text-white md:text-6xl">
+              {hasSearched ? "The strongest matches for your next move." : "Headline events and city-shaping plans."}
             </h2>
-            <p className="mt-3 max-w-3xl text-base leading-7 text-white/72">
+            <p className="mt-6 max-w-2xl text-lg leading-8 text-white/70">
               {content.discovery.body}
             </p>
           </div>
-          <div className="max-w-md text-sm leading-6 text-white/55">
+          <div className="max-w-xs text-sm leading-6 text-white/40 md:text-right">
             {message || (normalizedLocationLabel ? `Using ${normalizedLocationLabel} for the strongest city match.` : content.discovery.disclosure)}
           </div>
         </div>
 
         {loading ? (
-          <div className="ev-empty mt-8">Loading fresh results...</div>
+          <div className="ev-empty mt-12">Loading fresh results...</div>
         ) : visibleResults.length === 0 ? (
-          <div className="ev-empty mt-8">
-            <div className="text-xl font-bold text-white">{emptyState.title}</div>
-            <p className="mt-2 text-sm leading-6 text-white/70">{message || emptyState.body}</p>
-            <div className="mt-4 flex flex-wrap gap-2">
+          <div className="ev-empty mt-12">
+            <div className="text-2xl font-bold text-white">{emptyState.title}</div>
+            <p className="mt-3 text-base leading-7 text-white/60">{message || emptyState.body}</p>
+            <div className="mt-8 flex flex-wrap gap-3">
               {PUBLIC_CITIES.map((suggestion) => (
                 <button
                   key={suggestion.slug}
                   type="button"
-                  className="ev-chip ev-chip--external"
+                  className="ev-chip ev-chip--external h-11 px-6 text-sm"
                   onClick={() => {
                     setCity(suggestion.name);
                     void runSearch({ city: suggestion.name });
@@ -503,9 +503,9 @@ export default function DiscoveryLanding({
             </div>
           </div>
         ) : (
-          <div className="mt-8 grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+          <div className="mt-12 grid gap-8 xl:grid-cols-[1.1fr_0.9fr]">
             {spotlight ? <DiscoveryCard event={spotlight} priority="hero" /> : null}
-            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-1">
+            <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-1">
               {rail.slice(0, 4).map((event) => (
                 <DiscoveryCard key={event.id} event={event} priority="rail" />
               ))}
@@ -516,7 +516,7 @@ export default function DiscoveryLanding({
       ) : null}
 
       {sponsorPlacements.length ? (
-        <section className="mx-auto max-w-7xl px-4 pb-10 md:px-6 lg:px-8">
+        <section className="mx-auto max-w-7xl px-4 pb-16 md:px-6 lg:px-8 lg:pb-24">
           <SponsorPlacementStrip
             placements={sponsorPlacements}
             eyebrow={modules.sponsorBlock.eyebrow}
@@ -528,16 +528,16 @@ export default function DiscoveryLanding({
       ) : null}
 
       {content.visibility.showCategoryBlocks ? (
-        <section className="mx-auto max-w-7xl px-4 pb-10 md:px-6 lg:px-8">
+        <section className="mx-auto max-w-7xl px-4 pb-16 md:px-6 lg:px-8 lg:pb-24">
           <div className="flex items-end justify-between gap-4">
-            <div>
+            <div className="max-w-3xl">
               <div className="ev-section-kicker">Explore by lane</div>
-              <h2 className="mt-3 text-3xl font-black tracking-[-0.04em] text-white md:text-4xl">
+              <h2 className="mt-4 text-4xl font-black tracking-[-0.04em] text-white md:text-5xl">
                 Search by nightlife, music, sports, or city plans.
               </h2>
             </div>
           </div>
-          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="mt-10 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
             {content.taxonomy.categories.map((category) => (
               <button
                 key={category.title}
@@ -546,13 +546,13 @@ export default function DiscoveryLanding({
                   setQuery(category.title);
                   void runSearch({ query: category.title });
                 }}
-                className="ev-panel p-5 text-left hover:-translate-y-0.5"
+                className="ev-panel group min-h-[220px] p-8 text-left transition-all hover:-translate-y-1 hover:bg-white/[0.04]"
               >
                 <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#cfb8ff]">
                   Explore
                 </div>
-                <div className="mt-3 text-2xl font-black tracking-tight text-white">{category.title}</div>
-                <p className="mt-3 text-sm leading-6 text-white/72">{category.description}</p>
+                <div className="mt-5 text-3xl font-black tracking-tight text-white">{category.title}</div>
+                <p className="mt-4 text-base leading-7 text-white/60">{category.description}</p>
               </button>
             ))}
           </div>
@@ -560,25 +560,28 @@ export default function DiscoveryLanding({
       ) : null}
 
       {content.visibility.showCityBlocks ? (
-        <section id="cities" className="mx-auto max-w-7xl px-4 pb-10 md:px-6 lg:px-8">
-          <div className="ev-panel p-6 md:p-8">
+        <section id="cities" className="mx-auto max-w-7xl px-4 pb-16 md:px-6 lg:px-8 lg:pb-24">
+          <div className="ev-panel p-8 md:p-12">
             <div className="ev-section-kicker">Cities</div>
-            <h2 className="mt-3 text-3xl font-black tracking-[-0.04em] text-white md:text-4xl">
+            <h2 className="mt-4 text-4xl font-black tracking-[-0.04em] text-white md:text-5xl">
               Start with the city. The right night follows.
             </h2>
-            <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+            <div className="mt-12 grid gap-6 md:grid-cols-2 xl:grid-cols-5">
               {PUBLIC_CITIES.map((cityItem) => (
                 <Link
                   key={cityItem.slug}
                   href={`/${cityItem.slug}`}
-                  className="group rounded-[24px] border border-white/10 bg-white/5 p-5 hover:bg-white/[0.07]"
+                  className="group rounded-[32px] border border-white/10 bg-white/5 p-7 transition-all hover:bg-white/[0.08] hover:shadow-2xl"
                 >
                   <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#cfb8ff]">
                     {cityItem.stateLabel}
                   </div>
-                  <div className="mt-3 text-2xl font-black tracking-tight text-white">{cityItem.shortLabel}</div>
-                  <p className="mt-3 text-sm leading-6 text-white/70">{cityItem.description}</p>
-                  <span className="mt-5 inline-flex text-sm font-semibold text-white/84">Explore {cityItem.shortLabel}</span>
+                  <div className="mt-4 text-3xl font-black tracking-tight text-white">{cityItem.shortLabel}</div>
+                  <p className="mt-4 text-sm leading-6 text-white/60">{cityItem.description}</p>
+                  <span className="mt-8 inline-flex items-center gap-2 text-sm font-bold text-white/90">
+                    Explore {cityItem.shortLabel}
+                    <span className="transition-transform group-hover:translate-x-1">→</span>
+                  </span>
                 </Link>
               ))}
             </div>

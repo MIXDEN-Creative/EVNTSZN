@@ -53,9 +53,9 @@ export const EPL_TEAM_PROFILES: EplTeamProfile[] = [
     slug: "harbor-titans",
     name: "Harbor Titans",
     neighborhood: "Harbor",
-    headline: "Big-stage presence, heavy game-night energy, and a team built to look the part.",
+    headline: "Big-stage presence, heavy game-night energy, and a team built to dominate.",
     description:
-      "The Harbor Titans bring scale and spectacle into the league with a premium public-facing identity meant to feel imposing.",
+      "The Harbor Titans bring scale and spectacle into the league with a premium identity meant to feel imposing and unstoppable.",
     logoUrl: "/epl_team_logos/titans.jpeg",
     notes: ["Big-game feel", "Physical identity", "Premium team presence"],
   },

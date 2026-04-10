@@ -56,7 +56,7 @@ export default async function EventsPage() {
                 </div>
                 <Link
                   href={`/events/${event.slug}`}
-                  className="mt-6 inline-flex rounded-2xl bg-white px-4 py-3 font-semibold text-black"
+                  className="mt-6 ev-button-primary w-full"
                 >
                   Open event
                 </Link>

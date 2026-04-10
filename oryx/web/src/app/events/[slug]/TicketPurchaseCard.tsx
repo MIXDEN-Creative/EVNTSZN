@@ -154,7 +154,7 @@ export default function TicketPurchaseCard({
         <button
           onClick={handleCheckout}
           disabled={!selectedTicketType || loading || !isPurchasable}
-          className="rounded-2xl bg-white px-5 py-4 font-semibold text-black disabled:opacity-50"
+          className="ev-button-primary w-full mt-4"
         >
           {loading
             ? "Processing..."

@@ -17,14 +17,14 @@ import PublicFooter from "@/components/public/PublicFooter";
 export const metadata: Metadata = {
   title: "EPL | EVNTSZN Prime League",
   description:
-    "Explore EVNTSZN Prime League, a premium coed flag football league with draft-night energy, six clubs, weekly standings pressure, and real Baltimore game-day pull.",
+    "Explore EVNTSZN Prime League, Baltimore’s premium flag football league. Six teams, draft-night energy, and high-stakes city competition.",
   alternates: {
     canonical: "https://epl.evntszn.com",
   },
   openGraph: {
     title: "EPL | EVNTSZN Prime League",
     description:
-      "Explore EVNTSZN Prime League, a premium coed flag football league with draft-night energy, team pride, standings movement, and game-day momentum.",
+      "Explore EVNTSZN Prime League, Baltimore’s premium flag football league. Six teams, draft-night energy, and high-stakes city competition.",
     url: "https://epl.evntszn.com",
     siteName: "EVNTSZN",
     type: "website",
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "EPL | EVNTSZN Prime League",
     description:
-      "Explore EVNTSZN Prime League, a premium coed flag football league with draft-night energy, team pride, standings movement, and game-day momentum.",
+      "Explore EVNTSZN Prime League, Baltimore’s premium flag football league. Six teams, draft-night energy, and high-stakes city competition.",
   },
 };
 
@@ -60,26 +60,26 @@ export default async function EplPage() {
           alt="EVNTSZN Prime League flag football"
           className="absolute inset-0 h-full w-full object-cover"
         />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(162,89,255,0.30),transparent_35%),linear-gradient(180deg,rgba(0,0,0,0.40),rgba(0,0,0,0.84))]" />
-        <div className="relative mx-auto grid max-w-7xl gap-8 px-4 py-16 md:px-6 lg:grid-cols-[1.1fr_0.9fr] lg:px-8 lg:py-24">
-          <div>
-            <div className="inline-flex rounded-full border border-white/15 bg-white/8 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-white/90">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(162,89,255,0.35),transparent_45%),linear-gradient(180deg,rgba(0,0,0,0.30),rgba(0,0,0,0.92))]" />
+        <div className="relative mx-auto grid max-w-7xl gap-12 px-4 py-20 md:px-6 lg:grid-cols-[1.1fr_0.9fr] lg:px-8 lg:py-32">
+          <div className="flex flex-col justify-center">
+            <div className="inline-flex w-fit rounded-full border border-white/15 bg-white/8 px-5 py-2 text-xs font-bold uppercase tracking-[0.24em] text-white/90">
               {content.hero.eyebrow}
             </div>
 
-            <h1 className="mt-5 max-w-4xl text-5xl font-black leading-[0.93] tracking-[-0.05em] text-white md:text-7xl">
+            <h1 className="mt-8 max-w-4xl text-6xl font-black leading-[0.9] tracking-[-0.05em] text-white md:text-8xl">
               {content.hero.title}
             </h1>
 
-            <p className="mt-5 max-w-2xl text-base leading-7 text-white/80 md:text-lg">
+            <p className="mt-8 max-w-2xl text-lg leading-8 text-white/80 md:text-xl">
               {content.hero.description}
             </p>
 
-            <div className="mt-8 flex flex-wrap gap-3">
+            <div className="mt-10 flex flex-wrap gap-4">
               {content.menu.showRegister ? (
                 <a
                   href={content.hero.primaryCtaHref}
-                  className="rounded-full bg-white px-5 py-3 text-sm font-semibold text-black transition hover:opacity-90"
+                  className="rounded-full bg-white px-8 py-4 text-sm font-black uppercase tracking-widest text-black transition hover:opacity-90 active:scale-95"
                 >
                   {content.hero.primaryCtaLabel}
                 </a>
@@ -87,29 +87,15 @@ export default async function EplPage() {
               {content.menu.showSchedule ? (
                 <a
                   href="#schedule"
-                  className="rounded-full border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+                  className="rounded-full border border-white/20 bg-white/5 px-8 py-4 text-sm font-black uppercase tracking-widest text-white backdrop-blur-xl transition hover:bg-white/10 active:scale-95"
                 >
                   {content.hero.secondaryCtaLabel}
                 </a>
               ) : null}
-              {content.menu.showDraftCountdown ? (
-                <a
-                  href="#countdown"
-                  className="rounded-full border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
-                >
-                  Draft Countdown
-                </a>
-              ) : null}
-              <a
-                href="https://evntszn.com"
-                className="rounded-full border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
-              >
-                Back to EVNTSZN
-              </a>
             </div>
           </div>
 
-          <div className="grid gap-4">
+          <div className="grid gap-6">
             {[
               {
                 label: "League feel",
@@ -117,76 +103,76 @@ export default async function EplPage() {
               },
               {
                 label: "Why people come back",
-                body: "Players can register, supporters can follow the table, and every club has a public identity worth checking between game nights.",
+                body: "Players can register, supporters can follow the table, and every team has a public identity worth checking between game nights.",
               },
               {
                 label: "Built for Baltimore",
                 body: "EPL leans into city pride, neighborhood identity, and a coed adult league energy that feels sharper than a one-off rec run.",
               },
             ].map((item) => (
-              <div key={item.label} className="rounded-[24px] border border-white/10 bg-white/8 p-5 backdrop-blur-xl">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/55">
+              <div key={item.label} className="rounded-[32px] border border-white/10 bg-black/40 p-8 backdrop-blur-2xl">
+                <div className="text-[11px] font-bold uppercase tracking-[0.24em] text-white/40">
                   {item.label}
                 </div>
-                <p className="mt-2 text-base leading-7 text-white/82">{item.body}</p>
+                <p className="mt-4 text-lg leading-8 text-white/90">{item.body}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <div className="mx-auto max-w-7xl px-4 py-12 md:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 py-20 md:px-6 lg:px-8 lg:py-32">
         {content.menu.showDraftCountdown ? <DraftCountdown /> : null}
 
-        <section className="mt-10 rounded-[32px] border border-white/10 bg-[#0c0c15] p-6 md:p-8">
-          <div className="text-xs font-semibold uppercase tracking-[0.24em] text-[#b899ff]">
+        <section className="mt-20 rounded-[48px] border border-white/10 bg-[#0c0c15] p-10 md:p-16">
+          <div className="text-xs font-bold uppercase tracking-[0.24em] text-[#b899ff]">
             Season overview
           </div>
-          <h2 className="mt-3 text-3xl font-black tracking-tight text-white md:text-5xl">
+          <h2 className="mt-6 text-4xl font-black tracking-tight text-white md:text-7xl">
             {content.sections.seasonHeadline}
           </h2>
-          <p className="mt-4 max-w-3xl text-base leading-7 text-white/72">
+          <p className="mt-8 max-w-4xl text-lg leading-8 text-white/70">
             {content.sections.seasonBody}
           </p>
-          <div className="mt-8 grid gap-4 md:grid-cols-3">
+          <div className="mt-12 grid gap-6 md:grid-cols-3">
             {[
               "Coed league structure",
               "Saturday, June 6 draft night",
               "City-rooted competition with real team identity",
             ].map((text) => (
-              <div key={text} className="rounded-[24px] border border-white/10 bg-white/5 p-5">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/55">
+              <div key={text} className="rounded-[32px] border border-white/10 bg-white/5 p-8">
+                <div className="text-[11px] font-bold uppercase tracking-[0.24em] text-white/40">
                   Season 1
                 </div>
-                <div className="mt-2 text-xl font-bold text-white">{text}</div>
+                <div className="mt-4 text-2xl font-black text-white">{text}</div>
               </div>
             ))}
           </div>
         </section>
 
         {content.menu.showSchedule ? (
-          <section id="schedule" className="mt-10 rounded-[32px] border border-white/10 bg-[#0c0c15] p-6 md:p-8">
-            <div className="text-xs font-semibold uppercase tracking-[0.24em] text-[#b899ff]">
+          <section id="schedule" className="mt-20 rounded-[48px] border border-white/10 bg-[#0c0c15] p-10 md:p-16">
+            <div className="text-xs font-bold uppercase tracking-[0.24em] text-[#b899ff]">
               Schedule
             </div>
-            <h2 className="mt-3 text-3xl font-black tracking-tight text-white md:text-5xl">
+            <h2 className="mt-6 text-4xl font-black tracking-tight text-white md:text-7xl">
               {content.sections.scheduleHeadline}
             </h2>
-            <p className="mt-4 max-w-3xl text-base leading-7 text-white/72">
+            <p className="mt-8 max-w-4xl text-lg leading-8 text-white/70">
               {content.sections.scheduleBody}
             </p>
 
-            <div className="mt-8 grid gap-4 md:grid-cols-3">
+            <div className="mt-12 grid gap-6 md:grid-cols-3">
               {[
                 "Opening-night matchups and statement starts",
                 "Rivalry weeks that tighten the table",
                 "Stretch-run games that change playoff pressure",
               ].map((text) => (
-                <div key={text} className="rounded-[24px] border border-white/10 bg-white/5 p-5">
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/55">
+                <div key={text} className="rounded-[32px] border border-white/10 bg-white/5 p-8">
+                  <div className="text-[11px] font-bold uppercase tracking-[0.24em] text-white/40">
                     League rhythm
                   </div>
-                  <div className="mt-2 text-xl font-bold text-white">{text}</div>
+                  <div className="mt-4 text-2xl font-black text-white">{text}</div>
                 </div>
               ))}
             </div>
@@ -194,30 +180,33 @@ export default async function EplPage() {
         ) : null}
 
         {content.menu.showTeams ? (
-          <section id="teams" className="mt-10 rounded-[32px] border border-white/10 bg-[#0c0c15] p-6 md:p-8">
-            <div className="text-xs font-semibold uppercase tracking-[0.24em] text-[#b899ff]">
+          <section id="teams" className="mt-20 rounded-[48px] border border-white/10 bg-[#0c0c15] p-10 md:p-16">
+            <div className="text-xs font-bold uppercase tracking-[0.24em] text-[#b899ff]">
               Teams
             </div>
-            <h2 className="mt-3 text-3xl font-black tracking-tight text-white md:text-5xl">
+            <h2 className="mt-6 text-4xl font-black tracking-tight text-white md:text-7xl">
               {content.sections.teamsHeadline}
             </h2>
-            <p className="mt-4 max-w-3xl text-base leading-7 text-white/72">
+            <p className="mt-8 max-w-4xl text-lg leading-8 text-white/70">
               {content.sections.teamsBody}
             </p>
 
-            <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <div className="mt-12 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
               {EPL_TEAM_PROFILES.map((team) => (
-                <Link key={team.slug} href={`/epl/teams/${team.slug}`} className="rounded-[24px] border border-white/10 bg-white/5 p-5 hover:bg-white/[0.08]">
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/55">
-                    Season 1 Club
+                <Link key={team.slug} href={`/epl/teams/${team.slug}`} className="group rounded-[32px] border border-white/10 bg-white/5 p-8 transition-all hover:-translate-y-1 hover:bg-white/[0.08]">
+                  <div className="text-[11px] font-bold uppercase tracking-[0.24em] text-white/40">
+                    Season 1 Team
                   </div>
-                  <div className="mt-2 text-2xl font-bold text-white">{team.name}</div>
-                  <p className="mt-2 text-sm leading-6 text-white/72">{team.headline}</p>
+                  <div className="mt-5 text-3xl font-black text-white">{team.name}</div>
+                  <p className="mt-4 text-base leading-7 text-white/60">{team.headline}</p>
+                  <div className="mt-8 inline-flex text-sm font-bold text-white/80 group-hover:text-white">
+                    View Team Profile →
+                  </div>
                 </Link>
               ))}
             </div>
-            <div className="mt-6">
-              <Link href="/epl/teams" className="rounded-full border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10">
+            <div className="mt-10">
+              <Link href="/epl/teams" className="ev-button-secondary">
                 View all teams
               </Link>
             </div>

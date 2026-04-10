@@ -36,17 +36,16 @@ export default function VenueOpsDashboard({
   if (!canOperate) {
     return (
       <div className="rounded-[32px] border border-white/10 bg-white/[0.03] p-6">
-        <h2 className="text-2xl font-semibold">Activate venue ops</h2>
-        <p className="mt-3 max-w-2xl text-white/65">
-          Claim the venue-facing EVNTSZN workspace for scanner launches, front-gate readiness,
-          and event-day operational visibility.
+        <h2 className="text-2xl font-semibold">Venue Access Required</h2>
+        <p className="mt-3 max-w-2xl text-white/70">
+          Activate your venue profile to launch event scanners, manage gate throughput, and track real-time attendance.
         </p>
         <button
           onClick={activateVenueWorkspace}
           disabled={loading}
-          className="mt-6 rounded-2xl bg-white px-5 py-3 font-semibold text-black disabled:opacity-50"
+          className="mt-6 rounded-2xl bg-white px-5 py-3 font-semibold text-black active:scale-95 disabled:opacity-50"
         >
-          {loading ? "Activating..." : "Activate venue workspace"}
+          {loading ? "Activating..." : "Set up venue access"}
         </button>
       </div>
     );
@@ -56,26 +55,43 @@ export default function VenueOpsDashboard({
     <div className="grid gap-5">
       {events.map((event) => (
         <div key={event.id} className="rounded-[30px] border border-white/10 bg-white/[0.03] p-6">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <div className="text-xs uppercase tracking-[0.22em] text-white/45">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex-1">
+              <div className="text-xs font-bold uppercase tracking-[0.22em] text-[#A259FF]">
                 {event.city}, {event.state}
               </div>
-              <div className="mt-2 text-2xl font-semibold">{event.title}</div>
-              <div className="mt-2 text-white/62">
-                {new Date(event.start_at).toLocaleString()} · scanner: {event.scanner_status}
+              <div className="mt-2 text-2xl font-black">{event.title}</div>
+              <div className="mt-2 text-sm text-white/60">
+                {new Date(event.start_at).toLocaleString("en-US", { 
+                  weekday: 'short', 
+                  month: 'short', 
+                  day: 'numeric', 
+                  hour: 'numeric', 
+                  minute: '2-digit' 
+                })} · <span className="uppercase tracking-wide text-white/40">Scanner: {event.scanner_status}</span>
               </div>
             </div>
-            <div className="flex flex-wrap gap-2">
+            
+            <div className="flex flex-wrap items-center gap-4 lg:w-1/2 lg:justify-end">
+              <div className="min-w-[140px] flex-1 lg:flex-none">
+                <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-white/40">
+                  <span>Occupancy</span>
+                  <span>{event.check_in_count || 0}</span>
+                </div>
+                <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/5">
+                  <div 
+                    className="h-full bg-[#A259FF] transition-all duration-500" 
+                    style={{ width: `${Math.min((event.check_in_count / 100) * 100, 100)}%` }} 
+                  />
+                </div>
+              </div>
+              
               <a
                 href={getCanonicalUrl(`/scanner/${event.slug}`, "scanner", window.location.host)}
-                className="rounded-xl bg-white px-4 py-3 text-sm font-semibold text-black"
+                className="ev-button-primary"
               >
                 Open scanner
               </a>
-              <div className="rounded-xl border border-white/15 px-4 py-3 text-sm text-white/72">
-                Checked in: {event.check_in_count || 0}
-              </div>
             </div>
           </div>
         </div>

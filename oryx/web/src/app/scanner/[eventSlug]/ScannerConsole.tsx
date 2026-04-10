@@ -173,41 +173,44 @@ export default function ScannerConsole({
       </div>
 
       <div className="mx-auto grid max-w-5xl gap-6 px-4 py-6 lg:grid-cols-[1.1fr_0.9fr]">
-        <section className="rounded-[32px] border border-white/10 bg-white/[0.03] p-4">
-          {statsOpen ? (
-            <div className="mb-4 rounded-[24px] border border-white/10 bg-black/35 p-4">
-              <div className="text-[11px] uppercase tracking-[0.22em] text-[#A259FF]">Ticket stats</div>
-              <div className="mt-4 grid gap-3 md:grid-cols-2">
-                {breakdown.map((row) => (
-                  <div key={row.id} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm">
-                    <div className="font-semibold text-white">{row.name}</div>
-                    <div className="mt-2 text-white/65">Sold: {row.sold}</div>
-                    <div className="text-white/65">Checked in: {row.checkedIn}</div>
-                    <div className="text-white/65">Waiting: {row.remainingNotCheckedIn}</div>
-                  </div>
-                ))}
+        <section className="space-y-6">
+          <div className="rounded-[32px] border border-white/10 bg-white/[0.03] p-6">
+            <div className="text-[11px] uppercase tracking-[0.24em] text-[#A259FF]">Live Pulse</div>
+            <div className="mt-6 grid grid-cols-2 gap-4">
+              <div className="rounded-3xl border border-white/10 bg-black/40 p-5">
+                <div className="text-xs text-white/50">Checked in</div>
+                <div className="mt-2 text-4xl font-black">{count}</div>
+                <div className="mt-1 text-xs text-white/40">Total guests on-site</div>
+              </div>
+              <div className="rounded-3xl border border-white/10 bg-black/40 p-5">
+                <div className="text-xs text-white/50">Capacity</div>
+                <div className="mt-2 text-4xl font-black">{Math.round((count / ticketCapacity) * 100) || 0}%</div>
+                <div className="mt-1 text-xs text-white/40">Of {ticketCapacity} tickets</div>
               </div>
             </div>
-          ) : null}
-          <div className="overflow-hidden rounded-[28px] border border-white/10 bg-[radial-gradient(circle_at_top,rgba(162,89,255,0.18),transparent_35%),linear-gradient(180deg,#060606_0%,#000_100%)]">
-            <div className="flex min-h-[420px] items-end justify-between p-5">
-              <div className="max-w-sm">
-                <div className="text-xs uppercase tracking-[0.24em] text-white/45">Camera lane</div>
-                <div className="mt-3 text-2xl font-semibold">Fast check-in, clean lane, no wasted motion.</div>
-                <p className="mt-3 text-sm text-white/65">
-                  Keep the camera lane unobstructed, recover guests through universal search, and hold the entire front-gate experience inside one tight mobile-first surface.
-                </p>
-              </div>
-              <div className="rounded-3xl border border-[#A259FF]/30 bg-[#A259FF]/10 px-4 py-3 text-xs uppercase tracking-[0.22em] text-[#dfd0ff]">
-                {eventSlug}
+
+            <div className="mt-6 space-y-4">
+              <div className="text-xs font-semibold uppercase tracking-widest text-white/40">Ticket Breakdown</div>
+              <div className="grid gap-3">
+                {breakdown.map((row) => (
+                  <div key={row.id} className="flex items-center justify-between rounded-2xl border border-white/5 bg-white/[0.02] p-4">
+                    <div>
+                      <div className="font-bold text-white/90">{row.name}</div>
+                      <div className="text-xs text-white/50">{row.sold} sold</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-lg font-black text-white">{row.checkedIn}</div>
+                      <div className="text-[10px] uppercase tracking-tighter text-white/40">On-site</div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
         </section>
 
         <section className="rounded-[32px] border border-white/10 bg-white/[0.03] p-5">
-          <div className="text-xs uppercase tracking-[0.24em] text-[#A259FF]">Universal search</div>
-          <div className="mt-2 text-sm text-white/58">Search by ticket code, attendee, or email. Results stay in-line with direct check-in action.</div>
+          <div className="text-xs uppercase tracking-[0.24em] text-[#A259FF]">Guest Recovery</div>
           <div className="mt-4 flex gap-3">
             <input
               autoFocus
@@ -219,13 +222,13 @@ export default function ScannerConsole({
                   void searchTickets();
                 }
               }}
-              placeholder="Ticket code, attendee name, or email"
-              className="h-12 flex-1 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none"
+              placeholder="Attendee name, code, or email"
+              className="h-14 flex-1 rounded-2xl border border-white/20 bg-black/60 px-5 text-lg text-white outline-none focus:border-[#A259FF]/50"
             />
             <button
               onClick={() => searchTickets()}
               disabled={loading}
-              className="rounded-2xl bg-white px-4 py-3 font-semibold text-black disabled:opacity-50"
+              className="rounded-2xl bg-white px-6 font-bold text-black active:scale-95 disabled:opacity-50"
             >
               Search
             </button>

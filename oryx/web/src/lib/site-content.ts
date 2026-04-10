@@ -175,7 +175,7 @@ export const DEFAULT_HOMEPAGE_CONTENT: Omit<HomepageContent, "storageReady"> = {
     eyebrow: "Live City Pulse",
     title: "Don't just go out. Land exactly where the energy is.",
     description:
-      "Access exclusive nightlife, headline concerts, and the city's most competitive sports. EVNTSZN connects you to the moments that actually matter.",
+      "Access the city's most exclusive nights, headline concerts, and high-stakes sports. We connect you to the moments that define the season.",
     primaryCtaLabel: "Explore the movement",
     primaryCtaHref: "/events",
     secondaryCtaLabel: "Claim your access",
@@ -186,17 +186,17 @@ export const DEFAULT_HOMEPAGE_CONTENT: Omit<HomepageContent, "storageReady"> = {
   banner: {
     eyebrow: "The Premium Standard",
     title: "Stop searching. Start arriving.",
-    body: "EVNTSZN cuts through the noise to surface the city's strongest moves. From discovery to tickets, we keep the path clean so you never miss a beat.",
+    body: "EVNTSZN surfaces the city's strongest moves first. From the initial discovery to the final ticket, we keep the path clean so you never miss a beat.",
   },
   discovery: {
     headline: "The city is moving. Find your next move.",
-    body: "Filter for the elite experiences—nightlife, concerts, and sports that define the city calendar. We prioritize native EVNTSZN inventory so you get the strongest options first.",
+    body: "Filter for the elite experiences—nightlife, concerts, and sports that define the city calendar. We prioritize exclusive EVNTSZN events so you get the strongest options first.",
     disclosure:
       "Priority is given to EVNTSZN-native events to ensure the highest quality experience.",
     searchPlaceholder: "Search artist, venue, vibe, or the night's headline event",
     keywordPlaceholder: "Keyword",
     cityPlaceholder: "City",
-    nativeHeadline: "Official EVNTSZN Events",
+    nativeHeadline: "Featured EVNTSZN Events",
     hostHeadline: "Hosted Experiences",
     independentHeadline: "Independent Organizers",
     externalHeadline: "Extended City Discovery",
@@ -260,7 +260,7 @@ export const DEFAULT_EPL_PUBLIC_CONTENT: Omit<EplPublicContent, "storageReady"> 
     eyebrow: "Elite Competition",
     title: "More than a league. A Baltimore legacy in the making.",
     description:
-      "Forge your club's identity, track the standings, and command the field. Season 1 starts now—don't just watch the game, own it.",
+      "Forge your team's identity, track the standings, and command the field. Season 1 starts now—don't just watch the game, own it.",
     primaryCtaLabel: "Join the Ranks",
     primaryCtaHref: "/epl/season-1/register",
     secondaryCtaLabel: "View the Schedule",
@@ -269,11 +269,11 @@ export const DEFAULT_EPL_PUBLIC_CONTENT: Omit<EplPublicContent, "storageReady"> 
   sections: {
     seasonHeadline: "Forged in Baltimore. Built for the Bold.",
     seasonBody:
-      "From draft night to the championship stretch, every snap carries the weight of city pride and club identity. This is where athletes become legends.",
+      "From draft night to the championship stretch, every snap carries the weight of city pride and team identity. This is where athletes become legends.",
     scheduleHeadline: "The Road to the Title.",
     scheduleBody:
       "Follow the rivalries, the statement nights, and the games that will define the season. No guessing, just momentum.",
-    teamsHeadline: "Six Clubs. One Throne.",
+    teamsHeadline: "Six Teams. One Throne.",
     teamsBody:
       "Every team carries a neighborhood edge and a drive to dominate. Choose your side and follow the journey.",
     standingsHeadline: "Where Respect is Earned.",
