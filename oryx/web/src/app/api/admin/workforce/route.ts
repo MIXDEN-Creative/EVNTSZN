@@ -182,6 +182,9 @@ export async function GET(request: NextRequest) {
     positions: positionsRes.data || [],
     payrollSummaries,
     summaries: {
+      clockedIn: entries.filter((entry: any) => !entry.ended_at && ["draft", "corrected"].includes(entry.status)).length,
+      submitted: entries.filter((entry: any) => entry.status === "submitted").length,
+      readyForPayroll: entries.filter((entry: any) => entry.status === "ready_for_payroll").length,
       pending: entries.filter((entry: any) => entry.status === "submitted").length,
       approvedHours: entries
         .filter((entry: any) => entry.status === "approved" || entry.status === "ready_for_payroll")

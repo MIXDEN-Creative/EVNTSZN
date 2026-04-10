@@ -27,32 +27,6 @@ const organizerClassificationOptions = getOrganizerClassificationOptions();
 const primaryRoles = ["attendee", "organizer", "venue", "scanner", "admin"];
 const citySuggestions = INTERNAL_CITY_OPTIONS;
 
-const emptyCreateForm = {
-  email: "",
-  full_name: "",
-  password: "",
-  primary_role: "attendee",
-  role_key: "host",
-  organizer_classification: "evntszn_host",
-  network_status: "active",
-  city: "",
-  state: "",
-  job_title: "",
-  functions: "",
-  city_scope: "",
-  dashboard_access: "",
-  surface_access: "",
-  module_access: "",
-  approval_authority: "",
-  team_scope: "",
-  sponsor_scope: "",
-  can_manage_content: false,
-  can_manage_discovery: false,
-  can_manage_store: false,
-  can_manage_sponsors: false,
-  can_access_scanner: false,
-};
-
 function parseList(value: string) {
   return value
     .split(",")
@@ -69,9 +43,7 @@ export default function UsersAdminClient() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-  const [createForm, setCreateForm] = useState(emptyCreateForm);
   const [editor, setEditor] = useState<Record<string, any> | null>(null);
-  const [savingCreate, setSavingCreate] = useState(false);
   const [savingUser, setSavingUser] = useState(false);
   const [query, setQuery] = useState("");
 
@@ -164,39 +136,6 @@ export default function UsersAdminClient() {
     });
   }, [selectedUser]);
 
-  async function createUser(event: React.FormEvent) {
-    event.preventDefault();
-    setSavingCreate(true);
-    setMessage("");
-
-    const res = await fetch("/api/admin/operator-users", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ...createForm,
-        functions: parseList(createForm.functions),
-        city_scope: parseList(createForm.city_scope),
-        dashboard_access: parseList(createForm.dashboard_access),
-        surface_access: parseList(createForm.surface_access),
-        module_access: parseList(createForm.module_access),
-        approval_authority: parseList(createForm.approval_authority),
-        team_scope: parseList(createForm.team_scope),
-        sponsor_scope: parseList(createForm.sponsor_scope),
-      }),
-    });
-
-    const data = (await res.json()) as { error?: string };
-    setSavingCreate(false);
-    if (!res.ok) {
-      setMessage(data.error || "Could not create user.");
-      return;
-    }
-
-    setCreateForm(emptyCreateForm);
-    setMessage("User created.");
-    await load();
-  }
-
   async function saveSelectedUser() {
     if (!selectedUser || !editor) return;
     setSavingUser(true);
@@ -234,9 +173,9 @@ export default function UsersAdminClient() {
         <div className="ev-shell-hero-grid">
           <div>
             <div className="ev-kicker">User directory</div>
-            <h1 className="ev-title">Create staff accounts, assign scope, and keep access clean.</h1>
+            <h1 className="ev-title">Manage the active roster, account details, and operating context for people who already have access.</h1>
             <p className="ev-subtitle">
-              Use this workspace to provision operator accounts, define the operating track, and control who can reach dashboards, modules, and scanner access.
+              Team & Access is the provisioning desk for invites, scopes, and new access assignments. This page is for roster search, existing-account edits, and account-level cleanup only.
             </p>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
@@ -262,207 +201,26 @@ export default function UsersAdminClient() {
       <div className="mt-6 grid gap-6 xl:grid-cols-[0.92fr_1.08fr]">
         <section className="grid gap-6">
           <section className="ev-panel p-6">
-            <div className="ev-section-kicker">Create user</div>
-            <h2 className="mt-3 text-2xl font-bold text-white">Provision a new internal account</h2>
+            <div className="ev-section-kicker">Workspace purpose</div>
+            <h2 className="mt-3 text-2xl font-bold text-white">Use Team &amp; Access for provisioning</h2>
             <p className="mt-2 text-sm text-white/60">
-              Move left to right: identity first, then access, then scope. Advanced notes stay collapsed until needed.
+              Keep onboarding in one place. Create profiles, send invites, and assign scopes from Team &amp; Access. Use this roster to update existing account details, role labels, city coverage, and internal notes after someone is already in the system.
             </p>
-
-            <form onSubmit={createUser} className="mt-6 grid gap-6">
+            <div className="mt-6 grid gap-4">
               <div className="rounded-2xl border border-white/10 bg-black/25 p-5">
-                <div className="text-xs uppercase tracking-[0.22em] text-[#caa7ff]">Step 1</div>
-                <div className="mt-2 text-lg font-semibold text-white">Identity</div>
-                <div className="mt-4 grid gap-4 md:grid-cols-2">
-                  <input
-                    className="ev-field"
-                    placeholder="Full name"
-                    value={createForm.full_name}
-                    onChange={(e) => setCreateForm({ ...createForm, full_name: e.target.value })}
-                  />
-                  <input
-                    className="ev-field"
-                    type="email"
-                    placeholder="Email"
-                    value={createForm.email}
-                    onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })}
-                    required
-                  />
+                <div className="text-xs uppercase tracking-[0.22em] text-[#caa7ff]">Provisioning</div>
+                <div className="mt-2 text-lg font-semibold text-white">Need to onboard someone new?</div>
+                <div className="mt-2 text-sm text-white/62">
+                  Start from Team &amp; Access when you need to create an access profile, define scope, send an invite, or assign capability groups.
                 </div>
+                <a href="/epl/admin/team" className="ev-button-primary mt-4 inline-flex">
+                  Open Team &amp; Access
+                </a>
               </div>
-
-              <div className="rounded-2xl border border-white/10 bg-black/25 p-5">
-                <div className="text-xs uppercase tracking-[0.22em] text-[#caa7ff]">Step 2</div>
-                <div className="mt-2 text-lg font-semibold text-white">Access</div>
-                <div className="mt-4 grid gap-4 md:grid-cols-2">
-                  <select
-                    className="ev-field"
-                    value={createForm.primary_role}
-                    onChange={(e) => setCreateForm({ ...createForm, primary_role: e.target.value })}
-                  >
-                    {primaryRoles.map((role) => (
-                      <option key={role} value={role}>
-                        {role}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    className="ev-field"
-                    value={createForm.role_key}
-                    onChange={(e) => setCreateForm({ ...createForm, role_key: e.target.value })}
-                  >
-                    {roleOptions.map((role) => (
-                      <option key={role.value} value={role.value}>
-                        {role.label}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    className="ev-field"
-                    value={createForm.organizer_classification}
-                    onChange={(e) =>
-                      setCreateForm({ ...createForm, organizer_classification: e.target.value })
-                    }
-                  >
-                    {organizerClassificationOptions.map((classification) => (
-                      <option key={classification.value} value={classification.value}>
-                        {classification.label}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    className="ev-field"
-                    value={createForm.network_status}
-                    onChange={(e) => setCreateForm({ ...createForm, network_status: e.target.value })}
-                  >
-                    {["prospect", "active", "paused", "alumni"].map((status) => (
-                      <option key={status} value={status}>
-                        {status}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+              <div className="rounded-2xl border border-white/10 bg-black/25 p-5 text-sm text-white/68">
+                Roster edits here affect existing users only: profile details, role labels, city coverage, module flags, notes, and active state.
               </div>
-
-              <div className="rounded-2xl border border-white/10 bg-black/25 p-5">
-                <div className="text-xs uppercase tracking-[0.22em] text-[#caa7ff]">Step 3</div>
-                <div className="mt-2 text-lg font-semibold text-white">Scope</div>
-                <div className="mt-4 grid gap-4 md:grid-cols-2">
-                  <input
-                    className="ev-field"
-                    placeholder="City"
-                    list="operator-user-city-options"
-                    value={createForm.city}
-                    onChange={(e) => setCreateForm({ ...createForm, city: e.target.value })}
-                  />
-                  <input
-                    className="ev-field"
-                    placeholder="State"
-                    value={createForm.state}
-                    onChange={(e) => setCreateForm({ ...createForm, state: e.target.value })}
-                  />
-                  <input
-                    className="ev-field"
-                    placeholder="Job title"
-                    value={createForm.job_title}
-                    onChange={(e) => setCreateForm({ ...createForm, job_title: e.target.value })}
-                  />
-                  <input
-                    className="ev-field"
-                    placeholder="Functions, comma separated"
-                    value={createForm.functions}
-                    onChange={(e) => setCreateForm({ ...createForm, functions: e.target.value })}
-                  />
-                  <input
-                    className="ev-field"
-                    list="operator-user-city-options"
-                    placeholder="City scope, comma separated"
-                    value={createForm.city_scope}
-                    onChange={(e) => setCreateForm({ ...createForm, city_scope: e.target.value })}
-                  />
-                  <input
-                    className="ev-field"
-                    placeholder="Dashboards"
-                    value={createForm.dashboard_access}
-                    onChange={(e) => setCreateForm({ ...createForm, dashboard_access: e.target.value })}
-                  />
-                  <input
-                    className="ev-field"
-                    placeholder="Surfaces"
-                    value={createForm.surface_access}
-                    onChange={(e) => setCreateForm({ ...createForm, surface_access: e.target.value })}
-                  />
-                  <input
-                    className="ev-field"
-                    placeholder="Modules"
-                    value={createForm.module_access}
-                    onChange={(e) => setCreateForm({ ...createForm, module_access: e.target.value })}
-                  />
-                </div>
-
-                <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                  {[
-                    ["can_manage_content", "Content"],
-                    ["can_manage_discovery", "Discovery"],
-                    ["can_manage_store", "Store"],
-                    ["can_manage_sponsors", "Sponsors"],
-                    ["can_access_scanner", "Scanner"],
-                  ].map(([key, label]) => (
-                    <label
-                      key={key}
-                      className="flex items-center gap-3 rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/78"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={Boolean(createForm[key as keyof typeof createForm])}
-                        onChange={(e) => setCreateForm({ ...createForm, [key]: e.target.checked })}
-                      />
-                      {label} access
-                    </label>
-                  ))}
-                </div>
-
-                <details className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4">
-                  <summary className="cursor-pointer text-sm font-semibold text-white">Advanced</summary>
-                  <div className="mt-4 grid gap-4">
-                    <input
-                      className="ev-field"
-                      type="password"
-                      placeholder="Temporary password"
-                      value={createForm.password}
-                      onChange={(e) => setCreateForm({ ...createForm, password: e.target.value })}
-                      required
-                    />
-                    <textarea
-                      className="ev-textarea"
-                      rows={2}
-                      placeholder="Approval authority"
-                      value={createForm.approval_authority}
-                      onChange={(e) => setCreateForm({ ...createForm, approval_authority: e.target.value })}
-                    />
-                    <div className="grid gap-4 md:grid-cols-2">
-                      <textarea
-                        className="ev-textarea"
-                        rows={2}
-                        placeholder="Team scope"
-                        value={createForm.team_scope}
-                        onChange={(e) => setCreateForm({ ...createForm, team_scope: e.target.value })}
-                      />
-                      <textarea
-                        className="ev-textarea"
-                        rows={2}
-                        placeholder="Sponsor scope"
-                        value={createForm.sponsor_scope}
-                        onChange={(e) => setCreateForm({ ...createForm, sponsor_scope: e.target.value })}
-                      />
-                    </div>
-                  </div>
-                </details>
-              </div>
-
-              <button type="submit" disabled={savingCreate} className="ev-button-primary">
-                {savingCreate ? "Creating..." : "Create user"}
-              </button>
-            </form>
+            </div>
           </section>
         </section>
 

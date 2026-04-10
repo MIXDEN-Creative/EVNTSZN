@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
+import { INTERNAL_CITY_OPTIONS, getCityStateCode } from "@/lib/city-options";
 
 type ManagedEvent = {
   id: string;
@@ -23,6 +24,13 @@ type ManagedEvent = {
   payout_account_label: string | null;
   scanner_status: string;
   venue_name: string | null;
+  revenue_profile?: {
+    id: string;
+    event_type: "host" | "city_leader" | "independent";
+    city_office_id: string | null;
+    is_independent: boolean;
+    independent_origin: "city" | "hq" | null;
+  } | null;
   ticket_summary?: {
     total: number;
     active: number;
@@ -63,6 +71,31 @@ type EventDetailResponse = {
     run_of_show?: string | null;
     ops_notes?: string | null;
   } | null;
+  revenue?: {
+    profile?: {
+      id: string;
+      event_type: "host" | "city_leader" | "independent";
+      city_office_id: string | null;
+      is_independent: boolean;
+      independent_origin: "city" | "hq" | null;
+    } | null;
+    totals?: {
+      grossTicketRevenue: number;
+      platformFeeTotal: number;
+      netRevenueTotal: number;
+      hostShare: number;
+      cityLeaderShare: number;
+      cityOfficeShare: number;
+      hqShare: number;
+      overrideTotal: number;
+    };
+    auditStatus?: "balanced" | "unbalanced" | "pending";
+    ledgerStatuses?: {
+      pending: number;
+      locked: number;
+      void: number;
+    };
+  } | null;
 };
 
 const EMPTY_FORM = {
@@ -91,6 +124,9 @@ const EMPTY_FORM = {
   homeSideLabel: "",
   awaySideLabel: "",
   eventClass: "evntszn" as "evntszn" | "independent_organizer" | "mml",
+  revenueEventType: "host" as "host" | "city_leader" | "independent",
+  cityOfficeId: "",
+  independentOrigin: "city" as "city" | "hq",
 };
 
 export default function EventsAdminClient() {
@@ -104,6 +140,8 @@ export default function EventsAdminClient() {
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<ManagedEvent | null>(null);
   const [ticketTypes, setTicketTypes] = useState<ManagedTicketType[]>([]);
+  const [revenueSummary, setRevenueSummary] = useState<EventDetailResponse["revenue"]>(null);
+  const [officeOptions, setOfficeOptions] = useState<Array<{ id: string; officeName: string; city: string; officeStatus: string }>>([]);
   const [ticketForm, setTicketForm] = useState({
     name: "",
     description: "",
@@ -148,12 +186,20 @@ export default function EventsAdminClient() {
     void loadEvents(filter);
   }, [filter]);
 
+  useEffect(() => {
+    fetch("/api/admin/city-office", { cache: "no-store" })
+      .then(async (response) => (await response.json()) as { offices?: Array<{ id: string; officeName: string; city: string; officeStatus: string }> })
+      .then((payload) => setOfficeOptions(payload.offices || []))
+      .catch(() => setOfficeOptions([]));
+  }, []);
+
   async function loadEventDetail(eventId: string) {
     const response = await fetch(`/api/evntszn/events/${eventId}`, { cache: "no-store" });
     const payload = (await response.json()) as EventDetailResponse;
     if (!response.ok) throw new Error(payload.error || "Could not load event detail.");
     setSelectedEvent(payload.event || null);
     setTicketTypes(payload.ticketTypes || []);
+    setRevenueSummary(payload.revenue || null);
     setOperationsForm({
       objective: payload.operations?.objective || "",
       runOfShow: payload.operations?.run_of_show || "",
@@ -233,6 +279,11 @@ export default function EventsAdminClient() {
     }),
     [events],
   );
+
+  const filteredOfficeOptions = useMemo(() => {
+    if (!form.city) return officeOptions;
+    return officeOptions.filter((office) => office.city === form.city);
+  }, [form.city, officeOptions]);
 
   async function selectEvent(eventId: string) {
     setSelectedEventId(eventId);
@@ -406,7 +457,12 @@ export default function EventsAdminClient() {
                   <select
                     value={form.eventClass}
                     onChange={(event) =>
-                      setForm({ ...form, eventClass: event.target.value as "evntszn" | "independent_organizer" | "mml" })
+                      setForm({
+                        ...form,
+                        eventClass: event.target.value as "evntszn" | "independent_organizer" | "mml",
+                        revenueEventType:
+                          event.target.value === "independent_organizer" ? "independent" : form.revenueEventType,
+                      })
                     }
                     className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none"
                   >
@@ -431,10 +487,17 @@ export default function EventsAdminClient() {
                   <input
                     key={key}
                     value={form[key as keyof typeof form] as string}
-                    onChange={(event) => setForm({ ...form, [key]: event.target.value })}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        [key]: event.target.value,
+                        ...(key === "city" ? { state: getCityStateCode(event.target.value) || current.state } : {}),
+                      }))
+                    }
                     placeholder={label}
                     className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none"
                     required={["title", "venueName", "city", "state", "startAt", "endAt"].includes(key)}
+                    list={key === "city" ? "event-city-options" : undefined}
                   />
                 ))}
               </div>
@@ -442,6 +505,68 @@ export default function EventsAdminClient() {
 
             <div className="rounded-2xl border border-white/10 bg-black/25 p-5">
               <div className="text-xs uppercase tracking-[0.22em] text-[#caa7ff]">Step 2</div>
+              <div className="mt-2 text-lg font-semibold text-white">Revenue model</div>
+              <p className="mt-2 text-sm text-white/60">
+                Attach the event to the right revenue profile now so ticket purchases can allocate shares without manual repair later.
+              </p>
+              <div className="mt-4 grid gap-4 md:grid-cols-2">
+                <label className="grid gap-2 text-sm text-white/72">
+                  <span>Revenue event type</span>
+                  <select
+                    value={form.revenueEventType}
+                    onChange={(event) =>
+                      setForm({
+                        ...form,
+                        revenueEventType: event.target.value as "host" | "city_leader" | "independent",
+                      })
+                    }
+                    className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none"
+                  >
+                    <option value="host">Host event</option>
+                    <option value="city_leader">City leader event</option>
+                    <option value="independent">Independent organizer</option>
+                  </select>
+                </label>
+                {form.revenueEventType === "independent" ? (
+                  <label className="grid gap-2 text-sm text-white/72">
+                    <span>Independent origin</span>
+                    <select
+                      value={form.independentOrigin}
+                      onChange={(event) =>
+                        setForm({
+                          ...form,
+                          independentOrigin: event.target.value as "city" | "hq",
+                        })
+                      }
+                      className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none"
+                    >
+                      <option value="city">City origin</option>
+                      <option value="hq">HQ origin</option>
+                    </select>
+                  </label>
+                ) : null}
+                {(form.revenueEventType !== "independent" || form.independentOrigin === "city") ? (
+                  <label className="grid gap-2 text-sm text-white/72 md:col-span-2">
+                    <span>City office</span>
+                    <select
+                      value={form.cityOfficeId}
+                      onChange={(event) => setForm({ ...form, cityOfficeId: event.target.value })}
+                      className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none"
+                    >
+                      <option value="">Attach later</option>
+                      {filteredOfficeOptions.map((office) => (
+                        <option key={office.id} value={office.id}>
+                          {office.officeName} · {office.city} · {office.officeStatus}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ) : null}
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-white/10 bg-black/25 p-5">
+              <div className="text-xs uppercase tracking-[0.22em] text-[#caa7ff]">Step 3</div>
               <div className="mt-2 text-lg font-semibold text-white">Default ticket setup</div>
               <div className="mt-4 grid gap-4 md:grid-cols-2">
                 {[
@@ -467,7 +592,7 @@ export default function EventsAdminClient() {
 
             {form.eventVertical === "epl" ? (
               <div className="rounded-2xl border border-white/10 bg-black/25 p-5">
-                <div className="text-xs uppercase tracking-[0.22em] text-[#caa7ff]">Step 3</div>
+                <div className="text-xs uppercase tracking-[0.22em] text-[#caa7ff]">Step 4</div>
                 <div className="mt-2 text-lg font-semibold text-white">League matchup labels</div>
                 <div className="mt-4 grid gap-4 md:grid-cols-2">
                 <input
@@ -644,6 +769,50 @@ export default function EventsAdminClient() {
           ) : (
             <div className="mt-6 grid gap-6">
               <div className="rounded-[24px] border border-white/10 bg-black/20 p-5">
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div>
+                    <div className="text-sm font-semibold text-white">Revenue summary</div>
+                    <div className="mt-2 text-sm text-white/60">
+                      {revenueSummary?.profile
+                        ? `Model: ${revenueSummary.profile.event_type.replace(/_/g, " ")}${revenueSummary.profile.independent_origin ? ` · ${revenueSummary.profile.independent_origin} origin` : ""}`
+                        : "No revenue profile attached yet."}
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-2 text-xs">
+                    <span className="rounded-full border border-white/10 px-3 py-2 text-white/72">
+                      Audit {revenueSummary?.auditStatus || "pending"}
+                    </span>
+                    <span className="rounded-full border border-white/10 px-3 py-2 text-white/72">
+                      Locked {revenueSummary?.ledgerStatuses?.locked || 0}
+                    </span>
+                    <span className="rounded-full border border-white/10 px-3 py-2 text-white/72">
+                      Pending {revenueSummary?.ledgerStatuses?.pending || 0}
+                    </span>
+                    <span className="rounded-full border border-white/10 px-3 py-2 text-white/72">
+                      Void {revenueSummary?.ledgerStatuses?.void || 0}
+                    </span>
+                  </div>
+                </div>
+                <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                  {[
+                    ["Gross ticket revenue", revenueSummary?.totals?.grossTicketRevenue || 0],
+                    ["Platform fee total", revenueSummary?.totals?.platformFeeTotal || 0],
+                    ["Net revenue total", revenueSummary?.totals?.netRevenueTotal || 0],
+                    ["Host share", revenueSummary?.totals?.hostShare || 0],
+                    ["City leader share", revenueSummary?.totals?.cityLeaderShare || 0],
+                    ["City office share", revenueSummary?.totals?.cityOfficeShare || 0],
+                    ["HQ share", revenueSummary?.totals?.hqShare || 0],
+                    ["Override total", revenueSummary?.totals?.overrideTotal || 0],
+                  ].map(([label, value]) => (
+                    <div key={String(label)} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                      <div className="text-[11px] uppercase tracking-[0.18em] text-white/45">{label}</div>
+                      <div className="mt-2 text-lg font-semibold text-white">${Number(value).toFixed(2)}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="rounded-[24px] border border-white/10 bg-black/20 p-5">
                 <div className="text-sm font-semibold text-white">Run of show</div>
                 <div className="mt-4 grid gap-4">
                   <textarea
@@ -728,6 +897,11 @@ export default function EventsAdminClient() {
           )}
         </section>
       </div>
+      <datalist id="event-city-options">
+        {INTERNAL_CITY_OPTIONS.map((city) => (
+          <option key={city} value={city} />
+        ))}
+      </datalist>
     </main>
   );
 }

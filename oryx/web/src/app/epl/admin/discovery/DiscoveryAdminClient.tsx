@@ -329,7 +329,7 @@ export default function DiscoveryAdminClient() {
   }
 
   return (
-    <main className="mx-auto max-w-7xl p-6">
+    <main className="mx-auto max-w-[1500px] p-6">
       <section className="ev-shell-hero">
         <div className="ev-shell-hero-grid">
           <div>
@@ -358,14 +358,38 @@ export default function DiscoveryAdminClient() {
         </div>
       </section>
 
+      <section className="mt-6 ev-panel p-4">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="text-sm text-white/62">
+            Stay inside the current single-page model. Work top to bottom: homepage copy first, taxonomy and shared modules next, then listing and moderation controls.
+          </div>
+          <div className="flex flex-wrap gap-2 text-sm">
+          {[
+            ["#homepage-hero", "Homepage hero"],
+            ["#homepage-copy", "Homepage copy"],
+            ["#taxonomy-blocks", "Taxonomy"],
+            ["#public-modules", "Public modules"],
+            ["#listing-controls", "Listing controls"],
+          ].map(([href, label]) => (
+            <a key={href} href={href} className="rounded-full border border-white/10 bg-black/30 px-4 py-2 text-white/72 hover:bg-white/10">
+              {label}
+            </a>
+          ))}
+          </div>
+        </div>
+      </section>
+
       <div className="mt-8 grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
         <section className="grid gap-6">
-          <div className="ev-panel">
+          <div id="homepage-hero" className="ev-panel">
             <div className="ev-section-kicker">Homepage hero</div>
+            <p className="mt-3 text-sm text-white/62">
+              Use the larger fields here for the main public headline, opener, and CTA stack. This is the top-of-funnel message block for discovery.
+            </p>
             <div className="mt-5 grid gap-4">
               <input className="ev-field" value={content.hero.eyebrow} onChange={(event) => setContent({ ...content, hero: { ...content.hero, eyebrow: event.target.value } })} />
               <input className="ev-field" value={content.hero.title} onChange={(event) => setContent({ ...content, hero: { ...content.hero, title: event.target.value } })} />
-              <textarea className="ev-textarea" value={content.hero.description} onChange={(event) => setContent({ ...content, hero: { ...content.hero, description: event.target.value } })} />
+              <textarea className="ev-textarea" rows={6} value={content.hero.description} onChange={(event) => setContent({ ...content, hero: { ...content.hero, description: event.target.value } })} />
             </div>
             <div className="mt-4 grid gap-4 md:grid-cols-2">
               <input className="ev-field" value={content.hero.primaryCtaLabel} onChange={(event) => setContent({ ...content, hero: { ...content.hero, primaryCtaLabel: event.target.value } })} />
@@ -385,13 +409,14 @@ export default function DiscoveryAdminClient() {
             </button>
           </div>
 
-          <div className="ev-panel">
+          <div id="homepage-copy" className="ev-panel">
             <div className="ev-section-kicker">Homepage message blocks</div>
             <div className="mt-5 grid gap-5">
-              <div>
+              <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                <div className="text-sm font-medium text-white/78">Banner</div>
                 <input className="ev-field" value={content.banner.eyebrow} onChange={(event) => setContent({ ...content, banner: { ...content.banner, eyebrow: event.target.value } })} />
                 <input className="ev-field mt-3" value={content.banner.title} onChange={(event) => setContent({ ...content, banner: { ...content.banner, title: event.target.value } })} />
-                <textarea className="ev-textarea mt-3" value={content.banner.body} onChange={(event) => setContent({ ...content, banner: { ...content.banner, body: event.target.value } })} />
+                <textarea className="ev-textarea mt-3" rows={5} value={content.banner.body} onChange={(event) => setContent({ ...content, banner: { ...content.banner, body: event.target.value } })} />
                 <button
                   type="button"
                   className="ev-button-secondary mt-4"
@@ -402,10 +427,11 @@ export default function DiscoveryAdminClient() {
                 </button>
               </div>
 
-              <div>
+              <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                <div className="text-sm font-medium text-white/78">Search and discovery copy</div>
                 <input className="ev-field" value={content.discovery.headline} onChange={(event) => setContent({ ...content, discovery: { ...content.discovery, headline: event.target.value } })} />
-                <textarea className="ev-textarea mt-3" value={content.discovery.body} onChange={(event) => setContent({ ...content, discovery: { ...content.discovery, body: event.target.value } })} />
-                <textarea className="ev-textarea mt-3" value={content.discovery.disclosure} onChange={(event) => setContent({ ...content, discovery: { ...content.discovery, disclosure: event.target.value } })} />
+                <textarea className="ev-textarea mt-3" rows={6} value={content.discovery.body} onChange={(event) => setContent({ ...content, discovery: { ...content.discovery, body: event.target.value } })} />
+                <textarea className="ev-textarea mt-3" rows={4} value={content.discovery.disclosure} onChange={(event) => setContent({ ...content, discovery: { ...content.discovery, disclosure: event.target.value } })} />
                 <div className="mt-3 grid gap-3 md:grid-cols-2">
                   <input className="ev-field" value={content.discovery.searchPlaceholder} onChange={(event) => setContent({ ...content, discovery: { ...content.discovery, searchPlaceholder: event.target.value } })} />
                   <input className="ev-field" value={content.discovery.keywordPlaceholder} onChange={(event) => setContent({ ...content, discovery: { ...content.discovery, keywordPlaceholder: event.target.value } })} />
@@ -470,13 +496,13 @@ export default function DiscoveryAdminClient() {
         </section>
 
         <section className="grid gap-6">
-          <div className="ev-panel">
+          <div id="taxonomy-blocks" className="ev-panel">
             <div className="ev-section-kicker">Taxonomy blocks</div>
             <p className="mt-3 text-sm text-white/65">Use one line per block with the format `Label|Description`.</p>
             <label className="mt-5 block text-sm font-medium text-white/72">Categories</label>
-            <textarea className="ev-textarea mt-2" value={taxonomyCategories} onChange={(event) => setTaxonomyCategories(event.target.value)} />
+            <textarea className="ev-textarea mt-2" rows={8} value={taxonomyCategories} onChange={(event) => setTaxonomyCategories(event.target.value)} />
             <label className="mt-5 block text-sm font-medium text-white/72">Cities</label>
-            <textarea className="ev-textarea mt-2" value={taxonomyCities} onChange={(event) => setTaxonomyCities(event.target.value)} />
+            <textarea className="ev-textarea mt-2" rows={8} value={taxonomyCities} onChange={(event) => setTaxonomyCities(event.target.value)} />
             <button
               type="button"
               className="ev-button-primary mt-5"
@@ -496,7 +522,7 @@ export default function DiscoveryAdminClient() {
             </button>
           </div>
 
-          <div className="ev-panel">
+          <div id="public-modules" className="ev-panel">
             <div className="ev-section-kicker">Public module copy</div>
             <p className="mt-3 text-sm text-white/65">
               Manage the shared copy blocks that feed city pages, team pages, sponsor placement sections, the EPL store promo, and the public opportunities surface.
@@ -508,7 +534,7 @@ export default function DiscoveryAdminClient() {
                   <input className="ev-field" value={modules.citySpotlight.eyebrow} onChange={(event) => setModules({ ...modules, citySpotlight: { ...modules.citySpotlight, eyebrow: event.target.value } })} />
                   <input className="ev-field" value={modules.citySpotlight.headline} onChange={(event) => setModules({ ...modules, citySpotlight: { ...modules.citySpotlight, headline: event.target.value } })} />
                 </div>
-                <textarea className="ev-textarea mt-3" value={modules.citySpotlight.body} onChange={(event) => setModules({ ...modules, citySpotlight: { ...modules.citySpotlight, body: event.target.value } })} />
+                <textarea className="ev-textarea mt-3" rows={5} value={modules.citySpotlight.body} onChange={(event) => setModules({ ...modules, citySpotlight: { ...modules.citySpotlight, body: event.target.value } })} />
               </div>
 
               <div>
@@ -517,10 +543,10 @@ export default function DiscoveryAdminClient() {
                   <input className="ev-field" value={modules.teamBlocks.scheduleHeadline} onChange={(event) => setModules({ ...modules, teamBlocks: { ...modules.teamBlocks, scheduleHeadline: event.target.value } })} />
                   <input className="ev-field" value={modules.teamBlocks.rosterHeadline} onChange={(event) => setModules({ ...modules, teamBlocks: { ...modules.teamBlocks, rosterHeadline: event.target.value } })} />
                 </div>
-                <textarea className="ev-textarea mt-3" value={modules.teamBlocks.scheduleBody} onChange={(event) => setModules({ ...modules, teamBlocks: { ...modules.teamBlocks, scheduleBody: event.target.value } })} />
-                <textarea className="ev-textarea mt-3" value={modules.teamBlocks.rosterBody} onChange={(event) => setModules({ ...modules, teamBlocks: { ...modules.teamBlocks, rosterBody: event.target.value } })} />
+                <textarea className="ev-textarea mt-3" rows={5} value={modules.teamBlocks.scheduleBody} onChange={(event) => setModules({ ...modules, teamBlocks: { ...modules.teamBlocks, scheduleBody: event.target.value } })} />
+                <textarea className="ev-textarea mt-3" rows={5} value={modules.teamBlocks.rosterBody} onChange={(event) => setModules({ ...modules, teamBlocks: { ...modules.teamBlocks, rosterBody: event.target.value } })} />
                 <input className="ev-field mt-3" value={modules.teamBlocks.announcementsHeadline} onChange={(event) => setModules({ ...modules, teamBlocks: { ...modules.teamBlocks, announcementsHeadline: event.target.value } })} />
-                <textarea className="ev-textarea mt-3" value={modules.teamBlocks.announcementsBody} onChange={(event) => setModules({ ...modules, teamBlocks: { ...modules.teamBlocks, announcementsBody: event.target.value } })} />
+                <textarea className="ev-textarea mt-3" rows={5} value={modules.teamBlocks.announcementsBody} onChange={(event) => setModules({ ...modules, teamBlocks: { ...modules.teamBlocks, announcementsBody: event.target.value } })} />
               </div>
 
               <div>
@@ -529,7 +555,7 @@ export default function DiscoveryAdminClient() {
                   <input className="ev-field" value={modules.storePromo.eyebrow} onChange={(event) => setModules({ ...modules, storePromo: { ...modules.storePromo, eyebrow: event.target.value } })} />
                   <input className="ev-field" value={modules.storePromo.headline} onChange={(event) => setModules({ ...modules, storePromo: { ...modules.storePromo, headline: event.target.value } })} />
                 </div>
-                <textarea className="ev-textarea mt-3" value={modules.storePromo.body} onChange={(event) => setModules({ ...modules, storePromo: { ...modules.storePromo, body: event.target.value } })} />
+                <textarea className="ev-textarea mt-3" rows={5} value={modules.storePromo.body} onChange={(event) => setModules({ ...modules, storePromo: { ...modules.storePromo, body: event.target.value } })} />
                 <div className="mt-3 grid gap-3 md:grid-cols-2">
                   <input className="ev-field" value={modules.storePromo.ctaLabel} onChange={(event) => setModules({ ...modules, storePromo: { ...modules.storePromo, ctaLabel: event.target.value } })} />
                   <input className="ev-field" value={modules.storePromo.ctaHref} onChange={(event) => setModules({ ...modules, storePromo: { ...modules.storePromo, ctaHref: event.target.value } })} />
@@ -543,7 +569,7 @@ export default function DiscoveryAdminClient() {
                   <input className="ev-field" value={modules.sponsorBlock.footerHeadline} onChange={(event) => setModules({ ...modules, sponsorBlock: { ...modules.sponsorBlock, footerHeadline: event.target.value } })} />
                 </div>
                 <input className="ev-field mt-3" value={modules.sponsorBlock.headline} onChange={(event) => setModules({ ...modules, sponsorBlock: { ...modules.sponsorBlock, headline: event.target.value } })} />
-                <textarea className="ev-textarea mt-3" value={modules.sponsorBlock.body} onChange={(event) => setModules({ ...modules, sponsorBlock: { ...modules.sponsorBlock, body: event.target.value } })} />
+                <textarea className="ev-textarea mt-3" rows={5} value={modules.sponsorBlock.body} onChange={(event) => setModules({ ...modules, sponsorBlock: { ...modules.sponsorBlock, body: event.target.value } })} />
               </div>
 
               <div>
@@ -552,7 +578,7 @@ export default function DiscoveryAdminClient() {
                   <input className="ev-field" value={modules.opportunitiesBlock.eyebrow} onChange={(event) => setModules({ ...modules, opportunitiesBlock: { ...modules.opportunitiesBlock, eyebrow: event.target.value } })} />
                   <input className="ev-field" value={modules.opportunitiesBlock.headline} onChange={(event) => setModules({ ...modules, opportunitiesBlock: { ...modules.opportunitiesBlock, headline: event.target.value } })} />
                 </div>
-                <textarea className="ev-textarea mt-3" value={modules.opportunitiesBlock.body} onChange={(event) => setModules({ ...modules, opportunitiesBlock: { ...modules.opportunitiesBlock, body: event.target.value } })} />
+                <textarea className="ev-textarea mt-3" rows={5} value={modules.opportunitiesBlock.body} onChange={(event) => setModules({ ...modules, opportunitiesBlock: { ...modules.opportunitiesBlock, body: event.target.value } })} />
               </div>
 
               <button
@@ -578,7 +604,7 @@ export default function DiscoveryAdminClient() {
             </div>
           </div>
 
-          <div className="ev-panel">
+          <div id="listing-controls" className="ev-panel">
             <div className="ev-section-kicker">Listing controls</div>
             <p className="mt-3 text-sm text-white/65">
               Adjust native event positioning without opening every event record. Keep this list focused on what should surface first.

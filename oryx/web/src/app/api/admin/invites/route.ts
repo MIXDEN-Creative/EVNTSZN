@@ -72,6 +72,24 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Email and role are required." }, { status: 400 });
   }
 
+  console.info("[admin.invites] POST entry", {
+    actor: user.id,
+    email,
+    roleId,
+    roleSubtype,
+    scopeType,
+    capabilityGroups,
+  });
+  console.info("[admin.invites] payload received", {
+    email,
+    fullName,
+    roleId,
+    roleSubtype,
+    scopeType,
+    scopeValues,
+    capabilityGroups,
+  });
+
   const { data: role, error: roleError } = await supabaseAdmin
     .from("roles")
     .select("id, name")
@@ -140,7 +158,13 @@ export async function POST(request: Request) {
 
   const acceptUrl = `${getAdminOrigin(new URL(request.url).host)}/admin-invite/accept?token=${rawToken}&email=${encodeURIComponent(email)}`;
 
-  await sendAccessInviteEmail({
+  console.info("[admin.invites] send attempt", {
+    inviteId: invite.id,
+    sender: process.env.OPS_FROM_EMAIL || "EVNTSZN Ops <ops@evntszn.com>",
+    usedFallbackSender: !process.env.OPS_FROM_EMAIL,
+  });
+
+  const emailResult = await sendAccessInviteEmail({
     to: email,
     fullName,
     roleName: role.name,
@@ -149,7 +173,22 @@ export async function POST(request: Request) {
     acceptUrl,
   });
 
-  return NextResponse.json({ ok: true, inviteId: invite.id, resentExisting: Boolean(existingInvite.data) });
+  console.info("[admin.invites] send result", {
+    inviteId: invite.id,
+    sent: emailResult.sent,
+    attempted: emailResult.attempted,
+    sender: emailResult.sender,
+    providerId: emailResult.providerId,
+    reason: emailResult.reason,
+    error: emailResult.error,
+  });
+
+  return NextResponse.json({
+    ok: true,
+    inviteId: invite.id,
+    resentExisting: Boolean(existingInvite.data),
+    email: emailResult,
+  });
 }
 
 export async function PATCH(request: Request) {
@@ -186,6 +225,7 @@ export async function PATCH(request: Request) {
   }
 
   if (action === "resend") {
+    console.info("[admin.invites] resend entry", { actor: user.id, inviteId });
     const rawToken = createInviteToken();
     const tokenHash = hashInviteToken(rawToken);
 
@@ -208,7 +248,13 @@ export async function PATCH(request: Request) {
     const metadata = (invite.metadata || {}) as Record<string, unknown>;
     const acceptUrl = `${getAdminOrigin(new URL(request.url).host)}/admin-invite/accept?token=${rawToken}&email=${encodeURIComponent(invite.email)}`;
 
-    await sendAccessInviteEmail({
+    console.info("[admin.invites] resend send attempt", {
+      inviteId,
+      sender: process.env.OPS_FROM_EMAIL || "EVNTSZN Ops <ops@evntszn.com>",
+      usedFallbackSender: !process.env.OPS_FROM_EMAIL,
+    });
+
+    const emailResult = await sendAccessInviteEmail({
       to: invite.email,
       fullName: String(metadata.full_name || "").trim() || null,
       roleName: (invite.roles as { name?: string } | null)?.name || "EVNTSZN access",
@@ -217,7 +263,17 @@ export async function PATCH(request: Request) {
       acceptUrl,
     });
 
-    return NextResponse.json({ ok: true });
+    console.info("[admin.invites] resend send result", {
+      inviteId,
+      sent: emailResult.sent,
+      attempted: emailResult.attempted,
+      sender: emailResult.sender,
+      providerId: emailResult.providerId,
+      reason: emailResult.reason,
+      error: emailResult.error,
+    });
+
+    return NextResponse.json({ ok: true, email: emailResult });
   }
 
   return NextResponse.json({ error: "Unsupported invite action." }, { status: 400 });

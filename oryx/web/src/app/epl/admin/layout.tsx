@@ -107,6 +107,7 @@ export default async function AdminLayout({
     {
       label: "Revenue",
       links: [
+        canManageAdmins ? { href: `${getAdminOrigin(host)}/payouts`, label: "Payouts" } : null,
         canViewOrders ? { href: `${getAdminOrigin(host)}/merch-orders`, label: "Merch Orders" } : null,
         canViewRewards ? { href: `${getAdminOrigin(host)}/rewards`, label: "Rewards" } : null,
         canManageCatalog ? { href: `${getAdminOrigin(host)}/sponsors`, label: "Sponsors" } : null,

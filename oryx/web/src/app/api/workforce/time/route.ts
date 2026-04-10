@@ -89,11 +89,22 @@ export async function POST(request: Request) {
     .limit(1)
     .maybeSingle();
 
-  if (openEntryRes.error) {
-    return NextResponse.json({ error: openEntryRes.error.message }, { status: 500 });
+  const draftEntryRes = await supabaseAdmin
+    .from("workforce_time_entries")
+    .select("*")
+    .eq("user_id", userId)
+    .in("status", ["draft", "corrected"])
+    .not("ended_at", "is", null)
+    .order("updated_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (openEntryRes.error || draftEntryRes.error) {
+    return NextResponse.json({ error: openEntryRes.error?.message || draftEntryRes.error?.message }, { status: 500 });
   }
 
   const openEntry = openEntryRes.data as any;
+  const draftEntry = draftEntryRes.data as any;
 
   if (action === "clock_in") {
     if (openEntry) {
@@ -145,7 +156,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true });
   }
 
-  if (!openEntry && ["clock_out", "break_start", "break_end", "submit"].includes(action)) {
+  if (!openEntry && ["clock_out", "break_start", "break_end"].includes(action)) {
     return NextResponse.json({ error: "No active time entry found." }, { status: 400 });
   }
 
@@ -203,13 +214,17 @@ export async function POST(request: Request) {
   }
 
   if (action === "submit") {
+    const submitEntry = draftEntry || null;
+    if (!submitEntry) {
+      return NextResponse.json({ error: "Clock out before submitting hours." }, { status: 400 });
+    }
     const minutesWorked = calculateWorkedMinutes({
-      startedAt: openEntry.started_at,
-      endedAt: openEntry.ended_at,
-      breakMinutes: openEntry.break_minutes,
+      startedAt: submitEntry.started_at,
+      endedAt: submitEntry.ended_at,
+      breakMinutes: submitEntry.break_minutes,
     });
     const overtimeBreakdown = deriveOvertimeMinutes({
-      payType: openEntry.pay_type,
+      payType: submitEntry.pay_type,
       minutesWorked,
       payPeriodMinutesWorked: minutesWorked,
     });
@@ -223,7 +238,7 @@ export async function POST(request: Request) {
         submitted_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
-      .eq("id", openEntry.id);
+      .eq("id", submitEntry.id);
     if (update.error) return NextResponse.json({ error: update.error.message }, { status: 500 });
     return NextResponse.json({ ok: true });
   }

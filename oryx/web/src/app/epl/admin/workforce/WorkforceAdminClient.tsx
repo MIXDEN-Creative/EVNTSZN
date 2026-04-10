@@ -140,6 +140,14 @@ export default function WorkforceAdminClient() {
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="ev-meta-card">
+              <div className="ev-meta-label">Clocked in</div>
+              <div className="ev-meta-value">{summaries?.clockedIn ?? 0}</div>
+            </div>
+            <div className="ev-meta-card">
+              <div className="ev-meta-label">Submitted</div>
+              <div className="ev-meta-value">{summaries?.submitted ?? 0}</div>
+            </div>
+            <div className="ev-meta-card">
               <div className="ev-meta-label">Pending</div>
               <div className="ev-meta-value">{summaries?.pending ?? 0}</div>
             </div>
@@ -158,6 +166,10 @@ export default function WorkforceAdminClient() {
             <div className="ev-meta-card">
               <div className="ev-meta-label">Overtime hours</div>
               <div className="ev-meta-value">{summaries?.overtimeHours ?? 0}</div>
+            </div>
+            <div className="ev-meta-card">
+              <div className="ev-meta-label">Ready for payroll</div>
+              <div className="ev-meta-value">{summaries?.readyForPayroll ?? 0}</div>
             </div>
           </div>
         </div>

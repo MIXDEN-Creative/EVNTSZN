@@ -18,6 +18,7 @@ type TimeEntry = {
   status: string;
   started_at: string | null;
   ended_at: string | null;
+  break_started_at?: string | null;
   break_minutes: number;
   minutes_worked: number;
   regular_minutes?: number;
@@ -48,6 +49,7 @@ export default function StaffTimeClient() {
   }, []);
 
   const openEntry = useMemo(() => entries.find((entry) => !entry.ended_at && (entry.status === "draft" || entry.status === "corrected")) || null, [entries]);
+  const draftEntry = useMemo(() => entries.find((entry) => entry.ended_at && (entry.status === "draft" || entry.status === "corrected")) || null, [entries]);
 
   async function act(action: string) {
     const res = await fetch("/api/workforce/time", {
@@ -84,6 +86,23 @@ export default function StaffTimeClient() {
       <div className="mt-6 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
         <section className="ev-panel p-6">
           <div className="ev-section-kicker">Shift</div>
+          <div className="mt-3 rounded-2xl border border-white/10 bg-black/30 p-4 text-sm text-white/64">
+            Step 1: choose your assignment. Step 2: clock in. Step 3: log breaks if needed. Step 4: clock out. Step 5: submit the finished shift.
+          </div>
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
+              <div className="text-xs uppercase tracking-[0.18em] text-white/45">Current status</div>
+              <div className="mt-2 text-lg font-semibold text-white">
+                {openEntry ? (openEntry.break_started_at ? "On break" : "Clocked in") : draftEntry ? "Ready to submit" : "Not clocked in"}
+              </div>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
+              <div className="text-xs uppercase tracking-[0.18em] text-white/45">Next action</div>
+              <div className="mt-2 text-lg font-semibold text-white">
+                {openEntry ? "Clock out when the shift ends." : draftEntry ? "Submit the completed shift." : "Start a shift with Clock in."}
+              </div>
+            </div>
+          </div>
           <div className="mt-4 grid gap-4">
             <select className="ev-field" value={selectedAssignmentId} onChange={(event) => setSelectedAssignmentId(event.target.value)}>
               <option value="">Select assignment</option>
@@ -109,10 +128,10 @@ export default function StaffTimeClient() {
               </button>
             </div>
 
-            <button type="button" className="ev-button-secondary" disabled={!openEntry || !openEntry.ended_at} onClick={() => void act("submit")}>
-              Submit hours
-            </button>
-          </div>
+              <button type="button" className="ev-button-secondary" disabled={!draftEntry} onClick={() => void act("submit")}>
+                Submit hours
+              </button>
+            </div>
         </section>
 
         <section className="ev-panel p-6">

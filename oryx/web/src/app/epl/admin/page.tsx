@@ -14,6 +14,11 @@ export default async function AdminHomePage() {
       href: `${getAdminOrigin(host)}/merch-orders`,
       description: "Track fulfillment, refunds, resend, and order history.",
     },
+    permissions.includes("admin.manage") && {
+      title: "Payouts",
+      href: `${getAdminOrigin(host)}/payouts`,
+      description: "Review locked earnings, create manual payouts, and track sent versus released funds.",
+    },
     permissions.includes("rewards.view") && {
       title: "Rewards",
       href: `${getAdminOrigin(host)}/rewards`,

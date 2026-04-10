@@ -474,7 +474,9 @@ export default function AdminTeamPage() {
   }
 
   async function resolveRoleIdForFlow() {
-    if (flow.selectedRoleId) return flow.selectedRoleId;
+    if (flow.selectedRoleId) {
+      return { roleId: flow.selectedRoleId, profileCreated: false };
+    }
 
     const generatedName = flow.profileName.trim() || buildGeneratedRoleName(flow);
     const response = await fetch("/api/admin/roles", {
@@ -497,7 +499,7 @@ export default function AdminTeamPage() {
     if (!response.ok || !json.roleId) {
       throw new Error(json.error || "Could not create access profile.");
     }
-    return json.roleId;
+    return { roleId: json.roleId, profileCreated: true };
   }
 
   async function submitFlow(event: React.FormEvent) {
@@ -506,7 +508,7 @@ export default function AdminTeamPage() {
     setMessage("");
 
     try {
-      const roleId = await resolveRoleIdForFlow();
+      const { roleId, profileCreated } = await resolveRoleIdForFlow();
 
       if (flow.mode === "invite") {
         const inviteResponse = await fetch("/api/admin/invites", {
@@ -524,12 +526,47 @@ export default function AdminTeamPage() {
           }),
         });
 
-        const inviteJson = (await inviteResponse.json()) as { error?: string; resentExisting?: boolean };
+        const inviteJson = (await inviteResponse.json()) as {
+          error?: string;
+          resentExisting?: boolean;
+          inviteId?: string;
+          email?: {
+            attempted?: boolean;
+            sent?: boolean;
+            sender?: string;
+            usedFallbackSender?: boolean;
+            providerId?: string | null;
+            error?: string | null;
+            reason?: string | null;
+          };
+        };
         if (!inviteResponse.ok) {
           throw new Error(inviteJson.error || "Could not send invite.");
         }
 
-        setMessage(inviteJson.resentExisting ? "Existing pending invite refreshed and resent." : "Invite sent.");
+        const statusLines = [
+          profileCreated ? "Access profile created." : "Using existing access profile.",
+          inviteJson.resentExisting ? "Existing pending invite refreshed." : `Invite record created${inviteJson.inviteId ? ` (${inviteJson.inviteId})` : ""}.`,
+        ];
+
+        if (inviteJson.email?.sent) {
+          statusLines.push(
+            inviteJson.email.usedFallbackSender
+              ? `Invite email sent with fallback sender ${inviteJson.email.sender}.`
+              : `Invite email sent from ${inviteJson.email.sender}.`,
+          );
+          if (inviteJson.email.providerId) {
+            statusLines.push(`Delivery attempt recorded as ${inviteJson.email.providerId}.`);
+          }
+        } else if (inviteJson.email?.attempted) {
+          statusLines.push(`Invite email failed: ${inviteJson.email.error || "Unknown sender error."}`);
+        } else if (inviteJson.email?.reason === "missing_api_key") {
+          statusLines.push("Invite record created, but email was not sent because RESEND_API_KEY is not configured.");
+        } else {
+          statusLines.push("Invite record created, but email sender is not fully configured.");
+        }
+
+        setMessage(statusLines.join(" "));
       } else {
         const assignResponse = await fetch("/api/admin/team", {
           method: "POST",
@@ -549,7 +586,7 @@ export default function AdminTeamPage() {
         if (!assignResponse.ok) {
           throw new Error(assignJson.error || "Could not assign access.");
         }
-        setMessage("Access assigned.");
+        setMessage(`${profileCreated ? "Access profile created. " : ""}Access assigned.`);
       }
 
       setFlow(emptyFlow());
@@ -671,6 +708,7 @@ export default function AdminTeamPage() {
               <p className="mt-1 text-sm text-white/58">
                 Start with the person. Choose invite onboarding or attach access to an existing platform user.
               </p>
+              <div className="mt-3 text-xs uppercase tracking-[0.18em] text-white/45">Required</div>
               <div className="mt-4 grid gap-4 md:grid-cols-2">
                 {flow.mode === "invite" ? (
                   <>
@@ -710,6 +748,7 @@ export default function AdminTeamPage() {
             <section className="rounded-3xl border border-white/10 bg-black/20 p-5">
               <div className="text-xs uppercase tracking-[0.22em] text-[#caa7ff]">Step 2</div>
               <h3 className="mt-2 text-lg font-semibold text-white">Primary role</h3>
+              <p className="mt-1 text-sm text-white/58">Choose the access type first. The scope options update automatically for the selected role.</p>
               <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                 {PRIMARY_ROLE_OPTIONS.map((role) => (
                   <button

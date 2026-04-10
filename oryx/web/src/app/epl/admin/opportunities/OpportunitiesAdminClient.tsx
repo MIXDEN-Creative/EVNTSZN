@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { INTERNAL_CITY_OPTIONS, getCityStateCode } from "@/lib/city-options";
 
 type AccessRole = {
@@ -131,6 +132,17 @@ type ApiPayload = {
   error?: string;
 };
 
+type PlayerApplicationRecord = {
+  key: string;
+  applicantName: string;
+  email: string;
+  stage: string;
+  status: string | null;
+  city: string | null;
+  submittedAt: string | null;
+  notes: string | null;
+};
+
 function unwrapOne<T>(value: T | T[] | null | undefined) {
   return Array.isArray(value) ? value[0] || null : value || null;
 }
@@ -164,7 +176,7 @@ function compensationLabel(position: Position, template: Template | null) {
 
 export default function OpportunitiesAdminClient() {
   const [message, setMessage] = useState("");
-  const [activeTab, setActiveTab] = useState<"templates" | "open_positions" | "assignments" | "applicants" | "public_listings">("open_positions");
+  const [activeTab, setActiveTab] = useState<"templates" | "open_positions" | "assignments" | "applicants" | "public_listings" | "player_applications">("open_positions");
   const [detailTab, setDetailTab] = useState<"overview" | "public_listing" | "assignments" | "access" | "notes">("overview");
   const [templates, setTemplates] = useState<Template[]>([]);
   const [positions, setPositions] = useState<Position[]>([]);
@@ -175,10 +187,12 @@ export default function OpportunitiesAdminClient() {
   const [events, setEvents] = useState<EventOption[]>([]);
   const [users, setUsers] = useState<StaffUser[]>([]);
   const [volunteerPerks, setVolunteerPerks] = useState<string[]>([]);
+  const [playerApplications, setPlayerApplications] = useState<PlayerApplicationRecord[]>([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   const [selectedPositionId, setSelectedPositionId] = useState<string | null>(null);
   const [selectedAssignmentId, setSelectedAssignmentId] = useState<string | null>(null);
   const [selectedApplicantId, setSelectedApplicantId] = useState<string | null>(null);
+  const [selectedPlayerApplicationKey, setSelectedPlayerApplicationKey] = useState<string | null>(null);
   const [templateFilter, setTemplateFilter] = useState("all");
   const [departmentFilter, setDepartmentFilter] = useState("all");
   const [positionFilter, setPositionFilter] = useState("all");
@@ -257,6 +271,28 @@ export default function OpportunitiesAdminClient() {
     setEvents(json.events || []);
     setUsers(json.users || []);
     setVolunteerPerks(json.volunteerPerks || []);
+    try {
+      const approvalsRes = await fetch("/api/admin/application-command-center", { cache: "no-store" });
+      const approvalsJson = (await approvalsRes.json()) as { applications?: any[] };
+      if (approvalsRes.ok) {
+        const nextPlayerApplications = (approvalsJson.applications || [])
+          .filter((application) => application.kind === "player")
+          .map((application) => ({
+            key: application.key,
+            applicantName: application.applicantName,
+            email: application.email,
+            stage: application.stage,
+            status: application.status,
+            city: application.city,
+            submittedAt: application.submittedAt,
+            notes: application.notes,
+          }));
+        setPlayerApplications(nextPlayerApplications);
+        if (!selectedPlayerApplicationKey && nextPlayerApplications[0]?.key) {
+          setSelectedPlayerApplicationKey(nextPlayerApplications[0].key);
+        }
+      }
+    } catch {}
 
     if (!selectedTemplateId && nextTemplates[0]?.id) setSelectedTemplateId(nextTemplates[0].id);
     if (!selectedPositionId && nextPositions[0]?.id) setSelectedPositionId(nextPositions[0].id);
@@ -294,6 +330,7 @@ export default function OpportunitiesAdminClient() {
   const selectedPosition = positions.find((position) => position.id === selectedPositionId) || null;
   const selectedAssignment = assignments.find((assignment) => assignment.id === selectedAssignmentId) || null;
   const selectedApplicant = applicants.find((applicant) => applicant.id === selectedApplicantId) || null;
+  const selectedPlayerApplication = playerApplications.find((application) => application.key === selectedPlayerApplicationKey) || null;
 
   useEffect(() => {
     if (!selectedTemplate) return;
@@ -435,8 +472,9 @@ export default function OpportunitiesAdminClient() {
       paid: templates.filter((template) => template.role_type === "paid").length,
       pendingAssignments: assignments.filter((assignment) => assignment.assignment_status === "pending").length,
       applicants: applicants.filter((applicant) => applicant.status === "submitted").length,
+      playerApplications: playerApplications.length,
     }),
-    [applicants, assignments, positions, templates],
+    [applicants, assignments, playerApplications.length, positions, templates],
   );
 
   const staffingCityOptions = useMemo(() => {
@@ -462,6 +500,7 @@ export default function OpportunitiesAdminClient() {
             <div className="ev-meta-card"><div className="ev-meta-label">Templates</div><div className="ev-meta-value">{stats.templates}</div></div>
             <div className="ev-meta-card"><div className="ev-meta-label">Open positions</div><div className="ev-meta-value">{stats.openPositions}</div></div>
             <div className="ev-meta-card"><div className="ev-meta-label">Applicants waiting</div><div className="ev-meta-value">{stats.applicants}</div></div>
+            <div className="ev-meta-card"><div className="ev-meta-label">Player applications</div><div className="ev-meta-value">{stats.playerApplications}</div></div>
           </div>
         </div>
       </section>
@@ -475,6 +514,7 @@ export default function OpportunitiesAdminClient() {
           ["assignments", "Assignments"],
           ["applicants", "Applicants"],
           ["public_listings", "Public Listings"],
+          ["player_applications", "Player Applications"],
         ].map(([key, label]) => (
           <button
             key={key}
@@ -489,9 +529,9 @@ export default function OpportunitiesAdminClient() {
         ))}
       </section>
 
-      <div className="mt-6 grid gap-6 xl:grid-cols-[300px_1fr_1.1fr]">
-        <section className="ev-panel p-5">
-          <div className="ev-section-kicker">{activeTab === "templates" ? "Role templates" : activeTab === "assignments" ? "Assignments" : activeTab === "applicants" ? "Applicants" : activeTab === "public_listings" ? "Public listings" : "Open positions"}</div>
+      <div className="mt-6 grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)]">
+        <section className="ev-panel p-5 xl:col-start-2">
+          <div className="ev-section-kicker">{activeTab === "templates" ? "Role templates" : activeTab === "assignments" ? "Assignments" : activeTab === "applicants" ? "Applicants" : activeTab === "public_listings" ? "Public listings" : activeTab === "player_applications" ? "EPL player applications" : "Open positions"}</div>
           <div className="mt-4 grid gap-3">
             {activeTab === "templates" ? (
               <>
@@ -544,6 +584,24 @@ export default function OpportunitiesAdminClient() {
                 <div className="mt-2 text-sm text-white/58">{template.department || "General operations"}</div>
               </button>
             )) : null}
+            {activeTab === "player_applications" ? (
+              playerApplications.length ? playerApplications.map((application) => (
+                <button
+                  key={application.key}
+                  type="button"
+                  onClick={() => setSelectedPlayerApplicationKey(application.key)}
+                  className={`w-full rounded-2xl border p-4 text-left ${selectedPlayerApplicationKey === application.key ? "border-[#A259FF]/40 bg-[#A259FF]/10" : "border-white/10 bg-black/30"}`}
+                >
+                  <div className="text-sm font-semibold text-white">{application.applicantName}</div>
+                  <div className="mt-1 text-sm text-white/58">{application.email}</div>
+                  <div className="mt-2 text-xs uppercase tracking-[0.18em] text-[#caa7ff]">{application.stage.replace(/_/g, " ")}</div>
+                </button>
+              )) : (
+                <div className="rounded-2xl border border-dashed border-white/10 bg-black/20 p-4 text-sm text-white/48">
+                  No EPL player applications are in queue right now.
+                </div>
+              )
+            ) : null}
           </div>
         </section>
 
@@ -683,6 +741,31 @@ export default function OpportunitiesAdminClient() {
                 ))}
               </div>
             </>
+          ) : activeTab === "player_applications" ? (
+            <>
+              <div className="ev-section-kicker">Player application routing</div>
+              <h2 className="mt-3 text-2xl font-bold text-white">Player intake is reviewed in the Application Command Center.</h2>
+              <div className="mt-4 rounded-2xl border border-white/10 bg-black/30 p-4 text-sm text-white/62">
+                Use this desk for staffing templates, openings, assignments, and public listings. Use the dedicated EPL player queue in Approvals for registration review and decisions.
+              </div>
+              {selectedPlayerApplication ? (
+                <div className="mt-5 rounded-2xl border border-white/10 bg-black/30 p-5">
+                  <div className="text-xs uppercase tracking-[0.18em] text-white/45">Selected player application</div>
+                  <div className="mt-3 text-2xl font-bold text-white">{selectedPlayerApplication.applicantName}</div>
+                  <div className="mt-2 text-sm text-white/58">{selectedPlayerApplication.email}</div>
+                  <div className="mt-3 flex flex-wrap gap-2 text-[11px] uppercase tracking-[0.18em] text-[#caa7ff]">
+                    <span>{selectedPlayerApplication.stage.replace(/_/g, " ")}</span>
+                    {selectedPlayerApplication.city ? <span>{selectedPlayerApplication.city}</span> : null}
+                    {selectedPlayerApplication.status ? <span>{selectedPlayerApplication.status}</span> : null}
+                  </div>
+                  <div className="mt-4 text-sm text-white/62">{selectedPlayerApplication.notes || "No internal notes yet."}</div>
+                </div>
+              ) : null}
+              <div className="mt-5 flex flex-wrap gap-3">
+                <Link href="/epl/admin/approvals" className="ev-button-primary">Open EPL player queue</Link>
+                <button type="button" className="ev-button-secondary" onClick={() => setActiveTab("open_positions")}>Back to staffing</button>
+              </div>
+            </>
           ) : (
             <>
               <div className="ev-section-kicker">{activeTab === "public_listings" ? "Public listings" : "Open positions"}</div>
@@ -730,7 +813,7 @@ export default function OpportunitiesAdminClient() {
           )}
         </section>
 
-        <section className="ev-panel p-6">
+        <section className="ev-panel p-6 xl:col-start-2">
           {activeTab === "templates" ? (
             <>
               <div className="ev-section-kicker">Template summary</div>
