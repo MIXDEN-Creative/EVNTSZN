@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdminPermission } from "@/lib/admin-auth";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { toDatabaseUserId } from "@/lib/access-control";
 
 function normalizeCity(value: string | null | undefined) {
   return (value || "Unassigned").trim();
@@ -11,7 +12,7 @@ export async function GET(request: NextRequest) {
 
   const cityFilter = request.nextUrl.searchParams.get("city");
 
-  const [eventsRes, applicationsRes, profilesRes, ordersRes, sponsorOrdersRes, programsRes, sponsorAccountsRes] = await Promise.all([
+  const [eventsRes, applicationsRes, profilesRes, ordersRes, sponsorOrdersRes, programsRes, sponsorAccountsRes, officesRes] = await Promise.all([
     supabaseAdmin
       .from("evntszn_events")
       .select("id, city, status, start_at, check_in_count"),
@@ -20,7 +21,7 @@ export async function GET(request: NextRequest) {
       .select("id, city, status, application_type, discovery_eligible"),
     supabaseAdmin
       .from("evntszn_operator_profiles")
-      .select("user_id, role_key, organizer_classification, city_scope, is_active"),
+      .select("user_id, role_key, organizer_classification, city_scope, is_active, evntszn_profiles(full_name, city, state)"),
     supabaseAdmin
       .from("evntszn_ticket_orders")
       .select("id, amount_total_cents, status, evntszn_events(city)")
@@ -34,10 +35,13 @@ export async function GET(request: NextRequest) {
     supabaseAdmin
       .from("evntszn_sponsor_accounts")
       .select("id, name, scope_type, city_scope, status, activation_status, fulfillment_status, asset_ready, epl_category"),
+    supabaseAdmin
+      .from("city_offices")
+      .select("id, office_name, city, state, region, office_status, office_lead_user_id, notes, description, created_at, updated_at"),
   ]);
 
   const error =
-    eventsRes.error || applicationsRes.error || profilesRes.error || ordersRes.error || sponsorOrdersRes.error || programsRes.error || sponsorAccountsRes.error;
+    eventsRes.error || applicationsRes.error || profilesRes.error || ordersRes.error || sponsorOrdersRes.error || programsRes.error || sponsorAccountsRes.error || officesRes.error;
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
@@ -63,6 +67,7 @@ export async function GET(request: NextRequest) {
         applications: [] as any[],
         programMembers: [] as any[],
         sponsorRelationships: [] as any[],
+        offices: [] as any[],
       });
     }
     return cityMap.get(cityName);
@@ -156,9 +161,99 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  const profileMap = new Map((profilesRes.data || []).map((profile: any) => [profile.user_id, profile]));
+  for (const office of officesRes.data || []) {
+    const row = ensureCity(normalizeCity(office.city));
+    row.offices.push({
+      id: office.id,
+      officeName: office.office_name,
+      city: office.city,
+      state: office.state,
+      region: office.region,
+      officeStatus: office.office_status,
+      officeLeadUserId: office.office_lead_user_id,
+      officeLeadName: office.office_lead_user_id
+        ? Array.isArray(profileMap.get(office.office_lead_user_id)?.evntszn_profiles)
+          ? profileMap.get(office.office_lead_user_id)?.evntszn_profiles?.[0]?.full_name || null
+          : profileMap.get(office.office_lead_user_id)?.evntszn_profiles?.full_name || null
+        : null,
+      notes: office.notes,
+      description: office.description,
+      createdAt: office.created_at,
+      updatedAt: office.updated_at,
+    });
+  }
+
   const cities = Array.from(cityMap.values())
     .filter((row) => !cityFilter || row.city.toLowerCase() === cityFilter.toLowerCase())
     .sort((a, b) => a.city.localeCompare(b.city));
 
-  return NextResponse.json({ cities });
+  return NextResponse.json({
+    cities,
+    offices: (officesRes.data || []).map((office) => ({
+      id: office.id,
+      officeName: office.office_name,
+      city: office.city,
+      state: office.state,
+      region: office.region,
+      officeStatus: office.office_status,
+      officeLeadUserId: office.office_lead_user_id,
+      notes: office.notes,
+      description: office.description,
+      createdAt: office.created_at,
+      updatedAt: office.updated_at,
+    })),
+    officeLeads: (profilesRes.data || []).map((profile: any) => ({
+      userId: profile.user_id,
+      fullName: Array.isArray(profile.evntszn_profiles)
+        ? profile.evntszn_profiles[0]?.full_name || null
+        : profile.evntszn_profiles?.full_name || null,
+      city: Array.isArray(profile.evntszn_profiles)
+        ? profile.evntszn_profiles[0]?.city || null
+        : profile.evntszn_profiles?.city || null,
+      state: Array.isArray(profile.evntszn_profiles)
+        ? profile.evntszn_profiles[0]?.state || null
+        : profile.evntszn_profiles?.state || null,
+    })),
+  });
+}
+
+export async function POST(request: NextRequest) {
+  await requireAdminPermission("city.manage", "/epl/admin/city-office");
+
+  const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
+  const officeId = String(body.id || "").trim();
+  const officeName = String(body.officeName || "").trim();
+  const city = String(body.city || "").trim();
+  const state = String(body.state || "").trim() || null;
+  const region = String(body.region || "").trim() || null;
+  const officeStatus = String(body.officeStatus || "active").trim() || "active";
+  const notes = String(body.notes || "").trim() || null;
+  const description = String(body.description || "").trim() || null;
+  const officeLeadUserId = body.officeLeadUserId ? toDatabaseUserId(String(body.officeLeadUserId || "").trim()) : null;
+
+  if (!officeName || !city) {
+    return NextResponse.json({ error: "Office name and city are required." }, { status: 400 });
+  }
+
+  const payload = {
+    office_name: officeName,
+    city,
+    state,
+    region,
+    office_status: officeStatus,
+    office_lead_user_id: officeLeadUserId,
+    notes,
+    description,
+  };
+
+  const result = officeId
+    ? await supabaseAdmin.from("city_offices").update(payload).eq("id", officeId).select("id").single()
+    : await supabaseAdmin.from("city_offices").insert(payload).select("id").single();
+
+  if (result.error || !result.data) {
+    return NextResponse.json({ error: result.error?.message || "Could not save office." }, { status: 500 });
+  }
+
+  return NextResponse.json({ ok: true, officeId: result.data.id });
 }
