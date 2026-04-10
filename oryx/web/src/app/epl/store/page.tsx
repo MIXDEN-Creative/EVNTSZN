@@ -234,15 +234,18 @@ export default function EPLStorePage() {
           </h1>
 
           <p className="mt-3 max-w-2xl text-lg text-white/70">
-            Official EVNTSZN Prime League merch with featured drops, real categories, and a cleaner route from browsing to checkout.
+            Official EVNTSZN Prime League merch built around club identity, league nights, and the gear players and supporters actually want to wear.
           </p>
 
           <div className="mt-6 flex flex-wrap gap-3">
-            <Link href="https://evntszn.com" className="ev-button-secondary">
-              Homepage
-            </Link>
-            <Link href="https://epl.evntszn.com" className="ev-button-secondary">
+            <Link href="https://epl.evntszn.com" className="ev-button-primary">
               Back to EPL
+            </Link>
+            <Link href="https://epl.evntszn.com/season-1/register" className="ev-button-secondary">
+              Register
+            </Link>
+            <Link href="https://evntszn.com/support" className="ev-button-secondary">
+              Support
             </Link>
           </div>
         </div>
@@ -251,14 +254,14 @@ export default function EPLStorePage() {
       <section className="mx-auto max-w-7xl px-6 py-8">
         {!catalogReady ? (
           <div className="mb-6 rounded-2xl border border-[#A259FF]/25 bg-[#A259FF]/10 px-4 py-3 text-sm text-[#e1d0ff]">
-            Catalog controls are still syncing, so the store is showing live Printful inventory directly.
+            The latest league gear is still loading in, so the store is showing live inventory directly.
           </div>
         ) : null}
 
         {featuredProducts.length ? (
           <section className="mb-8 rounded-[32px] border border-white/10 bg-[#0c0c15] p-6">
             <div className="ev-section-kicker">Featured products</div>
-            <h2 className="mt-3 text-3xl font-black tracking-tight text-white">The strongest league merch lives at the top.</h2>
+            <h2 className="mt-3 text-3xl font-black tracking-tight text-white">Start with the pieces carrying the most league energy.</h2>
             <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
               {featuredProducts.map((product) => (
                 <button
@@ -359,7 +362,7 @@ export default function EPLStorePage() {
               </div>
             ) : visibleProducts.length === 0 ? (
               <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 text-sm leading-6 text-white/60">
-                No products are live in this category yet. Refresh the store or switch collections to check the latest Printful inventory.
+                No products are live in this collection yet. Switch categories or refresh to check the latest league drop.
               </div>
             ) : (
               <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">

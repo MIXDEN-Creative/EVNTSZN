@@ -22,7 +22,7 @@ export default async function AdminHomePage() {
     permissions.includes("admin.manage") && {
       title: "Team & Access",
       href: `${getAdminOrigin(host)}/team`,
-      description: "Create roles, send invites, and manage internal access.",
+      description: "Create access profiles, scope roles, and onboard staff safely.",
     },
     permissions.includes("admin.manage") && {
       title: "Control Center",
@@ -37,7 +37,7 @@ export default async function AdminHomePage() {
     permissions.includes("admin.manage") && {
       title: "Approvals",
       href: `${getAdminOrigin(host)}/approvals`,
-      description: "Review applications and approve the right access path.",
+      description: "Review applications, assign reviewers, and move decisions forward.",
     },
     permissions.includes("city.manage") && {
       title: "City Office",
@@ -57,7 +57,12 @@ export default async function AdminHomePage() {
     permissions.includes("opportunities.manage") && {
       title: "Opportunities",
       href: `${getAdminOrigin(host)}/opportunities`,
-      description: "Open, close, and publish current roles.",
+      description: "Manage staffing templates, open positions, assignments, and applicants.",
+    },
+    (permissions.includes("workforce.view") || permissions.includes("workforce.manage") || permissions.includes("workforce.approve")) && {
+      title: "Workforce",
+      href: `${getAdminOrigin(host)}/workforce`,
+      description: "Review hours, payroll-ready time, and labor exceptions across staff and events.",
     },
     permissions.includes("events.manage") && {
       title: "Events",

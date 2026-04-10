@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { INTERNAL_CITY_OPTIONS } from "@/lib/city-options";
 
 const statusOptions = [
   "submitted",
@@ -15,6 +16,7 @@ const statusOptions = [
   "not selected",
   "archived",
 ];
+const citySuggestions = INTERNAL_CITY_OPTIONS;
 
 function buildGoogleCalendarUrl({
   stage,
@@ -463,7 +465,7 @@ export default function HiringAdminClient() {
                   </select>
                   <input className="ev-field" placeholder="Job title" value={conversionForm.jobTitle} onChange={(e) => setConversionForm({ ...conversionForm, jobTitle: e.target.value })} />
                   <input className="ev-field" placeholder="Functions" value={conversionForm.functions} onChange={(e) => setConversionForm({ ...conversionForm, functions: e.target.value })} />
-                  <input className="ev-field" placeholder="City scope" value={conversionForm.cityScope} onChange={(e) => setConversionForm({ ...conversionForm, cityScope: e.target.value })} />
+                  <input className="ev-field" list="staffing-hiring-city-options" placeholder="City scope" value={conversionForm.cityScope} onChange={(e) => setConversionForm({ ...conversionForm, cityScope: e.target.value })} />
                   <input className="ev-field" placeholder="Dashboard access" value={conversionForm.dashboardAccess} onChange={(e) => setConversionForm({ ...conversionForm, dashboardAccess: e.target.value })} />
                   <input className="ev-field" placeholder="Surface access" value={conversionForm.surfaceAccess} onChange={(e) => setConversionForm({ ...conversionForm, surfaceAccess: e.target.value })} />
                   <input className="ev-field md:col-span-2" placeholder="Module access" value={conversionForm.moduleAccess} onChange={(e) => setConversionForm({ ...conversionForm, moduleAccess: e.target.value })} />
@@ -485,6 +487,11 @@ export default function HiringAdminClient() {
           )}
         </section>
       </div>
+      <datalist id="staffing-hiring-city-options">
+        {citySuggestions.map((city) => (
+          <option key={city} value={city} />
+        ))}
+      </datalist>
     </main>
   );
 }

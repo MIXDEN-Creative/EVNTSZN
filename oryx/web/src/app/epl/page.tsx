@@ -17,7 +17,7 @@ import PublicFooter from "@/components/public/PublicFooter";
 export const metadata: Metadata = {
   title: "EPL | EVNTSZN Prime League",
   description:
-    "Explore EVNTSZN Prime League, a premium coed city-built league with registration, draft-night energy, team identity, standings movement, and public schedule momentum.",
+    "Explore EVNTSZN Prime League, a premium coed flag football league with draft-night energy, six clubs, weekly standings pressure, and real Baltimore game-day pull.",
   alternates: {
     canonical: "https://epl.evntszn.com",
   },
@@ -112,16 +112,16 @@ export default async function EplPage() {
           <div className="grid gap-4">
             {[
               {
-                label: "League shape",
-                body: "Registration, rosters, quarterback pressure, flag pulls, and standings pressure all belong in one public-facing league surface.",
+                label: "League feel",
+                body: "Draft night, flag pulls, quarterback pressure, and sideline momentum all live in one public league built to feel active every week.",
               },
               {
-                label: "Why it matters",
-                body: "EPL gives EVNTSZN a flag football vertical people can actually discover, follow, and join instead of a one-off registration page with no momentum.",
+                label: "Why people come back",
+                body: "Players can register, supporters can follow the table, and every club has a public identity worth checking between game nights.",
               },
               {
-                label: "Built for pull",
-                body: "Players, team communities, and curious city traffic should all have a reason to come back before, during, and after the season.",
+                label: "Built for Baltimore",
+                body: "EPL leans into city pride, neighborhood identity, and a coed adult league energy that feels sharper than a one-off rec run.",
               },
             ].map((item) => (
               <div key={item.label} className="rounded-[24px] border border-white/10 bg-white/8 p-5 backdrop-blur-xl">
@@ -178,9 +178,9 @@ export default async function EplPage() {
 
             <div className="mt-8 grid gap-4 md:grid-cols-3">
               {[
-                "Season opener and statement nights",
-                "Mid-table pressure and rivalry fixtures",
-                "Stretch-run matchups that move the standings",
+                "Opening-night matchups and statement starts",
+                "Rivalry weeks that tighten the table",
+                "Stretch-run games that change playoff pressure",
               ].map((text) => (
                 <div key={text} className="rounded-[24px] border border-white/10 bg-white/5 p-5">
                   <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/55">
@@ -215,6 +215,11 @@ export default async function EplPage() {
                   <p className="mt-2 text-sm leading-6 text-white/72">{team.headline}</p>
                 </Link>
               ))}
+            </div>
+            <div className="mt-6">
+              <Link href="/epl/teams" className="rounded-full border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10">
+                View all teams
+              </Link>
             </div>
           </section>
         ) : null}
@@ -253,8 +258,8 @@ export default async function EplPage() {
               <Link href="/epl/opportunities" className="rounded-full bg-white px-5 py-3 text-sm font-semibold text-black transition hover:opacity-90">
                 Explore opportunities
               </Link>
-              <Link href="/epl/opportunities#application" className="rounded-full border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10">
-                Start an application
+              <Link href="/epl/opportunities#roles" className="rounded-full border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10">
+                View open roles
               </Link>
             </div>
           </section>
@@ -299,15 +304,15 @@ export default async function EplPage() {
               {[
                 {
                   title: "Register",
-                  body: "Players enter through the public registration flow with clear next steps and a clean path into the league.",
+                  body: "Players lock in their spot, build a player profile, and enter the league with a clean path into Season 1.",
                 },
                 {
                   title: "Draft night",
-                  body: "Saturday, June 6 sets the roster picture and locks in the clubs that define Season 1.",
+                  body: "Draft night sets the clubs, sharpens the storylines, and gives every team its opening shape.",
                 },
                 {
                   title: "Follow the table",
-                  body: "Schedule, team identity, and standings movement keep the season alive week after week.",
+                  body: "Check the schedule, watch the standings move, and keep up with the clubs carrying the season.",
                 },
               ].map((item) => (
                 <div key={item.title} className="rounded-[24px] border border-white/10 bg-white/5 p-5">

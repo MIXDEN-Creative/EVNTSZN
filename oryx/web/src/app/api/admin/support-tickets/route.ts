@@ -17,7 +17,7 @@ export async function GET() {
     return NextResponse.json({ error: "Support access is not enabled for this account." }, { status: 403 });
   }
 
-  const [ticketsRes, assigneesRes, profilesRes, eventsRes] = await Promise.all([
+  const [ticketsRes, assigneesRes, profilesRes, eventsRes, updatesRes] = await Promise.all([
     supabaseAdmin
       .from("support_tickets")
       .select(`
@@ -34,9 +34,12 @@ export async function GET() {
         related_order_code,
         occurred_on,
         occurred_at_label,
+        linked_city,
+        linked_office_label,
         severity,
         status,
         description,
+        resolution_notes,
         metadata,
         assignee_user_id,
         created_at,
@@ -60,10 +63,17 @@ export async function GET() {
       .select("id, title, city, slug")
       .order("start_at", { ascending: false })
       .limit(50),
+    supabaseAdmin
+      .from("support_ticket_updates")
+      .select("id, ticket_id, update_type, status_to, assignee_user_id, note_body, created_at, author_user_id")
+      .order("created_at", { ascending: true }),
   ]);
 
-  if (ticketsRes.error || assigneesRes.error || profilesRes.error || eventsRes.error) {
-    return NextResponse.json({ error: ticketsRes.error?.message || assigneesRes.error?.message || profilesRes.error?.message || eventsRes.error?.message }, { status: 500 });
+  if (ticketsRes.error || assigneesRes.error || profilesRes.error || eventsRes.error || updatesRes.error) {
+    return NextResponse.json(
+      { error: ticketsRes.error?.message || assigneesRes.error?.message || profilesRes.error?.message || eventsRes.error?.message || updatesRes.error?.message },
+      { status: 500 },
+    );
   }
 
   const profileMap = new Map((profilesRes.data || []).map((profile) => [profile.user_id, profile]));
@@ -81,8 +91,15 @@ export async function GET() {
     assigneeMap.set(row.user_id, current);
   }
 
+  const updates = (updatesRes.data || []).map((update) => ({
+    ...update,
+    author_name: profileMap.get(update.author_user_id)?.full_name || update.author_user_id || "System",
+    assignee_name: update.assignee_user_id ? profileMap.get(update.assignee_user_id)?.full_name || update.assignee_user_id : null,
+  }));
+
   return NextResponse.json({
     tickets: ticketsRes.data || [],
+    updates,
     assignees: Array.from(assigneeMap.values()).sort((a, b) => a.full_name.localeCompare(b.full_name)),
     events: eventsRes.data || [],
     canAssign: permissions.includes("support.assign") || permissions.includes("support.manage"),

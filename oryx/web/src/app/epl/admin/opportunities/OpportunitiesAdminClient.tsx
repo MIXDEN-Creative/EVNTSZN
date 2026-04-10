@@ -1,342 +1,1059 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-
-type Opportunity = {
-  id: string;
-  role_code?: string | null;
-  title: string;
-  department: string | null;
-  opportunity_type: string;
-  summary: string | null;
-  description: string | null;
-  requirements: string[] | null;
-  perks: string[] | null;
-  pay_label: string | null;
-  status: string;
-  is_public?: boolean;
-  location_city?: string | null;
-  location_state?: string | null;
-  priority_score?: number;
-  display_order?: number;
-  access_role_id?: string | null;
-  assignment_permission_codes?: string[] | null;
-  assignment_logic?: { notes?: string | null } | null;
-};
+import { INTERNAL_CITY_OPTIONS, getCityStateCode } from "@/lib/city-options";
 
 type AccessRole = {
   id: string;
   name: string;
+  primary_role?: string | null;
+  role_subtype?: string | null;
 };
 
-function parseList(value: string) {
+type StaffUser = {
+  user_id: string;
+  full_name: string | null;
+  city: string | null;
+  state: string | null;
+  primary_role: string | null;
+};
+
+type Template = {
+  id: string;
+  title: string;
+  role_code: string | null;
+  department: string | null;
+  role_type: "paid" | "volunteer";
+  summary: string | null;
+  responsibilities: string[] | null;
+  requirements: string[] | null;
+  default_access_role_id: string | null;
+  default_assignment_permission_codes: string[] | null;
+  default_operational_tags: string[] | null;
+  volunteer_perks: string[] | null;
+  pay_amount: number | null;
+  pay_type: string | null;
+  employment_status: string | null;
+  access_track: string | null;
+  is_active: boolean;
+  sort_order: number;
+  roles?: { id: string; name?: string | null } | { id: string; name?: string | null }[] | null;
+};
+
+type Position = {
+  id: string;
+  role_template_id: string;
+  title_override: string | null;
+  season_id: string | null;
+  city: string | null;
+  state: string | null;
+  position_status: string;
+  visibility: "public" | "internal_only";
+  slots_needed: number;
+  slots_filled: number;
+  priority: number;
+  notes: string | null;
+  publicly_listed: boolean;
+  starts_at: string | null;
+  ends_at: string | null;
+  access_role_id: string | null;
+  assignment_permission_codes: string[] | null;
+  onboarding_notes: string | null;
+  volunteer_perks: string[] | null;
+  pay_amount: number | null;
+  pay_type: string | null;
+  employment_status: string | null;
+  access_track: string | null;
+  staff_role_templates?: Template | Template[] | null;
+  seasons?: { id: string; name?: string | null; slug?: string | null } | { id: string; name?: string | null; slug?: string | null }[] | null;
+  evntszn_events?: { id: string; title?: string | null; city?: string | null; slug?: string | null } | { id: string; title?: string | null; city?: string | null; slug?: string | null }[] | null;
+  roles?: { id: string; name?: string | null } | { id: string; name?: string | null }[] | null;
+};
+
+type Assignment = {
+  id: string;
+  position_id: string;
+  user_id: string | null;
+  application_id: string | null;
+  assignment_status: string;
+  notes: string | null;
+  assigned_at: string | null;
+  staff_positions?: {
+    id: string;
+    title_override?: string | null;
+    city?: string | null;
+    position_status?: string | null;
+    staff_role_templates?: { title?: string | null; role_type?: string | null } | { title?: string | null; role_type?: string | null }[] | null;
+  } | null;
+  evntszn_profiles?: { user_id?: string | null; full_name?: string | null; city?: string | null } | { user_id?: string | null; full_name?: string | null; city?: string | null }[] | null;
+  staff_applications?: { id?: string | null; first_name?: string | null; last_name?: string | null; email?: string | null; status?: string | null } | { id?: string | null; first_name?: string | null; last_name?: string | null; email?: string | null; status?: string | null }[] | null;
+};
+
+type Applicant = {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  status: string;
+  city: string | null;
+  state: string | null;
+  preferred_roles: string[] | null;
+  opportunity_id?: string | null;
+  position_id?: string | null;
+  role_template_id?: string | null;
+  created_at: string;
+};
+
+type Season = {
+  id: string;
+  name: string;
+  slug: string;
+};
+
+type EventOption = {
+  id: string;
+  title: string;
+  city: string | null;
+  slug: string;
+  start_at?: string | null;
+};
+
+type ApiPayload = {
+  templates?: Template[];
+  positions?: Position[];
+  assignments?: Assignment[];
+  applicants?: Applicant[];
+  seasons?: Season[];
+  accessRoles?: AccessRole[];
+  events?: EventOption[];
+  users?: StaffUser[];
+  volunteerPerks?: string[];
+  error?: string;
+};
+
+function unwrapOne<T>(value: T | T[] | null | undefined) {
+  return Array.isArray(value) ? value[0] || null : value || null;
+}
+
+function joinLines(value: string[] | null | undefined) {
+  return (value || []).join("\n");
+}
+
+function parseLines(value: string) {
   return value
     .split("\n")
     .map((item) => item.trim())
     .filter(Boolean);
 }
 
+function formatDate(value: string | null | undefined) {
+  if (!value) return "—";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "—" : date.toLocaleDateString();
+}
+
+function compensationLabel(position: Position, template: Template | null) {
+  if ((template?.role_type || "volunteer") !== "paid") return "Volunteer";
+  const amount = position.pay_amount ?? template?.pay_amount;
+  const payType = position.pay_type || template?.pay_type;
+  const employment = position.employment_status || template?.employment_status;
+  return [amount ? `$${amount}` : null, payType?.replace(/_/g, " "), employment?.replace(/_/g, " ")]
+    .filter(Boolean)
+    .join(" • ") || "Paid role";
+}
+
 export default function OpportunitiesAdminClient() {
-  const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
-  const [accessRoles, setAccessRoles] = useState<AccessRole[]>([]);
   const [message, setMessage] = useState("");
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [form, setForm] = useState<Record<string, any>>({
+  const [activeTab, setActiveTab] = useState<"templates" | "open_positions" | "assignments" | "applicants" | "public_listings">("open_positions");
+  const [detailTab, setDetailTab] = useState<"overview" | "public_listing" | "assignments" | "access" | "notes">("overview");
+  const [templates, setTemplates] = useState<Template[]>([]);
+  const [positions, setPositions] = useState<Position[]>([]);
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [applicants, setApplicants] = useState<Applicant[]>([]);
+  const [seasons, setSeasons] = useState<Season[]>([]);
+  const [accessRoles, setAccessRoles] = useState<AccessRole[]>([]);
+  const [events, setEvents] = useState<EventOption[]>([]);
+  const [users, setUsers] = useState<StaffUser[]>([]);
+  const [volunteerPerks, setVolunteerPerks] = useState<string[]>([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
+  const [selectedPositionId, setSelectedPositionId] = useState<string | null>(null);
+  const [selectedAssignmentId, setSelectedAssignmentId] = useState<string | null>(null);
+  const [selectedApplicantId, setSelectedApplicantId] = useState<string | null>(null);
+  const [templateFilter, setTemplateFilter] = useState("all");
+  const [departmentFilter, setDepartmentFilter] = useState("all");
+  const [positionFilter, setPositionFilter] = useState("all");
+  const [templateForm, setTemplateForm] = useState<Record<string, any>>({
     title: "",
     roleCode: "",
-    department: "",
-    opportunityType: "volunteer",
+    department: "Operations",
+    roleType: "volunteer",
     summary: "",
-    description: "",
+    responsibilities: "",
     requirements: "",
-    perks: "",
-    payLabel: "",
-    status: "open",
-    isPublic: true,
-    locationCity: "Baltimore",
-    locationState: "MD",
-    priorityScore: 100,
-    displayOrder: 100,
-    seasonSlug: "season-1",
+    defaultAccessRoleId: "",
+    defaultAssignmentPermissionCodes: "",
+    defaultOperationalTags: "",
+    volunteerPerks: [] as string[],
+    payAmount: "",
+    payType: "",
+    employmentStatus: "",
+    accessTrack: "none",
+    isActive: true,
+    sortOrder: 100,
+  });
+  const [positionForm, setPositionForm] = useState<Record<string, any>>({
+    roleTemplateId: "",
+    titleOverride: "",
+    seasonId: "",
+    eventId: "",
+    city: "Baltimore",
+    state: "MD",
+    positionStatus: "open",
+    visibility: "public",
+    slotsNeeded: 2,
+    slotsFilled: 0,
+    priority: 100,
+    notes: "",
+    publiclyListed: true,
+    startsAt: "",
+    endsAt: "",
     accessRoleId: "",
     assignmentPermissionCodes: "",
-    assignmentLogic: "",
+    onboardingNotes: "",
+    volunteerPerks: [] as string[],
+    payAmount: "",
+    payType: "",
+    employmentStatus: "",
+    accessTrack: "none",
+  });
+  const [assignmentForm, setAssignmentForm] = useState<Record<string, any>>({
+    id: "",
+    positionId: "",
+    userId: "",
+    applicationId: "",
+    assignmentStatus: "pending",
+    notes: "",
   });
 
   async function load() {
-    const [opportunitiesRes, rolesRes] = await Promise.all([
-      fetch("/api/epl/admin/opportunities", { cache: "no-store" }),
-      fetch("/api/admin/roles", { cache: "no-store" }),
-    ]);
-    const [opportunitiesJson, rolesJson] = await Promise.all([opportunitiesRes.json(), rolesRes.json()]);
-    const json = opportunitiesJson as { opportunities?: Opportunity[]; error?: string };
-    if (!opportunitiesRes.ok) {
-      setMessage(json.error || "Could not load opportunities.");
+    const res = await fetch("/api/epl/admin/opportunities", { cache: "no-store" });
+    const json = (await res.json()) as ApiPayload;
+    if (!res.ok) {
+      setMessage(json.error || "Could not load staffing command center.");
       return;
     }
-    const next = json.opportunities || [];
-    setOpportunities(next);
-    if (!selectedId && next[0]?.id) setSelectedId(next[0].id);
-    if (rolesRes.ok) {
-      setAccessRoles(((rolesJson as { roles?: AccessRole[] }).roles || []).map((role) => ({ id: role.id, name: role.name })));
-    }
+
+    const nextTemplates = json.templates || [];
+    const nextPositions = json.positions || [];
+    const nextAssignments = json.assignments || [];
+    const nextApplicants = json.applicants || [];
+
+    setTemplates(nextTemplates);
+    setPositions(nextPositions);
+    setAssignments(nextAssignments);
+    setApplicants(nextApplicants);
+    setSeasons(json.seasons || []);
+    setAccessRoles(json.accessRoles || []);
+    setEvents(json.events || []);
+    setUsers(json.users || []);
+    setVolunteerPerks(json.volunteerPerks || []);
+
+    if (!selectedTemplateId && nextTemplates[0]?.id) setSelectedTemplateId(nextTemplates[0].id);
+    if (!selectedPositionId && nextPositions[0]?.id) setSelectedPositionId(nextPositions[0].id);
+    if (!selectedAssignmentId && nextAssignments[0]?.id) setSelectedAssignmentId(nextAssignments[0].id);
+    if (!selectedApplicantId && nextApplicants[0]?.id) setSelectedApplicantId(nextApplicants[0].id);
   }
 
   useEffect(() => {
     load();
   }, []);
 
-  const stats = useMemo(
-    () => ({
-      total: opportunities.length,
-      open: opportunities.filter((item) => item.status === "open").length,
-      public: opportunities.filter((item) => item.is_public !== false).length,
-      linkedRoles: opportunities.filter((item) => item.access_role_id).length,
-    }),
-    [opportunities],
+  const filteredTemplates = useMemo(
+    () =>
+      templates.filter((template) => {
+        if (templateFilter === "paid" && template.role_type !== "paid") return false;
+        if (templateFilter === "volunteer" && template.role_type !== "volunteer") return false;
+        if (templateFilter === "active" && !template.is_active) return false;
+        if (templateFilter === "inactive" && template.is_active) return false;
+        if (departmentFilter !== "all" && template.department !== departmentFilter) return false;
+        return true;
+      }),
+    [departmentFilter, templateFilter, templates],
   );
 
-  const selectedOpportunity = useMemo(
-    () => opportunities.find((item) => item.id === selectedId) || null,
-    [opportunities, selectedId],
-  );
+  const visiblePositions = useMemo(() => {
+    const base = positions.filter((position) => {
+      if (activeTab === "public_listings" && (!position.publicly_listed || position.visibility !== "public")) return false;
+      if (positionFilter !== "all" && position.position_status !== positionFilter) return false;
+      return true;
+    });
+    return base;
+  }, [activeTab, positionFilter, positions]);
+
+  const selectedTemplate = templates.find((template) => template.id === selectedTemplateId) || null;
+  const selectedPosition = positions.find((position) => position.id === selectedPositionId) || null;
+  const selectedAssignment = assignments.find((assignment) => assignment.id === selectedAssignmentId) || null;
+  const selectedApplicant = applicants.find((applicant) => applicant.id === selectedApplicantId) || null;
 
   useEffect(() => {
-    if (!selectedOpportunity) return;
-    setForm({
-      id: selectedOpportunity.id,
-      seasonSlug: "season-1",
-      title: selectedOpportunity.title || "",
-      roleCode: (selectedOpportunity as any).role_code || "",
-      department: selectedOpportunity.department || "",
-      opportunityType: selectedOpportunity.opportunity_type || "volunteer",
-      summary: selectedOpportunity.summary || "",
-      description: selectedOpportunity.description || "",
-      requirements: (selectedOpportunity.requirements || []).join("\n"),
-      perks: (selectedOpportunity.perks || []).join("\n"),
-      payLabel: selectedOpportunity.pay_label || "",
-      status: selectedOpportunity.status || "open",
-      isPublic: selectedOpportunity.is_public !== false,
-      locationCity: selectedOpportunity.location_city || "",
-      locationState: selectedOpportunity.location_state || "",
-      priorityScore: selectedOpportunity.priority_score || 100,
-      displayOrder: selectedOpportunity.display_order || 100,
-      accessRoleId: selectedOpportunity.access_role_id || "",
-      assignmentPermissionCodes: (selectedOpportunity.assignment_permission_codes || []).join(", "),
-      assignmentLogic: selectedOpportunity.assignment_logic?.notes || "",
+    if (!selectedTemplate) return;
+    setTemplateForm({
+      id: selectedTemplate.id,
+      title: selectedTemplate.title || "",
+      roleCode: selectedTemplate.role_code || "",
+      department: selectedTemplate.department || "Operations",
+      roleType: selectedTemplate.role_type || "volunteer",
+      summary: selectedTemplate.summary || "",
+      responsibilities: joinLines(selectedTemplate.responsibilities),
+      requirements: joinLines(selectedTemplate.requirements),
+      defaultAccessRoleId: selectedTemplate.default_access_role_id || "",
+      defaultAssignmentPermissionCodes: (selectedTemplate.default_assignment_permission_codes || []).join(", "),
+      defaultOperationalTags: (selectedTemplate.default_operational_tags || []).join(", "),
+      volunteerPerks: selectedTemplate.volunteer_perks || [],
+      payAmount: selectedTemplate.pay_amount || "",
+      payType: selectedTemplate.pay_type || "",
+      employmentStatus: selectedTemplate.employment_status || "",
+      accessTrack: selectedTemplate.access_track || "none",
+      isActive: selectedTemplate.is_active,
+      sortOrder: selectedTemplate.sort_order || 100,
     });
-  }, [selectedOpportunity]);
+  }, [selectedTemplate]);
 
-  async function saveOpportunity(event: React.FormEvent) {
+  useEffect(() => {
+    if (!selectedPosition) return;
+    const template = unwrapOne(selectedPosition.staff_role_templates);
+    setPositionForm({
+      id: selectedPosition.id,
+      roleTemplateId: selectedPosition.role_template_id || "",
+      titleOverride: selectedPosition.title_override || "",
+      seasonId: selectedPosition.season_id || "",
+      eventId: unwrapOne(selectedPosition.evntszn_events)?.id || "",
+      city: selectedPosition.city || "",
+      state: selectedPosition.state || "",
+      positionStatus: selectedPosition.position_status || "open",
+      visibility: selectedPosition.visibility || "public",
+      slotsNeeded: selectedPosition.slots_needed || 1,
+      slotsFilled: selectedPosition.slots_filled || 0,
+      priority: selectedPosition.priority || 100,
+      notes: selectedPosition.notes || "",
+      publiclyListed: selectedPosition.publicly_listed !== false,
+      startsAt: selectedPosition.starts_at || "",
+      endsAt: selectedPosition.ends_at || "",
+      accessRoleId: selectedPosition.access_role_id || template?.default_access_role_id || "",
+      assignmentPermissionCodes: (selectedPosition.assignment_permission_codes || []).join(", "),
+      onboardingNotes: selectedPosition.onboarding_notes || "",
+      volunteerPerks: selectedPosition.volunteer_perks || template?.volunteer_perks || [],
+      payAmount: selectedPosition.pay_amount || template?.pay_amount || "",
+      payType: selectedPosition.pay_type || template?.pay_type || "",
+      employmentStatus: selectedPosition.employment_status || template?.employment_status || "",
+      accessTrack: selectedPosition.access_track || template?.access_track || "none",
+    });
+  }, [selectedPosition]);
+
+  useEffect(() => {
+    if (!selectedAssignment) return;
+    setAssignmentForm({
+      id: selectedAssignment.id,
+      positionId: selectedAssignment.position_id || "",
+      userId: selectedAssignment.user_id || "",
+      applicationId: selectedAssignment.application_id || "",
+      assignmentStatus: selectedAssignment.assignment_status || "pending",
+      notes: selectedAssignment.notes || "",
+    });
+  }, [selectedAssignment]);
+
+  async function saveTemplate(event: React.FormEvent) {
     event.preventDefault();
-    setMessage("");
     const res = await fetch("/api/epl/admin/opportunities", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        ...form,
-        requirements: parseList(form.requirements || ""),
-        perks: parseList(form.perks || ""),
-        assignmentPermissionCodes: String(form.assignmentPermissionCodes || "")
+        action: "saveTemplate",
+        ...templateForm,
+        responsibilities: parseLines(templateForm.responsibilities || ""),
+        requirements: parseLines(templateForm.requirements || ""),
+        defaultOperationalTags: String(templateForm.defaultOperationalTags || "")
           .split(",")
-          .map((value) => value.trim())
+          .map((value: string) => value.trim())
           .filter(Boolean),
       }),
     });
     const json = (await res.json()) as { error?: string };
     if (!res.ok) {
-      setMessage(json.error || "Could not save opportunity.");
+      setMessage(json.error || "Could not save role template.");
       return;
     }
-    setMessage(form.id ? "Opportunity updated." : "Opportunity created.");
-    if (!form.id) {
-      setForm({
-        title: "",
-        roleCode: "",
-        department: "",
-        opportunityType: "volunteer",
-        summary: "",
-        description: "",
-        requirements: "",
-        perks: "",
-        payLabel: "",
-        status: "open",
-        isPublic: true,
-        locationCity: "Baltimore",
-        locationState: "MD",
-        priorityScore: 100,
-        displayOrder: 100,
-        seasonSlug: "season-1",
-        accessRoleId: "",
-        assignmentPermissionCodes: "",
-        assignmentLogic: "",
-      });
-    }
+    setMessage(templateForm.id ? "Role template updated." : "Role template created.");
     await load();
   }
+
+  async function savePosition(event: React.FormEvent) {
+    event.preventDefault();
+    const res = await fetch("/api/epl/admin/opportunities", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...positionForm,
+        action: "savePosition",
+        assignmentPermissionCodes: String(positionForm.assignmentPermissionCodes || "")
+          .split(",")
+          .map((value: string) => value.trim())
+          .filter(Boolean),
+      }),
+    });
+    const json = (await res.json()) as { error?: string; positionId?: string };
+    if (!res.ok) {
+      setMessage(json.error || "Could not save position.");
+      return;
+    }
+    setMessage(positionForm.id ? "Open position updated." : "Open position created.");
+    if (json.positionId) setSelectedPositionId(json.positionId);
+    await load();
+  }
+
+  async function saveAssignment(event: React.FormEvent) {
+    event.preventDefault();
+    const res = await fetch("/api/epl/admin/opportunities", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "saveAssignment", ...assignmentForm }),
+    });
+    const json = (await res.json()) as { error?: string };
+    if (!res.ok) {
+      setMessage(json.error || "Could not save assignment.");
+      return;
+    }
+    setMessage(assignmentForm.id ? "Assignment updated." : "Assignment saved.");
+    await load();
+  }
+
+  const stats = useMemo(
+    () => ({
+      templates: templates.length,
+      openPositions: positions.filter((position) => position.position_status === "open").length,
+      volunteer: templates.filter((template) => template.role_type === "volunteer").length,
+      paid: templates.filter((template) => template.role_type === "paid").length,
+      pendingAssignments: assignments.filter((assignment) => assignment.assignment_status === "pending").length,
+      applicants: applicants.filter((applicant) => applicant.status === "submitted").length,
+    }),
+    [applicants, assignments, positions, templates],
+  );
+
+  const staffingCityOptions = useMemo(() => {
+    return Array.from(
+      new Set(
+        [...INTERNAL_CITY_OPTIONS, ...positions.map((position) => position.city).filter(Boolean), ...applicants.map((applicant) => applicant.city).filter(Boolean)] as string[],
+      ),
+    );
+  }, [applicants, positions]);
 
   return (
     <main className="mx-auto max-w-7xl">
       <section className="ev-shell-hero">
         <div className="ev-shell-hero-grid">
           <div>
-            <div className="ev-kicker">EPL opportunities</div>
-            <h1 className="ev-title">Open roles, review the queue, and keep staffing needs current.</h1>
+            <div className="ev-kicker">EPL staffing</div>
+            <h1 className="ev-title">Run templates, openings, assignments, and public listings from one staffing desk.</h1>
             <p className="ev-subtitle">
-              Use the left queue to track every opening. Use the detail panel to update the listing, link access roles, and control what applicants see.
+              Templates define the role. Positions track live demand. Assignments connect real people to real openings without mixing public copy and internal staffing logic.
             </p>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {[
-              ["Roles", stats.total],
-              ["Open", stats.open],
-              ["Public", stats.public],
-              ["Linked access", stats.linkedRoles],
-            ].map(([label, value]) => (
-              <div key={String(label)} className="ev-meta-card">
-                <div className="ev-meta-label">{label}</div>
-                <div className="ev-meta-value">{value}</div>
-              </div>
-            ))}
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="ev-meta-card"><div className="ev-meta-label">Templates</div><div className="ev-meta-value">{stats.templates}</div></div>
+            <div className="ev-meta-card"><div className="ev-meta-label">Open positions</div><div className="ev-meta-value">{stats.openPositions}</div></div>
+            <div className="ev-meta-card"><div className="ev-meta-label">Applicants waiting</div><div className="ev-meta-value">{stats.applicants}</div></div>
           </div>
         </div>
       </section>
 
       {message ? <div className="mt-4 rounded-2xl border border-white/10 bg-black/30 p-4 text-sm text-white/75">{message}</div> : null}
 
-      <div className="mt-6 grid gap-6 xl:grid-cols-[320px_1fr]">
+      <section className="mt-6 flex flex-wrap gap-3">
+        {[
+          ["templates", "Templates"],
+          ["open_positions", "Open Positions"],
+          ["assignments", "Assignments"],
+          ["applicants", "Applicants"],
+          ["public_listings", "Public Listings"],
+        ].map(([key, label]) => (
+          <button
+            key={key}
+            type="button"
+            onClick={() => setActiveTab(key as typeof activeTab)}
+            className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+              activeTab === key ? "bg-white text-black" : "border border-white/10 bg-black/30 text-white/70 hover:text-white"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </section>
+
+      <div className="mt-6 grid gap-6 xl:grid-cols-[300px_1fr_1.1fr]">
         <section className="ev-panel p-5">
-          <div className="ev-section-kicker">Live roles</div>
+          <div className="ev-section-kicker">{activeTab === "templates" ? "Role templates" : activeTab === "assignments" ? "Assignments" : activeTab === "applicants" ? "Applicants" : activeTab === "public_listings" ? "Public listings" : "Open positions"}</div>
+          <div className="mt-4 grid gap-3">
+            {activeTab === "templates" ? (
+              <>
+                <select className="ev-field" value={templateFilter} onChange={(event) => setTemplateFilter(event.target.value)}>
+                  <option value="all">All templates</option>
+                  <option value="paid">Paid</option>
+                  <option value="volunteer">Volunteer</option>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+                <select className="ev-field" value={departmentFilter} onChange={(event) => setDepartmentFilter(event.target.value)}>
+                  <option value="all">All departments</option>
+                  {Array.from(new Set(templates.map((template) => template.department).filter(Boolean))).map((department) => (
+                    <option key={department} value={department || ""}>
+                      {department}
+                    </option>
+                  ))}
+                </select>
+              </>
+            ) : null}
+          </div>
           <div className="mt-4 space-y-3">
-            {opportunities.map((opportunity) => (
+            {activeTab === "templates" ? filteredTemplates.map((template) => (
               <button
-                key={opportunity.id}
+                key={template.id}
                 type="button"
-                onClick={() => setSelectedId(opportunity.id)}
-                className={`w-full rounded-2xl border p-4 text-left ${
-                  selectedId === opportunity.id ? "border-[#A259FF]/40 bg-[#A259FF]/10" : "border-white/10 bg-black/30"
+                onClick={() => {
+                  setSelectedTemplateId(template.id);
+                  if (!positionForm.roleTemplateId) {
+                    setPositionForm((current: Record<string, any>) => ({
+                      ...current,
+                      roleTemplateId: template.id,
+                      accessRoleId: template.default_access_role_id || "",
+                      volunteerPerks: template.volunteer_perks || [],
+                      payAmount: template.pay_amount || "",
+                      payType: template.pay_type || "",
+                      employmentStatus: template.employment_status || "",
+                      accessTrack: template.access_track || "none",
+                    }));
+                  }
+                }}
+                className={`w-full rounded-2xl border p-4 text-left transition ${
+                  selectedTemplateId === template.id ? "border-[#A259FF]/40 bg-[#A259FF]/10" : "border-white/10 bg-black/30"
                 }`}
               >
-                <div className="text-sm uppercase tracking-[0.18em] text-[#caa7ff]">{opportunity.opportunity_type}</div>
-                <div className="mt-2 text-lg font-semibold text-white">{opportunity.title}</div>
-                <div className="mt-2 text-sm text-white/55">
-                  {opportunity.location_city || "Baltimore"} {opportunity.pay_label ? `• ${opportunity.pay_label}` : ""}
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-sm font-semibold text-white">{template.title}</span>
+                  <span className="rounded-full border border-white/10 px-2 py-1 text-[10px] uppercase tracking-[0.2em] text-[#caa7ff]">{template.role_type}</span>
                 </div>
+                <div className="mt-2 text-sm text-white/58">{template.department || "General operations"}</div>
               </button>
-            ))}
+            )) : null}
           </div>
         </section>
 
-        <section className="ev-panel p-6">
-          <div className="ev-section-kicker">{form.id ? "Edit role" : "Create role"}</div>
-          <h2 className="mt-3 text-2xl font-bold text-white">{form.id ? "Update opportunity" : "Open a new opportunity"}</h2>
-          <form onSubmit={saveOpportunity} className="mt-5 grid gap-4">
-            <div className="rounded-2xl border border-white/10 bg-black/25 p-5">
-              <div className="text-xs uppercase tracking-[0.22em] text-[#caa7ff]">Step 1</div>
-              <div className="mt-2 text-lg font-semibold text-white">Role basics</div>
-              <div className="mt-4 grid gap-4 md:grid-cols-2">
-              <input className="ev-field" placeholder="Role title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
-              <input className="ev-field" placeholder="Role code" value={form.roleCode} onChange={(e) => setForm({ ...form, roleCode: e.target.value })} />
-              </div>
-              <div className="mt-4 grid gap-4 md:grid-cols-2">
-              <input className="ev-field" placeholder="Department" value={form.department} onChange={(e) => setForm({ ...form, department: e.target.value })} />
-              <select className="ev-field" value={form.opportunityType} onChange={(e) => setForm({ ...form, opportunityType: e.target.value })}>
-                <option value="volunteer">Volunteer</option>
-                <option value="paid">Paid</option>
-              </select>
-              </div>
-              <input className="ev-field mt-4" placeholder="Short summary" value={form.summary} onChange={(e) => setForm({ ...form, summary: e.target.value })} />
-              <textarea className="ev-textarea mt-4" rows={4} placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-            </div>
+        <section className="ev-panel p-5">
+          {activeTab === "templates" ? (
+            <>
+              <div className="ev-section-kicker">Role template editor</div>
+              <h2 className="mt-3 text-2xl font-bold text-white">{templateForm.id ? "Edit role template" : "Create role template"}</h2>
+              <form onSubmit={saveTemplate} className="mt-5 grid gap-4">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <input className="ev-field" placeholder="Title" value={templateForm.title} onChange={(e) => setTemplateForm({ ...templateForm, title: e.target.value })} />
+                  <input className="ev-field" placeholder="Slug or code" value={templateForm.roleCode} onChange={(e) => setTemplateForm({ ...templateForm, roleCode: e.target.value })} />
+                </div>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <input className="ev-field" placeholder="Department" value={templateForm.department} onChange={(e) => setTemplateForm({ ...templateForm, department: e.target.value })} />
+                  <select className="ev-field" value={templateForm.roleType} onChange={(e) => setTemplateForm({ ...templateForm, roleType: e.target.value })}>
+                    <option value="volunteer">Volunteer</option>
+                    <option value="paid">Paid</option>
+                  </select>
+                </div>
+                <input className="ev-field" placeholder="Short summary" value={templateForm.summary} onChange={(e) => setTemplateForm({ ...templateForm, summary: e.target.value })} />
+                <textarea className="ev-textarea" rows={4} placeholder="Responsibilities, one per line" value={templateForm.responsibilities} onChange={(e) => setTemplateForm({ ...templateForm, responsibilities: e.target.value })} />
+                <textarea className="ev-textarea" rows={4} placeholder="Requirements, one per line" value={templateForm.requirements} onChange={(e) => setTemplateForm({ ...templateForm, requirements: e.target.value })} />
 
-            <div className="rounded-2xl border border-white/10 bg-black/25 p-5">
-              <div className="text-xs uppercase tracking-[0.22em] text-[#caa7ff]">Step 2</div>
-              <div className="mt-2 text-lg font-semibold text-white">Public listing</div>
-              <div className="mt-4 grid gap-4 md:grid-cols-2">
-                <textarea className="ev-textarea" rows={4} placeholder="Requirements, one per line" value={form.requirements} onChange={(e) => setForm({ ...form, requirements: e.target.value })} />
-                <textarea className="ev-textarea" rows={4} placeholder="Perks, one per line" value={form.perks} onChange={(e) => setForm({ ...form, perks: e.target.value })} />
-              </div>
-              <div className="mt-4 grid gap-4 md:grid-cols-4">
-                <input className="ev-field" placeholder="Pay label" value={form.payLabel} onChange={(e) => setForm({ ...form, payLabel: e.target.value })} />
-                <input className="ev-field" placeholder="City" value={form.locationCity} onChange={(e) => setForm({ ...form, locationCity: e.target.value })} />
-                <input className="ev-field" placeholder="State" value={form.locationState} onChange={(e) => setForm({ ...form, locationState: e.target.value })} />
-                <select className="ev-field" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
-                  <option value="draft">Draft</option>
-                  <option value="open">Open</option>
-                  <option value="closed">Closed</option>
-                  <option value="filled">Filled</option>
-                </select>
-              </div>
-              <div className="mt-4 grid gap-4 md:grid-cols-3">
-                <input className="ev-field" type="number" placeholder="Priority" value={form.priorityScore} onChange={(e) => setForm({ ...form, priorityScore: Number(e.target.value || 100) })} />
-                <input className="ev-field" type="number" placeholder="Display order" value={form.displayOrder} onChange={(e) => setForm({ ...form, displayOrder: Number(e.target.value || 100) })} />
-                <label className="flex items-center gap-3 rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/75">
-                  <input type="checkbox" checked={Boolean(form.isPublic)} onChange={(e) => setForm({ ...form, isPublic: e.target.checked })} />
-                  Publicly visible
-                </label>
-              </div>
-            </div>
+                <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
+                  <div className="text-xs uppercase tracking-[0.22em] text-[#caa7ff]">{templateForm.roleType === "paid" ? "Paid role settings" : "Volunteer perks"}</div>
+                  {templateForm.roleType === "paid" ? (
+                    <div className="mt-3 grid gap-4 md:grid-cols-3">
+                      <input className="ev-field" type="number" placeholder="Pay amount" value={templateForm.payAmount} onChange={(e) => setTemplateForm({ ...templateForm, payAmount: e.target.value })} />
+                      <select className="ev-field" value={templateForm.payType} onChange={(e) => setTemplateForm({ ...templateForm, payType: e.target.value })}>
+                        <option value="">Pay type</option>
+                        <option value="hourly">Hourly</option>
+                        <option value="daily">Daily</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly">Monthly</option>
+                        <option value="stipend">Stipend</option>
+                        <option value="fixed">Fixed</option>
+                      </select>
+                      <select className="ev-field" value={templateForm.employmentStatus} onChange={(e) => setTemplateForm({ ...templateForm, employmentStatus: e.target.value })}>
+                        <option value="">Employment status</option>
+                        <option value="full_time">Full time</option>
+                        <option value="part_time">Part time</option>
+                        <option value="seasonal">Seasonal</option>
+                        <option value="event_based">Event based</option>
+                      </select>
+                    </div>
+                  ) : (
+                    <div className="mt-3 grid gap-2 md:grid-cols-2">
+                      {volunteerPerks.map((perk) => (
+                        <label key={perk} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/75">
+                          <input
+                            type="checkbox"
+                            checked={templateForm.volunteerPerks.includes(perk)}
+                            onChange={(event) =>
+                              setTemplateForm((current: Record<string, any>) => ({
+                                ...current,
+                                volunteerPerks: event.target.checked
+                                  ? [...current.volunteerPerks, perk]
+                                  : current.volunteerPerks.filter((item: string) => item !== perk),
+                              }))
+                            }
+                          />
+                          {perk}
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
 
-            <div className="rounded-2xl border border-white/10 bg-black/25 p-5">
-              <div className="text-xs uppercase tracking-[0.22em] text-[#caa7ff]">Step 3</div>
-              <div className="mt-2 text-lg font-semibold text-white">Assignment rules</div>
-              <div className="mt-4 grid gap-4 md:grid-cols-2">
-              <select className="ev-field" value={form.accessRoleId} onChange={(e) => setForm({ ...form, accessRoleId: e.target.value })}>
-                <option value="">No linked access role</option>
-                {accessRoles.map((role) => (
-                  <option key={role.id} value={role.id}>
-                    {role.name}
-                  </option>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <select className="ev-field" value={templateForm.defaultAccessRoleId} onChange={(e) => setTemplateForm({ ...templateForm, defaultAccessRoleId: e.target.value })}>
+                    <option value="">No default access role</option>
+                    {accessRoles.map((role) => (
+                      <option key={role.id} value={role.id}>{role.name}</option>
+                    ))}
+                  </select>
+                  <select className="ev-field" value={templateForm.accessTrack} onChange={(e) => setTemplateForm({ ...templateForm, accessTrack: e.target.value })}>
+                    <option value="none">No system access</option>
+                    <option value="limited_ops">Limited operational access</option>
+                    <option value="scanner">Scanner access</option>
+                    <option value="support">Support access</option>
+                    <option value="workforce">Workforce access</option>
+                    <option value="office">Office-level access</option>
+                  </select>
+                </div>
+                <input className="ev-field" placeholder="Default assignment permissions" value={templateForm.defaultAssignmentPermissionCodes} onChange={(e) => setTemplateForm({ ...templateForm, defaultAssignmentPermissionCodes: e.target.value })} />
+                <input className="ev-field" placeholder="Default operational tags" value={templateForm.defaultOperationalTags} onChange={(e) => setTemplateForm({ ...templateForm, defaultOperationalTags: e.target.value })} />
+                <div className="flex flex-wrap gap-3">
+                  <button type="submit" className="ev-button-primary">{templateForm.id ? "Save template" : "Create template"}</button>
+                  <button type="button" className="ev-button-secondary" onClick={() => setTemplateForm({
+                    title: "", roleCode: "", department: "Operations", roleType: "volunteer", summary: "", responsibilities: "", requirements: "", defaultAccessRoleId: "", defaultAssignmentPermissionCodes: "", defaultOperationalTags: "", volunteerPerks: [], payAmount: "", payType: "", employmentStatus: "", accessTrack: "none", isActive: true, sortOrder: 100,
+                  })}>New template</button>
+                </div>
+              </form>
+            </>
+          ) : activeTab === "assignments" ? (
+            <>
+              <div className="ev-section-kicker">Assignments</div>
+              <div className="mt-4 space-y-3">
+                {assignments.map((assignment) => {
+                  const position = assignment.staff_positions;
+                  const template = unwrapOne(position?.staff_role_templates);
+                  const assignee = unwrapOne(assignment.evntszn_profiles);
+                  const applicant = unwrapOne(assignment.staff_applications);
+                  return (
+                    <button
+                      key={assignment.id}
+                      type="button"
+                      onClick={() => setSelectedAssignmentId(assignment.id)}
+                      className={`w-full rounded-2xl border p-4 text-left ${selectedAssignmentId === assignment.id ? "border-[#A259FF]/40 bg-[#A259FF]/10" : "border-white/10 bg-black/30"}`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold text-white">{position?.title_override || template?.title || "Assignment"}</span>
+                        <span className="rounded-full border border-white/10 px-2 py-1 text-[10px] uppercase tracking-[0.2em] text-[#caa7ff]">{assignment.assignment_status}</span>
+                      </div>
+                      <div className="mt-2 text-sm text-white/58">{assignee?.full_name || `${applicant?.first_name || ""} ${applicant?.last_name || ""}`.trim() || applicant?.email || "Unassigned"}</div>
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          ) : activeTab === "applicants" ? (
+            <>
+              <div className="ev-section-kicker">Applicants</div>
+              <div className="mt-4 space-y-3">
+                {applicants.map((applicant) => (
+                  <button
+                    key={applicant.id}
+                    type="button"
+                    onClick={() => setSelectedApplicantId(applicant.id)}
+                    className={`w-full rounded-2xl border p-4 text-left ${selectedApplicantId === applicant.id ? "border-[#A259FF]/40 bg-[#A259FF]/10" : "border-white/10 bg-black/30"}`}
+                  >
+                    <div className="text-sm font-semibold text-white">{applicant.first_name} {applicant.last_name}</div>
+                    <div className="mt-1 text-sm text-white/58">{applicant.email}</div>
+                    <div className="mt-2 text-xs uppercase tracking-[0.18em] text-[#caa7ff]">{applicant.status}</div>
+                  </button>
                 ))}
-              </select>
-              <input
-                className="ev-field"
-                placeholder="Assignment permission codes, comma separated"
-                value={form.assignmentPermissionCodes}
-                onChange={(e) => setForm({ ...form, assignmentPermissionCodes: e.target.value })}
-              />
               </div>
-              <textarea
-                className="ev-textarea mt-4"
-                rows={3}
-                placeholder="Assignment logic or onboarding notes"
-                value={form.assignmentLogic}
-                onChange={(e) => setForm({ ...form, assignmentLogic: e.target.value })}
-              />
-            </div>
-            <div className="flex flex-wrap gap-3">
-              <button type="submit" className="ev-button-primary">{form.id ? "Save opportunity" : "Create opportunity"}</button>
-              {form.id ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedId(null);
-                    setForm({
-                      title: "",
-                      roleCode: "",
-                      department: "",
-                      opportunityType: "volunteer",
-                      summary: "",
-                      description: "",
-                      requirements: "",
-                      perks: "",
-                      payLabel: "",
-                      status: "open",
-                      isPublic: true,
-                      locationCity: "Baltimore",
-                      locationState: "MD",
-                      priorityScore: 100,
-                      displayOrder: 100,
-                      seasonSlug: "season-1",
-                    });
-                  }}
-                  className="ev-button-secondary"
-                >
-                  New opportunity
+            </>
+          ) : (
+            <>
+              <div className="ev-section-kicker">{activeTab === "public_listings" ? "Public listings" : "Open positions"}</div>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <select className="ev-field" value={positionFilter} onChange={(event) => setPositionFilter(event.target.value)}>
+                  <option value="all">All statuses</option>
+                  <option value="open">Open</option>
+                  <option value="nearly_filled">Nearly filled</option>
+                  <option value="filled">Filled</option>
+                  <option value="closed">Closed</option>
+                  <option value="archived">Archived</option>
+                </select>
+                <button type="button" className="ev-button-secondary" onClick={() => setSelectedPositionId(null)}>
+                  New position
                 </button>
-              ) : null}
-            </div>
-          </form>
+              </div>
+              <div className="mt-4 space-y-3">
+                {visiblePositions.map((position) => {
+                  const template = unwrapOne(position.staff_role_templates);
+                  const event = unwrapOne(position.evntszn_events);
+                  const season = unwrapOne(position.seasons);
+                  return (
+                    <button
+                      key={position.id}
+                      type="button"
+                      onClick={() => setSelectedPositionId(position.id)}
+                      className={`w-full rounded-2xl border p-4 text-left ${selectedPositionId === position.id ? "border-[#A259FF]/40 bg-[#A259FF]/10" : "border-white/10 bg-black/30"}`}
+                    >
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-sm font-semibold text-white">{position.title_override || template?.title || "Open position"}</span>
+                        <span className="rounded-full border border-white/10 px-2 py-1 text-[10px] uppercase tracking-[0.2em] text-[#caa7ff]">{template?.role_type || "volunteer"}</span>
+                        <span className="rounded-full border border-white/10 px-2 py-1 text-[10px] uppercase tracking-[0.2em] text-white/60">{position.position_status}</span>
+                      </div>
+                      <div className="mt-2 text-sm text-white/58">
+                        {[event?.title || season?.name || null, position.city || null].filter(Boolean).join(" • ")}
+                      </div>
+                      <div className="mt-2 text-xs text-white/50">
+                        {position.slots_filled}/{position.slots_needed} filled • {position.visibility === "public" ? "Public" : "Internal only"} • Priority {position.priority}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </section>
+
+        <section className="ev-panel p-6">
+          {activeTab === "templates" ? (
+            <>
+              <div className="ev-section-kicker">Template summary</div>
+              {selectedTemplate ? (
+                <div className="mt-4 space-y-4">
+                  <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
+                    <div className="text-2xl font-bold text-white">{selectedTemplate.title}</div>
+                    <div className="mt-2 text-sm text-white/58">{selectedTemplate.summary || "No summary yet."}</div>
+                  </div>
+                  <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
+                    <div className="text-xs uppercase tracking-[0.18em] text-white/45">Template details</div>
+                      <div className="mt-3 grid gap-3 text-sm text-white/68">
+                        <div>Department: {selectedTemplate.department || "General"}</div>
+                        <div>Type: {selectedTemplate.role_type}</div>
+                        <div>Default access: {unwrapOne(selectedTemplate.roles)?.name || "None"}</div>
+                        <div>Access track: {selectedTemplate.access_track?.replace(/_/g, " ") || "none"}</div>
+                        <div>Requirements: {(selectedTemplate.requirements || []).length}</div>
+                      </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-dashed border-white/10 bg-black/20 p-5 text-sm text-white/48">Choose a template or create a new one.</div>
+              )}
+            </>
+          ) : activeTab === "assignments" ? (
+            <>
+              <div className="ev-section-kicker">Assignment detail</div>
+              <h2 className="mt-3 text-2xl font-bold text-white">{assignmentForm.id ? "Update assignment" : "Create assignment"}</h2>
+              <form onSubmit={saveAssignment} className="mt-5 grid gap-4">
+                <select className="ev-field" value={assignmentForm.positionId} onChange={(e) => setAssignmentForm({ ...assignmentForm, positionId: e.target.value })}>
+                  <option value="">Choose position</option>
+                  {positions.map((position) => {
+                    const template = unwrapOne(position.staff_role_templates);
+                    return <option key={position.id} value={position.id}>{position.title_override || template?.title || "Position"}</option>;
+                  })}
+                </select>
+                <select className="ev-field" value={assignmentForm.applicationId} onChange={(e) => setAssignmentForm({ ...assignmentForm, applicationId: e.target.value })}>
+                  <option value="">Link applicant later</option>
+                  {applicants.map((applicant) => (
+                    <option key={applicant.id} value={applicant.id}>{applicant.first_name} {applicant.last_name} • {applicant.email}</option>
+                  ))}
+                </select>
+                <select className="ev-field" value={assignmentForm.userId} onChange={(e) => setAssignmentForm({ ...assignmentForm, userId: e.target.value })}>
+                  <option value="">No internal user linked yet</option>
+                  {users.map((staffUser) => (
+                    <option key={staffUser.user_id} value={staffUser.user_id}>{staffUser.full_name || staffUser.user_id}</option>
+                  ))}
+                </select>
+                <select className="ev-field" value={assignmentForm.assignmentStatus} onChange={(e) => setAssignmentForm({ ...assignmentForm, assignmentStatus: e.target.value })}>
+                  <option value="pending">Pending</option>
+                  <option value="assigned">Assigned</option>
+                  <option value="confirmed">Confirmed</option>
+                  <option value="declined">Declined</option>
+                  <option value="removed">Removed</option>
+                </select>
+                <textarea className="ev-textarea" rows={4} placeholder="Assignment notes" value={assignmentForm.notes} onChange={(e) => setAssignmentForm({ ...assignmentForm, notes: e.target.value })} />
+                <button type="submit" className="ev-button-primary">{assignmentForm.id ? "Save assignment" : "Assign staff"}</button>
+              </form>
+            </>
+          ) : activeTab === "applicants" ? (
+            <>
+              <div className="ev-section-kicker">Applicant detail</div>
+              {selectedApplicant ? (
+                <div className="mt-4 space-y-4">
+                  <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
+                    <div className="text-2xl font-bold text-white">{selectedApplicant.first_name} {selectedApplicant.last_name}</div>
+                    <div className="mt-2 text-sm text-white/58">{selectedApplicant.email}</div>
+                    <div className="mt-2 text-xs uppercase tracking-[0.18em] text-[#caa7ff]">{selectedApplicant.status}</div>
+                  </div>
+                  <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
+                    <div className="text-xs uppercase tracking-[0.18em] text-white/45">Preferred roles</div>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {(selectedApplicant.preferred_roles || []).length ? (
+                        (selectedApplicant.preferred_roles || []).map((role) => (
+                          <span key={role} className="rounded-full border border-white/10 px-3 py-1 text-xs text-white/70">{role}</span>
+                        ))
+                      ) : (
+                        <span className="text-sm text-white/48">No preferred roles provided.</span>
+                      )}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    className="ev-button-primary"
+                    onClick={() => {
+                      setActiveTab("assignments");
+                      setAssignmentForm({
+                        id: "",
+                        positionId: selectedApplicant.position_id || "",
+                        userId: "",
+                        applicationId: selectedApplicant.id,
+                        assignmentStatus: "assigned",
+                        notes: "",
+                      });
+                    }}
+                  >
+                    Create assignment
+                  </button>
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-dashed border-white/10 bg-black/20 p-5 text-sm text-white/48">Select an applicant to review and assign.</div>
+              )}
+            </>
+          ) : (
+            <>
+              <div className="ev-section-kicker">Position detail</div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {[
+                  ["overview", "Overview"],
+                  ["public_listing", "Public Listing"],
+                  ["assignments", "Assignments"],
+                  ["access", "Access"],
+                  ["notes", "Notes"],
+                ].map(([key, label]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setDetailTab(key as typeof detailTab)}
+                    className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                      detailTab === key ? "bg-white text-black" : "border border-white/10 bg-black/30 text-white/70"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              <form onSubmit={savePosition} className="mt-5 grid gap-4">
+                {detailTab === "overview" ? (
+                  <>
+                    <select className="ev-field" value={positionForm.roleTemplateId} onChange={(e) => setPositionForm({ ...positionForm, roleTemplateId: e.target.value })}>
+                      <option value="">Select role template</option>
+                      {templates.filter((template) => template.is_active).map((template) => (
+                        <option key={template.id} value={template.id}>{template.title}</option>
+                      ))}
+                    </select>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <input className="ev-field" placeholder="Title override" value={positionForm.titleOverride} onChange={(e) => setPositionForm({ ...positionForm, titleOverride: e.target.value })} />
+                      <select className="ev-field" value={positionForm.positionStatus} onChange={(e) => setPositionForm({ ...positionForm, positionStatus: e.target.value })}>
+                        <option value="open">Open</option>
+                        <option value="nearly_filled">Nearly filled</option>
+                        <option value="filled">Filled</option>
+                        <option value="closed">Closed</option>
+                        <option value="archived">Archived</option>
+                      </select>
+                    </div>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <select className="ev-field" value={positionForm.seasonId} onChange={(e) => setPositionForm({ ...positionForm, seasonId: e.target.value })}>
+                        <option value="">No season linkage</option>
+                        {seasons.map((season) => (
+                          <option key={season.id} value={season.slug}>{season.name}</option>
+                        ))}
+                      </select>
+                      <select className="ev-field" value={positionForm.eventId} onChange={(e) => setPositionForm({ ...positionForm, eventId: e.target.value })}>
+                        <option value="">No event linkage</option>
+                        {events.map((event) => (
+                          <option key={event.id} value={event.id}>{event.title}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="grid gap-4 md:grid-cols-4">
+                      <select
+                        className="ev-field"
+                        value={positionForm.city}
+                        onChange={(e) =>
+                          setPositionForm({
+                            ...positionForm,
+                            city: e.target.value,
+                            state: getCityStateCode(e.target.value) || positionForm.state,
+                          })
+                        }
+                      >
+                        <option value="">City</option>
+                        {staffingCityOptions.map((city) => (
+                          <option key={city} value={city}>
+                            {city}
+                          </option>
+                        ))}
+                      </select>
+                      <input className="ev-field" placeholder="State" value={positionForm.state} onChange={(e) => setPositionForm({ ...positionForm, state: e.target.value })} />
+                      <input className="ev-field" type="number" placeholder="Slots needed" value={positionForm.slotsNeeded} onChange={(e) => setPositionForm({ ...positionForm, slotsNeeded: Number(e.target.value || 1) })} />
+                      <input className="ev-field" type="number" placeholder="Slots filled" value={positionForm.slotsFilled} onChange={(e) => setPositionForm({ ...positionForm, slotsFilled: Number(e.target.value || 0) })} />
+                    </div>
+                    <div className="rounded-2xl border border-white/10 bg-black/25 p-4 text-sm text-white/58">
+                      Internal staffing logic lives in templates, access track, permissions, and assignments. Public listing copy only appears when this position is public and listed.
+                    </div>
+                  </>
+                ) : null}
+
+                {detailTab === "public_listing" ? (
+                  <>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <select className="ev-field" value={positionForm.visibility} onChange={(e) => setPositionForm({ ...positionForm, visibility: e.target.value })}>
+                        <option value="public">Public</option>
+                        <option value="internal_only">Internal only</option>
+                      </select>
+                      <label className="flex items-center gap-3 rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/75">
+                        <input type="checkbox" checked={Boolean(positionForm.publiclyListed)} onChange={(e) => setPositionForm({ ...positionForm, publiclyListed: e.target.checked })} />
+                        Show in public listings
+                      </label>
+                    </div>
+                    <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
+                      <div className="text-xs uppercase tracking-[0.18em] text-white/45">Listing type</div>
+                      {selectedTemplate?.role_type === "paid" || templates.find((template) => template.id === positionForm.roleTemplateId)?.role_type === "paid" ? (
+                        <div className="mt-3 grid gap-4 md:grid-cols-3">
+                          <input className="ev-field" type="number" placeholder="Pay amount" value={positionForm.payAmount} onChange={(e) => setPositionForm({ ...positionForm, payAmount: e.target.value })} />
+                          <select className="ev-field" value={positionForm.payType} onChange={(e) => setPositionForm({ ...positionForm, payType: e.target.value })}>
+                            <option value="">Pay type</option>
+                            <option value="hourly">Hourly</option>
+                            <option value="daily">Daily</option>
+                            <option value="weekly">Weekly</option>
+                            <option value="monthly">Monthly</option>
+                            <option value="stipend">Stipend</option>
+                            <option value="fixed">Fixed</option>
+                          </select>
+                          <select className="ev-field" value={positionForm.employmentStatus} onChange={(e) => setPositionForm({ ...positionForm, employmentStatus: e.target.value })}>
+                            <option value="">Employment status</option>
+                            <option value="full_time">Full time</option>
+                            <option value="part_time">Part time</option>
+                            <option value="seasonal">Seasonal</option>
+                            <option value="event_based">Event based</option>
+                          </select>
+                        </div>
+                      ) : (
+                        <div className="mt-3 grid gap-2 md:grid-cols-2">
+                          {volunteerPerks.map((perk) => (
+                            <label key={perk} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/75">
+                              <input
+                                type="checkbox"
+                                checked={positionForm.volunteerPerks.includes(perk)}
+                                onChange={(event) =>
+                                  setPositionForm((current: Record<string, any>) => ({
+                                    ...current,
+                                    volunteerPerks: event.target.checked
+                                      ? [...current.volunteerPerks, perk]
+                                      : current.volunteerPerks.filter((item: string) => item !== perk),
+                                  }))
+                                }
+                              />
+                              {perk}
+                            </label>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </>
+                ) : null}
+
+                {detailTab === "assignments" ? (
+                  <>
+                    <div className="rounded-2xl border border-white/10 bg-black/30 p-4 text-sm text-white/58">
+                      {assignments.filter((assignment) => assignment.position_id === (positionForm.id || selectedPositionId)).length} assignment record(s) linked to this position.
+                    </div>
+                    <button type="button" className="ev-button-secondary" onClick={() => {
+                      setActiveTab("assignments");
+                      setAssignmentForm({ id: "", positionId: positionForm.id || selectedPositionId || "", userId: "", applicationId: "", assignmentStatus: "assigned", notes: "" });
+                    }}>
+                      Assign staff
+                    </button>
+                  </>
+                ) : null}
+
+                {detailTab === "access" ? (
+                  <>
+                    <select className="ev-field" value={positionForm.accessRoleId} onChange={(e) => setPositionForm({ ...positionForm, accessRoleId: e.target.value })}>
+                      <option value="">No linked access role</option>
+                      {accessRoles.map((role) => (
+                        <option key={role.id} value={role.id}>{role.name}</option>
+                      ))}
+                    </select>
+                    <select className="ev-field" value={positionForm.accessTrack} onChange={(e) => setPositionForm({ ...positionForm, accessTrack: e.target.value })}>
+                      <option value="none">No system access</option>
+                      <option value="limited_ops">Limited operational access</option>
+                      <option value="scanner">Scanner access</option>
+                      <option value="support">Support access</option>
+                      <option value="workforce">Workforce access</option>
+                      <option value="office">Office-level access</option>
+                    </select>
+                    <input className="ev-field" placeholder="Assignment permission requirements" value={positionForm.assignmentPermissionCodes} onChange={(e) => setPositionForm({ ...positionForm, assignmentPermissionCodes: e.target.value })} />
+                    <textarea className="ev-textarea" rows={4} placeholder="Onboarding notes for access setup" value={positionForm.onboardingNotes} onChange={(e) => setPositionForm({ ...positionForm, onboardingNotes: e.target.value })} />
+                  </>
+                ) : null}
+
+                {detailTab === "notes" ? (
+                  <>
+                    <textarea className="ev-textarea" rows={6} placeholder="Internal notes for staffing, outreach, or event-day context" value={positionForm.notes} onChange={(e) => setPositionForm({ ...positionForm, notes: e.target.value })} />
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <input className="ev-field" type="datetime-local" value={positionForm.startsAt} onChange={(e) => setPositionForm({ ...positionForm, startsAt: e.target.value })} />
+                      <input className="ev-field" type="datetime-local" value={positionForm.endsAt} onChange={(e) => setPositionForm({ ...positionForm, endsAt: e.target.value })} />
+                    </div>
+                  </>
+                ) : null}
+
+                <div className="flex flex-wrap gap-3">
+                  <button type="submit" className="ev-button-primary">{positionForm.id ? "Save position" : "Open position"}</button>
+                  <button type="button" className="ev-button-secondary" onClick={() => setPositionForm({
+                    roleTemplateId: selectedTemplateId || "",
+                    titleOverride: "",
+                    seasonId: "",
+                    eventId: "",
+                    city: "Baltimore",
+                    state: "MD",
+                    positionStatus: "open",
+                    visibility: "public",
+                    slotsNeeded: 2,
+                    slotsFilled: 0,
+                    priority: 100,
+                    notes: "",
+                    publiclyListed: true,
+                    startsAt: "",
+                    endsAt: "",
+                    accessRoleId: "",
+                    assignmentPermissionCodes: "",
+                    onboardingNotes: "",
+                    volunteerPerks: [],
+                    payAmount: "",
+                    payType: "",
+                    employmentStatus: "",
+                    accessTrack: "none",
+                  })}>New position</button>
+                </div>
+              </form>
+            </>
+          )}
         </section>
       </div>
     </main>

@@ -70,6 +70,18 @@ export const PUBLIC_CITIES: PublicCity[] = [
     seoDescription:
       "Discover DC events, nightlife, sports, and live entertainment with EVNTSZN.",
   },
+  {
+    slug: "dover",
+    name: "Dover",
+    stateLabel: "Delaware",
+    shortLabel: "Dover",
+    headline: "Dover events, nightlife, sports, and local things to do",
+    description:
+      "Find Dover events, league nights, nightlife, and local entertainment through the same EVNTSZN discovery layer used across the network.",
+    seoTitle: "Dover events, nightlife, sports, and things to do",
+    seoDescription:
+      "Discover Dover events, nightlife, sports entertainment, and things to do with EVNTSZN.",
+  },
 ];
 
 export function getPublicCityBySlug(slug: string) {

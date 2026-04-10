@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAdminPermission } from "@/lib/admin-auth";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { toDatabaseUserId } from "@/lib/access-control";
+import { normalizeCapabilityGroups, normalizeScopeValues } from "@/lib/access-model";
 
 export async function GET() {
   await requireAdminPermission("admin.manage", "/epl/admin/team");
@@ -16,11 +17,22 @@ export async function GET() {
         is_active,
         user_id,
         role_id,
+        role_subtype,
+        scope_type,
+        scope_values,
+        capability_groups,
+        capability_overrides,
         roles (
           id,
           code,
           name,
           description,
+          primary_role,
+          role_subtype,
+          default_scope_type,
+          default_scope,
+          capability_groups,
+          capability_overrides,
           is_system,
           is_active
         )
@@ -51,6 +63,11 @@ export async function GET() {
     current.roles.push({
       id: assignment.id,
       role_id: assignment.role_id,
+      role_subtype: (assignment as { role_subtype?: string | null }).role_subtype || null,
+      scope_type: (assignment as { scope_type?: string | null }).scope_type || null,
+      scope_values: (assignment as { scope_values?: Record<string, string[]> | null }).scope_values || {},
+      capability_groups: (assignment as { capability_groups?: string[] | null }).capability_groups || [],
+      capability_overrides: (assignment as { capability_overrides?: Record<string, unknown> | null }).capability_overrides || {},
       is_active: assignment.is_active,
       created_at: assignment.created_at,
       updated_at: assignment.updated_at,
@@ -72,6 +89,14 @@ export async function POST(request: Request) {
   if (action === "assignRole") {
     const userId = String(body.userId || "").trim();
     const roleId = String(body.roleId || "").trim();
+    const roleSubtype = String(body.roleSubtype || "").trim() || null;
+    const scopeType = String(body.scopeType || "").trim() || null;
+    const scopeValues = normalizeScopeValues(body.scopeValues);
+    const capabilityGroups = normalizeCapabilityGroups(body.capabilityGroups);
+    const capabilityOverrides =
+      body.capabilityOverrides && typeof body.capabilityOverrides === "object" && !Array.isArray(body.capabilityOverrides)
+        ? body.capabilityOverrides
+        : {};
 
     if (!userId || !roleId) {
       return NextResponse.json({ error: "userId and roleId are required." }, { status: 400 });
@@ -83,6 +108,11 @@ export async function POST(request: Request) {
         {
           user_id: userId,
           role_id: roleId,
+          role_subtype: roleSubtype,
+          scope_type: scopeType,
+          scope_values: scopeValues,
+          capability_groups: capabilityGroups,
+          capability_overrides: capabilityOverrides,
           is_active: true,
           assigned_by: actorUserId,
         },

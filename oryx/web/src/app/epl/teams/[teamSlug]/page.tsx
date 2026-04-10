@@ -24,10 +24,22 @@ export async function generateMetadata({ params }: TeamPageProps): Promise<Metad
   if (!team) return {};
 
   return {
-    title: `${team.name} | EPL`,
-    description: `${team.name} public profile, schedule rhythm, roster context, and league identity within EVNTSZN Prime League.`,
+    title: `${team.name}`,
+    description: `${team.name} team page with club identity, Season 1 storylines, and a clean path back into EVNTSZN Prime League.`,
     alternates: {
       canonical: `${getEplOrigin()}/teams/${team.slug}`,
+    },
+    openGraph: {
+      title: `${team.name}`,
+      description: `${team.name} team page with club identity, Season 1 storylines, and a clean path back into EVNTSZN Prime League.`,
+      url: `${getEplOrigin()}/teams/${team.slug}`,
+      siteName: "EVNTSZN",
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${team.name}`,
+      description: `${team.name} team page with club identity, Season 1 storylines, and a clean path back into EVNTSZN Prime League.`,
     },
   };
 }
@@ -51,8 +63,13 @@ export default async function EplTeamPage({ params }: TeamPageProps) {
       <EplNav menu={content.menu} />
       <section className="mx-auto max-w-7xl px-4 py-12 md:px-6 lg:px-8">
         <div className="ev-kicker">{team.neighborhood}</div>
-        <h1 className="ev-title">{team.name}</h1>
-        <p className="ev-subtitle max-w-3xl">{team.description}</p>
+        <div className="mt-4 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <h1 className="ev-title">{team.name}</h1>
+            <p className="ev-subtitle max-w-3xl">{team.description}</p>
+          </div>
+          <img src={team.logoUrl} alt={team.name} className="h-32 w-32 rounded-[28px] border border-white/10 object-cover" />
+        </div>
 
         <div className="mt-10 grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
           <section className="ev-panel p-6">
@@ -68,10 +85,10 @@ export default async function EplTeamPage({ params }: TeamPageProps) {
           </section>
 
           <section className="ev-panel p-6">
-            <div className="ev-section-kicker">Season rhythm</div>
+            <div className="ev-section-kicker">Season 1 focus</div>
             <div className="mt-4 space-y-4 text-sm leading-6 text-white/74">
-              <p>Schedule, roster movement, and match-week announcements will publish here as Season 1 cadence locks in.</p>
-              <p>When live match data is not available yet, this page still anchors team identity, league context, and a clean path back into the wider EPL public surface.</p>
+              <p>Use this page to keep up with the club identity, follow table movement, and get back to registration or standings without losing the league thread.</p>
+              <p>As the season settles into weekly rhythm, this page becomes the fastest way to move from one club to the wider EPL race.</p>
             </div>
           </section>
         </div>
@@ -99,11 +116,14 @@ export default async function EplTeamPage({ params }: TeamPageProps) {
         </div>
 
         <div className="mt-8 flex flex-wrap gap-3">
-          <Link href="/epl" className="ev-button-primary">
-            Back to EPL
-          </Link>
-          <Link href="/epl/season-1/register" className="ev-button-secondary">
+          <Link href="/epl/season-1/register" className="ev-button-primary">
             Register for Season 1
+          </Link>
+          <Link href="/epl/standings" className="ev-button-secondary">
+            Check standings
+          </Link>
+          <Link href="/epl/teams" className="ev-button-secondary">
+            Back to teams
           </Link>
         </div>
 

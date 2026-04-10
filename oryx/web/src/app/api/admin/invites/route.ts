@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdminPermission } from "@/lib/admin-auth";
 import { createInviteToken, hashInviteToken, toDatabaseUserId } from "@/lib/access-control";
+import { normalizeCapabilityGroups, normalizeScopeValues, summarizeCapabilityGroups, summarizeScope } from "@/lib/access-model";
 import { getAdminOrigin } from "@/lib/domains";
 import { sendAccessInviteEmail } from "@/lib/send-access-invite-email";
 import { supabaseAdmin } from "@/lib/supabase-admin";
@@ -18,11 +19,22 @@ export async function GET() {
       accepted_at,
       created_at,
       updated_at,
+      role_subtype,
+      scope_type,
+      scope_values,
+      capability_groups,
+      capability_overrides,
       metadata,
       roles (
         id,
         name,
-        code
+        code,
+        primary_role,
+        role_subtype,
+        default_scope_type,
+        default_scope,
+        capability_groups,
+        capability_overrides
       )
     `)
     .order("created_at", { ascending: false });
@@ -47,6 +59,14 @@ export async function POST(request: Request) {
   const email = String(body.email || "").trim().toLowerCase();
   const fullName = String(body.full_name || "").trim();
   const roleId = String(body.role_id || "").trim();
+  const roleSubtype = String(body.role_subtype || "").trim() || null;
+  const scopeType = String(body.scope_type || "").trim() || null;
+  const scopeValues = normalizeScopeValues(body.scope_values);
+  const capabilityGroups = normalizeCapabilityGroups(body.capability_groups);
+  const capabilityOverrides =
+    body.capability_overrides && typeof body.capability_overrides === "object" && !Array.isArray(body.capability_overrides)
+      ? body.capability_overrides
+      : {};
 
   if (!email || !roleId) {
     return NextResponse.json({ error: "Email and role are required." }, { status: 400 });
@@ -84,6 +104,11 @@ export async function POST(request: Request) {
   const invitePayload = {
     email,
     role_id: roleId,
+    role_subtype: roleSubtype,
+    scope_type: scopeType,
+    scope_values: scopeValues,
+    capability_groups: capabilityGroups,
+    capability_overrides: capabilityOverrides,
     token_hash: tokenHash,
     status: "pending",
     created_by: actorUserId,
@@ -119,6 +144,8 @@ export async function POST(request: Request) {
     to: email,
     fullName,
     roleName: role.name,
+    scopeSummary: summarizeScope(scopeType, scopeValues),
+    capabilitySummary: summarizeCapabilityGroups(capabilityGroups),
     acceptUrl,
   });
 
@@ -137,7 +164,7 @@ export async function PATCH(request: Request) {
 
   const { data: invite, error: inviteError } = await supabaseAdmin
     .from("invites")
-    .select("id, email, metadata, roles(id, name)")
+    .select("id, email, metadata, scope_type, scope_values, capability_groups, roles(id, name)")
     .eq("id", inviteId)
     .maybeSingle();
 
@@ -185,6 +212,8 @@ export async function PATCH(request: Request) {
       to: invite.email,
       fullName: String(metadata.full_name || "").trim() || null,
       roleName: (invite.roles as { name?: string } | null)?.name || "EVNTSZN access",
+      scopeSummary: summarizeScope((invite as { scope_type?: string | null }).scope_type || null, ((invite as { scope_values?: Record<string, string[]> | null }).scope_values || {}) as Record<string, string[]>),
+      capabilitySummary: summarizeCapabilityGroups(((invite as { capability_groups?: string[] | null }).capability_groups || []) as string[]),
       acceptUrl,
     });
 

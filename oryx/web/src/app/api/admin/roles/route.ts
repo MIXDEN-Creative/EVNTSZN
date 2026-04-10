@@ -2,6 +2,13 @@ import { NextResponse } from "next/server";
 import { requireAdminPermission } from "@/lib/admin-auth";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { toDatabaseUserId } from "@/lib/access-control";
+import {
+  buildPermissionCodesFromCapabilityGroups,
+  inferCapabilityGroupsFromPermissionCodes,
+  inferPrimaryRole,
+  normalizeCapabilityGroups,
+  normalizeScopeValues,
+} from "@/lib/access-model";
 
 export async function GET() {
   await requireAdminPermission("admin.manage", "/epl/admin/team");
@@ -13,6 +20,12 @@ export async function GET() {
       code,
       name,
       description,
+      primary_role,
+      role_subtype,
+      default_scope_type,
+      default_scope,
+      capability_groups,
+      capability_overrides,
       is_system,
       is_active,
       role_permissions (
@@ -45,7 +58,20 @@ export async function POST(request: Request) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "_")
     .replace(/^_+|_+$/g, "");
-  const permissionIds = Array.isArray(body.permissionIds) ? body.permissionIds.map((value) => String(value)) : [];
+  const requestedPermissionIds = Array.isArray(body.permissionIds) ? body.permissionIds.map((value) => String(value)) : [];
+  const capabilityGroups = normalizeCapabilityGroups(body.capabilityGroups);
+  const primaryRole = String(body.primaryRole || "").trim() || inferPrimaryRole({ code, name });
+  const roleSubtype = String(body.roleSubtype || "").trim() || null;
+  const defaultScopeType = String(body.defaultScopeType || "").trim() || null;
+  const defaultScope = normalizeScopeValues(body.defaultScope);
+  const capabilityOverrides = {
+    allow_permission_codes: Array.isArray((body.capabilityOverrides as Record<string, unknown> | undefined)?.allow_permission_codes)
+      ? Array.from(new Set(((body.capabilityOverrides as Record<string, unknown>).allow_permission_codes as unknown[]).map((value) => String(value || "").trim()).filter(Boolean)))
+      : [],
+    deny_permission_codes: Array.isArray((body.capabilityOverrides as Record<string, unknown> | undefined)?.deny_permission_codes)
+      ? Array.from(new Set(((body.capabilityOverrides as Record<string, unknown>).deny_permission_codes as unknown[]).map((value) => String(value || "").trim()).filter(Boolean)))
+      : [],
+  };
   const isActive = body.isActive !== false;
 
   if (!name) {
@@ -73,10 +99,33 @@ export async function POST(request: Request) {
   }
 
   const actorUserId = toDatabaseUserId(user.id);
+  const { data: availablePermissions, error: permissionsError } = await supabaseAdmin
+    .from("permissions")
+    .select("id, code");
+
+  if (permissionsError) {
+    return NextResponse.json({ error: permissionsError.message }, { status: 500 });
+  }
+
+  const permissionIdByCode = new Map((availablePermissions || []).map((permission) => [permission.code, permission.id]));
+  const inferredPermissionCodes = new Set(buildPermissionCodesFromCapabilityGroups(capabilityGroups));
+  for (const code of capabilityOverrides.allow_permission_codes) inferredPermissionCodes.add(code);
+  for (const code of capabilityOverrides.deny_permission_codes) inferredPermissionCodes.delete(code);
+
+  const permissionIds = requestedPermissionIds.length
+    ? requestedPermissionIds
+    : Array.from(inferredPermissionCodes).map((code) => permissionIdByCode.get(code)).filter(Boolean) as string[];
+
   const payload = {
     code: code || null,
     name,
     description,
+    primary_role: primaryRole,
+    role_subtype: roleSubtype,
+    default_scope_type: defaultScopeType,
+    default_scope: defaultScope,
+    capability_groups: capabilityGroups,
+    capability_overrides: capabilityOverrides,
     is_active: isActive,
     updated_by: actorUserId,
     created_by: actorUserId,
@@ -91,6 +140,12 @@ export async function POST(request: Request) {
         code: payload.code,
         name: payload.name,
         description: payload.description,
+        primary_role: payload.primary_role,
+        role_subtype: payload.role_subtype,
+        default_scope_type: payload.default_scope_type,
+        default_scope: payload.default_scope,
+        capability_groups: payload.capability_groups,
+        capability_overrides: payload.capability_overrides,
         is_active: payload.is_active,
         updated_by: payload.updated_by,
       })
@@ -132,5 +187,11 @@ export async function POST(request: Request) {
     }
   }
 
-  return NextResponse.json({ ok: true, roleId, allowedPermissions: permissions });
+  const rolePermissions = (availablePermissions || []).filter((permission) => permissionIds.includes(permission.id)).map((permission) => permission.code);
+  return NextResponse.json({
+    ok: true,
+    roleId,
+    allowedPermissions: permissions,
+    savedCapabilityGroups: capabilityGroups.length ? capabilityGroups : inferCapabilityGroupsFromPermissionCodes(rolePermissions),
+  });
 }

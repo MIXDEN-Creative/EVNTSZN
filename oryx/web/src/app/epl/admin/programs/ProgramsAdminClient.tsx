@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { INTERNAL_CITY_OPTIONS } from "@/lib/city-options";
 
 function parseList(value: string) {
   return value
@@ -202,7 +203,7 @@ export default function ProgramsAdminClient() {
             </div>
             <div className="grid gap-4 md:grid-cols-3">
               <input className="ev-field" placeholder="Phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-              <input className="ev-field" placeholder="City" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
+              <input className="ev-field" list="program-member-city-options" placeholder="City" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
               <input className="ev-field" placeholder="State" value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} />
             </div>
             <input className="ev-field" placeholder="Role or function tags (comma separated)" value={form.role_tags} onChange={(e) => setForm({ ...form, role_tags: e.target.value })} />
@@ -358,6 +359,11 @@ export default function ProgramsAdminClient() {
           </div>
         </section>
       </div>
+      <datalist id="program-member-city-options">
+        {INTERNAL_CITY_OPTIONS.map((city) => (
+          <option key={city} value={city} />
+        ))}
+      </datalist>
     </main>
   );
 }

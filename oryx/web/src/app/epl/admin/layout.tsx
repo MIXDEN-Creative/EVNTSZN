@@ -59,11 +59,67 @@ export default async function AdminLayout({
   const canManageCity = permissions.includes("city.manage");
   const canManageSupport = permissions.includes("support.manage") || permissions.includes("support.respond");
   const canManagePrograms = permissions.includes("admin.manage") || permissions.includes("city.manage");
+  const canViewWorkforce =
+    permissions.includes("workforce.view") || permissions.includes("workforce.manage") || permissions.includes("workforce.approve");
 
   const roleNames = memberships
     .map((m: any) => m.admin_roles?.name)
     .filter(Boolean)
     .join(", ");
+
+  type NavLink = { href: string; label: string };
+  const navSections = [
+    {
+      label: "Overview",
+      links: [
+        { href: isHqSurface ? getHqOrigin(host) : getAdminOrigin(host), label: isHqSurface ? "HQ Overview" : "Overview" },
+        canManageAdmins ? { href: `${getAdminOrigin(host)}/control-center`, label: "Control Center" } : null,
+      ].filter(Boolean) as NavLink[],
+    },
+    {
+      label: "Events",
+      links: [
+        canManageEvents ? { href: `${getAdminOrigin(host)}/events`, label: "Events" } : null,
+        canManageCatalog ? { href: `${getAdminOrigin(host)}/discovery`, label: "Discovery" } : null,
+        canManageScanner ? { href: `${getAdminOrigin(host)}/scanner`, label: "Scanner" } : null,
+      ].filter(Boolean) as NavLink[],
+    },
+    {
+      label: "Team",
+      links: [
+        canManageAdmins ? { href: `${getAdminOrigin(host)}/team`, label: "Team & Access" } : null,
+        canManageAdmins ? { href: `${getAdminOrigin(host)}/users`, label: "Users" } : null,
+        canManageAdmins ? { href: `${getAdminOrigin(host)}/approvals`, label: "Approvals" } : null,
+        canManageAdmins ? { href: `${getAdminOrigin(host)}/hiring`, label: "Hiring" } : null,
+        canManageOpportunities ? { href: `${getAdminOrigin(host)}/opportunities`, label: "Opportunities" } : null,
+      ].filter(Boolean) as NavLink[],
+    },
+    {
+      label: "Operations",
+      links: [
+        canManageCity ? { href: `${getAdminOrigin(host)}/city-office`, label: "Offices" } : null,
+        canViewWorkforce ? { href: `${getAdminOrigin(host)}/workforce`, label: "Workforce" } : null,
+        canManagePrograms ? { href: `${getAdminOrigin(host)}/programs`, label: "Programs" } : null,
+        canManageSupport ? { href: `${getAdminOrigin(host)}/support`, label: "Support" } : null,
+        canManageAdmins ? { href: `${getAdminOrigin(host)}/issues`, label: "Issues & Health" } : null,
+      ].filter(Boolean) as NavLink[],
+    },
+    {
+      label: "Revenue",
+      links: [
+        canViewOrders ? { href: `${getAdminOrigin(host)}/merch-orders`, label: "Merch Orders" } : null,
+        canViewRewards ? { href: `${getAdminOrigin(host)}/rewards`, label: "Rewards" } : null,
+        canManageCatalog ? { href: `${getAdminOrigin(host)}/sponsors`, label: "Sponsors" } : null,
+        canManageCatalog ? { href: `${getEplOrigin(host)}/store`, label: "Store" } : null,
+      ].filter(Boolean) as NavLink[],
+    },
+    {
+      label: "HQ",
+      links: [
+        isHqSurface ? { href: `${getHqOrigin(host)}/draft`, label: "Draft Console" } : null,
+      ].filter(Boolean) as NavLink[],
+    },
+  ].filter((section) => section.links.length);
 
   return (
     <div className={`ev-surface ${isHqSurface ? "ev-surface--hq" : "ev-surface--admin"} text-white`}>
@@ -86,118 +142,19 @@ export default async function AdminLayout({
             <div className="mt-1 text-sm text-[#A259FF]">{roleNames || "Admin"}</div>
           </div>
 
-          <nav className="mt-8 grid gap-3">
-            <Link href={isHqSurface ? getHqOrigin(host) : getAdminOrigin(host)} className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 hover:bg-white/[0.08]">
-              {isHqSurface ? "HQ Overview" : "Overview"}
-            </Link>
-
-            {canManageAdmins ? (
-              <Link href={`${getAdminOrigin(host)}/control-center`} className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 hover:bg-white/[0.08]">
-                Operations summary
-              </Link>
-            ) : null}
-
-            {canViewOrders ? (
-              <Link href={`${getAdminOrigin(host)}/merch-orders`} className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 hover:bg-white/[0.08]">
-                Merch Orders
-              </Link>
-            ) : null}
-
-            {canViewRewards ? (
-              <Link href={`${getAdminOrigin(host)}/rewards`} className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 hover:bg-white/[0.08]">
-                Rewards
-              </Link>
-            ) : null}
-
-            {canManageCatalog ? (
-              <Link href={`${getEplOrigin(host)}/store`} className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 hover:bg-white/[0.08]">
-                Storefront
-              </Link>
-            ) : null}
-
-            {canManageCatalog ? (
-              <Link href={`${getAdminOrigin(host)}/discovery`} className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 hover:bg-white/[0.08]">
-                Discovery visibility
-              </Link>
-            ) : null}
-
-            {isHqSurface ? (
-              <Link href={`${getHqOrigin(host)}/draft`} className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 hover:bg-white/[0.08]">
-                Draft Console
-              </Link>
-            ) : null}
-
-            {canManageAdmins ? (
-              <Link href={`${getAdminOrigin(host)}/team`} className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 hover:bg-white/[0.08]">
-                Team & Access
-              </Link>
-            ) : null}
-
-            {canManageAdmins ? (
-              <Link href={`${getAdminOrigin(host)}/users`} className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 hover:bg-white/[0.08]">
-                Users
-              </Link>
-            ) : null}
-
-            {canManageAdmins ? (
-              <Link href={`${getAdminOrigin(host)}/approvals`} className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 hover:bg-white/[0.08]">
-                Approvals
-              </Link>
-            ) : null}
-
-            {canManageCity ? (
-              <Link href={`${getAdminOrigin(host)}/city-office`} className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 hover:bg-white/[0.08]">
-                City Office
-              </Link>
-            ) : null}
-
-            {canManagePrograms ? (
-              <Link href={`${getAdminOrigin(host)}/programs`} className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 hover:bg-white/[0.08]">
-                Programs
-              </Link>
-            ) : null}
-
-            {canManageAdmins ? (
-              <Link href={`${getAdminOrigin(host)}/hiring`} className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 hover:bg-white/[0.08]">
-                Hiring
-              </Link>
-            ) : null}
-
-            {canManageOpportunities ? (
-              <Link href={`${getAdminOrigin(host)}/opportunities`} className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 hover:bg-white/[0.08]">
-                Opportunities
-              </Link>
-            ) : null}
-
-            {canManageEvents ? (
-              <Link href={`${getAdminOrigin(host)}/events`} className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 hover:bg-white/[0.08]">
-                Events
-              </Link>
-            ) : null}
-
-            {canManageCatalog ? (
-              <Link href={`${getAdminOrigin(host)}/sponsors`} className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 hover:bg-white/[0.08]">
-                Sponsors & Packages
-              </Link>
-            ) : null}
-
-            {canManageScanner ? (
-              <Link href={`${getAdminOrigin(host)}/scanner`} className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 hover:bg-white/[0.08]">
-                Scanner
-              </Link>
-            ) : null}
-
-            {canManageSupport ? (
-              <Link href={`${getAdminOrigin(host)}/support`} className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 hover:bg-white/[0.08]">
-                Support Desk
-              </Link>
-            ) : null}
-
-            {canManageAdmins ? (
-              <Link href={`${getAdminOrigin(host)}/issues`} className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 hover:bg-white/[0.08]">
-                System Issues
-              </Link>
-            ) : null}
+          <nav className="mt-8 grid gap-6">
+            {navSections.map((section) => (
+              <div key={section.label}>
+                <div className="mb-2 text-xs uppercase tracking-[0.22em] text-white/38">{section.label}</div>
+                <div className="grid gap-3">
+                  {section.links.map((link) => (
+                    <Link key={link.href} href={link.href} className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 hover:bg-white/[0.08]">
+                      {link.label}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ))}
           </nav>
 
           <form action="/account/logout" method="POST" className="mt-8">

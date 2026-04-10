@@ -65,7 +65,7 @@ export default async function AdminLoginPage({ searchParams }: AdminLoginPagePro
             <div className="mb-2 text-xs font-semibold uppercase tracking-[0.24em] text-[#b899ff]">Secure access</div>
             <h2 className="text-3xl font-black tracking-tight text-white">Internal sign-in</h2>
             <p className="mt-3 text-sm leading-6 text-white/70">
-              Start here for staff-only surfaces. Member login stays on the account page. This screen is for internal access only.
+              Start here for staff-only surfaces. Member login stays on the account page, internal recovery stays on this access path, and scanner/admin tools never open from casual attendee login.
             </p>
           </div>
 

@@ -7,11 +7,15 @@ export async function sendAccessInviteEmail({
   to,
   fullName,
   roleName,
+  scopeSummary,
+  capabilitySummary,
   acceptUrl,
 }: {
   to: string;
   fullName?: string | null;
   roleName: string;
+  scopeSummary?: string | null;
+  capabilitySummary?: string | null;
   acceptUrl: string;
 }) {
   if (!to || !process.env.RESEND_API_KEY) {
@@ -42,6 +46,8 @@ export async function sendAccessInviteEmail({
                 <div style="margin-top:10px;font-size:14px;line-height:1.7;color:rgba(255,255,255,0.72);">
                   This invite is secure, tied to your email address, and will attach your role after you sign in or create your account.
                 </div>
+                ${scopeSummary ? `<div style="margin-top:14px;font-size:13px;line-height:1.6;color:rgba(255,255,255,0.68);"><strong style="color:#ffffff;">Scope:</strong> ${scopeSummary}</div>` : ""}
+                ${capabilitySummary ? `<div style="margin-top:10px;font-size:13px;line-height:1.6;color:rgba(255,255,255,0.68);"><strong style="color:#ffffff;">Capabilities:</strong> ${capabilitySummary}</div>` : ""}
               </div>
 
               <div style="margin-top:24px;">

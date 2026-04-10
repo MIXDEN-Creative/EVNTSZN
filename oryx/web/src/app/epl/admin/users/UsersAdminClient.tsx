@@ -6,6 +6,7 @@ import {
   getOrganizerClassificationLabel,
   getOrganizerClassificationOptions,
 } from "@/lib/operator-access";
+import { INTERNAL_CITY_OPTIONS } from "@/lib/city-options";
 
 type PlatformUser = {
   user_id: string;
@@ -24,6 +25,7 @@ type PlatformUser = {
 const roleOptions = getOperatorRoleOptions();
 const organizerClassificationOptions = getOrganizerClassificationOptions();
 const primaryRoles = ["attendee", "organizer", "venue", "scanner", "admin"];
+const citySuggestions = INTERNAL_CITY_OPTIONS;
 
 const emptyCreateForm = {
   email: "",
@@ -348,6 +350,7 @@ export default function UsersAdminClient() {
                   <input
                     className="ev-field"
                     placeholder="City"
+                    list="operator-user-city-options"
                     value={createForm.city}
                     onChange={(e) => setCreateForm({ ...createForm, city: e.target.value })}
                   />
@@ -371,7 +374,8 @@ export default function UsersAdminClient() {
                   />
                   <input
                     className="ev-field"
-                    placeholder="City scope"
+                    list="operator-user-city-options"
+                    placeholder="City scope, comma separated"
                     value={createForm.city_scope}
                     onChange={(e) => setCreateForm({ ...createForm, city_scope: e.target.value })}
                   />
@@ -558,7 +562,7 @@ export default function UsersAdminClient() {
                         <div className="mt-4 grid gap-4">
                           <input className="ev-field" value={editor.full_name} onChange={(e) => setEditor({ ...editor, full_name: e.target.value })} />
                           <div className="grid gap-4 md:grid-cols-2">
-                            <input className="ev-field" value={editor.city} placeholder="City" onChange={(e) => setEditor({ ...editor, city: e.target.value })} />
+                            <input className="ev-field" list="operator-user-city-options" value={editor.city} placeholder="City" onChange={(e) => setEditor({ ...editor, city: e.target.value })} />
                             <input className="ev-field" value={editor.state} placeholder="State" onChange={(e) => setEditor({ ...editor, state: e.target.value })} />
                           </div>
                           <div className="grid gap-4 md:grid-cols-2">
@@ -632,7 +636,7 @@ export default function UsersAdminClient() {
                         <div className="text-xs uppercase tracking-[0.22em] text-white/45">Scope</div>
                         <div className="mt-4 grid gap-4">
                           <input className="ev-field" value={editor.functions} placeholder="Functions" onChange={(e) => setEditor({ ...editor, functions: e.target.value })} />
-                          <input className="ev-field" value={editor.city_scope} placeholder="City scope" onChange={(e) => setEditor({ ...editor, city_scope: e.target.value })} />
+                          <input className="ev-field" list="operator-user-city-options" value={editor.city_scope} placeholder="City scope, comma separated" onChange={(e) => setEditor({ ...editor, city_scope: e.target.value })} />
                           <input className="ev-field" value={editor.dashboard_access} placeholder="Dashboard access" onChange={(e) => setEditor({ ...editor, dashboard_access: e.target.value })} />
                           <input className="ev-field" value={editor.surface_access} placeholder="Surface access" onChange={(e) => setEditor({ ...editor, surface_access: e.target.value })} />
                           <input className="ev-field" value={editor.module_access} placeholder="Module access" onChange={(e) => setEditor({ ...editor, module_access: e.target.value })} />
@@ -664,6 +668,11 @@ export default function UsersAdminClient() {
           </section>
         </section>
       </div>
+      <datalist id="operator-user-city-options">
+        {citySuggestions.map((city) => (
+          <option key={city} value={city} />
+        ))}
+      </datalist>
     </main>
   );
 }

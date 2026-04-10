@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { INTERNAL_CITY_OPTIONS } from "@/lib/city-options";
 
 function parseList(value: string) {
   return value
@@ -252,7 +253,7 @@ export default function SponsorsAdminClient() {
               </div>
               <div className="grid gap-4 md:grid-cols-2">
                 <input className="ev-field" placeholder="Tier or package label" value={accountForm.tier_label} onChange={(e) => setAccountForm({ ...accountForm, tier_label: e.target.value })} />
-                <input className="ev-field" placeholder="City scope (comma separated)" value={accountForm.city_scope} onChange={(e) => setAccountForm({ ...accountForm, city_scope: e.target.value })} />
+                <input className="ev-field" list="sponsor-city-scope-options" placeholder="City scope (comma separated)" value={accountForm.city_scope} onChange={(e) => setAccountForm({ ...accountForm, city_scope: e.target.value })} />
               </div>
               <div className="grid gap-4 md:grid-cols-2">
                 <select className="ev-field" value={accountForm.relationship_owner_user_id} onChange={(e) => setAccountForm({ ...accountForm, relationship_owner_user_id: e.target.value })}>
@@ -601,6 +602,11 @@ export default function SponsorsAdminClient() {
           ) : null}
         </div>
       </div>
+      <datalist id="sponsor-city-scope-options">
+        {INTERNAL_CITY_OPTIONS.map((city) => (
+          <option key={city} value={city} />
+        ))}
+      </datalist>
     </main>
   );
 }

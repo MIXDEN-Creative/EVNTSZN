@@ -5,13 +5,14 @@ import { hashInviteToken } from "@/lib/access-control";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export async function POST(request: Request) {
-  const user = await getCurrentUser();
+  const currentUser = await getCurrentUser();
 
-  if (!user) {
-    return NextResponse.json({ error: "You must be signed in first." }, { status: 401 });
-  }
-
-  const body = (await request.json().catch(() => ({}))) as { token?: string };
+  const body = (await request.json().catch(() => ({}))) as {
+    token?: string;
+    email?: string;
+    password?: string;
+    fullName?: string;
+  };
   const rawToken = String(body.token || "").trim();
 
   if (!rawToken) {
@@ -27,6 +28,11 @@ export async function POST(request: Request) {
       role_id,
       status,
       expires_at,
+      role_subtype,
+      scope_type,
+      scope_values,
+      capability_groups,
+      capability_overrides,
       metadata,
       roles (
         id,
@@ -47,6 +53,11 @@ export async function POST(request: Request) {
         role_id: string;
         status: string;
         expires_at: string;
+        role_subtype?: string | null;
+        scope_type?: string | null;
+        scope_values?: Record<string, string[]> | null;
+        capability_groups?: string[] | null;
+        capability_overrides?: Record<string, unknown> | null;
         metadata?: Record<string, unknown> | null;
         roles?: { id: string; name?: string | null } | { id: string; name?: string | null }[] | null;
       }
@@ -67,11 +78,16 @@ export async function POST(request: Request) {
       id: legacyLookup.data.id,
       email: legacyLookup.data.email,
       role_id: legacyLookup.data.role_id,
-      status: legacyLookup.data.status,
-      expires_at: legacyLookup.data.expires_at,
-      metadata: { full_name: legacyLookup.data.full_name || null },
-      roles: null,
-    };
+        status: legacyLookup.data.status,
+        expires_at: legacyLookup.data.expires_at,
+        role_subtype: null,
+        scope_type: null,
+        scope_values: {},
+        capability_groups: [],
+        capability_overrides: {},
+        metadata: { full_name: legacyLookup.data.full_name || null },
+        roles: null,
+      };
   }
 
   if (!invite) {
@@ -94,14 +110,77 @@ export async function POST(request: Request) {
   if (invite.status !== "pending") {
     return NextResponse.json({ error: `This invite is ${invite.status}.` }, { status: 400 });
   }
+  let user = currentUser;
+  const inviteEmail = String(invite.email).toLowerCase();
 
-  if ((user.email || "").toLowerCase() !== String(invite.email).toLowerCase()) {
+  if (user && (user.email || "").toLowerCase() !== inviteEmail) {
     return NextResponse.json({ error: "This invite belongs to a different email address." }, { status: 403 });
+  }
+
+  if (!user) {
+    const providedEmail = String(body.email || "").trim().toLowerCase();
+    const password = String(body.password || "");
+    const fullName = String(body.fullName || "").trim();
+
+    if (providedEmail !== inviteEmail) {
+      return NextResponse.json({ error: "Use the invited email address to claim access." }, { status: 400 });
+    }
+
+    if (!password || password.length < 10) {
+      return NextResponse.json({ error: "Create a password with at least 10 characters." }, { status: 400 });
+    }
+
+    let page = 1;
+    let existingUserId: string | null = null;
+    while (page <= 10 && !existingUserId) {
+      const result = await supabaseAdmin.auth.admin.listUsers({ page, perPage: 200 });
+      if (result.error) {
+        return NextResponse.json({ error: result.error.message }, { status: 500 });
+      }
+      const existingUser = result.data.users.find((candidate) => (candidate.email || "").toLowerCase() === inviteEmail);
+      if (existingUser) {
+        existingUserId = existingUser.id;
+        break;
+      }
+      if (result.data.users.length < 200) break;
+      page += 1;
+    }
+
+    if (existingUserId) {
+      const authUpdate = await supabaseAdmin.auth.admin.updateUserById(existingUserId, {
+        password,
+        email_confirm: true,
+        user_metadata: {
+          full_name: fullName || undefined,
+        },
+      });
+
+      if (authUpdate.error || !authUpdate.data.user) {
+        return NextResponse.json({ error: authUpdate.error?.message || "Could not activate the invited account." }, { status: 500 });
+      }
+
+      user = authUpdate.data.user;
+    } else {
+      const authCreate = await supabaseAdmin.auth.admin.createUser({
+        email: inviteEmail,
+        password,
+        email_confirm: true,
+        user_metadata: {
+          full_name: fullName || null,
+        },
+      });
+
+      if (authCreate.error || !authCreate.data.user) {
+        return NextResponse.json({ error: authCreate.error?.message || "Could not activate the invited account." }, { status: 500 });
+      }
+
+      user = authCreate.data.user;
+    }
   }
 
   const metadata = (invite.metadata || {}) as Record<string, unknown>;
   await ensurePlatformProfile(user.id, {
-    fullName: String(metadata.full_name || user.user_metadata?.full_name || "").trim() || null,
+    fullName: String(metadata.full_name || body.fullName || user.user_metadata?.full_name || "").trim() || null,
     primaryRole: "admin",
   });
 
@@ -111,6 +190,11 @@ export async function POST(request: Request) {
       {
         user_id: user.id,
         role_id: invite.role_id,
+        role_subtype: invite.role_subtype || null,
+        scope_type: invite.scope_type || null,
+        scope_values: invite.scope_values || {},
+        capability_groups: invite.capability_groups || [],
+        capability_overrides: invite.capability_overrides || {},
         is_active: true,
         assigned_by: null,
       },

@@ -4,6 +4,7 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 import { getFounderSession } from "@/lib/founder-session";
 import { getLoginUrl, getRestrictedSurfaceForPath, getRestrictedUrl } from "@/lib/domains";
 import { DEFAULT_ADMIN_PERMISSION_CODES } from "@/lib/access-control";
+import { buildPermissionCodesFromCapabilityGroups, normalizeCapabilityGroups } from "@/lib/access-model";
 
 type RbacRole = {
   id: string;
@@ -34,11 +35,15 @@ type LegacyMembership = {
 
 type RbacPermissionMembership = {
   is_active: boolean;
+  capability_groups?: string[] | null;
+  capability_overrides?: Record<string, unknown> | null;
   roles:
     | {
         id?: string | null;
         code?: string | null;
         name?: string | null;
+        capability_groups?: string[] | null;
+        capability_overrides?: Record<string, unknown> | null;
         role_permissions?:
           | {
               permissions?: {
@@ -52,6 +57,8 @@ type RbacPermissionMembership = {
         id?: string | null;
         code?: string | null;
         name?: string | null;
+        capability_groups?: string[] | null;
+        capability_overrides?: Record<string, unknown> | null;
         role_permissions?:
           | {
               permissions?: {
@@ -227,6 +234,8 @@ export async function getAdminPermissions(userId: string) {
         id,
         code,
         name,
+        capability_groups,
+        capability_overrides,
         role_permissions (
           permissions (
             code,
@@ -246,10 +255,41 @@ export async function getAdminPermissions(userId: string) {
         DEFAULT_ADMIN_PERMISSION_CODES.forEach((code) => codes.add(code));
       }
 
+      for (const code of buildPermissionCodesFromCapabilityGroups(normalizeCapabilityGroups(role?.capability_groups || membership.capability_groups || []))) {
+        codes.add(code);
+      }
+
       const perms = role?.role_permissions || [];
       for (const rp of perms) {
         const code = rp?.permissions?.code;
         if (code) codes.add(code);
+      }
+
+      const roleOverrides =
+        role?.capability_overrides && typeof role.capability_overrides === "object" && !Array.isArray(role.capability_overrides)
+          ? role.capability_overrides
+          : {};
+      const membershipOverrides =
+        membership.capability_overrides && typeof membership.capability_overrides === "object" && !Array.isArray(membership.capability_overrides)
+          ? membership.capability_overrides
+          : {};
+
+      const allowCodes = [
+        ...(((roleOverrides as { allow_permission_codes?: unknown[] }).allow_permission_codes || []) as unknown[]),
+        ...(((membershipOverrides as { allow_permission_codes?: unknown[] }).allow_permission_codes || []) as unknown[]),
+      ];
+      const denyCodes = [
+        ...(((roleOverrides as { deny_permission_codes?: unknown[] }).deny_permission_codes || []) as unknown[]),
+        ...(((membershipOverrides as { deny_permission_codes?: unknown[] }).deny_permission_codes || []) as unknown[]),
+      ];
+
+      for (const value of allowCodes) {
+        const code = String(value || "").trim();
+        if (code) codes.add(code);
+      }
+      for (const value of denyCodes) {
+        const code = String(value || "").trim();
+        if (code) codes.delete(code);
       }
     }
 

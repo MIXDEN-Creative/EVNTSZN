@@ -27,7 +27,7 @@ export default function EplNav({ menu }: { menu: EplMenuVisibilityContent }) {
             </Link>
           ) : null}
           {menu.showTeams ? (
-            <Link href="/epl#teams" className="text-sm font-medium text-white/80 transition hover:text-white">
+            <Link href="/epl/teams" className="text-sm font-medium text-white/80 transition hover:text-white">
               Teams
             </Link>
           ) : null}

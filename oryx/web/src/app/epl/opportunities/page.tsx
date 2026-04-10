@@ -6,14 +6,14 @@ import EplNav from "@/components/epl/EplNav";
 import PublicFooter from "@/components/public/PublicFooter";
 
 export const metadata: Metadata = {
-  title: "EPL Opportunities | EVNTSZN",
-  description: "Apply for active EPL volunteer and paid opportunities across league operations, partnerships, audience growth, and game-day execution.",
+  title: "EPL Opportunities",
+  description: "Explore active paid and volunteer EPL roles across check-in, sideline coverage, event operations, and league support.",
   alternates: {
     canonical: `${getEplOrigin()}/opportunities`,
   },
   openGraph: {
     title: "EPL Opportunities | EVNTSZN",
-    description: "Apply for active EPL volunteer and paid opportunities across league operations, partnerships, audience growth, and game-day execution.",
+    description: "Explore active paid and volunteer EPL roles across check-in, sideline coverage, event operations, and league support.",
     url: `${getEplOrigin()}/opportunities`,
     siteName: "EVNTSZN",
     type: "website",
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "EPL Opportunities | EVNTSZN",
-    description: "Apply for active EPL volunteer and paid opportunities across league operations, partnerships, audience growth, and game-day execution.",
+    description: "Explore active paid and volunteer EPL roles across check-in, sideline coverage, event operations, and league support.",
   },
 };
 

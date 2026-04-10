@@ -39,6 +39,11 @@ export default function OperatorOpsDashboard({
         Open city office
       </a>
     ) : null,
+    operatorProfile.module_access.includes("staffing") ? (
+      <Link key="time" href="/ops/time" className="ev-button-secondary">
+        Track time
+      </Link>
+    ) : null,
     organizerClassification === "evntszn_host" || organizerClassification === "city_host" ? (
       <Link key="host-network" href="/hosts" className="ev-button-secondary">
         Host network path
@@ -129,6 +134,14 @@ export default function OperatorOpsDashboard({
                 {operatorProfile.can_access_scanner
                   ? "Scanner access is enabled on your operator profile. Event-level scan assignments still control what you can actually check in."
                   : "Scanner access is not enabled for this role right now."}
+              </div>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
+              <div className="text-sm font-semibold text-white">Workforce tools</div>
+              <div className="mt-2 text-sm text-white/65">
+                {operatorProfile.module_access.includes("staffing")
+                  ? "Time tracking and staffing workflows are available for your assigned shifts and event-day roles."
+                  : "Workforce tools are not enabled for this role right now."}
               </div>
             </div>
             <div className="rounded-2xl border border-white/10 bg-black/30 p-4">

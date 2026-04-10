@@ -7,9 +7,10 @@ const ISSUE_TYPES = new Set([
   "scanning_issue",
   "ticket_issue",
   "login_issue",
+  "dashboard_issue",
   "event_issue",
   "sponsor_issue",
-  "staff_issue",
+  "staffing_issue",
   "office_issue",
   "payment_issue",
   "other",
@@ -80,6 +81,8 @@ export async function POST(request: Request) {
 
   const roleLabel = operatorProfile?.role_key
     ? String(operatorProfile.role_key)
+    : String(body.roleLabelOverride || "").trim()
+      ? String(body.roleLabelOverride || "").trim()
     : profile?.primary_role
       ? String(profile.primary_role)
       : "guest";
@@ -100,6 +103,8 @@ export async function POST(request: Request) {
     occurred_at_label: String(body.occurredAtLabel || "").trim() || null,
     severity: ["low", "normal", "high", "urgent"].includes(String(body.severity || "")) ? body.severity : "normal",
     description,
+    linked_city: String(body.linkedCity || profile?.city || "").trim() || null,
+    linked_office_label: String(body.linkedOfficeLabel || "").trim() || null,
     metadata: {
       reported_from: body.reportedFrom || null,
       subdomain: body.subdomain || null,

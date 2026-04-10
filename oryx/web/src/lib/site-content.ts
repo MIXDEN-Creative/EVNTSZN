@@ -237,6 +237,10 @@ export const DEFAULT_HOMEPAGE_CONTENT: Omit<HomepageContent, "storageReady"> = {
         name: "Miami",
         description: "High-velocity nightlife and destination-event demand.",
       },
+      {
+        name: "Dover",
+        description: "Delaware league nights, local events, and community discovery with a cleaner premium surface.",
+      },
     ],
   },
   visibility: {
@@ -254,30 +258,30 @@ export const DEFAULT_HOMEPAGE_CONTENT: Omit<HomepageContent, "storageReady"> = {
 export const DEFAULT_EPL_PUBLIC_CONTENT: Omit<EplPublicContent, "storageReady"> = {
   hero: {
     eyebrow: "EVNTSZN Prime League",
-    title: "A city-built coed league with draft-night energy and premium presentation.",
+    title: "Baltimore flag football with draft-night energy, team pride, and real game-week pull.",
     description:
-      "EPL brings registration, team identity, schedule momentum, and sports-entertainment polish into one public league surface built for players, fans, and city energy.",
+      "Follow the clubs, lock in your registration, track the standings, and stay close to the moments that make Season 1 feel live.",
     primaryCtaLabel: "Register",
     primaryCtaHref: "/epl/season-1/register",
-    secondaryCtaLabel: "View Schedule",
+    secondaryCtaLabel: "View schedule",
     secondaryCtaHref: "#schedule",
   },
   sections: {
-    seasonHeadline: "Season 1 is built to feel organized, competitive, and alive.",
+    seasonHeadline: "Season 1 is built for game-day momentum, city pride, and a league people want to follow.",
     seasonBody:
-      "Structured registration, player review, draft-night presentation, and team identity make EPL feel like a real league product instead of a one-off rec run.",
-    scheduleHeadline: "Schedule visibility that supports players, fans, and weekly momentum.",
+      "Registration, draft night, club identity, and weekly standings pressure all feed one league front door that stays alive from sign-up through the stretch run.",
+    scheduleHeadline: "The schedule keeps every week moving.",
     scheduleBody:
-      "Use the public league page as the front door for season rhythm, signature game nights, and the moments that move the standings.",
-    teamsHeadline: "Six teams. Strong identity. Real city pull.",
+      "Follow statement nights, rivalry matchups, and the games that change the table without having to guess where league updates live.",
+    teamsHeadline: "Six clubs. Distinct identity. Real Baltimore pull.",
     teamsBody:
-      "Canton Chargers, Federal Hill Sentinels, Fells Point Raiders, Hampden Rebels, Harbor Titans, and Mount Vernon Royals drive the league's competitive personality.",
-    standingsHeadline: "Standings that make every week matter.",
+      "Each team carries its own neighborhood edge, draft-night storyline, and game-day feel so the league stays easy to follow all season.",
+    standingsHeadline: "A standings table that makes every game matter.",
     standingsBody:
-      "The public league surface is built for standings pressure, weekly storylines, and game-day movement fans can actually follow.",
-    storeHeadline: "League merch should feel collectible, not generic.",
+      "Wins, losses, and weekly movement belong in one clean league table that players and supporters can check after every big night.",
+    storeHeadline: "Merch that feels like league gear, not filler.",
     storeBody:
-      "The EPL store keeps branded gear, drop moments, and team identity aligned with the same premium EVNTSZN presentation standard.",
+      "Shop official EPL drops built around club identity, league nights, and the kind of gear people actually want to wear on game day.",
   },
   menu: {
     showRegister: true,
@@ -307,21 +311,21 @@ export const DEFAULT_PUBLIC_MODULES: Omit<PublicModules, "storageReady"> = {
   },
   storePromo: {
     eyebrow: "Merchandise",
-    headline: "Official EPL merch with real product drops, not filler blocks.",
-    body: "Run featured products, collection visibility, and store messaging from the dashboard while Printful stays behind the order flow.",
+    headline: "Official EPL merch built for players, supporters, and team pride.",
+    body: "Shop the latest league gear, club-inspired drops, and everyday pieces that keep EPL visible off the field too.",
     ctaLabel: "Open store",
     ctaHref: "/epl/store",
   },
   sponsorBlock: {
     eyebrow: "Presented with",
-    headline: "Sponsors and partners can go live across EVNTSZN once placements are actually ready.",
-    body: "Only approved, active placements render publicly, with dashboard control over dates, locations, and order priority.",
-    footerHeadline: "Trusted by sponsors, partners, and city builders who are live in the system.",
+    headline: "Sponsors and partners backing the league show up here when placements are live.",
+    body: "League partners, city brands, and event-day supporters appear here once placements are approved and active.",
+    footerHeadline: "Trusted by sponsors, partners, and city builders showing up for league nights.",
   },
   opportunitiesBlock: {
     eyebrow: "Opportunities",
-    headline: "Open EPL roles stay visible here while hiring stays inside the dashboard pipeline.",
-    body: "Publish only the roles you need now, then move applicants through review, interviews, and decisions without leaving the operating layer.",
+    headline: "Work league nights, support the teams, and help build the season from inside the action.",
+    body: "Explore current paid and volunteer openings across game-day operations, sideline coverage, check-in, and community support.",
   },
 };
 

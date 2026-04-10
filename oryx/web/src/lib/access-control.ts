@@ -23,6 +23,9 @@ export const DEFAULT_ADMIN_PERMISSION_CODES = [
   "support.manage",
   "support.assign",
   "support.respond",
+  "workforce.view",
+  "workforce.manage",
+  "workforce.approve",
 ] as const;
 
 export function toDatabaseUserId(userId?: string | null) {

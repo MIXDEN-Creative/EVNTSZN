@@ -4,6 +4,7 @@ export type EplTeamProfile = {
   neighborhood: string;
   headline: string;
   description: string;
+  logoUrl: string;
   notes: string[];
 };
 
@@ -15,6 +16,7 @@ export const EPL_TEAM_PROFILES: EplTeamProfile[] = [
     headline: "Canton speed, late-game pressure, and clean execution.",
     description:
       "The Canton Chargers bring fast cuts, clean pulls, and a city identity built for players and supporters who want every snap to feel live.",
+    logoUrl: "/epl_team_logos/chargers.jpeg",
     notes: ["Draft-built roster identity", "Waterfront crowd pull", "Fast-transition style"],
   },
   {
@@ -24,6 +26,7 @@ export const EPL_TEAM_PROFILES: EplTeamProfile[] = [
     headline: "Federal Hill discipline with a polished, high-pressure edge.",
     description:
       "The Sentinels project structure, control, and big-moment poise across every week of the standings race.",
+    logoUrl: "/epl_team_logos/sentinels.jpeg",
     notes: ["Structured coverage", "Defensive composure", "Standings pressure"],
   },
   {
@@ -33,6 +36,7 @@ export const EPL_TEAM_PROFILES: EplTeamProfile[] = [
     headline: "Harbor energy, pressure moments, and a side built to steal the night.",
     description:
       "The Fells Point Raiders lean into nightlife-edge personality and a game-night identity that feels loud, dangerous, and worth showing up for.",
+    logoUrl: "/epl_team_logos/raiders.jpeg",
     notes: ["Crowd energy", "Attacking confidence", "Harbor-night identity"],
   },
   {
@@ -42,6 +46,7 @@ export const EPL_TEAM_PROFILES: EplTeamProfile[] = [
     headline: "Independent spirit, hard minutes, and a side that refuses to look generic.",
     description:
       "The Hampden Rebels give the league an unmistakable team personality with a style rooted in grit, pursuit speed, and city pride.",
+    logoUrl: "/epl_team_logos/rebels.jpeg",
     notes: ["Independent edge", "Hard-running defense", "City-pride identity"],
   },
   {
@@ -51,6 +56,7 @@ export const EPL_TEAM_PROFILES: EplTeamProfile[] = [
     headline: "Big-stage presence, heavy game-night energy, and a team built to look the part.",
     description:
       "The Harbor Titans bring scale and spectacle into the league with a premium public-facing identity meant to feel imposing.",
+    logoUrl: "/epl_team_logos/titans.jpeg",
     notes: ["Big-game feel", "Physical identity", "Premium team presence"],
   },
   {
@@ -60,6 +66,7 @@ export const EPL_TEAM_PROFILES: EplTeamProfile[] = [
     headline: "Polished control, city elegance, and a side that moves with intent.",
     description:
       "The Mount Vernon Royals carry the most composed public identity in the league, pairing style with weekly pressure.",
+    logoUrl: "/epl_team_logos/royals.jpeg",
     notes: ["Composed build-up", "Elegant identity", "High-pressure finishing"],
   },
 ];

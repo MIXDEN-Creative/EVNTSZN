@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { getAdminOrigin, getLoginUrl } from "@/lib/domains";
+import { createClient } from "@/lib/supabase/client";
+import { getAdminOrigin } from "@/lib/domains";
 
 export default function AdminInviteAcceptPage({
   searchParams,
@@ -10,33 +11,40 @@ export default function AdminInviteAcceptPage({
 }) {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [password, setPassword] = useState("");
 
   const token = searchParams?.token || "";
   const email = searchParams?.email || "";
-  const loginHref =
-    typeof window === "undefined"
-      ? `/account/login?next=${encodeURIComponent(`/admin-invite/accept?token=${token}&email=${encodeURIComponent(email)}`)}`
-      : getLoginUrl(`/admin-invite/accept?token=${token}&email=${encodeURIComponent(email)}`, window.location.host);
 
   async function acceptInvite() {
     setLoading(true);
     setMessage("");
 
+    const supabase = createClient();
     const res = await fetch("/api/admin/invites/accept", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ token }),
+      body: JSON.stringify({ token, email, fullName, password }),
     });
 
-    const data = (await res.json()) as { error?: string };
+    const data = (await res.json()) as { error?: string; mode?: string };
 
     if (!res.ok) {
       setMessage(data.error || "Failed to accept invite");
     } else {
-      setMessage("Invite accepted. You can now use the admin dashboard.");
-      window.location.href = getAdminOrigin(window.location.host);
+      if (password) {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) {
+          setMessage("Access was activated. Sign in from the internal login page with your new password.");
+        } else {
+          window.location.href = getAdminOrigin(window.location.host);
+        }
+      } else {
+        setMessage("Invite accepted. Sign in from internal access with your password.");
+      }
     }
 
     setLoading(false);
@@ -45,27 +53,36 @@ export default function AdminInviteAcceptPage({
   return (
     <main className="min-h-screen bg-black text-white grid place-items-center p-6">
       <div className="w-full max-w-md rounded-3xl border border-white/10 bg-white/[0.03] p-6">
-        <h1 className="text-3xl font-black">Accept Admin Invite</h1>
+        <div className="ev-kicker">Internal invite</div>
+        <h1 className="mt-3 text-3xl font-black">Activate your EVNTSZN internal access</h1>
         <p className="mt-2 text-white/65">
-          Sign in with the invited email first. If the account does not exist yet, the secure access link will create it and bring you back here to finish the role assignment.
+          Claim your invited access, set a password, and enter the internal tools that match your assigned role.
         </p>
 
         {email ? <div className="mt-4 rounded-2xl border border-white/10 bg-black/40 p-4 text-sm text-white/72">Invited email: {email}</div> : null}
 
         <div className="mt-5 grid gap-3">
-          <a
-            href={loginHref}
-            className="rounded-2xl border border-white/15 px-5 py-4 text-center hover:bg-white/10"
-          >
-            Sign in with invited email
-          </a>
+          <input
+            value={fullName}
+            onChange={(event) => setFullName(event.target.value)}
+            className="ev-field"
+            placeholder="Full name"
+          />
+          <input
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            className="ev-field"
+            type="password"
+            placeholder="Create password"
+          />
+          <div className="text-xs leading-6 text-white/52">Use at least 10 characters. This password is only for internal staff access, not attendee/member login.</div>
 
           <button
             onClick={acceptInvite}
-            disabled={!token || loading}
+            disabled={!token || !email || !password || loading}
             className="rounded-2xl bg-[#A259FF] px-5 py-4 font-bold disabled:opacity-50"
           >
-            {loading ? "Accepting..." : "Accept Invite"}
+            {loading ? "Activating access..." : "Activate access"}
           </button>
         </div>
 
@@ -74,6 +91,10 @@ export default function AdminInviteAcceptPage({
             {message}
           </div>
         ) : null}
+
+        <div className="mt-4 text-xs leading-6 text-white/52">
+          Expired invite or wrong email? Ask HQ/Admin to resend the invite instead of opening a public sign-up flow.
+        </div>
       </div>
     </main>
   );

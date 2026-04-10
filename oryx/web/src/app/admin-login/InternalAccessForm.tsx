@@ -1,11 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { getLoginRedirectOrigin, normalizeNextPath } from "@/lib/domains";
 
 export default function InternalAccessForm({ next }: { next: string }) {
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -14,10 +16,11 @@ export default function InternalAccessForm({ next }: { next: string }) {
     setLoading(true);
     setMessage("");
 
+    const nextPath = normalizeNextPath(next);
     const accessCheck = await fetch("/api/admin/internal-access", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
+      body: JSON.stringify({ email, next: nextPath }),
     });
 
     const accessJson = (await accessCheck.json().catch(() => ({}))) as { error?: string };
@@ -28,21 +31,16 @@ export default function InternalAccessForm({ next }: { next: string }) {
     }
 
     const supabase = createClient();
-    const nextPath = normalizeNextPath(next);
     const redirectOrigin = getLoginRedirectOrigin(nextPath, window.location.host);
-    const redirectTo = `${redirectOrigin}/auth/callback?next=${encodeURIComponent(nextPath)}`;
-
-    const { error } = await supabase.auth.signInWithOtp({
+    const { error } = await supabase.auth.signInWithPassword({
       email,
-      options: {
-        emailRedirectTo: redirectTo,
-      },
+      password,
     });
 
     if (error) {
       setMessage(error.message);
     } else {
-      setMessage("Check your email for the secure internal access link.");
+      window.location.href = `${redirectOrigin}${nextPath}`;
     }
 
     setLoading(false);
@@ -53,7 +51,7 @@ export default function InternalAccessForm({ next }: { next: string }) {
       <div className="ev-section-kicker">Invited staff access</div>
       <h2 className="ev-panel-title mt-3">Sign in with your invited internal email</h2>
       <p className="ev-panel-copy">
-        Admin, HQ, ops, scanner, and office access only open for emails that already have assigned internal roles. This does not grant access by itself.
+        Admin, HQ, ops, scanner, and office access only open for invited accounts with active internal roles. This is a credential sign-in, not an open access request.
       </p>
 
       <div className="mt-6">
@@ -68,8 +66,20 @@ export default function InternalAccessForm({ next }: { next: string }) {
         />
       </div>
 
+      <div className="mt-4">
+        <label className="mb-2 block text-sm text-white/70">Password</label>
+        <input
+          type="password"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          className="ev-field"
+          placeholder="Your internal account password"
+          required
+        />
+      </div>
+
       <button type="submit" disabled={loading} className="ev-button-primary mt-6 w-full disabled:opacity-50">
-        {loading ? "Sending secure access..." : "Send internal access link"}
+        {loading ? "Signing in..." : "Sign in to internal tools"}
       </button>
 
       {message ? (
@@ -77,6 +87,13 @@ export default function InternalAccessForm({ next }: { next: string }) {
           {message}
         </div>
       ) : null}
+
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-white/58">
+        <span>New internal users should open their invite email first to claim access and set their password.</span>
+        <Link href="/admin-login/recover" className="text-[#d8c2ff] hover:text-white">
+          Forgot password?
+        </Link>
+      </div>
     </form>
   );
 }

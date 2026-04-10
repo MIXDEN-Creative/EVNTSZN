@@ -27,6 +27,7 @@ export default function SupportPageClient({
   const [form, setForm] = useState({
     name: defaultName,
     email: defaultEmail,
+    roleLabelOverride: defaultRole || "guest",
     issueType: "website_issue",
     issueSubtype: "",
     relatedEventId: "",
@@ -100,7 +101,7 @@ export default function SupportPageClient({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         ...form,
-        roleLabel: defaultRole,
+        roleLabelOverride: form.roleLabelOverride,
         subdomain: typeof window !== "undefined" ? window.location.host : "",
         reportedFrom: form.pageUrl || form.pagePath,
       }),
@@ -136,9 +137,13 @@ export default function SupportPageClient({
           Use this desk for ticket issues, login trouble, scanner problems, event questions, sponsor requests, staff issues, or anything on the platform that needs attention.
         </p>
         <div className="mt-6 space-y-3 text-sm text-white/65">
-          <div>Use the most accurate issue type so the right team sees it first.</div>
-          <div>Add the event or order when it matters.</div>
+          <div>Pick the issue category that best matches what broke or stalled.</div>
+          <div>Add the event, route, date, and time if the issue happened during a live flow.</div>
           <div>Signed-in users keep their account context attached automatically.</div>
+        </div>
+        <div className="mt-6 rounded-2xl border border-white/10 bg-black/30 p-4 text-xs leading-6 text-white/54">
+          Route captured: {form.pagePath || "Current page"}<br />
+          Source: {form.sourceSurface || "web"}
         </div>
       </section>
 
@@ -163,15 +168,27 @@ export default function SupportPageClient({
             />
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-3">
+            <select className="ev-field" value={form.roleLabelOverride} onChange={(event) => setForm((current) => ({ ...current, roleLabelOverride: event.target.value }))}>
+              <option value="guest">I am a guest or supporter</option>
+              <option value="player">I am a player</option>
+              <option value="attendee">I am an attendee</option>
+              <option value="organizer">I am an organizer</option>
+              <option value="host">I am a host</option>
+              <option value="scanner">I work scanner</option>
+              <option value="ops">I work ops</option>
+              <option value="sponsor">I am a sponsor or partner</option>
+              <option value="staff">I am staff</option>
+            </select>
             <select className="ev-field" value={form.issueType} onChange={(event) => setForm((current) => ({ ...current, issueType: event.target.value }))}>
               <option value="website_issue">Website issue</option>
               <option value="scanning_issue">Scanning issue</option>
               <option value="ticket_issue">Ticket issue</option>
               <option value="login_issue">Login issue</option>
+              <option value="dashboard_issue">Dashboard issue</option>
               <option value="event_issue">Event issue</option>
               <option value="sponsor_issue">Sponsor issue</option>
-              <option value="staff_issue">Staff issue</option>
+              <option value="staffing_issue">Staffing issue</option>
               <option value="office_issue">Office issue</option>
               <option value="payment_issue">Payment issue</option>
               <option value="other">Other</option>
@@ -215,7 +232,7 @@ export default function SupportPageClient({
           <textarea
             className="ev-textarea"
             rows={6}
-            placeholder="Describe what happened, what you expected, and what you need next."
+            placeholder="Describe what happened, what you expected, where it broke, and what you need next."
             value={form.description}
             onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))}
             required

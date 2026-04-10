@@ -7,16 +7,16 @@ export default function EPLSeasonOneRegisterPage() {
       surface="epl"
       eyebrow="EVNTSZN Prime League"
       title="Season 1 Player Registration"
-      description="Submit your registration, lock in your player profile, and move into the Season 1 pipeline. Clean process. Serious league."
+      description="Claim your spot, build your player profile, and get into Baltimore flag football with a registration flow that feels ready for the season."
       meta={
         <>
           <div className="ev-meta-card">
             <div className="ev-meta-label">Season entry</div>
-            <div className="ev-meta-value">$95 registration fee with player profile, application, and payment linkage.</div>
+            <div className="ev-meta-value">$95 registration fee with player profile, payment, and league intake handled in one step.</div>
           </div>
           <div className="ev-meta-card">
-            <div className="ev-meta-label">League surface</div>
-            <div className="ev-meta-value">Public EPL pages stay premium and open while league admin and draft operations remain gated.</div>
+            <div className="ev-meta-label">What happens next</div>
+            <div className="ev-meta-value">After registration, the league can place you into draft-night and Season 1 updates without dropping you into a dead-end sign-up loop.</div>
           </div>
         </>
       }
