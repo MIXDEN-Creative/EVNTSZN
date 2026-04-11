@@ -18,6 +18,20 @@ const statusOptions = [
 ];
 const citySuggestions = INTERNAL_CITY_OPTIONS;
 
+function toDateTimeLocalValue(value: string | null | undefined) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const pad = (input: number) => String(input).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function toIsoDateTime(value: string | null | undefined) {
+  if (!value) return "";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "" : date.toISOString();
+}
+
 function buildGoogleCalendarUrl({
   stage,
   title,
@@ -162,6 +176,7 @@ export default function HiringAdminClient() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         ...interviewForm,
+        scheduled_at: toIsoDateTime(interviewForm.scheduled_at),
         application_id: selectedApplication.id,
         interviewer_name:
           interviewForm.interviewer_name ||
@@ -250,7 +265,7 @@ export default function HiringAdminClient() {
         </div>
       </section>
 
-      <div className="mt-6 grid gap-6 xl:grid-cols-[320px_1fr]">
+      <div className="mt-6 grid gap-8 xl:grid-cols-[360px_1fr]">
         <section className="ev-panel p-5">
           <div className="ev-section-kicker">Applications</div>
           <div className="mt-4 space-y-3">
@@ -367,7 +382,7 @@ export default function HiringAdminClient() {
                               status: interview.status || "scheduled",
                               interviewer_user_id: interview.interviewer_user_id || "",
                               interviewer_name: interview.interviewer_name || "",
-                              scheduled_at: interview.scheduled_at ? String(interview.scheduled_at).slice(0, 16) : "",
+                              scheduled_at: toDateTimeLocalValue(interview.scheduled_at),
                               recommendation: interview.recommendation || "",
                               summary: interview.summary || "",
                               notes: interview.notes || "",
@@ -407,6 +422,9 @@ export default function HiringAdminClient() {
                 <form onSubmit={saveInterview} className="ev-panel p-6">
                   <div className="ev-section-kicker">Interview editor</div>
                   <h3 className="mt-3 text-xl font-bold text-white">Assign Zoom or phone interview</h3>
+                  <div className="mt-3 rounded-2xl border border-white/10 bg-black/25 p-4 text-sm text-white/62">
+                    Schedule the interview first, then capture outcome, summary, and notes in the same record so the hiring trail stays readable.
+                  </div>
                   <div className="mt-5 grid gap-4">
                     <div className="grid gap-4 md:grid-cols-2">
                       <select className="ev-field" value={interviewForm.interview_stage} onChange={(e) => setInterviewForm({ ...interviewForm, interview_stage: e.target.value })}>

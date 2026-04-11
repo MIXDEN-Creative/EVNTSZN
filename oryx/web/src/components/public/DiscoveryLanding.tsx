@@ -104,7 +104,7 @@ function normalizeNativeEvent(event: DiscoveryNativeEvent): DiscoveryListing {
     summary:
       event.description ||
       event.heroNote ||
-      `${event.sourceLabel} worth planning around.`,
+      `${event.sourceLabel} worth showing up for.`,
     isPrimary: true,
     featured: event.featured,
   };
@@ -177,13 +177,13 @@ function createEmptyState(query: string, city: string) {
   if (query || city) {
     return {
       title: "No results for this search",
-      body: `Try a different city or a broader search term to find more events. You can also jump into Baltimore, Atlanta, or NYC to see what’s trending.`,
+      body: `Try a different city or a broader search term. You can also jump into another city to see what people are turning up for right now.`,
     };
   }
 
   return {
     title: "Start your search",
-    body: "Search for a city, artist, or nightlife vibe to see the best events and headline plans in the feed below.",
+    body: "Search for a city, artist, team, or nightlife vibe to see what is actually worth going to.",
   };
 }
 
@@ -405,9 +405,9 @@ export default function DiscoveryLanding({
 
               <div className="mt-14 grid gap-4 sm:grid-cols-3">
                 {[
-                  { label: "Tonight", value: "Move on the best plan", detail: "Search what is happening now, what is next, and what is worth leaving home for." },
+                  { label: "Tonight", value: "Find the move fast", detail: "Search what is happening now, what starts next, and what is worth getting dressed for." },
                   { label: "This weekend", value: "Big game and big-night energy", detail: "Concerts, sports, parties, and league nights across the cities people watch first." },
-                  { label: "Across EVNTSZN", value: "One clean public flow", detail: "Browse, buy, register, and keep up with EPL without jumping through mismatched pages." },
+                  { label: "Across EVNTSZN", value: "One clean way in", detail: "Browse, buy, register, and keep up with EPL without getting dropped into disconnected pages." },
                 ].map((stat) => (
                   <div key={stat.label} className="ev-meta-card bg-black/35">
                     <div className="ev-meta-label">{stat.label}</div>
@@ -426,10 +426,10 @@ export default function DiscoveryLanding({
             >
               <div className="ev-section-kicker">Find your next plan</div>
               <h2 className="mt-4 text-3xl font-black tracking-[-0.04em] text-white">
-                Start with a city, a vibe, or a keyword. The strongest matches land below.
+                Start with a city, artist, team, or vibe. The strongest matches land below.
               </h2>
               <p className="mt-4 text-base leading-7 text-white/72">
-                Search concerts, nightlife, sports, and league nights. If a provider is down or a key is missing, the page still works with the best live results available.
+                Search concerts, nightlife, sports, and league nights. If a provider is missing or one feed goes down, discovery still keeps moving with the best live results available.
               </p>
 
               <div className="mt-8 grid gap-4 md:grid-cols-[1.1fr_0.8fr]">
@@ -473,7 +473,7 @@ export default function DiscoveryLanding({
 
               <div className="mt-8 grid gap-3 sm:grid-cols-2">
                 <button type="button" className="ev-button-primary" onClick={() => void runSearch()}>
-                  {loading ? "Searching..." : "Search EVNTSZN"}
+                  {loading ? "Searching..." : "Find events"}
                 </button>
                 <Link href="https://app.evntszn.com/account/login?mode=signup&next=/account" className="ev-button-secondary">
                   Create Account
@@ -487,6 +487,56 @@ export default function DiscoveryLanding({
                 </Link>
               </div>
             </motion.div>
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4 py-16 md:px-6 lg:px-8 lg:py-20">
+        <div className="ev-panel overflow-hidden p-8 md:p-10">
+          <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
+            <div>
+              <div className="ev-section-kicker">Host applications open</div>
+              <h2 className="mt-4 text-4xl font-black tracking-[-0.04em] text-white md:text-5xl">
+                We are actively registering EVNTSZN Hosts in Baltimore, Atlanta, New York, Miami, DC, and Dover.
+              </h2>
+              <p className="mt-5 max-w-3xl text-lg leading-8 text-white/72">
+                If you can run a room, lead guest energy, and hold a premium event standard, the EVNTSZN Host path is open. Approved hosts work real city-facing nights, operate inside the live host commission structure, and build toward bigger market responsibility.
+              </p>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <Link href="/hosts/apply" className="ev-button-primary">
+                  Apply as a host
+                </Link>
+                <Link href="/hosts" className="ev-button-secondary">
+                  Explore host path
+                </Link>
+              </div>
+            </div>
+
+            <div className="grid gap-4">
+              <div className="rounded-[28px] border border-white/10 bg-black/25 p-5">
+                <div className="text-xs uppercase tracking-[0.18em] text-white/45">Host perks</div>
+                <div className="mt-4 grid gap-3">
+                  {[
+                    "Host-led event revenue works inside the EVNTSZN host split.",
+                    "Scanner and event-ops support stay aligned with the host lane.",
+                    "Top hosts move into certified, pro, and city-lead pathways.",
+                    "City-by-city openings are currently live in Baltimore, Atlanta, New York, Miami, DC, and Dover.",
+                  ].map((item) => (
+                    <div key={item} className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm leading-6 text-white/72">
+                      {item}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="rounded-[28px] border border-white/10 bg-black/25 p-5">
+                <div className="text-xs uppercase tracking-[0.18em] text-white/45">Host revenue structure</div>
+                <div className="mt-3 text-lg font-semibold text-white">Host-led events</div>
+                <div className="mt-3 text-sm leading-6 text-white/72">
+                  Approved host-led events work inside the live EVNTSZN host commission structure, so strong operators can build real upside on the nights they lead.
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -636,10 +686,10 @@ export default function DiscoveryLanding({
               <div className="relative p-6 md:p-8">
                 <div className="ev-kicker">EPL Season 1</div>
                 <h2 className="mt-5 max-w-xl text-4xl font-black tracking-[-0.05em] text-white md:text-5xl">
-                  Baltimore draft night, coed flag football, and a league people can actually follow week to week.
+                  Coed flag football, draft-night pressure, and a league people can actually follow week to week.
                 </h2>
                 <p className="mt-4 max-w-xl text-base leading-7 text-white/76">
-                  EPL brings team identity, standings pressure, player registration, and game-day energy into one public league experience built for Baltimore.
+                  EPL brings team identity, standings pressure, player registration, and game-day energy into one public league experience built to travel cleanly from city to city.
                 </p>
                 <div className="mt-6 flex flex-wrap gap-3">
                   <Link href="https://epl.evntszn.com" className="ev-button-primary">

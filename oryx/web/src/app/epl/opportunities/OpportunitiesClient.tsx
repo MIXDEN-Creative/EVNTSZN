@@ -185,7 +185,7 @@ export default function OpportunitiesClient({ modules }: { modules: PublicModule
                     </div>
                     <p className="mt-4 text-white/70">{opp.summary || opp.description}</p>
                     <div className="mt-3 text-sm text-white/52">
-                      {[opp.location_city ? `${opp.location_city}${opp.location_state ? `, ${opp.location_state}` : ""}` : "Baltimore", opp.event_title || opp.season_name || null].filter(Boolean).join(" • ")}
+                      {[opp.location_city ? `${opp.location_city}${opp.location_state ? `, ${opp.location_state}` : ""}` : "League market", opp.event_title || opp.season_name || null].filter(Boolean).join(" • ")}
                     </div>
                     {opp.opportunity_type === "paid" ? (
                       <div className="mt-4 rounded-2xl border border-emerald-400/20 bg-emerald-500/10 p-3 text-sm text-emerald-100">
@@ -222,7 +222,7 @@ export default function OpportunitiesClient({ modules }: { modules: PublicModule
             {selectedOpportunity
               ? [
                   selectedOpportunity.opportunity_type === "paid" ? "Paid role" : "Volunteer role",
-                  selectedOpportunity.location_city ? `${selectedOpportunity.location_city}${selectedOpportunity.location_state ? `, ${selectedOpportunity.location_state}` : ""}` : "Baltimore",
+                  selectedOpportunity.location_city ? `${selectedOpportunity.location_city}${selectedOpportunity.location_state ? `, ${selectedOpportunity.location_state}` : ""}` : "League market",
                   selectedOpportunity.event_title || selectedOpportunity.season_name || null,
                   selectedOpportunity.pay_label || null,
                 ].filter(Boolean).join(" • ")

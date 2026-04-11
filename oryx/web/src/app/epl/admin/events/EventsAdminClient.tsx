@@ -129,6 +129,20 @@ const EMPTY_FORM = {
   independentOrigin: "city" as "city" | "hq",
 };
 
+function toDateTimeLocalValue(value: string | null | undefined) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const pad = (input: number) => String(input).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function toIsoDateTime(value: string | null | undefined) {
+  if (!value) return "";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "" : date.toISOString();
+}
+
 export default function EventsAdminClient() {
   const [events, setEvents] = useState<ManagedEvent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -216,7 +230,13 @@ export default function EventsAdminClient() {
       const response = await fetch("/api/evntszn/events", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ...form,
+          startAt: toIsoDateTime(form.startAt),
+          endAt: toIsoDateTime(form.endAt),
+          salesStartAt: toIsoDateTime(form.salesStartAt),
+          salesEndAt: toIsoDateTime(form.salesEndAt),
+        }),
       });
       const payload = (await response.json()) as { ok?: boolean; error?: string };
       if (!response.ok) throw new Error(payload.error || "Could not create event.");
@@ -314,7 +334,11 @@ export default function EventsAdminClient() {
       const response = await fetch(`/api/evntszn/events/${selectedEventId}/ticket-types`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(ticketForm),
+        body: JSON.stringify({
+          ...ticketForm,
+          salesStartAt: toIsoDateTime(ticketForm.salesStartAt),
+          salesEndAt: toIsoDateTime(ticketForm.salesEndAt),
+        }),
       });
       const payload = (await response.json()) as { ok?: boolean; error?: string };
       if (!response.ok) throw new Error(payload.error || "Could not create ticket type.");
@@ -415,13 +439,26 @@ export default function EventsAdminClient() {
         ) : null}
       </AnimatePresence>
 
-      <div className="mt-6 grid gap-6 xl:grid-cols-[0.85fr_1.15fr]">
-        <section className="ev-panel">
+      <div className="mt-8 grid gap-8 xl:grid-cols-[0.92fr_1.08fr]">
+        <section className="ev-panel p-6 md:p-7">
           <div className="ev-section-kicker">Create event</div>
           <div className="mt-3 text-2xl font-bold">Launch the next event</div>
           <p className="mt-2 text-sm text-white/60">
-            Start with event identity, then set ticket defaults. League-specific fields stay hidden until you switch the vertical.
+            Build the event in the same order the team will use it later: identity, revenue model, ticket defaults, league labels if needed, then public-facing copy.
           </p>
+          <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            {[
+              ["1", "Identity"],
+              ["2", "Revenue"],
+              ["3", "Tickets"],
+              ["4", form.eventVertical === "epl" ? "League + copy" : "Copy"],
+            ].map(([step, label]) => (
+              <div key={String(label)} className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3">
+                <div className="text-[11px] uppercase tracking-[0.18em] text-white/45">Step {step}</div>
+                <div className="mt-2 text-sm font-semibold text-white">{label}</div>
+              </div>
+            ))}
+          </div>
           <form onSubmit={createEvent} className="mt-6 grid gap-4">
             <div className="rounded-2xl border border-white/10 bg-black/25 p-5">
               <div className="text-xs uppercase tracking-[0.22em] text-[#caa7ff]">Step 1</div>
@@ -474,32 +511,67 @@ export default function EventsAdminClient() {
               ) : null}
 
               <div className="mt-4 grid gap-4 md:grid-cols-2">
-                {[
-                  ["title", "Event title"],
-                  ["subtitle", "Subtitle"],
-                  ["venueName", "Venue name"],
-                  ["city", "City"],
-                  ["state", "State"],
-                  ["startAt", "Start ISO datetime"],
-                  ["endAt", "End ISO datetime"],
-                  ["bannerImageUrl", "Banner image URL"],
-                ].map(([key, label]) => (
-                  <input
-                    key={key}
-                    value={form[key as keyof typeof form] as string}
-                    onChange={(event) =>
-                      setForm((current) => ({
-                        ...current,
-                        [key]: event.target.value,
-                        ...(key === "city" ? { state: getCityStateCode(event.target.value) || current.state } : {}),
-                      }))
-                    }
-                    placeholder={label}
-                    className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none"
-                    required={["title", "venueName", "city", "state", "startAt", "endAt"].includes(key)}
-                    list={key === "city" ? "event-city-options" : undefined}
-                  />
-                ))}
+                <input
+                  value={form.title}
+                  onChange={(event) => setForm({ ...form, title: event.target.value })}
+                  placeholder="Event title"
+                  className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none"
+                  required
+                />
+                <input
+                  value={form.subtitle}
+                  onChange={(event) => setForm({ ...form, subtitle: event.target.value })}
+                  placeholder="Subtitle"
+                  className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none"
+                />
+                <input
+                  value={form.venueName}
+                  onChange={(event) => setForm({ ...form, venueName: event.target.value })}
+                  placeholder="Venue name"
+                  className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none"
+                  required
+                />
+                <input
+                  value={form.city}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      city: event.target.value,
+                      state: getCityStateCode(event.target.value) || current.state,
+                    }))
+                  }
+                  placeholder="City"
+                  className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none"
+                  required
+                  list="event-city-options"
+                />
+                <input
+                  value={form.state}
+                  onChange={(event) => setForm({ ...form, state: event.target.value })}
+                  placeholder="State"
+                  className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none"
+                  required
+                />
+                <input
+                  value={form.bannerImageUrl}
+                  onChange={(event) => setForm({ ...form, bannerImageUrl: event.target.value })}
+                  placeholder="Banner image URL"
+                  className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none"
+                />
+                <input
+                  value={form.startAt}
+                  onChange={(event) => setForm({ ...form, startAt: event.target.value })}
+                  type="datetime-local"
+                  className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none"
+                  required
+                />
+                <input
+                  value={form.endAt}
+                  onChange={(event) => setForm({ ...form, endAt: event.target.value })}
+                  type="datetime-local"
+                  className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none"
+                  required
+                />
               </div>
             </div>
 
@@ -568,25 +640,18 @@ export default function EventsAdminClient() {
             <div className="rounded-2xl border border-white/10 bg-black/25 p-5">
               <div className="text-xs uppercase tracking-[0.22em] text-[#caa7ff]">Step 3</div>
               <div className="mt-2 text-lg font-semibold text-white">Default ticket setup</div>
+              <div className="mt-3 rounded-2xl border border-white/10 bg-black/25 p-4 text-sm text-white/62">
+                Build the first ticket type here so the event can launch without a second pass. Sales fields use local date and time, then save as ISO in the existing event API.
+              </div>
               <div className="mt-4 grid gap-4 md:grid-cols-2">
-                {[
-                  ["payoutAccountLabel", "Payout account label"],
-                  ["capacity", "Capacity"],
-                  ["ticketTypeName", "Ticket type"],
-                  ["ticketPriceCents", "Ticket price cents"],
-                  ["ticketQuantityTotal", "Ticket quantity"],
-                  ["maxPerOrder", "Max per order"],
-                  ["salesStartAt", "Ticket sales start ISO"],
-                  ["salesEndAt", "Ticket sales end ISO"],
-                ].map(([key, label]) => (
-                  <input
-                    key={key}
-                    value={form[key as keyof typeof form] as string}
-                    onChange={(event) => setForm({ ...form, [key]: event.target.value })}
-                    placeholder={label}
-                    className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none"
-                  />
-                ))}
+                <input value={form.payoutAccountLabel} onChange={(event) => setForm({ ...form, payoutAccountLabel: event.target.value })} placeholder="Payout account label" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
+                <input value={form.capacity} onChange={(event) => setForm({ ...form, capacity: event.target.value })} placeholder="Capacity" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
+                <input value={form.ticketTypeName} onChange={(event) => setForm({ ...form, ticketTypeName: event.target.value })} placeholder="Ticket type" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
+                <input value={form.ticketPriceCents} onChange={(event) => setForm({ ...form, ticketPriceCents: event.target.value })} placeholder="Ticket price cents" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
+                <input value={form.ticketQuantityTotal} onChange={(event) => setForm({ ...form, ticketQuantityTotal: event.target.value })} placeholder="Ticket quantity" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
+                <input value={form.maxPerOrder} onChange={(event) => setForm({ ...form, maxPerOrder: event.target.value })} placeholder="Max per order" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
+                <input value={form.salesStartAt} onChange={(event) => setForm({ ...form, salesStartAt: event.target.value })} type="datetime-local" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
+                <input value={form.salesEndAt} onChange={(event) => setForm({ ...form, salesEndAt: event.target.value })} type="datetime-local" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
               </div>
             </div>
 
@@ -611,18 +676,27 @@ export default function EventsAdminClient() {
               </div>
             ) : null}
 
-            <textarea
-              value={form.description}
-              onChange={(event) => setForm({ ...form, description: event.target.value })}
-              placeholder="Operational description"
-              className="min-h-[120px] rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none"
-            />
-            <textarea
-              value={form.heroNote}
-              onChange={(event) => setForm({ ...form, heroNote: event.target.value })}
-              placeholder="Hero note"
-              className="min-h-[100px] rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none"
-            />
+            <div className="rounded-2xl border border-white/10 bg-black/25 p-5">
+              <div className="text-xs uppercase tracking-[0.22em] text-[#caa7ff]">{form.eventVertical === "epl" ? "Step 5" : "Step 4"}</div>
+              <div className="mt-2 text-lg font-semibold text-white">Public-facing copy</div>
+              <p className="mt-2 text-sm text-white/60">
+                Save the attendee-facing summary and hero note here. Keep internal run-of-show detail in the event operations panel after creation.
+              </p>
+              <div className="mt-4 grid gap-4">
+                <textarea
+                  value={form.description}
+                  onChange={(event) => setForm({ ...form, description: event.target.value })}
+                  placeholder="Public event description"
+                  className="min-h-[150px] rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none"
+                />
+                <textarea
+                  value={form.heroNote}
+                  onChange={(event) => setForm({ ...form, heroNote: event.target.value })}
+                  placeholder="Short hero note for event cards and the event header"
+                  className="min-h-[120px] rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none"
+                />
+              </div>
+            </div>
 
             <label className="inline-flex items-center gap-3 text-sm text-white/72">
               <input
@@ -643,7 +717,7 @@ export default function EventsAdminClient() {
           </form>
         </section>
 
-        <section className="ev-panel">
+        <section className="ev-panel p-6 md:p-7">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <div className="ev-section-kicker">Event roster</div>
@@ -756,7 +830,7 @@ export default function EventsAdminClient() {
           </div>
         </section>
 
-        <section className="ev-panel">
+        <section className="ev-panel p-6 md:p-7">
           <div className="ev-section-kicker">Event operations</div>
           <div className="mt-2 text-2xl font-bold">
             {selectedEvent ? selectedEvent.title : "Select an event to manage ticketing and run of show."}
@@ -813,7 +887,7 @@ export default function EventsAdminClient() {
               </div>
 
               <div className="rounded-[24px] border border-white/10 bg-black/20 p-5">
-                <div className="text-sm font-semibold text-white">Run of show</div>
+                <div className="text-sm font-semibold text-white">Event operations</div>
                 <div className="mt-4 grid gap-4">
                   <textarea
                     value={operationsForm.objective}
@@ -874,8 +948,8 @@ export default function EventsAdminClient() {
                     <input value={ticketForm.maxPerOrder} onChange={(event) => setTicketForm({ ...ticketForm, maxPerOrder: event.target.value })} placeholder="Max per order" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
                   </div>
                   <div className="grid gap-4 md:grid-cols-3">
-                    <input value={ticketForm.salesStartAt} onChange={(event) => setTicketForm({ ...ticketForm, salesStartAt: event.target.value })} placeholder="Sales start ISO" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
-                    <input value={ticketForm.salesEndAt} onChange={(event) => setTicketForm({ ...ticketForm, salesEndAt: event.target.value })} placeholder="Sales end ISO" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
+                    <input value={ticketForm.salesStartAt} onChange={(event) => setTicketForm({ ...ticketForm, salesStartAt: event.target.value })} type="datetime-local" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
+                    <input value={ticketForm.salesEndAt} onChange={(event) => setTicketForm({ ...ticketForm, salesEndAt: event.target.value })} type="datetime-local" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
                     <input value={ticketForm.sortOrder} onChange={(event) => setTicketForm({ ...ticketForm, sortOrder: event.target.value })} placeholder="Sort order" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
                   </div>
                   <div className="grid gap-4 md:grid-cols-2">

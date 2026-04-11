@@ -175,6 +175,7 @@ function serializeCities(items: Array<{ name: string; description: string }>) {
 }
 
 export default function DiscoveryAdminClient() {
+  const [activeSection, setActiveSection] = useState<"homepage" | "modules" | "listings" | "external" | "epl">("homepage");
   const [content, setContent] = useState<ManagedContent | null>(null);
   const [eplContent, setEplContent] = useState<ManagedEplContent | null>(null);
   const [modules, setModules] = useState<ManagedPublicModules | null>(null);
@@ -185,6 +186,8 @@ export default function DiscoveryAdminClient() {
   const [message, setMessage] = useState<string | null>(null);
   const [taxonomyCategories, setTaxonomyCategories] = useState("");
   const [taxonomyCities, setTaxonomyCities] = useState("");
+  const [listingQuery, setListingQuery] = useState("");
+  const [externalQuery, setExternalQuery] = useState("");
 
   const discoveryStats = {
     native: listings.filter((listing) => listing.source === "evntszn").length,
@@ -192,6 +195,26 @@ export default function DiscoveryAdminClient() {
     independent: listings.filter((listing) => listing.source === "independent_organizer").length,
     externalHidden: externalListings.filter((listing) => listing.moderationStatus === "hidden").length,
   };
+
+  const filteredListings = listings.filter((listing) => {
+    const normalizedQuery = listingQuery.trim().toLowerCase();
+    if (!normalizedQuery) return true;
+    return [listing.title, listing.city, listing.state, listing.source, listing.badgeLabel, listing.promoCollection]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase()
+      .includes(normalizedQuery);
+  });
+
+  const filteredExternalListings = externalListings.filter((listing) => {
+    const normalizedQuery = externalQuery.trim().toLowerCase();
+    if (!normalizedQuery) return true;
+    return [listing.title, listing.city, listing.state, listing.venueName, listing.moderationStatus]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase()
+      .includes(normalizedQuery);
+  });
 
   async function load() {
     setLoading(true);
@@ -358,28 +381,37 @@ export default function DiscoveryAdminClient() {
         </div>
       </section>
 
-      <section className="mt-6 ev-panel p-4">
+      <section className="mt-6 ev-panel p-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="text-sm text-white/62">
-            Stay inside the current single-page model. Work top to bottom: homepage copy first, taxonomy and shared modules next, then listing and moderation controls.
+            Use this as a working control desk: homepage copy, public modules, native event placement, external moderation, and EPL public copy all stay here.
           </div>
           <div className="flex flex-wrap gap-2 text-sm">
           {[
-            ["#homepage-hero", "Homepage hero"],
-            ["#homepage-copy", "Homepage copy"],
-            ["#taxonomy-blocks", "Taxonomy"],
-            ["#public-modules", "Public modules"],
-            ["#listing-controls", "Listing controls"],
-          ].map(([href, label]) => (
-            <a key={href} href={href} className="rounded-full border border-white/10 bg-black/30 px-4 py-2 text-white/72 hover:bg-white/10">
+            ["homepage", "Homepage"],
+            ["modules", "Public modules"],
+            ["listings", "Native listings"],
+            ["external", "External moderation"],
+            ["epl", "EPL public"],
+          ].map(([key, label]) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setActiveSection(key as typeof activeSection)}
+              className={`rounded-full px-4 py-2 font-semibold ${
+                activeSection === key ? "bg-white text-black" : "border border-white/10 bg-black/30 text-white/72 hover:bg-white/10"
+              }`}
+            >
               {label}
-            </a>
+            </button>
           ))}
           </div>
         </div>
       </section>
 
-      <div className="mt-8 grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+      <div className="mt-8 grid gap-8">
+        {activeSection === "homepage" ? (
+        <div className="grid gap-8 xl:grid-cols-[1.05fr_0.95fr]">
         <section className="grid gap-6">
           <div id="homepage-hero" className="ev-panel">
             <div className="ev-section-kicker">Homepage hero</div>
@@ -899,6 +931,420 @@ export default function DiscoveryAdminClient() {
             </div>
           </div>
         </section>
+        </div>
+        ) : null}
+
+        {activeSection === "modules" ? (
+        <div className="grid gap-8 xl:grid-cols-[0.9fr_1.1fr]">
+          <section className="ev-panel p-6">
+            <div className="ev-section-kicker">Module guide</div>
+            <h2 className="mt-3 text-2xl font-bold text-white">Control the copy blocks that feed city, team, store, sponsor, and opportunities surfaces.</h2>
+            <div className="mt-5 grid gap-4">
+              <div className="rounded-3xl border border-white/10 bg-black/25 p-5 text-sm leading-6 text-white/65">
+                City spotlight controls the city-page opener.
+              </div>
+              <div className="rounded-3xl border border-white/10 bg-black/25 p-5 text-sm leading-6 text-white/65">
+                Team page blocks control schedule, roster, and announcement support copy.
+              </div>
+              <div className="rounded-3xl border border-white/10 bg-black/25 p-5 text-sm leading-6 text-white/65">
+                Store, sponsor, and opportunities blocks feed public conversion surfaces without opening separate editors.
+              </div>
+            </div>
+          </section>
+          <section className="grid gap-6">
+            <div id="taxonomy-blocks" className="ev-panel">
+              <div className="ev-section-kicker">Taxonomy blocks</div>
+              <p className="mt-3 text-sm text-white/65">Use one line per block with the format `Label|Description`.</p>
+              <label className="mt-5 block text-sm font-medium text-white/72">Categories</label>
+              <textarea className="ev-textarea mt-2" rows={8} value={taxonomyCategories} onChange={(event) => setTaxonomyCategories(event.target.value)} />
+              <label className="mt-5 block text-sm font-medium text-white/72">Cities</label>
+              <textarea className="ev-textarea mt-2" rows={8} value={taxonomyCities} onChange={(event) => setTaxonomyCities(event.target.value)} />
+              <button
+                type="button"
+                className="ev-button-primary mt-5"
+                disabled={saving === "homepage.taxonomy"}
+                onClick={() =>
+                  saveContent(
+                    "homepage.taxonomy",
+                    {
+                      categories: parseLines(taxonomyCategories, "category"),
+                      cities: parseLines(taxonomyCities, "city"),
+                    },
+                    "Homepage Taxonomy",
+                  )
+                }
+              >
+                {saving === "homepage.taxonomy" ? "Saving..." : "Save taxonomy"}
+              </button>
+            </div>
+
+            <div id="public-modules" className="ev-panel">
+              <div className="ev-section-kicker">Public module copy</div>
+              <p className="mt-3 text-sm text-white/65">
+                Manage the shared copy blocks that feed city pages, team pages, sponsor placement sections, the EPL store promo, and the public opportunities surface.
+              </p>
+              <div className="mt-5 grid gap-5">
+                <div>
+                  <div className="text-sm font-medium text-white/78">City spotlight</div>
+                  <div className="mt-3 grid gap-3 md:grid-cols-2">
+                    <input className="ev-field" value={modules.citySpotlight.eyebrow} onChange={(event) => setModules({ ...modules, citySpotlight: { ...modules.citySpotlight, eyebrow: event.target.value } })} />
+                    <input className="ev-field" value={modules.citySpotlight.headline} onChange={(event) => setModules({ ...modules, citySpotlight: { ...modules.citySpotlight, headline: event.target.value } })} />
+                  </div>
+                  <textarea className="ev-textarea mt-3" rows={5} value={modules.citySpotlight.body} onChange={(event) => setModules({ ...modules, citySpotlight: { ...modules.citySpotlight, body: event.target.value } })} />
+                </div>
+
+                <div>
+                  <div className="text-sm font-medium text-white/78">Team page blocks</div>
+                  <div className="mt-3 grid gap-3 md:grid-cols-2">
+                    <input className="ev-field" value={modules.teamBlocks.scheduleHeadline} onChange={(event) => setModules({ ...modules, teamBlocks: { ...modules.teamBlocks, scheduleHeadline: event.target.value } })} />
+                    <input className="ev-field" value={modules.teamBlocks.rosterHeadline} onChange={(event) => setModules({ ...modules, teamBlocks: { ...modules.teamBlocks, rosterHeadline: event.target.value } })} />
+                  </div>
+                  <textarea className="ev-textarea mt-3" rows={5} value={modules.teamBlocks.scheduleBody} onChange={(event) => setModules({ ...modules, teamBlocks: { ...modules.teamBlocks, scheduleBody: event.target.value } })} />
+                  <textarea className="ev-textarea mt-3" rows={5} value={modules.teamBlocks.rosterBody} onChange={(event) => setModules({ ...modules, teamBlocks: { ...modules.teamBlocks, rosterBody: event.target.value } })} />
+                  <input className="ev-field mt-3" value={modules.teamBlocks.announcementsHeadline} onChange={(event) => setModules({ ...modules, teamBlocks: { ...modules.teamBlocks, announcementsHeadline: event.target.value } })} />
+                  <textarea className="ev-textarea mt-3" rows={5} value={modules.teamBlocks.announcementsBody} onChange={(event) => setModules({ ...modules, teamBlocks: { ...modules.teamBlocks, announcementsBody: event.target.value } })} />
+                </div>
+
+                <div>
+                  <div className="text-sm font-medium text-white/78">Store promo</div>
+                  <div className="mt-3 grid gap-3 md:grid-cols-2">
+                    <input className="ev-field" value={modules.storePromo.eyebrow} onChange={(event) => setModules({ ...modules, storePromo: { ...modules.storePromo, eyebrow: event.target.value } })} />
+                    <input className="ev-field" value={modules.storePromo.headline} onChange={(event) => setModules({ ...modules, storePromo: { ...modules.storePromo, headline: event.target.value } })} />
+                  </div>
+                  <textarea className="ev-textarea mt-3" rows={5} value={modules.storePromo.body} onChange={(event) => setModules({ ...modules, storePromo: { ...modules.storePromo, body: event.target.value } })} />
+                  <div className="mt-3 grid gap-3 md:grid-cols-2">
+                    <input className="ev-field" value={modules.storePromo.ctaLabel} onChange={(event) => setModules({ ...modules, storePromo: { ...modules.storePromo, ctaLabel: event.target.value } })} />
+                    <input className="ev-field" value={modules.storePromo.ctaHref} onChange={(event) => setModules({ ...modules, storePromo: { ...modules.storePromo, ctaHref: event.target.value } })} />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="text-sm font-medium text-white/78">Sponsor blocks</div>
+                  <div className="mt-3 grid gap-3 md:grid-cols-2">
+                    <input className="ev-field" value={modules.sponsorBlock.eyebrow} onChange={(event) => setModules({ ...modules, sponsorBlock: { ...modules.sponsorBlock, eyebrow: event.target.value } })} />
+                    <input className="ev-field" value={modules.sponsorBlock.footerHeadline} onChange={(event) => setModules({ ...modules, sponsorBlock: { ...modules.sponsorBlock, footerHeadline: event.target.value } })} />
+                  </div>
+                  <input className="ev-field mt-3" value={modules.sponsorBlock.headline} onChange={(event) => setModules({ ...modules, sponsorBlock: { ...modules.sponsorBlock, headline: event.target.value } })} />
+                  <textarea className="ev-textarea mt-3" rows={5} value={modules.sponsorBlock.body} onChange={(event) => setModules({ ...modules, sponsorBlock: { ...modules.sponsorBlock, body: event.target.value } })} />
+                </div>
+
+                <div>
+                  <div className="text-sm font-medium text-white/78">Opportunities feature</div>
+                  <div className="mt-3 grid gap-3 md:grid-cols-2">
+                    <input className="ev-field" value={modules.opportunitiesBlock.eyebrow} onChange={(event) => setModules({ ...modules, opportunitiesBlock: { ...modules.opportunitiesBlock, eyebrow: event.target.value } })} />
+                    <input className="ev-field" value={modules.opportunitiesBlock.headline} onChange={(event) => setModules({ ...modules, opportunitiesBlock: { ...modules.opportunitiesBlock, headline: event.target.value } })} />
+                  </div>
+                  <textarea className="ev-textarea mt-3" rows={5} value={modules.opportunitiesBlock.body} onChange={(event) => setModules({ ...modules, opportunitiesBlock: { ...modules.opportunitiesBlock, body: event.target.value } })} />
+                </div>
+
+                <button
+                  type="button"
+                  className="ev-button-primary"
+                  disabled={saving === "public.modules"}
+                  onClick={() =>
+                    saveContent(
+                      "public.modules",
+                      {
+                        citySpotlight: modules.citySpotlight,
+                        teamBlocks: modules.teamBlocks,
+                        storePromo: modules.storePromo,
+                        sponsorBlock: modules.sponsorBlock,
+                        opportunitiesBlock: modules.opportunitiesBlock,
+                      },
+                      "Public Modules",
+                    )
+                  }
+                >
+                  {saving === "public.modules" ? "Saving..." : "Save public modules"}
+                </button>
+              </div>
+            </div>
+          </section>
+        </div>
+        ) : null}
+
+        {activeSection === "listings" ? (
+        <div className="grid gap-8 xl:grid-cols-[0.88fr_1.12fr]">
+          <section className="ev-panel p-6">
+            <div className="ev-section-kicker">Native listing queue</div>
+            <h2 className="mt-3 text-2xl font-bold text-white">Manage which EVNTSZN events actually show up on discovery.</h2>
+            <p className="mt-2 text-sm text-white/65">
+              Use featured, priority, collection, and discoverable state to control homepage/discovery placement without opening every event record.
+            </p>
+            <input
+              className="ev-field mt-5"
+              placeholder="Search title, city, source, or collection"
+              value={listingQuery}
+              onChange={(event) => setListingQuery(event.target.value)}
+            />
+            <div className="mt-5 space-y-4">
+              {filteredListings.map((listing) => (
+                <div key={listing.id} className="rounded-3xl border border-white/10 bg-black/25 p-5">
+                  <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+                    <div className="min-w-0 xl:max-w-sm">
+                      <div className="text-lg font-semibold text-white">{listing.title}</div>
+                      <div className="mt-2 text-sm text-white/58">
+                        {[listing.city, listing.state, listing.source.replace(/_/g, " ")].filter(Boolean).join(" • ")}
+                      </div>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {listing.featured ? <span className="ev-chip ev-chip--external">Featured</span> : null}
+                        {listing.promoCollection ? <span className="ev-chip ev-chip--external">{listing.promoCollection}</span> : null}
+                      </div>
+                    </div>
+
+                    <div className="grid flex-1 gap-3 lg:grid-cols-[minmax(0,1fr)_170px_120px_150px_auto]">
+                      <input
+                        className="ev-field"
+                        value={listing.badgeLabel}
+                        placeholder="Badge label"
+                        onChange={(event) =>
+                          setListings((current) =>
+                            current.map((item) => (item.id === listing.id ? { ...item, badgeLabel: event.target.value } : item)),
+                          )
+                        }
+                      />
+                      <select
+                        className="ev-select"
+                        value={listing.source}
+                        onChange={(event) =>
+                          setListings((current) =>
+                            current.map((item) =>
+                              item.id === listing.id ? { ...item, source: event.target.value as DiscoveryListing["source"] } : item,
+                            ),
+                          )
+                        }
+                      >
+                        <option value="evntszn">EVNTSZN event</option>
+                        <option value="host">EVNTSZN host</option>
+                        <option value="independent_organizer">Independent organizer</option>
+                      </select>
+                      <input
+                        type="number"
+                        className="ev-field"
+                        placeholder="Priority"
+                        value={listing.listingPriority}
+                        onChange={(event) =>
+                          setListings((current) =>
+                            current.map((item) =>
+                              item.id === listing.id ? { ...item, listingPriority: Number(event.target.value || 0) } : item,
+                            ),
+                          )
+                        }
+                      />
+                      <input
+                        className="ev-field"
+                        placeholder="Collection"
+                        value={listing.promoCollection || ""}
+                        onChange={(event) =>
+                          setListings((current) =>
+                            current.map((item) => (item.id === listing.id ? { ...item, promoCollection: event.target.value || null } : item)),
+                          )
+                        }
+                      />
+                      <label className="flex items-center gap-3 rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white/72">
+                        <input
+                          type="checkbox"
+                          checked={listing.featured}
+                          onChange={(event) =>
+                            setListings((current) =>
+                              current.map((item) => (item.id === listing.id ? { ...item, featured: event.target.checked } : item)),
+                            )
+                          }
+                        />
+                        Featured
+                      </label>
+                      <button type="button" className="ev-button-secondary" disabled={saving === listing.id} onClick={() => saveListing(listing)}>
+                        {saving === listing.id ? "Saving..." : "Save placement"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="ev-panel p-6">
+            <div className="ev-section-kicker">Placement rules</div>
+            <h2 className="mt-3 text-2xl font-bold text-white">Homepage and discovery placement should be intentional.</h2>
+            <div className="mt-5 grid gap-4">
+              <div className="rounded-3xl border border-white/10 bg-black/25 p-5 text-sm leading-6 text-white/65">
+                Use <span className="text-white">Featured</span> for the events that should rise first on homepage/discovery.
+              </div>
+              <div className="rounded-3xl border border-white/10 bg-black/25 p-5 text-sm leading-6 text-white/65">
+                Use <span className="text-white">Priority</span> to push listings up or down inside the discovery feed.
+              </div>
+              <div className="rounded-3xl border border-white/10 bg-black/25 p-5 text-sm leading-6 text-white/65">
+                Use <span className="text-white">Collection</span> to group events into a promo lane or homepage slice.
+              </div>
+            </div>
+          </section>
+        </div>
+        ) : null}
+
+        {activeSection === "external" ? (
+        <div className="grid gap-8 xl:grid-cols-[0.88fr_1.12fr]">
+          <section className="ev-panel p-6">
+            <div className="ev-section-kicker">External moderation</div>
+            <h2 className="mt-3 text-2xl font-bold text-white">Keep Ticketmaster and Eventbrite inventory clean.</h2>
+            <input
+              className="ev-field mt-5"
+              placeholder="Search title, venue, city, or status"
+              value={externalQuery}
+              onChange={(event) => setExternalQuery(event.target.value)}
+            />
+            <div className="mt-5 space-y-4">
+              {filteredExternalListings.map((listing) => (
+                <div key={listing.id} className="rounded-3xl border border-white/10 bg-black/25 p-5">
+                  <div className="flex flex-col gap-4">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <div className="text-base font-semibold text-white">{listing.title}</div>
+                        <div className="mt-1 text-sm text-white/55">
+                          {listing.venueName || "External venue"}{listing.city ? ` · ${listing.city}` : ""}{listing.state ? `, ${listing.state}` : ""}
+                        </div>
+                      </div>
+                      <span className="ev-chip ev-chip--external">{listing.moderationStatus.replace(/_/g, " ")}</span>
+                    </div>
+
+                    <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_140px_auto]">
+                      <select
+                        className="ev-select"
+                        value={listing.moderationStatus}
+                        onChange={(event) =>
+                          setExternalListings((current) =>
+                            current.map((item) =>
+                              item.id === listing.id ? { ...item, moderationStatus: event.target.value as ExternalDiscoveryListing["moderationStatus"] } : item,
+                            ),
+                          )
+                        }
+                      >
+                        <option value="active">Active</option>
+                        <option value="featured">Featured</option>
+                        <option value="deprioritized">De-prioritized</option>
+                        <option value="hidden">Hidden</option>
+                        <option value="unsuitable">Unsuitable</option>
+                      </select>
+                      <input
+                        type="number"
+                        className="ev-field"
+                        placeholder="Rank"
+                        value={listing.priorityAdjustment}
+                        onChange={(event) =>
+                          setExternalListings((current) =>
+                            current.map((item) =>
+                              item.id === listing.id ? { ...item, priorityAdjustment: Number(event.target.value || 0) } : item,
+                            ),
+                          )
+                        }
+                      />
+                      <button type="button" className="ev-button-secondary" disabled={saving === `external:${listing.id}`} onClick={() => saveExternalListing(listing)}>
+                        {saving === `external:${listing.id}` ? "Saving..." : "Save moderation"}
+                      </button>
+                    </div>
+
+                    <details className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                      <summary className="cursor-pointer text-sm font-semibold text-white">Override summary and notes</summary>
+                      <div className="mt-4 grid gap-3">
+                        <textarea className="ev-textarea" rows={4} placeholder="Optional public summary override" value={listing.description || ""} onChange={(event) => setExternalListings((current) => current.map((item) => (item.id === listing.id ? { ...item, description: event.target.value } : item)))} />
+                        <textarea className="ev-textarea" rows={3} placeholder="Internal moderation note" value={listing.notes || ""} onChange={(event) => setExternalListings((current) => current.map((item) => (item.id === listing.id ? { ...item, notes: event.target.value } : item)))} />
+                      </div>
+                    </details>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+          <section className="ev-panel p-6">
+            <div className="ev-section-kicker">Moderation guide</div>
+            <div className="mt-5 grid gap-4">
+              <div className="rounded-3xl border border-white/10 bg-black/25 p-5 text-sm leading-6 text-white/65">Use <span className="text-white">Featured</span> only when the external listing deserves homepage-level weight.</div>
+              <div className="rounded-3xl border border-white/10 bg-black/25 p-5 text-sm leading-6 text-white/65">Use <span className="text-white">Hidden</span> or <span className="text-white">Unsuitable</span> when the event should not surface to customers.</div>
+              <div className="rounded-3xl border border-white/10 bg-black/25 p-5 text-sm leading-6 text-white/65">Use override summary and notes only when the source description needs correction.</div>
+            </div>
+          </section>
+        </div>
+        ) : null}
+
+        {activeSection === "epl" ? (
+        <div className="grid gap-8 xl:grid-cols-[0.92fr_1.08fr]">
+          <section className="ev-panel p-6">
+            <div className="ev-section-kicker">EPL public page</div>
+            <p className="mt-3 text-sm text-white/65">
+              Control the public league landing page, hero copy, and menu visibility without turning EPL into a page builder.
+            </p>
+
+            <div className="mt-5 space-y-6">
+              <div>
+                <input className="ev-field" value={eplContent.hero.eyebrow} onChange={(event) => setEplContent({ ...eplContent, hero: { ...eplContent.hero, eyebrow: event.target.value } })} />
+                <input className="ev-field mt-3" value={eplContent.hero.title} onChange={(event) => setEplContent({ ...eplContent, hero: { ...eplContent.hero, title: event.target.value } })} />
+                <textarea className="ev-textarea mt-3" value={eplContent.hero.description} onChange={(event) => setEplContent({ ...eplContent, hero: { ...eplContent.hero, description: event.target.value } })} />
+                <div className="mt-3 grid gap-3 md:grid-cols-2">
+                  <input className="ev-field" value={eplContent.hero.primaryCtaLabel} onChange={(event) => setEplContent({ ...eplContent, hero: { ...eplContent.hero, primaryCtaLabel: event.target.value } })} />
+                  <input className="ev-field" value={eplContent.hero.primaryCtaHref} onChange={(event) => setEplContent({ ...eplContent, hero: { ...eplContent.hero, primaryCtaHref: event.target.value } })} />
+                  <input className="ev-field" value={eplContent.hero.secondaryCtaLabel} onChange={(event) => setEplContent({ ...eplContent, hero: { ...eplContent.hero, secondaryCtaLabel: event.target.value } })} />
+                  <input className="ev-field" value={eplContent.hero.secondaryCtaHref} onChange={(event) => setEplContent({ ...eplContent, hero: { ...eplContent.hero, secondaryCtaHref: event.target.value } })} />
+                </div>
+                <button type="button" className="ev-button-secondary mt-4" disabled={saving === "epl.hero"} onClick={() => saveContent("epl.hero", eplContent.hero, "EPL Hero")}>
+                  {saving === "epl.hero" ? "Saving..." : "Save EPL hero"}
+                </button>
+              </div>
+
+              <div>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <input className="ev-field" value={eplContent.sections.seasonHeadline} onChange={(event) => setEplContent({ ...eplContent, sections: { ...eplContent.sections, seasonHeadline: event.target.value } })} />
+                  <textarea className="ev-textarea" value={eplContent.sections.seasonBody} onChange={(event) => setEplContent({ ...eplContent, sections: { ...eplContent.sections, seasonBody: event.target.value } })} />
+                  <input className="ev-field" value={eplContent.sections.scheduleHeadline} onChange={(event) => setEplContent({ ...eplContent, sections: { ...eplContent.sections, scheduleHeadline: event.target.value } })} />
+                  <textarea className="ev-textarea" value={eplContent.sections.scheduleBody} onChange={(event) => setEplContent({ ...eplContent, sections: { ...eplContent.sections, scheduleBody: event.target.value } })} />
+                  <input className="ev-field" value={eplContent.sections.teamsHeadline} onChange={(event) => setEplContent({ ...eplContent, sections: { ...eplContent.sections, teamsHeadline: event.target.value } })} />
+                  <textarea className="ev-textarea" value={eplContent.sections.teamsBody} onChange={(event) => setEplContent({ ...eplContent, sections: { ...eplContent.sections, teamsBody: event.target.value } })} />
+                  <input className="ev-field" value={eplContent.sections.standingsHeadline} onChange={(event) => setEplContent({ ...eplContent, sections: { ...eplContent.sections, standingsHeadline: event.target.value } })} />
+                  <textarea className="ev-textarea" value={eplContent.sections.standingsBody} onChange={(event) => setEplContent({ ...eplContent, sections: { ...eplContent.sections, standingsBody: event.target.value } })} />
+                  <input className="ev-field" value={eplContent.sections.storeHeadline} onChange={(event) => setEplContent({ ...eplContent, sections: { ...eplContent.sections, storeHeadline: event.target.value } })} />
+                  <textarea className="ev-textarea" value={eplContent.sections.storeBody} onChange={(event) => setEplContent({ ...eplContent, sections: { ...eplContent.sections, storeBody: event.target.value } })} />
+                </div>
+                <button type="button" className="ev-button-secondary mt-4" disabled={saving === "epl.sections"} onClick={() => saveContent("epl.sections", eplContent.sections, "EPL Sections")}>
+                  {saving === "epl.sections" ? "Saving..." : "Save EPL sections"}
+                </button>
+              </div>
+
+              <div>
+                <div className="grid gap-3 md:grid-cols-2">
+                  {[
+                    ["showRegister", "Show Register"],
+                    ["showSchedule", "Show Schedule"],
+                    ["showTeams", "Show Teams"],
+                    ["showStandings", "Show Standings"],
+                    ["showStore", "Show Store"],
+                    ["showOpportunities", "Show Opportunities"],
+                    ["showDraftCountdown", "Show Draft Countdown"],
+                    ["showFaq", "Show FAQ"],
+                  ].map(([key, label]) => (
+                    <label key={key} className="flex items-center gap-3 text-sm text-white/72">
+                      <input
+                        type="checkbox"
+                        checked={eplContent.menu[key as keyof ManagedEplContent["menu"]]}
+                        onChange={(event) =>
+                          setEplContent({
+                            ...eplContent,
+                            menu: {
+                              ...eplContent.menu,
+                              [key]: event.target.checked,
+                            },
+                          })
+                        }
+                      />
+                      {label}
+                    </label>
+                  ))}
+                </div>
+                <button type="button" className="ev-button-primary mt-4" disabled={saving === "epl.menu"} onClick={() => saveContent("epl.menu", eplContent.menu, "EPL Menu")}>
+                  {saving === "epl.menu" ? "Saving..." : "Save EPL menu"}
+                </button>
+              </div>
+            </div>
+          </section>
+        </div>
+        ) : null}
       </div>
     </main>
   );

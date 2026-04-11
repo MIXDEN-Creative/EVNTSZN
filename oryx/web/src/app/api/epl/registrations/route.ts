@@ -5,6 +5,8 @@ import { JERSEY_NAME_DISCLAIMER } from "@/lib/epl/constants";
 import { absoluteUrl, getSeasonContext } from "@/lib/epl/helpers";
 import { stripe } from "@/lib/epl/stripe";
 
+const WAIVER_URL = "https://tally.so/r/XxY8xz";
+
 const registrationSchema = z.object({
   firstName: z.string().min(1).max(80),
   lastName: z.string().min(1).max(80),
@@ -245,6 +247,8 @@ export async function POST(req: Request) {
         source: "website",
         answers: {
           jerseyNameDisclaimer: JERSEY_NAME_DISCLAIMER,
+          waiverUrl: WAIVER_URL,
+          waiverStatus: "pending",
         },
       })
       .select("id")

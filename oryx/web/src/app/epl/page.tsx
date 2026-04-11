@@ -17,14 +17,14 @@ import PublicFooter from "@/components/public/PublicFooter";
 export const metadata: Metadata = {
   title: "EPL | EVNTSZN Prime League",
   description:
-    "Explore EVNTSZN Prime League, Baltimore’s coed flag football league with six clubs, draft-night energy, and a standings race worth following.",
+    "Explore EVNTSZN Prime League, a coed adult flag football league with real clubs, draft-night energy, and a standings race worth following.",
   alternates: {
     canonical: "https://epl.evntszn.com",
   },
   openGraph: {
     title: "EPL | EVNTSZN Prime League",
     description:
-      "Explore EVNTSZN Prime League, Baltimore’s coed flag football league with six clubs, draft-night energy, and a standings race worth following.",
+      "Explore EVNTSZN Prime League, a coed adult flag football league with real clubs, draft-night energy, and a standings race worth following.",
     url: "https://epl.evntszn.com",
     siteName: "EVNTSZN",
     type: "website",
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "EPL | EVNTSZN Prime League",
     description:
-      "Explore EVNTSZN Prime League, Baltimore’s coed flag football league with six clubs, draft-night energy, and a standings race worth following.",
+      "Explore EVNTSZN Prime League, a coed adult flag football league with real clubs, draft-night energy, and a standings race worth following.",
   },
 };
 
@@ -106,8 +106,8 @@ export default async function EplPage() {
                 body: "Players can register, supporters can follow the table, and every club has enough identity to keep people checking in between game nights.",
               },
               {
-                label: "Built for Baltimore",
-                body: "EPL leans into Baltimore pride, neighborhood identity, and a coed adult league feel that is sharper than a one-off rec run.",
+                label: "Built to travel city to city",
+                body: "EPL keeps the same coed adult flag football standard across every market: club identity, organized competition, and game-day energy that feels worth following.",
               },
             ].map((item) => (
               <div key={item.label} className="rounded-[32px] border border-white/10 bg-black/40 p-8 backdrop-blur-2xl">

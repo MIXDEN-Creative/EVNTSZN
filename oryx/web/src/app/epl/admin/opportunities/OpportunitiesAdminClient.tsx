@@ -164,6 +164,20 @@ function formatDate(value: string | null | undefined) {
   return Number.isNaN(date.getTime()) ? "—" : date.toLocaleDateString();
 }
 
+function toDateTimeLocalValue(value: string | null | undefined) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const pad = (input: number) => String(input).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function toIsoDateTime(value: string | null | undefined) {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
+
 function compensationLabel(position: Position, template: Template | null) {
   if ((template?.role_type || "volunteer") !== "paid") return "Volunteer";
   const amount = position.pay_amount ?? template?.pay_amount;
@@ -178,6 +192,7 @@ export default function OpportunitiesAdminClient() {
   const [message, setMessage] = useState("");
   const [activeTab, setActiveTab] = useState<"templates" | "open_positions" | "assignments" | "applicants" | "public_listings" | "player_applications">("open_positions");
   const [detailTab, setDetailTab] = useState<"overview" | "public_listing" | "assignments" | "access" | "notes">("overview");
+  const [search, setSearch] = useState("");
   const [templates, setTemplates] = useState<Template[]>([]);
   const [positions, setPositions] = useState<Position[]>([]);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
@@ -220,8 +235,8 @@ export default function OpportunitiesAdminClient() {
     titleOverride: "",
     seasonId: "",
     eventId: "",
-    city: "Baltimore",
-    state: "MD",
+    city: "",
+    state: "",
     positionStatus: "open",
     visibility: "public",
     slotsNeeded: 2,
@@ -321,10 +336,29 @@ export default function OpportunitiesAdminClient() {
     const base = positions.filter((position) => {
       if (activeTab === "public_listings" && (!position.publicly_listed || position.visibility !== "public")) return false;
       if (positionFilter !== "all" && position.position_status !== positionFilter) return false;
+      const normalizedSearch = search.trim().toLowerCase();
+      if (normalizedSearch) {
+        const template = unwrapOne(position.staff_role_templates);
+        const event = unwrapOne(position.evntszn_events);
+        const season = unwrapOne(position.seasons);
+        const haystack = [
+          position.title_override,
+          template?.title,
+          template?.department,
+          position.city,
+          position.state,
+          event?.title,
+          season?.name,
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+        if (!haystack.includes(normalizedSearch)) return false;
+      }
       return true;
     });
     return base;
-  }, [activeTab, positionFilter, positions]);
+  }, [activeTab, positionFilter, positions, search]);
 
   const selectedTemplate = templates.find((template) => template.id === selectedTemplateId) || null;
   const selectedPosition = positions.find((position) => position.id === selectedPositionId) || null;
@@ -374,8 +408,8 @@ export default function OpportunitiesAdminClient() {
       priority: selectedPosition.priority || 100,
       notes: selectedPosition.notes || "",
       publiclyListed: selectedPosition.publicly_listed !== false,
-      startsAt: selectedPosition.starts_at || "",
-      endsAt: selectedPosition.ends_at || "",
+      startsAt: toDateTimeLocalValue(selectedPosition.starts_at),
+      endsAt: toDateTimeLocalValue(selectedPosition.ends_at),
       accessRoleId: selectedPosition.access_role_id || template?.default_access_role_id || "",
       assignmentPermissionCodes: (selectedPosition.assignment_permission_codes || []).join(", "),
       onboardingNotes: selectedPosition.onboarding_notes || "",
@@ -432,6 +466,8 @@ export default function OpportunitiesAdminClient() {
       body: JSON.stringify({
         ...positionForm,
         action: "savePosition",
+        startsAt: toIsoDateTime(positionForm.startsAt),
+        endsAt: toIsoDateTime(positionForm.endsAt),
         assignmentPermissionCodes: String(positionForm.assignmentPermissionCodes || "")
           .split(",")
           .map((value: string) => value.trim())
@@ -485,15 +521,32 @@ export default function OpportunitiesAdminClient() {
     );
   }, [applicants, positions]);
 
+  const publicReadyCount = useMemo(
+    () =>
+      positions.filter(
+        (position) =>
+          position.visibility === "public" &&
+          position.publicly_listed &&
+          !["closed", "archived"].includes(position.position_status),
+      ).length,
+    [positions],
+  );
+
+  const selectedPositionTemplate = templates.find((template) => template.id === positionForm.roleTemplateId) || selectedTemplate;
+  const selectedPositionWillRenderPublicly =
+    positionForm.visibility === "public" &&
+    Boolean(positionForm.publiclyListed) &&
+    !["closed", "archived"].includes(String(positionForm.positionStatus || ""));
+
   return (
-    <main className="mx-auto max-w-7xl">
+    <main className="mx-auto max-w-[1500px]">
       <section className="ev-shell-hero">
         <div className="ev-shell-hero-grid">
           <div>
             <div className="ev-kicker">EPL staffing</div>
             <h1 className="ev-title">Run templates, openings, assignments, and public listings from one staffing desk.</h1>
             <p className="ev-subtitle">
-              Templates define the role. Positions track live demand. Assignments connect real people to real openings without mixing public copy and internal staffing logic.
+              Templates define the role. Positions track the actual need. Assignments connect real people to real openings. Public listings only surface when the position is open, public, and marked to display.
             </p>
           </div>
           <div className="grid gap-3 sm:grid-cols-3">
@@ -501,6 +554,7 @@ export default function OpportunitiesAdminClient() {
             <div className="ev-meta-card"><div className="ev-meta-label">Open positions</div><div className="ev-meta-value">{stats.openPositions}</div></div>
             <div className="ev-meta-card"><div className="ev-meta-label">Applicants waiting</div><div className="ev-meta-value">{stats.applicants}</div></div>
             <div className="ev-meta-card"><div className="ev-meta-label">Player applications</div><div className="ev-meta-value">{stats.playerApplications}</div></div>
+            <div className="ev-meta-card"><div className="ev-meta-label">Live publicly</div><div className="ev-meta-value">{publicReadyCount}</div></div>
           </div>
         </div>
       </section>
@@ -529,9 +583,16 @@ export default function OpportunitiesAdminClient() {
         ))}
       </section>
 
-      <div className="mt-6 grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)]">
-        <section className="ev-panel p-5 xl:col-start-2">
+      <div className="mt-6 grid gap-8 xl:grid-cols-[390px_minmax(0,1fr)]">
+        <section className="ev-panel p-6">
           <div className="ev-section-kicker">{activeTab === "templates" ? "Role templates" : activeTab === "assignments" ? "Assignments" : activeTab === "applicants" ? "Applicants" : activeTab === "public_listings" ? "Public listings" : activeTab === "player_applications" ? "EPL player applications" : "Open positions"}</div>
+          <div className="mt-3 text-sm text-white/60">
+            {activeTab === "public_listings"
+              ? "This queue controls what appears on the public EPL opportunities page."
+              : activeTab === "open_positions"
+                ? "Use this queue to open staffing needs, then manage the public listing, assignment path, and access linkage from the detail panel."
+                : "Select a record from the queue, then work it from the detail panel."}
+          </div>
           <div className="mt-4 grid gap-3">
             {activeTab === "templates" ? (
               <>
@@ -552,7 +613,20 @@ export default function OpportunitiesAdminClient() {
                 </select>
               </>
             ) : null}
+            {activeTab === "open_positions" || activeTab === "public_listings" ? (
+              <input
+                className="ev-field"
+                placeholder="Search title, department, city, season, or event"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+              />
+            ) : null}
           </div>
+          {activeTab === "player_applications" ? (
+            <div className="mt-4 rounded-2xl border border-white/10 bg-black/25 p-4 text-sm text-white/62">
+              EPL player registrations feed the same draftable pool used by the live snake draft. Review the intake here, then move into Approvals or the draft console when teams are ready to build.
+            </div>
+          ) : null}
           <div className="mt-4 space-y-3">
             {activeTab === "templates" ? filteredTemplates.map((template) => (
               <button
@@ -605,7 +679,44 @@ export default function OpportunitiesAdminClient() {
           </div>
         </section>
 
-        <section className="ev-panel p-5">
+        <section className="grid gap-6">
+        <section className="ev-panel p-6">
+          {(activeTab === "open_positions" || activeTab === "public_listings") ? (
+            <>
+              <div className="ev-section-kicker">Listing status</div>
+              <div className="mt-4 grid gap-4 md:grid-cols-4">
+                <div className="rounded-3xl border border-white/10 bg-black/25 p-4">
+                  <div className="text-xs uppercase tracking-[0.18em] text-white/45">Public visibility</div>
+                  <div className="mt-2 text-base font-semibold text-white">{positionForm.visibility === "public" ? "Public" : "Internal only"}</div>
+                </div>
+                <div className="rounded-3xl border border-white/10 bg-black/25 p-4">
+                  <div className="text-xs uppercase tracking-[0.18em] text-white/45">Homepage/public sync</div>
+                  <div className="mt-2 text-base font-semibold text-white">{positionForm.publiclyListed ? "Listed" : "Hidden"}</div>
+                </div>
+                <div className="rounded-3xl border border-white/10 bg-black/25 p-4">
+                  <div className="text-xs uppercase tracking-[0.18em] text-white/45">Status</div>
+                  <div className="mt-2 text-base font-semibold text-white">{String(positionForm.positionStatus || "open").replace(/_/g, " ")}</div>
+                </div>
+                <div className="rounded-3xl border border-white/10 bg-black/25 p-4">
+                  <div className="text-xs uppercase tracking-[0.18em] text-white/45">Public result</div>
+                  <div className="mt-2 text-base font-semibold text-white">{selectedPositionWillRenderPublicly ? "Shows on EPL opportunities" : "Does not show publicly"}</div>
+                </div>
+              </div>
+              <div className="mt-4 rounded-3xl border border-white/10 bg-black/25 p-5 text-sm leading-6 text-white/65">
+                A position appears on the public EPL opportunities page only when all three are true: <span className="text-white">Visibility = Public</span>, <span className="text-white">Show in public listings = on</span>, and <span className="text-white">Status is not closed or archived</span>.
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="ev-section-kicker">Workspace guide</div>
+              <div className="mt-4 rounded-3xl border border-white/10 bg-black/25 p-5 text-sm leading-6 text-white/65">
+                Templates define reusable role logic. Open positions create the real staffing need. Assignments connect a person or applicant to that opening. Public listings control what candidates see on the EPL opportunities page.
+              </div>
+            </>
+          )}
+        </section>
+
+        <section className="ev-panel p-6">
           {activeTab === "templates" ? (
             <>
               <div className="ev-section-kicker">Role template editor</div>
@@ -746,7 +857,7 @@ export default function OpportunitiesAdminClient() {
               <div className="ev-section-kicker">Player application routing</div>
               <h2 className="mt-3 text-2xl font-bold text-white">Player intake is reviewed in the Application Command Center.</h2>
               <div className="mt-4 rounded-2xl border border-white/10 bg-black/30 p-4 text-sm text-white/62">
-                Use this desk for staffing templates, openings, assignments, and public listings. Use the dedicated EPL player queue in Approvals for registration review and decisions.
+                Use this desk for staffing templates, openings, assignments, and public listings. Use the dedicated EPL player queue in Approvals for registration review, then use the draft console and live board when the pool is ready for team building.
               </div>
               {selectedPlayerApplication ? (
                 <div className="mt-5 rounded-2xl border border-white/10 bg-black/30 p-5">
@@ -763,6 +874,8 @@ export default function OpportunitiesAdminClient() {
               ) : null}
               <div className="mt-5 flex flex-wrap gap-3">
                 <Link href="/epl/admin/approvals" className="ev-button-primary">Open EPL player queue</Link>
+                <Link href="/epl/admin/draft" className="ev-button-secondary">Open draft console</Link>
+                <a href="/epl/draft/season-1" target="_blank" rel="noreferrer" className="ev-button-secondary">Open live draftboard</a>
                 <button type="button" className="ev-button-secondary" onClick={() => setActiveTab("open_positions")}>Back to staffing</button>
               </div>
             </>
@@ -813,7 +926,7 @@ export default function OpportunitiesAdminClient() {
           )}
         </section>
 
-        <section className="ev-panel p-6 xl:col-start-2">
+        <section className="ev-panel p-6">
           {activeTab === "templates" ? (
             <>
               <div className="ev-section-kicker">Template summary</div>
@@ -1015,8 +1128,16 @@ export default function OpportunitiesAdminClient() {
                       </label>
                     </div>
                     <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
+                      <div className="text-sm font-semibold text-white">What candidates will see</div>
+                      <div className="mt-2 text-sm text-white/60">
+                        {selectedPositionWillRenderPublicly
+                          ? `${positionForm.titleOverride || selectedPositionTemplate?.title || "This role"} will appear on the public EPL opportunities page after save.`
+                          : `${positionForm.titleOverride || selectedPositionTemplate?.title || "This role"} is currently hidden from the public EPL opportunities page.`}
+                      </div>
+                    </div>
+                    <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
                       <div className="text-xs uppercase tracking-[0.18em] text-white/45">Listing type</div>
-                      {selectedTemplate?.role_type === "paid" || templates.find((template) => template.id === positionForm.roleTemplateId)?.role_type === "paid" ? (
+                      {selectedPositionTemplate?.role_type === "paid" ? (
                         <div className="mt-3 grid gap-4 md:grid-cols-3">
                           <input className="ev-field" type="number" placeholder="Pay amount" value={positionForm.payAmount} onChange={(e) => setPositionForm({ ...positionForm, payAmount: e.target.value })} />
                           <select className="ev-field" value={positionForm.payType} onChange={(e) => setPositionForm({ ...positionForm, payType: e.target.value })}>
@@ -1113,8 +1234,8 @@ export default function OpportunitiesAdminClient() {
                     titleOverride: "",
                     seasonId: "",
                     eventId: "",
-                    city: "Baltimore",
-                    state: "MD",
+                    city: "",
+                    state: "",
                     positionStatus: "open",
                     visibility: "public",
                     slotsNeeded: 2,
@@ -1137,6 +1258,7 @@ export default function OpportunitiesAdminClient() {
               </form>
             </>
           )}
+        </section>
         </section>
       </div>
     </main>

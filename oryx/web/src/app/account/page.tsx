@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { Metadata } from "next";
 import { getAppOrigin, getEplOrigin, getHostsOrigin, getWebOrigin } from "@/lib/domains";
 import { getPlatformViewer } from "@/lib/evntszn";
@@ -6,13 +7,13 @@ import { getPlatformViewer } from "@/lib/evntszn";
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Account Hub | EVNTSZN",
-  description: "Open your EVNTSZN account hub for discovery, orders, league access, and role-based internal tools.",
+  description: "Open your EVNTSZN member account for tickets, saved events, league access, and the surfaces tied to your profile.",
   alternates: {
     canonical: `${getAppOrigin()}/account`,
   },
   openGraph: {
     title: "EVNTSZN Account Hub",
-    description: "Open your EVNTSZN account hub for discovery, orders, league access, and role-based internal tools.",
+    description: "Open your EVNTSZN member account for tickets, saved events, league access, and the surfaces tied to your profile.",
     url: `${getAppOrigin()}/account`,
     siteName: "EVNTSZN",
     type: "website",
@@ -20,7 +21,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "EVNTSZN Account Hub",
-    description: "Open your EVNTSZN account hub for discovery, orders, league access, and role-based internal tools.",
+    description: "Open your EVNTSZN member account for tickets, saved events, league access, and the surfaces tied to your profile.",
   },
 };
 
@@ -29,13 +30,13 @@ function buildQuickLinks(viewer: Awaited<ReturnType<typeof getPlatformViewer>>) 
   const links = [
     {
       title: "Discover",
-      body: "Go straight into the live discovery layer for nightlife, events, sports, and what is worth moving on tonight.",
+      body: "Go straight into public events, city plans, nightlife picks, and what is worth going to next.",
       href: `${getWebOrigin()}/`,
       label: "Open discovery",
     },
     {
       title: "EPL",
-      body: "Jump into the league surface for standings, opportunities, team identity, and season movement.",
+      body: "Jump into the league surface for standings, registration, opportunities, and season movement.",
       href: `${getEplOrigin()}/`,
       label: "Open EPL",
     },
@@ -45,19 +46,19 @@ function buildQuickLinks(viewer: Awaited<ReturnType<typeof getPlatformViewer>>) 
     links.push(
       {
         title: "Sign in",
-        body: "Open your EVNTSZN account, tickets, order tracking, and operator access from one clean login surface.",
+        body: "Open your member account for tickets, orders, saved plans, and league follow-up.",
         href: `${getAppOrigin()}/account/login?next=/account`,
         label: "Sign in",
       },
       {
         title: "Create account",
-        body: "Start your attendee account and keep a clean path into discovery, orders, and league activity.",
+        body: "Start your attendee account and keep one clean path into discovery, tickets, and league activity.",
         href: `${getAppOrigin()}/account/login?mode=signup&next=/account`,
         label: "Create account",
       },
       {
         title: "Host Network",
-        body: "If you are exploring EVNTSZN hosting or operator access, start from the Host Network instead of guessing where to go.",
+        body: "If you are applying to host events with EVNTSZN, start from the host path instead of the member account flow.",
         href: `${getHostsOrigin()}/`,
         label: "Explore Host Network",
       },
@@ -84,7 +85,7 @@ function buildQuickLinks(viewer: Awaited<ReturnType<typeof getPlatformViewer>>) 
     links.push(
       {
         title: "Control center",
-        body: "Move into the founder/admin command center for users, approvals, sponsors, issues, and platform health.",
+        body: "Move into the founder/admin command center for approvals, sponsors, issues, and daily operating health.",
         href: "/epl/admin/control-center",
         label: "Open control center",
       },
@@ -230,27 +231,38 @@ export default async function AccountPage() {
   return (
     <main className="min-h-screen bg-black text-white">
       <div className="mx-auto max-w-7xl px-4 py-10 md:px-6 lg:px-8">
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-          <Link href={`${getWebOrigin()}/`} className="text-lg font-black tracking-tight text-white">
-            EVNTSZN
+        <div className="mb-8 flex flex-wrap items-center justify-between gap-4 rounded-[28px] border border-white/10 bg-black/25 px-4 py-4 backdrop-blur-xl">
+          <Link href={`${getWebOrigin()}/`} className="flex items-center gap-3" aria-label="EVNTSZN home">
+            <span className="relative h-11 w-11 overflow-hidden rounded-2xl border border-white/10 bg-white/5">
+              <Image src="/brand/evntszn-icon.png" alt="EVNTSZN icon" fill sizes="44px" className="object-cover" priority />
+            </span>
+            <span className="flex flex-col">
+              <span className="text-lg font-black tracking-tight text-white">EVNTSZN</span>
+              <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/42">Member account and attendee access</span>
+            </span>
           </Link>
-          <Link href={`${getWebOrigin()}/`} className="rounded-full border border-white/12 bg-white/5 px-4 py-2 text-sm font-semibold text-white/84 transition hover:bg-white/10">
-            Return to homepage
-          </Link>
+          <div className="flex flex-wrap gap-3">
+            <Link href={`${getWebOrigin()}/`} className="rounded-full border border-white/12 bg-white/5 px-4 py-2 text-sm font-semibold text-white/84 transition hover:bg-white/10">
+              Public homepage
+            </Link>
+            <Link href={`${getAppOrigin()}/account/login`} className="rounded-full border border-white/12 bg-white/5 px-4 py-2 text-sm font-semibold text-white/84 transition hover:bg-white/10">
+              Member sign in
+            </Link>
+          </div>
         </div>
         <div className="rounded-[32px] border border-white/10 bg-gradient-to-br from-[#120f2a] via-[#0c0c15] to-black p-8 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
           <div className="text-xs font-semibold uppercase tracking-[0.24em] text-[#b899ff]">
-            {viewer.user ? "App hub" : "EVNTSZN account"}
+            {viewer.user ? "Member hub" : "EVNTSZN account"}
           </div>
           <h1 className="mt-3 text-4xl font-black tracking-tight text-white md:text-6xl">
             {viewer.user
-              ? "Your EVNTSZN app should move you into the right surface fast."
-              : "Sign in, create an account, or move straight into the parts of EVNTSZN that matter right now."}
+              ? "Move from your member account into the right EVNTSZN surface fast."
+              : "Sign in, create your account, and move straight into tickets, orders, and league access."}
           </h1>
           <p className="mt-4 max-w-3xl text-base leading-7 text-white/74">
             {viewer.user
-              ? "Use this hub for discovery, league activity, order tracking, and the protected operator surfaces you are actually assigned to."
-              : "Discovery stays public, but your account, orders, tickets, and protected operator access all route through this app surface cleanly."}
+              ? "Use this hub for discovery, order tracking, league activity, and any protected work surfaces already tied to your account."
+              : "Public discovery stays open. Your tickets, orders, saved activity, and attendee access all route through this member hub. Internal staff access stays separate."}
           </p>
 
           {accessSummary.length ? (

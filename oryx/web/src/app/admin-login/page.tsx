@@ -47,10 +47,10 @@ export default async function AdminLoginPage({ searchParams }: AdminLoginPagePro
               Internal access
             </div>
             <h1 className="mt-5 max-w-xl text-5xl font-black leading-[0.95] tracking-[-0.05em] text-white">
-              Enter EVNTSZN internal tools with the right role, not a casual member link.
+              Enter EVNTSZN operations with the right role, not an attendee login.
             </h1>
             <p className="mt-5 max-w-xl text-base leading-7 text-white/78">
-              HQ, admin, ops, scanner, and office surfaces stay behind invite-based internal access and role checks. Use the invited email for staff access or founder credentials for override.
+              HQ, admin, ops, scanner, and office tools stay behind invite-based internal access and role checks. Use the email that was invited into internal tools, or founder credentials for override.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link href={getWebOrigin()} className="rounded-full bg-white px-5 py-3 text-sm font-semibold text-black transition hover:opacity-90">
@@ -65,7 +65,7 @@ export default async function AdminLoginPage({ searchParams }: AdminLoginPagePro
             <div className="mb-2 text-xs font-semibold uppercase tracking-[0.24em] text-[#b899ff]">Secure access</div>
             <h2 className="text-3xl font-black tracking-tight text-white">Internal sign-in</h2>
             <p className="mt-3 text-sm leading-6 text-white/70">
-              Start here for staff-only surfaces. Member login stays on the account page, internal recovery stays on this access path, and scanner/admin tools never open from casual attendee login.
+              Start here for staff-only surfaces. Attendee accounts stay on the account page, internal recovery stays on this path, and scanner/admin tools never open from casual attendee sign-in.
             </p>
           </div>
 

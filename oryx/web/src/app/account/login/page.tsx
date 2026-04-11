@@ -2,17 +2,17 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import CustomerLoginForm from "./CustomerLoginForm";
-import { getAppOrigin, getSurfaceForPath } from "@/lib/domains";
+import { getAppOrigin, getSurfaceForPath, getWebOrigin } from "@/lib/domains";
 
 export const metadata: Metadata = {
   title: "Member Login | EVNTSZN",
-  description: "Sign in to EVNTSZN for tickets, order tracking, saved activity, and member access.",
+  description: "Sign in to EVNTSZN for tickets, saved events, orders, and attendee account access.",
   alternates: {
     canonical: `${getAppOrigin()}/account/login`,
   },
   openGraph: {
     title: "EVNTSZN Member Login",
-    description: "Sign in for EVNTSZN tickets, order tracking, saved activity, and member access.",
+    description: "Sign in for EVNTSZN tickets, saved events, orders, and attendee account access.",
     url: `${getAppOrigin()}/account/login`,
     siteName: "EVNTSZN",
     type: "website",
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "EVNTSZN Member Login",
-    description: "Sign in for EVNTSZN tickets, order tracking, saved activity, and member access.",
+    description: "Sign in for EVNTSZN tickets, saved events, orders, and attendee account access.",
   },
 };
 
@@ -44,33 +44,40 @@ export default async function AccountLoginPage({ searchParams }: LoginPageProps)
   return (
     <main className="min-h-screen bg-black text-white">
       <div className="mx-auto grid min-h-screen max-w-7xl gap-8 px-4 py-10 md:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:px-8">
-        <section className="relative overflow-hidden rounded-[32px] border border-white/10 bg-[#0c0c15] p-8">
-          <Link href="/" className="relative z-10 inline-flex text-lg font-black tracking-tight text-white">
-            EVNTSZN
-          </Link>
-          <img
-            src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=1600&q=80"
-            alt="EVNTSZN member access"
-            className="absolute inset-0 h-full w-full object-cover"
-          />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(162,89,255,0.30),transparent_35%),linear-gradient(180deg,rgba(0,0,0,0.50),rgba(0,0,0,0.88))]" />
+        <section className="relative overflow-hidden rounded-[36px] border border-white/10 bg-[radial-gradient(circle_at_top,rgba(162,89,255,0.22),transparent_38%),linear-gradient(180deg,#12111b_0%,#0a0a11_60%,#060609_100%)] p-8 shadow-[0_26px_70px_rgba(0,0,0,0.42)]">
+          <div className="absolute inset-0 bg-[linear-gradient(125deg,rgba(255,255,255,0.05),transparent_20%),radial-gradient(circle_at_82%_0%,rgba(255,255,255,0.08),transparent_24%)] opacity-80" />
           <div className="relative">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <Link href={getWebOrigin()} className="inline-flex text-lg font-black tracking-tight text-white">
+                EVNTSZN
+              </Link>
+              <div className="flex flex-wrap gap-3">
+                <Link href={getWebOrigin()} className="rounded-full border border-white/12 bg-white/5 px-4 py-2 text-sm font-semibold text-white/84 transition hover:bg-white/10">
+                  Public homepage
+                </Link>
+                <a
+                  href={`${getAppOrigin()}/admin-login?next=${encodeURIComponent(nextValue)}`}
+                  className="rounded-full border border-white/12 bg-white/5 px-4 py-2 text-sm font-semibold text-white/84 transition hover:bg-white/10"
+                >
+                  Internal staff access
+                </a>
+              </div>
+            </div>
             <div className="inline-flex rounded-full border border-white/15 bg-white/8 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-white/90">
-              Member Access
+              Attendee Account
             </div>
 
             <h1 className="mt-5 max-w-xl text-5xl font-black leading-[0.95] tracking-[-0.05em] text-white">
-              Get back into your EVNTSZN account without getting lost.
+              Pick up your EVNTSZN night without losing your place.
             </h1>
 
             <p className="mt-5 max-w-xl text-base leading-7 text-white/78">
-              Tickets, rewards, orders, and member access should feel premium from the first screen. Scanner,
-              operations, admin, and HQ still stay behind their own protected surfaces.
+              Use this account for tickets, saved events, orders, and checkout history. Internal staff tools stay on their own protected sign-in, so member access stays clean and attendee-facing.
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
-                href="/"
+                href={getWebOrigin()}
                 className="rounded-full bg-white px-5 py-3 text-sm font-semibold text-black transition hover:opacity-90"
               >
                 Back to EVNTSZN
@@ -82,12 +89,19 @@ export default async function AccountLoginPage({ searchParams }: LoginPageProps)
               >
                 Explore EPL
               </a>
-              <a
-                href={`${getAppOrigin()}/admin-login?next=${encodeURIComponent(nextValue)}`}
-                className="rounded-full border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
-              >
-                Internal access
-              </a>
+            </div>
+
+            <div className="mt-10 grid gap-4 md:grid-cols-3">
+              {[
+                ["Tickets and orders", "Keep one account for purchase history, confirmations, and event access."],
+                ["League access", "Use the same member account for EPL registration follow-up, league updates, and season notices."],
+                ["Protected staff tools stay separate", "If you work in ops, scanner, admin, or HQ, use the internal sign-in instead of the attendee flow."],
+              ].map(([label, body]) => (
+                <div key={label} className="rounded-[24px] border border-white/10 bg-white/[0.04] p-5">
+                  <div className="text-sm font-semibold text-white">{label}</div>
+                  <p className="mt-2 text-sm leading-6 text-white/65">{body}</p>
+                </div>
+              ))}
             </div>
           </div>
         </section>
@@ -97,10 +111,10 @@ export default async function AccountLoginPage({ searchParams }: LoginPageProps)
             Sign In
           </div>
 
-          <h2 className="text-3xl font-black tracking-tight text-white">Member login</h2>
+          <h2 className="text-3xl font-black tracking-tight text-white">Attendee sign in</h2>
 
           <p className="mt-3 text-sm leading-6 text-white/70">
-            Use the same account you created for EVNTSZN member access, ticket activity, and saved event movement.
+            Use the same email you use for tickets, saved events, and order history.
           </p>
 
           <div className="mt-6">

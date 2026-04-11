@@ -46,9 +46,9 @@ export default function CustomerLoginForm({ next }: CustomerLoginFormProps) {
   return (
     <form onSubmit={handleLogin} className="ev-panel">
       <div className="ev-section-kicker">Secure entry</div>
-      <h2 className="ev-panel-title mt-3">Sign in with your EVNTSZN email</h2>
+      <h2 className="ev-panel-title mt-3">Send your member sign-in link</h2>
       <p className="ev-panel-copy">
-        Use the same address tied to your tickets, rewards, orders, or approved staff access. We will send you a secure sign-in link and route you back where you were headed.
+        Use the same address tied to your tickets, saved events, and orders. We will send a magic link and return you to the right attendee page after sign-in.
       </p>
 
       <div className="mt-6">

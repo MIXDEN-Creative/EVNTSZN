@@ -9,14 +9,14 @@ import { getEplPublicContent } from "@/lib/site-content";
 export const metadata: Metadata = {
   title: "EPL Teams",
   description:
-    "Meet the Season 1 clubs in EVNTSZN Prime League and follow the teams carrying Baltimore flag football into draft night and game-day competition.",
+    "Meet the Season 1 clubs in EVNTSZN Prime League and follow the teams carrying coed adult flag football into draft night and game-day competition.",
   alternates: {
     canonical: `${getEplOrigin()}/teams`,
   },
   openGraph: {
     title: "EPL Teams",
     description:
-      "Meet the Season 1 clubs in EVNTSZN Prime League and follow the teams carrying Baltimore flag football into draft night and game-day competition.",
+      "Meet the Season 1 clubs in EVNTSZN Prime League and follow the teams carrying coed adult flag football into draft night and game-day competition.",
     url: `${getEplOrigin()}/teams`,
     siteName: "EVNTSZN",
     type: "website",
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "EPL Teams",
     description:
-      "Meet the Season 1 clubs in EVNTSZN Prime League and follow the teams carrying Baltimore flag football into draft night and game-day competition.",
+      "Meet the Season 1 clubs in EVNTSZN Prime League and follow the teams carrying coed adult flag football into draft night and game-day competition.",
   },
 };
 
@@ -37,7 +37,7 @@ export default async function EplTeamsPage() {
       <EplNav menu={content.menu} />
       <section className="mx-auto max-w-7xl px-4 py-16 md:px-6 lg:px-8 lg:py-20">
         <div className="ev-kicker">Season 1 clubs</div>
-        <h1 className="ev-title">Six teams. One city. Real flag football identity.</h1>
+        <h1 className="ev-title">Six teams. One league. Real flag football identity.</h1>
         <p className="ev-subtitle max-w-3xl">
           EPL teams are built to be followed all season: draft-night storylines, city pride, sideline energy, and clubs worth showing up for on game day.
         </p>

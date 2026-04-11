@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { getAppOrigin, getEplOrigin, getWebOrigin } from "@/lib/domains";
@@ -21,9 +22,14 @@ export default function PublicNav() {
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-black/72 backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 md:px-6 lg:px-8">
-        <Link href={getWebOrigin()} className="flex flex-col" aria-label="EVNTSZN home">
-          <span className="text-lg font-black tracking-tight text-white">EVNTSZN</span>
-          <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/42">Events, EPL, and city plans</span>
+        <Link href={getWebOrigin()} className="flex items-center gap-3" aria-label="EVNTSZN home">
+          <div className="relative h-11 w-11 overflow-hidden rounded-2xl border border-white/10 bg-white/5">
+            <Image src="/brand/evntszn-icon.png" alt="EVNTSZN icon" fill sizes="44px" className="object-cover" priority />
+          </div>
+          <span className="flex flex-col">
+            <span className="text-lg font-black tracking-tight text-white">EVNTSZN</span>
+            <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/42">Public guide for events, league nights, and city plans</span>
+          </span>
         </Link>
 
         <nav className="hidden items-center gap-6 lg:flex">
@@ -60,10 +66,10 @@ export default function PublicNav() {
 
         <div className="hidden items-center gap-3 lg:flex">
           <a href={`${getAppOrigin()}/account/login`} className="text-sm font-medium text-white/78 transition hover:text-white">
-            Sign In
+            Member sign in
           </a>
           <a href={`${getAppOrigin()}/account/login?mode=signup&next=/account`} className="ev-button-primary">
-            Create Account
+            Create member account
           </a>
         </div>
 
@@ -95,10 +101,10 @@ export default function PublicNav() {
               </div>
             </div>
             <a href={`${getAppOrigin()}/account/login`} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white">
-              Sign In
+              Member sign in
             </a>
-            <a href={`${getAppOrigin()}/account/login?next=/account`} className="ev-button-primary">
-              Create Account
+            <a href={`${getAppOrigin()}/account/login?mode=signup&next=/account`} className="ev-button-primary">
+              Create member account
             </a>
           </div>
         </div>

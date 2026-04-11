@@ -51,7 +51,7 @@ export default function InternalAccessForm({ next }: { next: string }) {
       <div className="ev-section-kicker">Invited staff access</div>
       <h2 className="ev-panel-title mt-3">Sign in with your invited internal email</h2>
       <p className="ev-panel-copy">
-        Admin, HQ, ops, scanner, and office access only open for invited accounts with active internal roles. This is a credential sign-in, not an open access request.
+        Admin, HQ, ops, scanner, and office access only open for invited accounts with active internal roles. This is a password sign-in for internal tools, not an attendee account flow.
       </p>
 
       <div className="mt-6">

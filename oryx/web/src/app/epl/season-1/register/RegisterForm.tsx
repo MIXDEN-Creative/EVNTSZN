@@ -39,6 +39,8 @@ const initialState: FormState = {
   headshot: null,
 };
 
+const WAIVER_URL = "https://tally.so/r/XxY8xz";
+
 type RegistrationResponse = {
   error?: string;
   checkoutUrl?: string;
@@ -123,56 +125,94 @@ export default function RegisterForm() {
 
   return (
     <form onSubmit={onSubmit} className="space-y-8">
-      <div className="grid gap-4 md:grid-cols-2">
-        <div>
-          <label className="mb-2 block text-xs uppercase tracking-[0.22em] text-white/55">First Name</label>
-          <input className={inputClassName()} value={form.firstName} onChange={(e) => setField("firstName", e.target.value)} required />
+      <div className="grid gap-3 md:grid-cols-5">
+        {[
+          "Player details",
+          "Football fit",
+          "Headshot",
+          "Jersey details",
+          "Waiver",
+        ].map((step, index) => (
+          <div key={step} className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3">
+            <div className="text-[11px] uppercase tracking-[0.18em] text-white/45">Step {index + 1}</div>
+            <div className="mt-2 text-sm font-semibold text-white">{step}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="rounded-[28px] border border-white/10 bg-white/[0.03] p-6 md:p-7">
+        <div className="mb-5">
+          <p className="text-xs uppercase tracking-[0.24em] text-[#A259FF]">Step 1</p>
+          <h3 className="mt-2 text-xl font-semibold text-white">Player details</h3>
+          <p className="mt-2 max-w-2xl text-sm text-white/58">Start with the basics so the league office can build your profile, verify eligibility, and keep your registration moving.</p>
         </div>
-        <div>
-          <label className="mb-2 block text-xs uppercase tracking-[0.22em] text-white/55">Last Name</label>
-          <input className={inputClassName()} value={form.lastName} onChange={(e) => setField("lastName", e.target.value)} required />
+        <div className="mb-5 grid gap-4 md:grid-cols-2">
+          <div className="rounded-2xl border border-white/10 bg-black/25 p-4 text-sm text-white/62">
+            Use your real contact info. League updates, payment follow-up, and draft-night communication all follow this record.
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-black/25 p-4 text-sm text-white/62">
+            This registration is for coed adult flag football. It feeds the live draftboard, team builds, and season operations after approval.
+          </div>
         </div>
-        <div>
-          <label className="mb-2 block text-xs uppercase tracking-[0.22em] text-white/55">Email</label>
-          <input className={inputClassName()} type="email" value={form.email} onChange={(e) => setField("email", e.target.value)} required />
-        </div>
-        <div>
-          <label className="mb-2 block text-xs uppercase tracking-[0.22em] text-white/55">Phone</label>
-          <input className={inputClassName()} value={form.phone} onChange={(e) => setField("phone", e.target.value)} required />
-        </div>
-        <div>
-          <label className="mb-2 block text-xs uppercase tracking-[0.22em] text-white/55">Age</label>
-          <input className={inputClassName()} type="number" min="16" max="70" value={form.age} onChange={(e) => setField("age", e.target.value)} required />
-        </div>
-        <div>
-          <label className="mb-2 block text-xs uppercase tracking-[0.22em] text-white/55">Experience Level</label>
-          <input className={inputClassName()} placeholder="Beginner, recreational, competitive, etc." value={form.experienceLevel} onChange={(e) => setField("experienceLevel", e.target.value)} required />
-        </div>
-        <div>
-          <label className="mb-2 block text-xs uppercase tracking-[0.22em] text-white/55">City</label>
-          <input className={inputClassName()} value={form.city} onChange={(e) => setField("city", e.target.value)} required />
-        </div>
-        <div>
-          <label className="mb-2 block text-xs uppercase tracking-[0.22em] text-white/55">State</label>
-          <input className={inputClassName()} value={form.state} onChange={(e) => setField("state", e.target.value)} required />
+        <div className="grid gap-4 md:grid-cols-2">
+          <div>
+            <label className="mb-2 block text-xs uppercase tracking-[0.22em] text-white/55">First Name</label>
+            <input className={inputClassName()} autoComplete="given-name" value={form.firstName} onChange={(e) => setField("firstName", e.target.value)} required />
+          </div>
+          <div>
+            <label className="mb-2 block text-xs uppercase tracking-[0.22em] text-white/55">Last Name</label>
+            <input className={inputClassName()} autoComplete="family-name" value={form.lastName} onChange={(e) => setField("lastName", e.target.value)} required />
+          </div>
+          <div>
+            <label className="mb-2 block text-xs uppercase tracking-[0.22em] text-white/55">Email</label>
+            <input className={inputClassName()} autoComplete="email" type="email" value={form.email} onChange={(e) => setField("email", e.target.value)} required />
+          </div>
+          <div>
+            <label className="mb-2 block text-xs uppercase tracking-[0.22em] text-white/55">Phone</label>
+            <input className={inputClassName()} autoComplete="tel" value={form.phone} onChange={(e) => setField("phone", e.target.value)} required />
+          </div>
+          <div>
+            <label className="mb-2 block text-xs uppercase tracking-[0.22em] text-white/55">Age</label>
+            <input className={inputClassName()} type="number" min="16" max="70" value={form.age} onChange={(e) => setField("age", e.target.value)} required />
+          </div>
+          <div>
+            <label className="mb-2 block text-xs uppercase tracking-[0.22em] text-white/55">Experience Level</label>
+            <input className={inputClassName()} placeholder="Beginner, recreational, competitive, etc." value={form.experienceLevel} onChange={(e) => setField("experienceLevel", e.target.value)} required />
+          </div>
+          <div>
+            <label className="mb-2 block text-xs uppercase tracking-[0.22em] text-white/55">City</label>
+            <input className={inputClassName()} autoComplete="address-level2" value={form.city} onChange={(e) => setField("city", e.target.value)} required />
+          </div>
+          <div>
+            <label className="mb-2 block text-xs uppercase tracking-[0.22em] text-white/55">State</label>
+            <input className={inputClassName()} autoComplete="address-level1" value={form.state} onChange={(e) => setField("state", e.target.value)} required />
+          </div>
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <div>
-          <label className="mb-2 block text-xs uppercase tracking-[0.22em] text-white/55">Primary Position</label>
-          <input className={inputClassName()} placeholder="QB, WR, DB, etc." value={form.positionPrimary} onChange={(e) => setField("positionPrimary", e.target.value)} required />
+      <div className="rounded-[28px] border border-white/10 bg-white/[0.03] p-6 md:p-7">
+        <div className="mb-5">
+          <p className="text-xs uppercase tracking-[0.24em] text-[#A259FF]">Step 2</p>
+          <h3 className="mt-2 text-xl font-semibold text-white">Football fit</h3>
+          <p className="mt-2 max-w-2xl text-sm text-white/58">These spots feed the draft pool and help the league office balance clubs around what each team actually needs on draft night.</p>
         </div>
-        <div>
-          <label className="mb-2 block text-xs uppercase tracking-[0.22em] text-white/55">Secondary Position</label>
-          <input className={inputClassName()} placeholder="Optional" value={form.positionSecondary} onChange={(e) => setField("positionSecondary", e.target.value)} />
+        <div className="grid gap-4 md:grid-cols-2">
+          <div>
+            <label className="mb-2 block text-xs uppercase tracking-[0.22em] text-white/55">Primary Position</label>
+            <input className={inputClassName()} placeholder="QB, WR, DB, etc." value={form.positionPrimary} onChange={(e) => setField("positionPrimary", e.target.value)} required />
+          </div>
+          <div>
+            <label className="mb-2 block text-xs uppercase tracking-[0.22em] text-white/55">Secondary Position</label>
+            <input className={inputClassName()} placeholder="Optional" value={form.positionSecondary} onChange={(e) => setField("positionSecondary", e.target.value)} />
+          </div>
         </div>
       </div>
 
       <div className="rounded-[28px] border border-white/10 bg-white/[0.03] p-5">
         <div className="mb-4">
-          <p className="text-xs uppercase tracking-[0.24em] text-[#A259FF]">Player Photo</p>
+          <p className="text-xs uppercase tracking-[0.24em] text-[#A259FF]">Step 3</p>
           <h3 className="mt-2 text-xl font-semibold text-white">Upload your headshot</h3>
+          <p className="mt-2 max-w-2xl text-sm text-white/58">Use a clear player photo so your registration, draft pool entry, and league profile are easy to review.</p>
         </div>
 
         <input
@@ -189,8 +229,9 @@ export default function RegisterForm() {
 
       <div className="rounded-[28px] border border-white/10 bg-white/[0.03] p-5">
         <div className="mb-4">
-          <p className="text-xs uppercase tracking-[0.24em] text-[#A259FF]">Jersey Details</p>
+          <p className="text-xs uppercase tracking-[0.24em] text-[#A259FF]">Step 4</p>
           <h3 className="mt-2 text-xl font-semibold text-white">Lock in your player identity</h3>
+          <p className="mt-2 max-w-2xl text-sm text-white/58">Jersey details stay with your player file through review, assignment, and season production.</p>
         </div>
 
         <div className="grid gap-4 md:grid-cols-3">
@@ -247,19 +288,47 @@ export default function RegisterForm() {
         </label>
       </div>
 
+      <div className="rounded-[28px] border border-white/10 bg-white/[0.03] p-6 md:p-7">
+        <div className="mb-4">
+          <p className="text-xs uppercase tracking-[0.24em] text-[#A259FF]">Step 5</p>
+          <h3 className="mt-2 text-xl font-semibold text-white">League waiver</h3>
+          <p className="mt-2 max-w-2xl text-sm text-white/58">
+            Registration and payment put you into the player pool. Finish the waiver right after checkout so your file is ready for review and draft-night prep.
+          </p>
+        </div>
+        <div className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-black/40 p-5 md:flex-row md:items-center md:justify-between">
+          <div className="text-sm text-white/75">
+            Waiver link: <span className="text-white">{WAIVER_URL}</span>
+          </div>
+          <a
+            href={WAIVER_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex h-12 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.05] px-5 text-sm font-semibold text-white transition hover:bg-white/[0.09]"
+          >
+            Open waiver
+          </a>
+        </div>
+      </div>
+
       {error ? (
         <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200">
           {error}
         </div>
       ) : null}
 
-      <button
-        type="submit"
-        disabled={submitting}
-        className="inline-flex h-12 items-center justify-center rounded-2xl bg-[#A259FF] px-6 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-      >
-        {submitting ? "Redirecting to checkout..." : "Continue to registration checkout"}
-      </button>
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="text-sm text-white/52">
+          You will go to secure checkout after this step. The waiver stays available after registration.
+        </div>
+        <button
+          type="submit"
+          disabled={submitting}
+          className="inline-flex h-12 items-center justify-center rounded-2xl bg-[#A259FF] px-6 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {submitting ? "Redirecting to checkout..." : "Continue to registration checkout"}
+        </button>
+      </div>
     </form>
   );
 }

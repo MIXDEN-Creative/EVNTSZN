@@ -54,6 +54,28 @@ export default function HostsPage() {
       </section>
 
       <section className="mx-auto max-w-7xl px-4 py-10 md:px-6 lg:px-8">
+        <div className="ev-panel p-6">
+          <div className="ev-section-kicker">Open host markets</div>
+          <div className="mt-3 text-2xl font-black tracking-tight text-white">Current EVNTSZN Host openings</div>
+          <p className="mt-3 max-w-3xl text-sm leading-6 text-white/72">
+            We are actively reviewing hosts for Baltimore, Atlanta, New York, Miami, DC, and Dover. Approved hosts work premium city nights, operate inside the live host commission structure, and build toward deeper city-office responsibility.
+          </p>
+          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {[
+              "Baltimore, MD",
+              "Atlanta, GA",
+              "New York, NY",
+              "Miami, FL",
+              "Washington, DC",
+              "Dover, DE",
+            ].map((market) => (
+              <div key={market} className="rounded-[22px] border border-white/10 bg-white/5 p-4 text-sm font-semibold text-white/78">
+                {market}
+              </div>
+            ))}
+          </div>
+        </div>
+
         <div className="grid gap-6 lg:grid-cols-3">
           {[
             {
@@ -86,6 +108,33 @@ export default function HostsPage() {
                 "Handle guest-facing execution and room discipline",
                 "Coordinate scanner and check-in support when assigned",
                 "Operate inside city, venue, and EVNTSZN standards",
+              ].map((item) => (
+                <div key={item} className="rounded-[22px] border border-white/10 bg-white/5 p-4 text-sm leading-6 text-white/74">
+                  {item}
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="ev-panel p-6">
+            <div className="ev-section-kicker">Why hosts step in</div>
+            <div className="mt-3 text-2xl font-black tracking-tight text-white">Revenue, city growth, and bigger nights</div>
+            <div className="mt-4 space-y-4 text-sm leading-6 text-white/74">
+              <p>Approved host-led events work inside the live EVNTSZN host commission structure, so the nights you lead can build real host-side upside.</p>
+              <p>Hosts also build toward certified and pro pathways, city-office coordination, stronger event support, and bigger nights in market.</p>
+            </div>
+          </section>
+        </div>
+
+        <div className="mt-8 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+          <section className="ev-panel p-6">
+            <div className="ev-section-kicker">Host perks</div>
+            <div className="mt-5 grid gap-4 md:grid-cols-2">
+              {[
+                "Direct host-led revenue participation on qualifying events",
+                "Scanner and check-in support when the event needs it",
+                "City-office collaboration and escalation path",
+                "Priority visibility for stronger operators and repeat execution",
               ].map((item) => (
                 <div key={item} className="rounded-[22px] border border-white/10 bg-white/5 p-4 text-sm leading-6 text-white/74">
                   {item}

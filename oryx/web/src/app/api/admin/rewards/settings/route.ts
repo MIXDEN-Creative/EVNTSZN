@@ -36,6 +36,7 @@ export async function POST(request: Request) {
     redemption_enabled: Boolean(body.redemption_enabled),
     redemption_value_cents: Number(body.redemption_value_cents || 100),
     minimum_points_to_redeem: Number(body.minimum_points_to_redeem || 100),
+    assigned_manager_user_id: body.assigned_manager_user_id ? String(body.assigned_manager_user_id) : null,
   };
 
   const { error } = await supabaseAdmin

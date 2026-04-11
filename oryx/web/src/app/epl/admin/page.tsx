@@ -35,11 +35,6 @@ export default async function AdminHomePage() {
       description: "See revenue, approvals, open issues, and what needs attention today.",
     },
     permissions.includes("admin.manage") && {
-      title: "Users",
-      href: `${getAdminOrigin(host)}/users`,
-      description: "Create users and update city, scanner, and operator access.",
-    },
-    permissions.includes("admin.manage") && {
       title: "Approvals",
       href: `${getAdminOrigin(host)}/approvals`,
       description: "Review applications, assign reviewers, and move decisions forward.",
@@ -73,6 +68,11 @@ export default async function AdminHomePage() {
       title: "Events",
       href: `${getAdminOrigin(host)}/events`,
       description: "Create, publish, and update events and ticketing.",
+    },
+    permissions.includes("admin.manage") && {
+      title: "Draft Console",
+      href: `${getAdminOrigin(host)}/draft`,
+      description: "Run the live draftboard, player pool, team needs, and pick controls from one desk.",
     },
     permissions.includes("scanner.manage") && {
       title: "Scanner",

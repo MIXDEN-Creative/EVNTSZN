@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
@@ -88,7 +89,6 @@ export default async function AdminLayout({
       label: "Team",
       links: [
         canManageAdmins ? { href: `${getAdminOrigin(host)}/team`, label: "Team & Access" } : null,
-        canManageAdmins ? { href: `${getAdminOrigin(host)}/users`, label: "Users" } : null,
         canManageAdmins ? { href: `${getAdminOrigin(host)}/approvals`, label: "Approvals" } : null,
         canManageAdmins ? { href: `${getAdminOrigin(host)}/hiring`, label: "Hiring" } : null,
         canManageOpportunities ? { href: `${getAdminOrigin(host)}/opportunities`, label: "Opportunities" } : null,
@@ -99,6 +99,7 @@ export default async function AdminLayout({
       links: [
         canManageCity ? { href: `${getAdminOrigin(host)}/city-office`, label: "Offices" } : null,
         canViewWorkforce ? { href: `${getAdminOrigin(host)}/workforce`, label: "Workforce" } : null,
+        canManageAdmins ? { href: `${getAdminOrigin(host)}/draft`, label: "Draft Console" } : null,
         canManagePrograms ? { href: `${getAdminOrigin(host)}/programs`, label: "Programs" } : null,
         canManageSupport ? { href: `${getAdminOrigin(host)}/support`, label: "Support" } : null,
         canManageAdmins ? { href: `${getAdminOrigin(host)}/issues`, label: "Issues & Health" } : null,
@@ -128,12 +129,26 @@ export default async function AdminLayout({
         <aside className="border-r border-white/10 bg-[linear-gradient(180deg,rgba(9,9,12,0.96),rgba(5,5,8,0.96))] p-6">
           <div className="ev-kicker">{isHqSurface ? "EVNTSZN HQ" : "EVNTSZN Admin"}</div>
 
-          <div className="mt-4 flex flex-wrap gap-3">
-            <Link href="https://evntszn.com" className="text-lg font-black tracking-tight text-white">
-              EVNTSZN
+          <div className="mt-4 flex items-center gap-3">
+            <Link href="https://evntszn.com" className="flex items-center gap-3 text-lg font-black tracking-tight text-white">
+              <span className="relative h-10 w-10 overflow-hidden rounded-2xl border border-white/10 bg-white/5">
+                <Image src="/brand/evntszn-icon.png" alt="EVNTSZN icon" fill sizes="40px" className="object-cover" />
+              </span>
+              <span className="flex flex-col">
+                <span>EVNTSZN</span>
+                <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/40">
+                  {isHqSurface ? "HQ operations" : "Admin operations"}
+                </span>
+              </span>
             </Link>
+          </div>
+
+          <div className="mt-4 flex flex-wrap gap-3">
             <Link href="https://app.evntszn.com/account" className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs font-semibold text-white/80 hover:bg-white/[0.08]">
-              App hub
+              Member account
+            </Link>
+            <Link href="https://epl.evntszn.com" className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs font-semibold text-white/80 hover:bg-white/[0.08]">
+              EPL
             </Link>
           </div>
 

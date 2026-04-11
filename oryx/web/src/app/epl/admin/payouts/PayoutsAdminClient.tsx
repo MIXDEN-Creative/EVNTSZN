@@ -41,6 +41,8 @@ export default function PayoutsAdminClient() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [recipients, setRecipients] = useState<RecipientSummary[]>([]);
+  const [recipientQuery, setRecipientQuery] = useState("");
+  const [historyFilter, setHistoryFilter] = useState<"all" | "pending" | "sent" | "failed" | "void">("all");
   const [selectedRecipientKey, setSelectedRecipientKey] = useState<string | null>(null);
   const [selectedRecipient, setSelectedRecipient] = useState<RecipientSummary | null>(null);
   const [availableLedgerRows, setAvailableLedgerRows] = useState<LedgerOption[]>([]);
@@ -91,6 +93,25 @@ export default function PayoutsAdminClient() {
     [availableLedgerRows, selectedLedgerIds],
   );
 
+  const filteredRecipients = useMemo(() => {
+    const normalizedQuery = recipientQuery.trim().toLowerCase();
+    return recipients.filter((recipient) => {
+      if (!normalizedQuery) return true;
+      return [recipient.recipientLabel, recipient.recipientType]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase()
+        .includes(normalizedQuery);
+    });
+  }, [recipientQuery, recipients]);
+
+  const filteredHistory = useMemo(() => {
+    return payoutHistory.filter((item) => historyFilter === "all" || item.status === historyFilter);
+  }, [historyFilter, payoutHistory]);
+
+  const allVisibleLedgerSelected =
+    availableLedgerRows.length > 0 && availableLedgerRows.every((row) => selectedLedgerIds.includes(row.id));
+
   async function createPayout() {
     if (!selectedRecipient) return;
     setSaving(true);
@@ -138,7 +159,7 @@ export default function PayoutsAdminClient() {
   }
 
   return (
-    <main className="mx-auto max-w-7xl">
+    <main className="mx-auto max-w-[1500px]">
       <section className="ev-shell-hero">
         <div className="ev-shell-hero-grid">
           <div>
@@ -168,14 +189,23 @@ export default function PayoutsAdminClient() {
       <div className="mt-6 grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)]">
         <section className="ev-panel p-5">
           <div className="ev-section-kicker">Recipients</div>
+          <div className="mt-3 text-sm text-white/62">
+            Pick the payout target first. The balance, available ledger rows, and payout history all follow this selection.
+          </div>
+          <input
+            className="ev-field mt-4"
+            placeholder="Search recipient or type"
+            value={recipientQuery}
+            onChange={(event) => setRecipientQuery(event.target.value)}
+          />
           <div className="mt-4 space-y-3">
             {loading ? <div className="text-sm text-white/60">Loading payout recipients...</div> : null}
-            {!loading && !recipients.length ? (
+            {!loading && !filteredRecipients.length ? (
               <div className="rounded-2xl border border-dashed border-white/10 bg-black/20 p-4 text-sm text-white/55">
                 No revenue recipients are available yet.
               </div>
             ) : null}
-            {recipients.map((recipient) => (
+            {filteredRecipients.map((recipient) => (
               <button
                 key={recipient.recipientKey}
                 type="button"
@@ -233,6 +263,20 @@ export default function PayoutsAdminClient() {
             </p>
             <div className="mt-5 grid gap-5 xl:grid-cols-[1.15fr_0.85fr]">
               <div className="space-y-3">
+                <div className="flex flex-wrap gap-3">
+                  <button
+                    type="button"
+                    className="ev-button-secondary"
+                    disabled={!availableLedgerRows.length}
+                    onClick={() =>
+                      setSelectedLedgerIds(
+                        allVisibleLedgerSelected ? [] : availableLedgerRows.map((row) => row.id),
+                      )
+                    }
+                  >
+                    {allVisibleLedgerSelected ? "Clear selection" : "Select all available"}
+                  </button>
+                </div>
                 {!availableLedgerRows.length ? (
                   <div className="rounded-2xl border border-dashed border-white/10 bg-black/20 p-4 text-sm text-white/55">
                     No locked revenue is currently available for payout.
@@ -266,6 +310,9 @@ export default function PayoutsAdminClient() {
                   <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white/68">
                     Selected ledger amount: <span className="font-semibold text-white">${selectedTotal.toFixed(2)}</span>
                   </div>
+                  <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white/68">
+                    Selected rows: <span className="font-semibold text-white">{selectedLedgerIds.length}</span>
+                  </div>
                   <input
                     className="ev-field"
                     inputMode="decimal"
@@ -294,14 +341,28 @@ export default function PayoutsAdminClient() {
           </section>
 
           <section className="ev-panel p-5">
-            <div className="ev-section-kicker">Payout history</div>
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+              <div>
+                <div className="ev-section-kicker">Payout history</div>
+                <div className="mt-2 text-sm text-white/62">
+                  Review sent, failed, pending, and void payouts for the selected recipient.
+                </div>
+              </div>
+              <select className="ev-field max-w-xs" value={historyFilter} onChange={(event) => setHistoryFilter(event.target.value as typeof historyFilter)}>
+                <option value="all">All payout states</option>
+                <option value="pending">Pending</option>
+                <option value="sent">Sent</option>
+                <option value="failed">Failed</option>
+                <option value="void">Void</option>
+              </select>
+            </div>
             <div className="mt-4 space-y-3">
-              {!payoutHistory.length ? (
+              {!filteredHistory.length ? (
                 <div className="rounded-2xl border border-dashed border-white/10 bg-black/20 p-4 text-sm text-white/55">
                   No payouts have been recorded for this recipient yet.
                 </div>
               ) : (
-                payoutHistory.map((payout) => (
+                filteredHistory.map((payout) => (
                   <div key={payout.id} className="rounded-2xl border border-white/10 bg-black/25 p-4">
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>

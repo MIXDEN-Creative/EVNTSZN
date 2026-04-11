@@ -14,34 +14,53 @@ export default function CityOfficeClient({
   description?: string;
   scopeNote?: string;
 }) {
+  function buildEmptyOfficeForm(cityName = "", stateCode = "") {
+    return {
+      id: "",
+      officeName: "",
+      city: cityName,
+      state: stateCode,
+      region: "",
+      officeStatus: "active",
+      officeLeadUserId: "",
+      notes: "",
+      description: "",
+    };
+  }
+
   const [cities, setCities] = useState<any[]>([]);
   const [offices, setOffices] = useState<any[]>([]);
   const [officeLeads, setOfficeLeads] = useState<any[]>([]);
   const [selectedCity, setSelectedCity] = useState<string>("");
   const [message, setMessage] = useState("");
-  const [officeForm, setOfficeForm] = useState({
-    id: "",
-    officeName: "",
-    city: "Baltimore",
-    state: "MD",
-    region: "",
-    officeStatus: "active",
-    officeLeadUserId: "",
-    notes: "",
-    description: "",
-  });
+  const [loading, setLoading] = useState(true);
+  const [officeForm, setOfficeForm] = useState(buildEmptyOfficeForm());
+
+  async function load() {
+    setLoading(true);
+    const res = await fetch(apiPath, { cache: "no-store" });
+    const json = (await res.json()) as { cities?: any[]; offices?: any[]; officeLeads?: any[]; error?: string };
+    if (!res.ok) {
+      setMessage(json.error || "Could not load office data.");
+      setLoading(false);
+      return;
+    }
+    const next = json.cities || [];
+    setCities(next);
+    setOffices(json.offices || []);
+    setOfficeLeads(json.officeLeads || []);
+    setSelectedCity((current) => current || next[0]?.city || "");
+    setOfficeForm((current) =>
+      current.id || current.officeName
+        ? current
+        : buildEmptyOfficeForm(next[0]?.city || "", getCityStateCode(next[0]?.city || "") || ""),
+    );
+    setLoading(false);
+  }
 
   useEffect(() => {
-    fetch(apiPath, { cache: "no-store" })
-      .then(async (res) => (await res.json()) as { cities?: any[]; offices?: any[]; officeLeads?: any[] })
-      .then((json) => {
-        const next = json.cities || [];
-        setCities(next);
-        setOffices(json.offices || []);
-        setOfficeLeads(json.officeLeads || []);
-        if (!selectedCity && next[0]?.city) setSelectedCity(next[0].city);
-      });
-  }, [apiPath, selectedCity]);
+    void load();
+  }, [apiPath]);
 
   const city = useMemo(
     () => cities.find((item) => item.city === selectedCity) || null,
@@ -63,22 +82,8 @@ export default function CityOfficeClient({
       return;
     }
     setMessage(officeForm.id ? "Office updated." : "Office created.");
-    setOfficeForm({
-      id: "",
-      officeName: "",
-      city: selectedCity || "Baltimore",
-      state: getCityStateCode(selectedCity || "Baltimore") || "MD",
-      region: "",
-      officeStatus: "active",
-      officeLeadUserId: "",
-      notes: "",
-      description: "",
-    });
-    const refresh = await fetch(apiPath, { cache: "no-store" });
-    const payload = (await refresh.json()) as { cities?: any[]; offices?: any[]; officeLeads?: any[] };
-    setCities(payload.cities || []);
-    setOffices(payload.offices || []);
-    setOfficeLeads(payload.officeLeads || []);
+    setOfficeForm(buildEmptyOfficeForm(selectedCity || "", getCityStateCode(selectedCity || "") || ""));
+    await load();
   }
 
   return (
@@ -96,7 +101,7 @@ export default function CityOfficeClient({
 
       {message ? <div className="mt-4 rounded-2xl border border-white/10 bg-black/30 p-4 text-sm text-white/75">{message}</div> : null}
 
-      <section className="mt-6 ev-panel p-6">
+      <section className="mt-6 ev-panel p-6 md:p-7">
         <div className="grid gap-4 md:grid-cols-[280px_1fr_auto]">
           <select className="ev-field" value={selectedCity} onChange={(e) => setSelectedCity(e.target.value)}>
             {cities.map((item) => (
@@ -110,23 +115,13 @@ export default function CityOfficeClient({
             type="button"
             className="ev-button-primary"
             onClick={() =>
-              setOfficeForm({
-                id: "",
-                officeName: "",
-                city: selectedCity || "Baltimore",
-                state: getCityStateCode(selectedCity || "Baltimore") || "MD",
-                region: "",
-                officeStatus: "active",
-                officeLeadUserId: "",
-                notes: "",
-                description: "",
-              })
+              setOfficeForm(buildEmptyOfficeForm(selectedCity || "", getCityStateCode(selectedCity || "") || ""))
             }
           >
             New office
           </button>
         </div>
-        <div className="mt-4 grid gap-3 md:grid-cols-3">
+        <div className="mt-5 grid gap-4 md:grid-cols-3">
           <div className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm text-white/68">
             <div className="text-[11px] uppercase tracking-[0.18em] text-white/45">Current city</div>
             <div className="mt-2 font-semibold text-white">{selectedCity || "Select a city"}</div>
@@ -151,7 +146,7 @@ export default function CityOfficeClient({
 
       {city ? (
         <>
-          <div className="mt-6 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+          <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
             {[
               ["Total events", city.totalEvents],
               ["Published", city.publishedEvents],
@@ -173,24 +168,27 @@ export default function CityOfficeClient({
             ))}
           </div>
 
-          <div className="mt-6 grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
-            <section className="ev-panel p-6">
+          <div className="mt-6 grid gap-8 xl:grid-cols-[1.05fr_0.95fr]">
+            <section className="ev-panel p-6 md:p-7">
               <div className="ev-section-kicker">Office records</div>
               <h2 className="mt-3 text-2xl font-bold text-white">{officeForm.id ? "Update office" : "Create office"}</h2>
               <p className="mt-2 text-sm text-white/60">
                 Keep this scoped to the basics: location, status, lead assignment, description, and internal notes.
               </p>
+              <div className="mt-4 rounded-2xl border border-white/10 bg-black/25 p-4 text-sm text-white/62">
+                {officeForm.id ? "You are editing an existing office record." : "Create one office record at a time, attach the lead if known, then use the city summary to review local coverage."}
+              </div>
               <form onSubmit={saveOffice} className="mt-5 grid gap-4">
                 <div className="grid gap-4 md:grid-cols-2">
-                  <input className="ev-field" placeholder="Office name" value={officeForm.officeName} onChange={(e) => setOfficeForm({ ...officeForm, officeName: e.target.value })} />
-                  <select className="ev-field" value={officeForm.city} onChange={(e) => setOfficeForm({ ...officeForm, city: e.target.value, state: getCityStateCode(e.target.value) || officeForm.state })}>
+                  <input className="ev-field" placeholder="Office name" value={officeForm.officeName} onChange={(e) => setOfficeForm({ ...officeForm, officeName: e.target.value })} required />
+                  <select className="ev-field" value={officeForm.city} onChange={(e) => setOfficeForm({ ...officeForm, city: e.target.value, state: getCityStateCode(e.target.value) || officeForm.state })} required>
                     {INTERNAL_CITY_OPTIONS.map((item) => (
                       <option key={item} value={item}>{item}</option>
                     ))}
                   </select>
                 </div>
                 <div className="grid gap-4 md:grid-cols-3">
-                  <input className="ev-field" placeholder="State" value={officeForm.state} onChange={(e) => setOfficeForm({ ...officeForm, state: e.target.value })} />
+                  <input className="ev-field" placeholder="State" value={officeForm.state} onChange={(e) => setOfficeForm({ ...officeForm, state: e.target.value })} required />
                   <input className="ev-field" placeholder="Region" value={officeForm.region} onChange={(e) => setOfficeForm({ ...officeForm, region: e.target.value })} />
                   <select className="ev-field" value={officeForm.officeStatus} onChange={(e) => setOfficeForm({ ...officeForm, officeStatus: e.target.value })}>
                     <option value="active">Active</option>
@@ -214,17 +212,7 @@ export default function CityOfficeClient({
                       type="button"
                       className="ev-button-secondary"
                       onClick={() =>
-                        setOfficeForm({
-                          id: "",
-                          officeName: "",
-                          city: selectedCity || "Baltimore",
-                          state: getCityStateCode(selectedCity || "Baltimore") || "MD",
-                          region: "",
-                          officeStatus: "active",
-                          officeLeadUserId: "",
-                          notes: "",
-                          description: "",
-                        })
+                        setOfficeForm(buildEmptyOfficeForm(selectedCity || "", getCityStateCode(selectedCity || "") || ""))
                       }
                     >
                       Clear selection
@@ -233,6 +221,7 @@ export default function CityOfficeClient({
                 </div>
               </form>
               <div className="mt-5 space-y-3">
+                {loading ? <div className="rounded-2xl border border-white/10 bg-black/25 p-4 text-sm text-white/58">Loading office records...</div> : null}
                 {cityOffices.length ? cityOffices.map((office) => (
                   <button
                     key={office.id}

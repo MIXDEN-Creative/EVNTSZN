@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
       .select("id, city, status, application_type, discovery_eligible"),
     supabaseAdmin
       .from("evntszn_operator_profiles")
-      .select("user_id, role_key, organizer_classification, city_scope, is_active, evntszn_profiles(full_name, city, state)"),
+      .select("user_id, role_key, organizer_classification, city_scope, is_active"),
     supabaseAdmin
       .from("evntszn_ticket_orders")
       .select("id, amount_total_cents, status, evntszn_events(city)")
@@ -44,6 +44,24 @@ export async function GET(request: NextRequest) {
     eventsRes.error || applicationsRes.error || profilesRes.error || ordersRes.error || sponsorOrdersRes.error || programsRes.error || sponsorAccountsRes.error || officesRes.error;
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  const profileUserIds = Array.from(
+    new Set(
+      (profilesRes.data || [])
+        .map((profile: any) => profile.user_id)
+        .filter(Boolean),
+    ),
+  );
+  const { data: profileRows, error: profileRowsError } = profileUserIds.length
+    ? await supabaseAdmin
+        .from("evntszn_profiles")
+        .select("user_id, full_name, city, state")
+        .in("user_id", profileUserIds)
+    : { data: [], error: null };
+
+  if (profileRowsError) {
+    return NextResponse.json({ error: profileRowsError.message }, { status: 500 });
   }
 
   const cityMap = new Map<string, any>();
@@ -161,9 +179,10 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  const profileMap = new Map((profilesRes.data || []).map((profile: any) => [profile.user_id, profile]));
+  const profileMap = new Map((profileRows || []).map((profile: any) => [profile.user_id, profile]));
   for (const office of officesRes.data || []) {
     const row = ensureCity(normalizeCity(office.city));
+    const leadProfile = office.office_lead_user_id ? profileMap.get(office.office_lead_user_id) : null;
     row.offices.push({
       id: office.id,
       officeName: office.office_name,
@@ -172,11 +191,7 @@ export async function GET(request: NextRequest) {
       region: office.region,
       officeStatus: office.office_status,
       officeLeadUserId: office.office_lead_user_id,
-      officeLeadName: office.office_lead_user_id
-        ? Array.isArray(profileMap.get(office.office_lead_user_id)?.evntszn_profiles)
-          ? profileMap.get(office.office_lead_user_id)?.evntszn_profiles?.[0]?.full_name || null
-          : profileMap.get(office.office_lead_user_id)?.evntszn_profiles?.full_name || null
-        : null,
+      officeLeadName: leadProfile?.full_name || null,
       notes: office.notes,
       description: office.description,
       createdAt: office.created_at,
@@ -198,23 +213,25 @@ export async function GET(request: NextRequest) {
       region: office.region,
       officeStatus: office.office_status,
       officeLeadUserId: office.office_lead_user_id,
+      officeLeadName: office.office_lead_user_id ? profileMap.get(office.office_lead_user_id)?.full_name || null : null,
       notes: office.notes,
       description: office.description,
       createdAt: office.created_at,
       updatedAt: office.updated_at,
     })),
-    officeLeads: (profilesRes.data || []).map((profile: any) => ({
-      userId: profile.user_id,
-      fullName: Array.isArray(profile.evntszn_profiles)
-        ? profile.evntszn_profiles[0]?.full_name || null
-        : profile.evntszn_profiles?.full_name || null,
-      city: Array.isArray(profile.evntszn_profiles)
-        ? profile.evntszn_profiles[0]?.city || null
-        : profile.evntszn_profiles?.city || null,
-      state: Array.isArray(profile.evntszn_profiles)
-        ? profile.evntszn_profiles[0]?.state || null
-        : profile.evntszn_profiles?.state || null,
-    })),
+    officeLeads: Array.from(
+      new Map(
+        (profilesRes.data || []).map((profile: any) => [
+          profile.user_id,
+          {
+            userId: profile.user_id,
+            fullName: profileMap.get(profile.user_id)?.full_name || null,
+            city: profileMap.get(profile.user_id)?.city || null,
+            state: profileMap.get(profile.user_id)?.state || null,
+          },
+        ]),
+      ).values(),
+    ),
   });
 }
 

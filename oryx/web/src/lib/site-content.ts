@@ -257,10 +257,10 @@ export const DEFAULT_HOMEPAGE_CONTENT: Omit<HomepageContent, "storageReady"> = {
 
 export const DEFAULT_EPL_PUBLIC_CONTENT: Omit<EplPublicContent, "storageReady"> = {
   hero: {
-    eyebrow: "Baltimore Coed Flag Football",
+    eyebrow: "Coed Adult Flag Football",
     title: "Coed flag football with real teams, real standings, and a city that picks sides.",
     description:
-      "EPL brings Baltimore league nights into one public home for players, supporters, applicants, and anyone tracking the season from draft night forward.",
+      "EPL brings league nights into one public home for players, supporters, applicants, and anyone tracking the season from draft night forward.",
     primaryCtaLabel: "Register for Season 1",
     primaryCtaHref: "/epl/season-1/register",
     secondaryCtaLabel: "See the teams",
@@ -273,7 +273,7 @@ export const DEFAULT_EPL_PUBLIC_CONTENT: Omit<EplPublicContent, "storageReady"> 
     scheduleHeadline: "Every game week should feel like it matters.",
     scheduleBody:
       "Follow opening week, rivalry matchups, and the stretch that decides playoff pressure. The league page stays built around what players and supporters actually need next.",
-    teamsHeadline: "Six Baltimore clubs with their own look, voice, and pressure.",
+    teamsHeadline: "Six clubs with their own look, voice, and pressure.",
     teamsBody:
       "These are not filler placeholders. Each club carries its own identity, neighborhood edge, and game-day energy through the season.",
     standingsHeadline: "The standings are where the talk gets real.",
