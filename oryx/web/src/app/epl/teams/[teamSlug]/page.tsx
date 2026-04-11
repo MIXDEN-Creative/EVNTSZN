@@ -61,7 +61,7 @@ export default async function EplTeamPage({ params }: TeamPageProps) {
   return (
     <main className="min-h-screen bg-black text-white">
       <EplNav menu={content.menu} />
-      <section className="mx-auto max-w-7xl px-4 py-12 md:px-6 lg:px-8">
+      <section className="mx-auto max-w-7xl px-4 py-16 md:px-6 lg:px-8 lg:py-20">
         <div className="ev-kicker">{team.neighborhood}</div>
         <div className="mt-4 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div>
@@ -71,7 +71,7 @@ export default async function EplTeamPage({ params }: TeamPageProps) {
           <img src={team.logoUrl} alt={team.name} className="h-32 w-32 rounded-[28px] border border-white/10 object-cover" />
         </div>
 
-        <div className="mt-10 grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+        <div className="mt-12 grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
           <section className="ev-panel p-6">
             <div className="ev-section-kicker">Identity</div>
             <h2 className="mt-3 text-3xl font-black tracking-tight text-white">{team.headline}</h2>
@@ -87,8 +87,8 @@ export default async function EplTeamPage({ params }: TeamPageProps) {
           <section className="ev-panel p-6">
             <div className="ev-section-kicker">Season 1 focus</div>
             <div className="mt-4 space-y-4 text-sm leading-6 text-white/74">
-              <p>Use this page to keep up with the club identity, follow table movement, and get back to registration or standings without losing the league thread.</p>
-              <p>As the season settles into weekly rhythm, this page becomes the fastest way to move from one club to the wider EPL race.</p>
+              <p>Use this page to keep up with the club identity, follow the standings race, and jump back into registration or the league table without losing the thread.</p>
+              <p>As weekly results land, this page becomes the fastest way to move from one club into the wider EPL race.</p>
             </div>
           </section>
         </div>

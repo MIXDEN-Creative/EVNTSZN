@@ -95,7 +95,7 @@ export default function TicketPurchaseCard({
       <p className="text-xs uppercase tracking-[0.24em] text-[#A259FF]">Ticketing</p>
       <h2 className="mt-3 text-3xl font-semibold">{eventTitle}</h2>
       <p className="mt-3 text-white/60">
-        Branded EVNTSZN ticket checkout with share-ready attendee access and scanner support.
+        Pick your ticket, choose a quantity, and move straight into checkout.
       </p>
 
       <div className="mt-6 grid gap-4">
@@ -133,7 +133,7 @@ export default function TicketPurchaseCard({
         </label>
 
         <div className="rounded-2xl border border-white/10 bg-black/30 p-4 text-sm text-white/70">
-          <div>{selectedTicketType?.description || "Premium EVNTSZN access."}</div>
+          <div>{selectedTicketType?.description || "Event access handled through the EVNTSZN checkout flow."}</div>
           <div className="mt-2 text-[#d8c2ff]">
             Status: {selectedTicketType ? getTicketAvailabilityLabel(selectedTicketType.availability_state) : "Unavailable"}
           </div>
@@ -170,7 +170,7 @@ export default function TicketPurchaseCard({
         </button>
 
         <div className="rounded-2xl border border-[#A259FF]/25 bg-[#A259FF]/10 p-4 text-sm text-[#dfd0ff]">
-          Every issued ticket includes a share code and referral-ready foundation for invite-friend growth.
+          Your ticket details stay tied to your order so check-in stays simple on event day.
         </div>
 
         {message ? (

@@ -9,14 +9,14 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 export const metadata: Metadata = {
   title: "EPL Standings",
   description:
-    "Follow the EVNTSZN Prime League table, club order, and official standings publication state for Season 1.",
+    "Follow the EVNTSZN Prime League table, club order, and the Season 1 standings race.",
   alternates: {
     canonical: `${getEplOrigin()}/standings`,
   },
   openGraph: {
     title: "EPL Standings",
     description:
-      "Follow the EVNTSZN Prime League table, club order, and official standings publication state for Season 1.",
+      "Follow the EVNTSZN Prime League table, club order, and the Season 1 standings race.",
     url: `${getEplOrigin()}/standings`,
     siteName: "EVNTSZN",
     type: "website",
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "EPL Standings",
     description:
-      "Follow the EVNTSZN Prime League table, club order, and official standings publication state for Season 1.",
+      "Follow the EVNTSZN Prime League table, club order, and the Season 1 standings race.",
   },
 };
 
@@ -62,7 +62,7 @@ export default async function EplStandingsPage() {
   return (
     <main className="min-h-screen bg-black text-white">
       <EplNav menu={content.menu} />
-      <section className="mx-auto max-w-7xl px-4 py-12 md:px-6 lg:px-8">
+      <section className="mx-auto max-w-7xl px-4 py-16 md:px-6 lg:px-8 lg:py-20">
         <div className="ev-kicker">Standings</div>
         <h1 className="ev-title">Season 1 standings and league table.</h1>
         <p className="ev-subtitle max-w-3xl">
@@ -70,7 +70,7 @@ export default async function EplStandingsPage() {
         </p>
 
         {!hasSeasonRows ? (
-          <div className="ev-panel mt-8 p-6">
+          <div className="ev-panel mt-10 p-7">
             <div className="ev-section-kicker">Table opens soon</div>
             <h2 className="mt-3 text-2xl font-black text-white">The clubs are set. The standings go live after the first whistle.</h2>
             <p className="mt-3 max-w-3xl text-sm leading-6 text-white/72">
@@ -126,9 +126,9 @@ export default async function EplStandingsPage() {
 
         <div className="mt-6 grid gap-4 md:grid-cols-2">
           <div className="ev-panel p-5">
-            <div className="ev-section-kicker">Publication state</div>
+            <div className="ev-section-kicker">Preseason state</div>
             <p className="mt-3 text-sm leading-6 text-white/72">
-              This table stays stable from pre-season through playoff push. Once official results go live, the same route carries every weekly move without dumping seeded placeholder rows into public view.
+              This table is already set for the season. Once scores go official, the same page carries every weekly move without dumping seeded leftovers into public view.
             </p>
           </div>
           <div className="ev-panel p-5">

@@ -224,7 +224,7 @@ export default function EPLStorePage() {
   return (
     <main className="min-h-screen bg-black text-white">
       <section className="border-b border-white/10 bg-gradient-to-b from-[#0a0a0a] to-black">
-        <div className="mx-auto max-w-7xl px-6 py-10">
+        <div className="mx-auto max-w-7xl px-6 py-14 lg:py-16">
           <div className="inline-flex items-center rounded-full border border-[#A259FF]/40 bg-[#A259FF]/10 px-4 py-1 text-sm text-[#d8c2ff]">
             EVNTSZN PRIME LEAGUE
           </div>
@@ -237,7 +237,7 @@ export default function EPLStorePage() {
             Official EVNTSZN Prime League merch built around club identity, league nights, and the gear players and supporters actually want to wear.
           </p>
 
-          <div className="mt-6 flex flex-wrap gap-3">
+          <div className="mt-8 flex flex-wrap gap-3">
             <Link href="https://epl.evntszn.com" className="ev-button-primary">
               Back to EPL
             </Link>

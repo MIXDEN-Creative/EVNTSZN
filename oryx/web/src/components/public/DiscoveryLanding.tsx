@@ -20,8 +20,21 @@ type DiscoveryLandingProps = {
     host: DiscoveryNativeEvent[];
     independent_organizer: DiscoveryNativeEvent[];
   };
-  initialExternal: TicketmasterEvent[];
+  initialExternal: ExternalDiscoveryEvent[];
   sponsorPlacements: SponsorPlacement[];
+};
+
+type ExternalDiscoveryEvent = {
+  id: string;
+  title: string;
+  url: string | null;
+  startAt: string | null;
+  venueName: string | null;
+  city?: string | null;
+  state?: string | null;
+  imageUrl: string | null;
+  description: string | null;
+  source: "ticketmaster" | "eventbrite";
 };
 
 type DiscoveryListing = {
@@ -33,7 +46,7 @@ type DiscoveryListing = {
   city: string;
   state: string;
   startAt: string | null;
-  source: "evntszn" | "host" | "independent_organizer" | "ticketmaster";
+  source: "evntszn" | "host" | "independent_organizer" | "ticketmaster" | "eventbrite";
   badgeLabel: string;
   summary: string;
   isPrimary: boolean;
@@ -49,6 +62,10 @@ type DiscoveryResponse = {
     city?: string;
     state?: string;
     label?: string;
+  } | null;
+  weather?: {
+    summary?: string;
+    venueNote?: string | null;
   } | null;
 };
 
@@ -87,13 +104,13 @@ function normalizeNativeEvent(event: DiscoveryNativeEvent): DiscoveryListing {
     summary:
       event.description ||
       event.heroNote ||
-      `${event.sourceLabel} shaping the city calendar.`,
+      `${event.sourceLabel} worth planning around.`,
     isPrimary: true,
     featured: event.featured,
   };
 }
 
-function normalizeExternalEvent(event: TicketmasterEvent): DiscoveryListing {
+function normalizeExternalEvent(event: ExternalDiscoveryEvent): DiscoveryListing {
   return {
     id: event.id,
     title: event.title,
@@ -103,11 +120,11 @@ function normalizeExternalEvent(event: TicketmasterEvent): DiscoveryListing {
     city: event.city || "",
     state: event.state || "",
     startAt: event.startAt,
-    source: "ticketmaster",
-    badgeLabel: "External listing",
+    source: event.source,
+    badgeLabel: event.source === "ticketmaster" ? "Ticketmaster" : "Eventbrite",
     summary:
       event.description ||
-      `${event.venueName || "Live city listing"}${event.city ? ` · ${event.city}` : ""}`,
+      `${event.venueName || "Live event"}${event.city ? ` · ${event.city}` : ""}`,
     isPrimary: false,
   };
 }
@@ -136,6 +153,8 @@ function getSourceChipClass(source: DiscoveryListing["source"]) {
       return "ev-chip ev-chip--independent";
     case "ticketmaster":
       return "ev-chip ev-chip--external";
+    case "eventbrite":
+      return "ev-chip ev-chip--external";
   }
 }
 
@@ -149,6 +168,8 @@ function getSourceLabel(source: DiscoveryListing["source"]) {
       return "Independent Organizer";
     case "ticketmaster":
       return "Ticketmaster-backed";
+    case "eventbrite":
+      return "Eventbrite-backed";
   }
 }
 
@@ -233,6 +254,7 @@ export default function DiscoveryLanding({
   const [message, setMessage] = useState<string | null>(null);
   const [results, setResults] = useState<DiscoveryListing[]>(initialPopular);
   const [normalizedLocationLabel, setNormalizedLocationLabel] = useState<string | null>(null);
+  const [weatherSummary, setWeatherSummary] = useState<string | null>(null);
 
   const groupedNative = useMemo(
     () => ({
@@ -284,12 +306,14 @@ export default function DiscoveryLanding({
 
         setResults(nextResults);
         setNormalizedLocationLabel(payload.normalizedCity?.label || null);
+        setWeatherSummary(payload.weather?.summary || payload.weather?.venueNote || null);
         if (!nextResults.length) {
           setMessage(createEmptyState(nextQuery, nextCity).body);
         }
       } catch {
         setResults([]);
         setMessage("Search is taking a beat. Try again in a moment.");
+        setWeatherSummary(null);
       } finally {
         setLoading(false);
       }
@@ -354,8 +378,8 @@ export default function DiscoveryLanding({
           <div className="ev-hero-overlay absolute inset-0" />
         </div>
 
-        <div className="relative mx-auto max-w-7xl px-4 py-16 md:px-6 lg:px-8 lg:py-24">
-          <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
+        <div className="relative mx-auto max-w-7xl px-4 py-20 md:px-6 lg:px-8 lg:py-32">
+          <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:gap-14">
             <motion.div
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
@@ -367,23 +391,23 @@ export default function DiscoveryLanding({
               </h1>
               <p className="ev-subtitle max-w-2xl">{content.hero.description}</p>
 
-              <div className="mt-8 flex flex-wrap gap-3">
+              <div className="mt-10 flex flex-wrap gap-3">
                 <Link href={content.hero.primaryCtaHref} className="ev-button-primary">
                   {content.hero.primaryCtaLabel}
                 </Link>
                 <Link href={content.hero.secondaryCtaHref} className="ev-button-secondary">
                   {content.hero.secondaryCtaLabel}
                 </Link>
-                <Link href={content.hero.tertiaryCtaHref} className="ev-button-secondary">
+                <Link href={content.hero.tertiaryCtaHref} className="text-sm font-semibold text-white/72 transition hover:text-white">
                   {content.hero.tertiaryCtaLabel}
                 </Link>
               </div>
 
-              <div className="mt-10 grid gap-3 sm:grid-cols-3">
+              <div className="mt-14 grid gap-4 sm:grid-cols-3">
                 {[
-                  { label: "Tonight", value: "Live now", detail: "Nightlife, last-minute plans, and artist nights worth moving on." },
-                  { label: "This weekend", value: "Big city energy", detail: "Concerts, sports, parties, and headline plans across your market." },
-                  { label: "Member value", value: "Tickets and access", detail: "Discovery, account, checkout, and league surfaces connected cleanly." },
+                  { label: "Tonight", value: "Move on the best plan", detail: "Search what is happening now, what is next, and what is worth leaving home for." },
+                  { label: "This weekend", value: "Big game and big-night energy", detail: "Concerts, sports, parties, and league nights across the cities people watch first." },
+                  { label: "Across EVNTSZN", value: "One clean public flow", detail: "Browse, buy, register, and keep up with EPL without jumping through mismatched pages." },
                 ].map((stat) => (
                   <div key={stat.label} className="ev-meta-card bg-black/35">
                     <div className="ev-meta-label">{stat.label}</div>
@@ -398,17 +422,17 @@ export default function DiscoveryLanding({
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.52, delay: 0.06 }}
-              className="ev-panel p-6 md:p-7"
+              className="ev-panel p-7 md:p-8"
             >
-              <div className="ev-section-kicker">Explore what is moving</div>
+              <div className="ev-section-kicker">Find your next plan</div>
               <h2 className="mt-4 text-3xl font-black tracking-[-0.04em] text-white">
-                Search the city fast, then move straight into the best listings.
+                Start with a city, a vibe, or a keyword. The strongest matches land below.
               </h2>
               <p className="mt-4 text-base leading-7 text-white/72">
-                Search nightlife, concerts, sports, and things to do. Results land immediately below this bar so people can move from curiosity to action without friction.
+                Search concerts, nightlife, sports, and league nights. If a provider is down or a key is missing, the page still works with the best live results available.
               </p>
 
-              <div className="mt-6 grid gap-3 md:grid-cols-[1.1fr_0.8fr]">
+              <div className="mt-8 grid gap-4 md:grid-cols-[1.1fr_0.8fr]">
                 <input
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
@@ -423,7 +447,7 @@ export default function DiscoveryLanding({
                 />
               </div>
 
-              <div className="mt-4 flex flex-wrap gap-2">
+              <div className="mt-5 flex flex-wrap gap-2">
                 {[
                   { key: "", label: "Popular" },
                   { key: "tonight", label: "Tonight" },
@@ -447,15 +471,19 @@ export default function DiscoveryLanding({
                 </button>
               </div>
 
-              <div className="mt-6 grid gap-3 md:grid-cols-[1fr_auto_auto]">
+              <div className="mt-8 grid gap-3 sm:grid-cols-2">
                 <button type="button" className="ev-button-primary" onClick={() => void runSearch()}>
                   {loading ? "Searching..." : "Search EVNTSZN"}
                 </button>
-                <Link href="https://app.evntszn.com/account/login" className="ev-button-secondary">
-                  Sign In
-                </Link>
                 <Link href="https://app.evntszn.com/account/login?mode=signup&next=/account" className="ev-button-secondary">
                   Create Account
+                </Link>
+              </div>
+
+              <div className="mt-4 text-sm leading-6 text-white/56">
+                Already have an account?{" "}
+                <Link href="https://app.evntszn.com/account/login" className="font-semibold text-white/80 transition hover:text-white">
+                  Sign in
                 </Link>
               </div>
             </motion.div>
@@ -464,19 +492,22 @@ export default function DiscoveryLanding({
       </section>
 
       {content.visibility.showPopularSection ? (
-      <section className="mx-auto max-w-7xl px-4 py-16 md:px-6 lg:px-8 lg:py-24">
+      <section className="mx-auto max-w-7xl px-4 py-20 md:px-6 lg:px-8 lg:py-28">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div className="max-w-4xl">
             <div className="ev-section-kicker">{hasSearched ? "Top results" : "Trending Now"}</div>
             <h2 className="mt-4 text-4xl font-black tracking-[-0.04em] text-white md:text-6xl">
-              {hasSearched ? "The strongest matches for your next move." : "Headline events and city-shaping plans."}
+              {hasSearched ? "The strongest matches for your next move." : "What people are showing up for right now."}
             </h2>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-white/70">
               {content.discovery.body}
             </p>
           </div>
           <div className="max-w-xs text-sm leading-6 text-white/40 md:text-right">
-            {message || (normalizedLocationLabel ? `Using ${normalizedLocationLabel} for the strongest city match.` : content.discovery.disclosure)}
+            {message ||
+              (normalizedLocationLabel
+                ? `Using ${normalizedLocationLabel} for the closest city match.${weatherSummary ? ` ${weatherSummary}` : ""}`
+                : weatherSummary || content.discovery.disclosure)}
           </div>
         </div>
 
@@ -516,7 +547,7 @@ export default function DiscoveryLanding({
       ) : null}
 
       {sponsorPlacements.length ? (
-        <section className="mx-auto max-w-7xl px-4 pb-16 md:px-6 lg:px-8 lg:pb-24">
+        <section className="mx-auto max-w-7xl px-4 pb-20 md:px-6 lg:px-8 lg:pb-28">
           <SponsorPlacementStrip
             placements={sponsorPlacements}
             eyebrow={modules.sponsorBlock.eyebrow}
@@ -560,8 +591,8 @@ export default function DiscoveryLanding({
       ) : null}
 
       {content.visibility.showCityBlocks ? (
-        <section id="cities" className="mx-auto max-w-7xl px-4 pb-16 md:px-6 lg:px-8 lg:pb-24">
-          <div className="ev-panel p-8 md:p-12">
+        <section id="cities" className="mx-auto max-w-7xl px-4 pb-20 md:px-6 lg:px-8 lg:pb-28">
+          <div className="ev-panel p-8 md:p-12 lg:p-14">
             <div className="ev-section-kicker">Cities</div>
             <h2 className="mt-4 text-4xl font-black tracking-[-0.04em] text-white md:text-5xl">
               Start with the city. The right night follows.
@@ -590,7 +621,7 @@ export default function DiscoveryLanding({
       ) : null}
 
       {content.visibility.showEplPanel ? (
-        <section className="mx-auto max-w-7xl px-4 pb-14 md:px-6 lg:px-8">
+        <section className="mx-auto max-w-7xl px-4 pb-20 md:px-6 lg:px-8 lg:pb-24">
           <div className="overflow-hidden rounded-[32px] border border-white/10 bg-[#0c0c15] shadow-[0_22px_60px_rgba(0,0,0,0.45)] lg:grid lg:grid-cols-[1.05fr_0.95fr]">
             <div className="relative min-h-[360px]">
               <Image
@@ -605,10 +636,10 @@ export default function DiscoveryLanding({
               <div className="relative p-6 md:p-8">
                 <div className="ev-kicker">EPL Season 1</div>
                 <h2 className="mt-5 max-w-xl text-4xl font-black tracking-[-0.05em] text-white md:text-5xl">
-                  Baltimore draft night, coed competition, and a league surface built to feel worth following.
+                  Baltimore draft night, coed flag football, and a league people can actually follow week to week.
                 </h2>
                 <p className="mt-4 max-w-xl text-base leading-7 text-white/76">
-                  EPL gives EVNTSZN a flagship sports-entertainment vertical with registration pull, team identity, standings pressure, and a draft countdown anchored to Saturday, June 6.
+                  EPL brings team identity, standings pressure, player registration, and game-day energy into one public league experience built for Baltimore.
                 </p>
                 <div className="mt-6 flex flex-wrap gap-3">
                   <Link href="https://epl.evntszn.com" className="ev-button-primary">
@@ -625,9 +656,9 @@ export default function DiscoveryLanding({
             </div>
             <div className="grid gap-4 p-6 md:p-8">
               {[
-                "City-rooted coed competition with real team identity.",
-                "Draft-night countdown and public league rhythm instead of a dead registration page.",
-                "A sports vertical that belongs inside the same premium EVNTSZN world as nightlife and live events.",
+                "A coed flag football league with real clubs, real standings, and real city pride.",
+                "Draft night, registration, and game-day follow-through live in one place.",
+                "Supporters can move from team pages to standings to opportunities without losing the league thread.",
               ].map((item) => (
                 <div key={item} className="ev-panel p-5">
                   <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#cfb8ff]">Why EPL lands</div>

@@ -58,3 +58,4 @@ oryx/web/app_disabled
 oryx/**/.temp
 oryx/web/src/app/api/epl/draft/control/route.ts.bak
 oryx/web/src/app/api/epl/draft/control/route.ts.bak2
+.aider*

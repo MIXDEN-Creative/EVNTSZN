@@ -61,13 +61,7 @@ export default function EplNav({ menu }: { menu: EplMenuVisibilityContent }) {
             href={getWebOrigin()}
             className="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10"
           >
-            Homepage
-          </a>
-          <a
-            href={`${getWebOrigin()}/support`}
-            className="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10"
-          >
-            Support
+            EVNTSZN
           </a>
           {menu.showRegister ? (
             <Link

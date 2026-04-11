@@ -121,7 +121,7 @@ export default function OpportunitiesClient({ modules }: { modules: PublicModule
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-12 md:px-6 lg:px-8">
+    <div className="mx-auto max-w-7xl px-4 py-16 md:px-6 lg:px-8 lg:py-20">
       <section className="ev-shell-hero">
         <div className="ev-shell-hero-grid">
           <div>
@@ -134,7 +134,7 @@ export default function OpportunitiesClient({ modules }: { modules: PublicModule
         </div>
       </section>
 
-      <section className="ev-panel mt-6 p-6">
+      <section className="ev-panel mt-8 p-7 md:p-8">
         <div className="grid gap-4 md:grid-cols-[1.2fr_0.8fr_auto]">
           <input value={query} onChange={(e) => setQuery(e.target.value)} className="ev-field" placeholder="Search check-in, content, sideline, support..." />
           <input value={city} onChange={(e) => setCity(e.target.value)} className="ev-field" placeholder="City" />
@@ -142,7 +142,7 @@ export default function OpportunitiesClient({ modules }: { modules: PublicModule
         </div>
       </section>
 
-      <div className="mt-8 grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
+      <div className="mt-10 grid gap-10 lg:grid-cols-[1.08fr_0.92fr] lg:gap-12">
         <section id="roles" className="space-y-8">
           {!opportunities.length ? (
             <section className="ev-panel p-6">
@@ -183,7 +183,7 @@ export default function OpportunitiesClient({ modules }: { modules: PublicModule
                         View role
                       </button>
                     </div>
-                    <p className="mt-3 text-white/70">{opp.summary || opp.description}</p>
+                    <p className="mt-4 text-white/70">{opp.summary || opp.description}</p>
                     <div className="mt-3 text-sm text-white/52">
                       {[opp.location_city ? `${opp.location_city}${opp.location_state ? `, ${opp.location_state}` : ""}` : "Baltimore", opp.event_title || opp.season_name || null].filter(Boolean).join(" • ")}
                     </div>
@@ -213,8 +213,8 @@ export default function OpportunitiesClient({ modules }: { modules: PublicModule
           ))}
         </section>
 
-        <section id="application" className="ev-panel p-6 lg:sticky lg:top-24">
-          <div className="ev-section-kicker">Application</div>
+        <section id="application" className="ev-panel p-7 md:p-8 lg:sticky lg:top-24">
+          <div className="ev-section-kicker">Apply</div>
           <h2 className="mt-3 text-2xl font-bold text-white">
             {selectedOpportunity ? `Apply for ${selectedOpportunity.title}` : "Choose a role to apply"}
           </h2>

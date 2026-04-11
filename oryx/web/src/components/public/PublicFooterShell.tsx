@@ -15,7 +15,7 @@ export default function PublicFooterShell({
 }) {
   return (
     <footer className="border-t border-white/10 bg-black/90">
-      <div className="mx-auto max-w-7xl px-4 py-10 md:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 py-14 md:px-6 lg:px-8 lg:py-16">
         {placements.length ? (
           <div className="mb-10 rounded-[28px] border border-white/10 bg-white/[0.03] p-6">
             <div className="text-xs font-semibold uppercase tracking-[0.24em] text-[#b899ff]">Sponsors & partners</div>
@@ -52,7 +52,7 @@ export default function PublicFooterShell({
           <div>
             <Link href={`${getWebOrigin()}/`} className="text-2xl font-black tracking-tight text-white">EVNTSZN™</Link>
             <p className="mt-4 max-w-md text-sm leading-7 text-white/68">
-              Premium discovery for nightlife, live music, sports, city moments, and league nights worth planning around. Powered by ORYX. ORYX is a product of MIXDEN Creative.
+              EVNTSZN brings together nights out, live games, concerts, EPL, and city plans people actually want to keep up with.
             </p>
           </div>
 

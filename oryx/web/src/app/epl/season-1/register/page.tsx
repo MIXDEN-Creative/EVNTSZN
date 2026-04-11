@@ -7,7 +7,7 @@ export default function EPLSeasonOneRegisterPage() {
       surface="epl"
       eyebrow="EVNTSZN Prime League"
       title="Season 1 Player Registration"
-      description="Claim your spot, build your player profile, and get into Baltimore flag football with a registration flow that feels ready for the season."
+      description="Claim your spot, build your player profile, and get into Baltimore coed flag football with a registration flow built for the season."
       meta={
         <>
           <div className="ev-meta-card">
@@ -16,7 +16,7 @@ export default function EPLSeasonOneRegisterPage() {
           </div>
           <div className="ev-meta-card">
             <div className="ev-meta-label">What happens next</div>
-            <div className="ev-meta-value">After registration, the league can place you into draft-night and Season 1 updates without dropping you into a dead-end sign-up loop.</div>
+            <div className="ev-meta-value">After registration, you stay in the Season 1 flow for draft night, player updates, and league communication.</div>
           </div>
         </>
       }

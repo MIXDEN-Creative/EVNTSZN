@@ -103,13 +103,13 @@ export default async function EventDetailPage({ params }: { params: Params }) {
   };
 
   return (
-    <main className="min-h-screen bg-black px-6 py-12 text-white">
+    <main className="min-h-screen bg-black px-4 py-16 text-white md:px-6 lg:px-8 lg:py-20">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <div className="mx-auto max-w-7xl">
-        <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
+        <div className="grid gap-10 lg:grid-cols-[1.2fr_0.8fr] lg:gap-12">
           <section>
             <p className="text-xs uppercase tracking-[0.28em] text-[#A259FF]">
               {event.city}, {event.state}
@@ -143,7 +143,7 @@ export default async function EventDetailPage({ params }: { params: Params }) {
                 </p>
               </div>
               <div className="rounded-[28px] border border-white/10 bg-white/[0.03] p-5">
-                <p className="text-xs uppercase tracking-[0.22em] text-white/45">Scanner</p>
+                <p className="text-xs uppercase tracking-[0.22em] text-white/45">Check-in</p>
                 <p className="mt-3 text-xl font-semibold">{event.scanner_status}</p>
               </div>
             </div>
@@ -156,7 +156,7 @@ export default async function EventDetailPage({ params }: { params: Params }) {
 
             {operations?.objective || operations?.run_of_show ? (
               <div className="mt-8 rounded-[30px] border border-white/10 bg-white/[0.03] p-6">
-                <p className="text-xs uppercase tracking-[0.22em] text-[#A259FF]">Event operations</p>
+                <p className="text-xs uppercase tracking-[0.22em] text-[#A259FF]">What to know</p>
                 {operations.objective ? (
                   <p className="mt-4 text-base leading-7 text-white/76">{operations.objective}</p>
                 ) : null}

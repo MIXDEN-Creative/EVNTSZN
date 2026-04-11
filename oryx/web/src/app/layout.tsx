@@ -16,18 +16,18 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(getWebOrigin()),
   title: {
-    default: "EVNTSZN | Premium nightlife, sports, and city energy",
+    default: "EVNTSZN | Nights out, live games, concerts, and league nights",
     template: "%s | EVNTSZN",
   },
   description:
-    "Discover the city's strongest moves. EVNTSZN connects you to headline concerts, exclusive nightlife, and high-stakes sports through a premium discovery experience.",
+    "Find the nights out, live games, concerts, and league moments worth showing up for with EVNTSZN.",
   alternates: {
     canonical: "/",
   },
   openGraph: {
-    title: "EVNTSZN | Premium nightlife, sports, and city energy",
+    title: "EVNTSZN | Nights out, live games, concerts, and league nights",
     description:
-      "A premium event discovery platform for headline concerts, exclusive nightlife, and high-stakes sports.",
+      "One cleaner public guide to concerts, nightlife, sports, and league nights.",
     url: "/",
     siteName: "EVNTSZN",
     locale: "en_US",
@@ -35,9 +35,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "EVNTSZN | Premium nightlife, sports, and city energy",
+    title: "EVNTSZN | Nights out, live games, concerts, and league nights",
     description:
-      "Find your next move. Access exclusive city energy and the strongest live plans first.",
+      "Find what is happening next and move straight into the right event, ticket, or league page.",
   },
 };
 

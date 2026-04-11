@@ -13,24 +13,50 @@ export type EventbriteEvent = {
 
 const eventbriteCache = new Map<string, { expiresAt: number; value: EventbriteEvent[] }>();
 
+type EventbriteSearchResponse = {
+  events?: Array<{
+    id?: string;
+    url?: string;
+    name?: { text?: string | null } | null;
+    summary?: string | null;
+    description?: { text?: string | null } | null;
+    start?: { utc?: string | null } | null;
+    logo?: {
+      original?: {
+        url?: string | null;
+      } | null;
+    } | null;
+    primary_venue?: {
+      name?: string | null;
+      address?: {
+        city?: string | null;
+        region?: string | null;
+      } | null;
+    } | null;
+  }>;
+};
+
 export async function searchEventbriteEvents(input: {
   query?: string;
   city?: string;
   size?: number;
 }) {
-  const apiKey = process.env.EB_API_KEY;
+  const apiKey = process.env.EVENTBRITE_API_KEY || process.env.EB_API_KEY;
 
   if (!apiKey) {
     return [] as EventbriteEvent[];
   }
 
-  // Note: Eventbrite API v3 often requires organization ID or specific expansion parameters.
-  // This is a simplified stub following the existing patterns.
   const params = new URLSearchParams({
-    token: apiKey,
-    q: input.query || "",
-    "location.address": input.city || "",
+    q: input.query?.trim() || "",
+    expand: "primary_venue",
+    page_size: String(input.size || 8),
+    sort_by: "date",
   });
+
+  if (input.city?.trim()) {
+    params.set("location.address", input.city.trim());
+  }
 
   const cacheKey = params.toString();
   const cached = eventbriteCache.get(cacheKey);
@@ -40,27 +66,29 @@ export async function searchEventbriteEvents(input: {
 
   try {
     const response = await fetch(`https://www.eventbriteapi.com/v3/events/search/?${params.toString()}`, {
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+      },
       next: { revalidate: 300 },
     });
 
     if (!response.ok) {
-      // Return empty if API fails or is not accessible
-      return [];
+      return cached?.value || [];
     }
 
-    const payload: any = await response.json();
+    const payload = (await response.json()) as EventbriteSearchResponse;
     const events = payload.events || [];
 
-    const normalized = events.map((event: any) => ({
+    const normalized = events.map((event) => ({
       id: event.id || crypto.randomUUID(),
       title: event.name?.text || "Event",
       url: event.url || null,
       startAt: event.start?.utc || null,
-      venueName: event.venue?.name || null,
-      city: event.venue?.address?.city || null,
-      state: event.venue?.address?.region || null,
+      venueName: event.primary_venue?.name || null,
+      city: event.primary_venue?.address?.city || input.city?.trim() || null,
+      state: event.primary_venue?.address?.region || null,
       imageUrl: event.logo?.original?.url || null,
-      description: event.description?.text || null,
+      description: event.summary || event.description?.text || null,
       source: "eventbrite" as const,
     }));
 
@@ -72,6 +100,27 @@ export async function searchEventbriteEvents(input: {
     return normalized;
   } catch (error) {
     console.error("[eventbrite] search failed", error);
-    return [];
+    return cached?.value || [];
   }
+}
+
+export async function getEventbriteShowcase(cities: string[] = ["Baltimore", "Atlanta", "New York", "Miami", "Washington"]) {
+  const groups = await Promise.all(
+    cities.map((city) =>
+      searchEventbriteEvents({
+        city,
+        size: 2,
+      }).catch(() => [] as EventbriteEvent[]),
+    ),
+  );
+
+  const seen = new Set<string>();
+  return groups
+    .flat()
+    .filter((event) => {
+      if (seen.has(event.id)) return false;
+      seen.add(event.id);
+      return true;
+    })
+    .slice(0, 8);
 }

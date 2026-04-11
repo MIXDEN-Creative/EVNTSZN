@@ -21,8 +21,9 @@ export default function PublicNav() {
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-black/72 backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 md:px-6 lg:px-8">
-        <Link href={getWebOrigin()} className="text-lg font-black tracking-tight text-white">
-          EVNTSZN
+        <Link href={getWebOrigin()} className="flex flex-col" aria-label="EVNTSZN home">
+          <span className="text-lg font-black tracking-tight text-white">EVNTSZN</span>
+          <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/42">Events, EPL, and city plans</span>
         </Link>
 
         <nav className="hidden items-center gap-6 lg:flex">
@@ -61,7 +62,7 @@ export default function PublicNav() {
           <a href={`${getAppOrigin()}/account/login`} className="text-sm font-medium text-white/78 transition hover:text-white">
             Sign In
           </a>
-          <a href={`${getAppOrigin()}/account/login?next=/account`} className="ev-button-primary">
+          <a href={`${getAppOrigin()}/account/login?mode=signup&next=/account`} className="ev-button-primary">
             Create Account
           </a>
         </div>

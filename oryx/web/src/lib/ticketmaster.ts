@@ -63,7 +63,7 @@ export async function searchTicketmasterEvents(input: {
   latitude?: number;
   longitude?: number;
 }) {
-  const apiKey = process.env.TM_API_KEY;
+  const apiKey = process.env.TICKETMASTER_API_KEY || process.env.TM_API_KEY;
 
   if (!apiKey) {
     return [] as TicketmasterEvent[];

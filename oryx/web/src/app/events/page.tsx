@@ -12,18 +12,18 @@ export default async function EventsPage() {
   return (
     <SurfaceShell
       surface="web"
-      eyebrow="EVNTSZN live inventory"
+      eyebrow="Public events"
       title="Events and ticket drops"
-      description="Browse published EVNTSZN experiences, purchase branded access, and move into a clean attendee flow with share-ready tickets."
+      description="Browse published EVNTSZN events, open the one that fits, and move straight into tickets, details, and the next step."
       meta={
         <>
           <div className="ev-meta-card">
-            <div className="ev-meta-label">Access layer</div>
-            <div className="ev-meta-value">Public browsing stays on the web surface while member, scanner, and operator environments remain separated.</div>
+            <div className="ev-meta-label">What you can do here</div>
+            <div className="ev-meta-value">Scan the live calendar, open an event page, and buy access without getting pulled into the wrong flow.</div>
           </div>
           <div className="ev-meta-card">
-            <div className="ev-meta-label">Run of show</div>
-            <div className="ev-meta-value">Every event opens into the branded purchase path with scanner-ready operations already wired behind the scenes.</div>
+            <div className="ev-meta-label">Ticket flow</div>
+            <div className="ev-meta-value">Every event page carries the details, ticket options, and purchase path in one place.</div>
           </div>
         </>
       }
@@ -48,11 +48,11 @@ export default async function EventsPage() {
               </div>
 
               <div className="rounded-[28px] border border-white/10 bg-black/30 p-5">
-                <p className="text-xs uppercase tracking-[0.22em] text-white/45">Run of show</p>
+                <p className="text-xs uppercase tracking-[0.22em] text-white/45">At a glance</p>
                 <div className="mt-4 space-y-2 text-sm text-white/72">
                   <div>Doors: {new Date(event.start_at).toLocaleString()}</div>
                   <div>Wrap: {new Date(event.end_at).toLocaleString()}</div>
-                  <div>Scanner state: {event.scanner_status}</div>
+                  <div>Check-in: {event.scanner_status}</div>
                 </div>
                 <Link
                   href={`/events/${event.slug}`}

@@ -17,14 +17,14 @@ import PublicFooter from "@/components/public/PublicFooter";
 export const metadata: Metadata = {
   title: "EPL | EVNTSZN Prime League",
   description:
-    "Explore EVNTSZN Prime League, Baltimore’s premium flag football league. Six teams, draft-night energy, and high-stakes city competition.",
+    "Explore EVNTSZN Prime League, Baltimore’s coed flag football league with six clubs, draft-night energy, and a standings race worth following.",
   alternates: {
     canonical: "https://epl.evntszn.com",
   },
   openGraph: {
     title: "EPL | EVNTSZN Prime League",
     description:
-      "Explore EVNTSZN Prime League, Baltimore’s premium flag football league. Six teams, draft-night energy, and high-stakes city competition.",
+      "Explore EVNTSZN Prime League, Baltimore’s coed flag football league with six clubs, draft-night energy, and a standings race worth following.",
     url: "https://epl.evntszn.com",
     siteName: "EVNTSZN",
     type: "website",
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "EPL | EVNTSZN Prime League",
     description:
-      "Explore EVNTSZN Prime League, Baltimore’s premium flag football league. Six teams, draft-night energy, and high-stakes city competition.",
+      "Explore EVNTSZN Prime League, Baltimore’s coed flag football league with six clubs, draft-night energy, and a standings race worth following.",
   },
 };
 
@@ -61,7 +61,7 @@ export default async function EplPage() {
           className="absolute inset-0 h-full w-full object-cover"
         />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(162,89,255,0.35),transparent_45%),linear-gradient(180deg,rgba(0,0,0,0.30),rgba(0,0,0,0.92))]" />
-        <div className="relative mx-auto grid max-w-7xl gap-12 px-4 py-20 md:px-6 lg:grid-cols-[1.1fr_0.9fr] lg:px-8 lg:py-32">
+        <div className="relative mx-auto grid max-w-7xl gap-12 px-4 py-24 md:px-6 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16 lg:px-8 lg:py-36">
           <div className="flex flex-col justify-center">
             <div className="inline-flex w-fit rounded-full border border-white/15 bg-white/8 px-5 py-2 text-xs font-bold uppercase tracking-[0.24em] text-white/90">
               {content.hero.eyebrow}
@@ -75,7 +75,7 @@ export default async function EplPage() {
               {content.hero.description}
             </p>
 
-            <div className="mt-10 flex flex-wrap gap-4">
+            <div className="mt-12 flex flex-wrap gap-4">
               {content.menu.showRegister ? (
                 <a
                   href={content.hero.primaryCtaHref}
@@ -86,7 +86,7 @@ export default async function EplPage() {
               ) : null}
               {content.menu.showSchedule ? (
                 <a
-                  href="#schedule"
+                  href={content.hero.secondaryCtaHref}
                   className="rounded-full border border-white/20 bg-white/5 px-8 py-4 text-sm font-black uppercase tracking-widest text-white backdrop-blur-xl transition hover:bg-white/10 active:scale-95"
                 >
                   {content.hero.secondaryCtaLabel}
@@ -99,15 +99,15 @@ export default async function EplPage() {
             {[
               {
                 label: "League feel",
-                body: "Draft night, flag pulls, quarterback pressure, and sideline momentum all live in one public league built to feel active every week.",
+                body: "Draft night, flag pulls, quarterback pressure, and sideline momentum all live in one public league built to feel alive every week.",
               },
               {
                 label: "Why people come back",
-                body: "Players can register, supporters can follow the table, and every team has a public identity worth checking between game nights.",
+                body: "Players can register, supporters can follow the table, and every club has enough identity to keep people checking in between game nights.",
               },
               {
                 label: "Built for Baltimore",
-                body: "EPL leans into city pride, neighborhood identity, and a coed adult league energy that feels sharper than a one-off rec run.",
+                body: "EPL leans into Baltimore pride, neighborhood identity, and a coed adult league feel that is sharper than a one-off rec run.",
               },
             ].map((item) => (
               <div key={item.label} className="rounded-[32px] border border-white/10 bg-black/40 p-8 backdrop-blur-2xl">
@@ -124,7 +124,7 @@ export default async function EplPage() {
       <div className="mx-auto max-w-7xl px-4 py-20 md:px-6 lg:px-8 lg:py-32">
         {content.menu.showDraftCountdown ? <DraftCountdown /> : null}
 
-        <section className="mt-20 rounded-[48px] border border-white/10 bg-[#0c0c15] p-10 md:p-16">
+        <section className="mt-24 rounded-[48px] border border-white/10 bg-[#0c0c15] p-10 md:p-16 lg:p-18">
           <div className="text-xs font-bold uppercase tracking-[0.24em] text-[#b899ff]">
             Season overview
           </div>
@@ -151,7 +151,7 @@ export default async function EplPage() {
         </section>
 
         {content.menu.showSchedule ? (
-          <section id="schedule" className="mt-20 rounded-[48px] border border-white/10 bg-[#0c0c15] p-10 md:p-16">
+          <section id="schedule" className="mt-24 rounded-[48px] border border-white/10 bg-[#0c0c15] p-10 md:p-16 lg:p-18">
             <div className="text-xs font-bold uppercase tracking-[0.24em] text-[#b899ff]">
               Schedule
             </div>
@@ -180,7 +180,7 @@ export default async function EplPage() {
         ) : null}
 
         {content.menu.showTeams ? (
-          <section id="teams" className="mt-20 rounded-[48px] border border-white/10 bg-[#0c0c15] p-10 md:p-16">
+          <section id="teams" className="mt-24 rounded-[48px] border border-white/10 bg-[#0c0c15] p-10 md:p-16 lg:p-18">
             <div className="text-xs font-bold uppercase tracking-[0.24em] text-[#b899ff]">
               Teams
             </div>
@@ -200,7 +200,7 @@ export default async function EplPage() {
                   <div className="mt-5 text-3xl font-black text-white">{team.name}</div>
                   <p className="mt-4 text-base leading-7 text-white/60">{team.headline}</p>
                   <div className="mt-8 inline-flex text-sm font-bold text-white/80 group-hover:text-white">
-                    View Team Profile →
+                    Open team page →
                   </div>
                 </Link>
               ))}
@@ -214,7 +214,7 @@ export default async function EplPage() {
         ) : null}
 
         {content.menu.showStandings ? (
-          <section id="standings" className="mt-10 rounded-[32px] border border-white/10 bg-[#0c0c15] p-6 md:p-8">
+          <section id="standings" className="mt-14 rounded-[36px] border border-white/10 bg-[#0c0c15] p-8 md:p-10">
             <div className="text-xs font-semibold uppercase tracking-[0.24em] text-[#b899ff]">
               Standings
             </div>
@@ -233,7 +233,7 @@ export default async function EplPage() {
         ) : null}
 
         {content.menu.showOpportunities ? (
-          <section id="opportunities" className="mt-10 rounded-[32px] border border-white/10 bg-[#0c0c15] p-6 md:p-8">
+          <section id="opportunities" className="mt-14 rounded-[36px] border border-white/10 bg-[#0c0c15] p-8 md:p-10">
             <div className="text-xs font-semibold uppercase tracking-[0.24em] text-[#b899ff]">
               {modules.opportunitiesBlock.eyebrow}
             </div>
@@ -255,7 +255,7 @@ export default async function EplPage() {
         ) : null}
 
         {content.menu.showStore ? (
-          <section id="store" className="mt-10 rounded-[32px] border border-white/10 bg-[#0c0c15] p-6 md:p-8">
+          <section id="store" className="mt-14 rounded-[36px] border border-white/10 bg-[#0c0c15] p-8 md:p-10">
             <div className="text-xs font-semibold uppercase tracking-[0.24em] text-[#b899ff]">
               {modules.storePromo.eyebrow}
             </div>
@@ -285,7 +285,7 @@ export default async function EplPage() {
         ) : null}
 
         {content.menu.showFaq ? (
-          <section className="mt-10 rounded-[32px] border border-white/10 bg-[#0c0c15] p-6 md:p-8">
+          <section className="mt-14 rounded-[36px] border border-white/10 bg-[#0c0c15] p-8 md:p-10">
             <div className="text-xs font-semibold uppercase tracking-[0.24em] text-[#b899ff]">
               How it works
             </div>

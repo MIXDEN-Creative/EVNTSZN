@@ -35,14 +35,14 @@ export default async function EplTeamsPage() {
   return (
     <main className="min-h-screen bg-black text-white">
       <EplNav menu={content.menu} />
-      <section className="mx-auto max-w-7xl px-4 py-12 md:px-6 lg:px-8">
+      <section className="mx-auto max-w-7xl px-4 py-16 md:px-6 lg:px-8 lg:py-20">
         <div className="ev-kicker">Season 1 clubs</div>
         <h1 className="ev-title">Six teams. One city. Real flag football identity.</h1>
         <p className="ev-subtitle max-w-3xl">
-          EPL teams are built to feel like something people want to follow all season: draft-night storylines, city pride, sideline energy, and clubs worth showing up for on game day.
+          EPL teams are built to be followed all season: draft-night storylines, city pride, sideline energy, and clubs worth showing up for on game day.
         </p>
 
-        <div className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+        <div className="mt-14 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
           {EPL_TEAM_PROFILES.map((team) => (
             <Link
               key={team.slug}
@@ -71,7 +71,7 @@ export default async function EplTeamsPage() {
           ))}
         </div>
 
-        <div className="mt-8 flex flex-wrap gap-3">
+        <div className="mt-10 flex flex-wrap gap-3">
           <Link href="/epl/standings" className="ev-button-primary">
             View standings
           </Link>

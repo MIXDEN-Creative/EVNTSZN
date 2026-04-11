@@ -11,15 +11,16 @@ import {
   getHomepageContent,
   getPublicModulesContent,
 } from "@/lib/site-content";
+import { getEventbriteShowcase } from "@/lib/eventbrite";
 import { getTicketmasterShowcase } from "@/lib/ticketmaster";
 import { getWebOrigin } from "@/lib/domains";
 import { getPublicSponsorPlacements } from "@/lib/sponsor-placements";
 import { safePublicLoad } from "@/lib/public-safe-load";
 
 export const metadata: Metadata = {
-  title: "EVNTSZN | Discover nightlife, live music, sports, and the best things to do",
+  title: "EVNTSZN | Nights out, live games, concerts, and city plans worth showing up for",
   description:
-    "Discover nightlife, live music, sports, draft night energy, and the best things to do in Baltimore, Atlanta, Miami, New York, and DC with EVNTSZN.",
+    "Find concerts, nightlife, sports, league nights, and city plans worth leaving home for across Baltimore, Atlanta, Miami, New York, DC, and Dover.",
   alternates: {
     canonical: "https://evntszn.com",
   },
@@ -38,18 +39,18 @@ export const metadata: Metadata = {
     "EVNTSZN",
   ],
   openGraph: {
-    title: "EVNTSZN | Discover nightlife, live music, sports, and the best things to do",
+    title: "EVNTSZN | Nights out, live games, concerts, and city plans worth showing up for",
     description:
-      "Search nightlife, concerts, sports, city energy, and the strongest live plans with EVNTSZN’s premium public discovery experience.",
+      "Search concerts, nightlife, sports, and local plans with one clean public guide to what is happening next.",
     url: "https://evntszn.com",
     siteName: "EVNTSZN",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "EVNTSZN | Discover nightlife, live music, sports, and the best things to do",
+    title: "EVNTSZN | Nights out, live games, concerts, and city plans worth showing up for",
     description:
-      "Find the best things to do in Baltimore, Atlanta, Miami, New York, DC, and beyond with EVNTSZN.",
+      "Find the next concert, game, league night, or night out worth your time with EVNTSZN.",
   },
 };
 
@@ -65,7 +66,7 @@ function formatHomepageJsonLd() {
         url: origin,
         logo: `${origin}/favicon.ico`,
         description:
-          "EVNTSZN is a premium event discovery platform for nightlife, music, sports, and live entertainment.",
+          "EVNTSZN helps people find nights out, live games, concerts, and local plans worth showing up for.",
       },
       {
         "@type": "WebSite",
@@ -99,7 +100,7 @@ function dedupeHomepageListings<
 }
 
 export default async function HomePage() {
-  const [content, modules, nativeResult, externalShowcase, homepagePlacements] = await Promise.all([
+  const [content, modules, nativeResult, ticketmasterShowcase, eventbriteShowcase, homepagePlacements] = await Promise.all([
     safePublicLoad("homepage-content", () => getHomepageContent(), {
       ...DEFAULT_HOMEPAGE_CONTENT,
       storageReady: false,
@@ -113,8 +114,17 @@ export default async function HomePage() {
       storageReady: false,
     }),
     safePublicLoad("homepage-ticketmaster-showcase", async () => applyExternalDiscoveryControls("ticketmaster", await getTicketmasterShowcase()), []),
+    safePublicLoad("homepage-eventbrite-showcase", () => getEventbriteShowcase(), []),
     safePublicLoad("homepage-sponsor-placements", () => getPublicSponsorPlacements("homepage"), []),
   ]);
+
+  const externalShowcase = dedupeHomepageListings(
+    [...ticketmasterShowcase, ...eventbriteShowcase].map((event) => ({
+      ...event,
+      city: event.city || undefined,
+      state: event.state || undefined,
+    })),
+  ).slice(0, 12);
 
   const nativeSections = groupDiscoveryEventsBySource(nativeResult.events);
   const initialPopular = dedupeHomepageListings([
@@ -149,11 +159,11 @@ export default async function HomePage() {
       city: event.city || "",
       state: event.state || "",
       startAt: event.startAt,
-      source: "ticketmaster" as const,
-      badgeLabel: "External listing",
+      source: event.source,
+      badgeLabel: event.source === "ticketmaster" ? "Ticketmaster" : "Eventbrite",
       summary:
         event.description ||
-        `${event.venueName || "Live city listing"}${event.city ? ` · ${event.city}` : ""}`,
+        `${event.venueName || "Live event"}${event.city ? ` · ${event.city}` : ""}`,
       isPrimary: false,
     })),
   ]).slice(0, 8);
