@@ -378,7 +378,7 @@ export default function DiscoveryLanding({
           <div className="ev-hero-overlay absolute inset-0" />
         </div>
 
-        <div className="relative mx-auto max-w-7xl px-4 py-20 md:px-6 lg:px-8 lg:py-32">
+        <div className="relative mx-auto max-w-[1600px] px-4 py-20 md:px-6 lg:px-8 lg:py-32">
           <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:gap-14">
             <motion.div
               initial={{ opacity: 0, y: 24 }}
@@ -491,48 +491,48 @@ export default function DiscoveryLanding({
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-16 md:px-6 lg:px-8 lg:py-20">
-        <div className="ev-panel overflow-hidden p-8 md:p-10">
-          <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
+      <section className="mx-auto max-w-[1600px] px-4 py-16 md:px-6 lg:px-8 lg:py-20">
+        <div className="ev-panel overflow-hidden p-8 md:p-10 lg:p-14">
+          <div className="grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
             <div>
               <div className="ev-section-kicker">Host applications open</div>
-              <h2 className="mt-4 text-4xl font-black tracking-[-0.04em] text-white md:text-5xl">
-                We are actively registering EVNTSZN Hosts in Baltimore, Atlanta, New York, Miami, DC, and Dover.
+              <h2 className="mt-4 text-4xl font-black tracking-[-0.04em] text-white md:text-5xl lg:text-6xl leading-[0.95]">
+                We are actively registering EVNTSZN Hosts.
               </h2>
-              <p className="mt-5 max-w-3xl text-lg leading-8 text-white/72">
+              <p className="mt-6 max-w-3xl text-lg md:text-xl leading-relaxed text-white/72">
                 If you can run a room, lead guest energy, and hold a premium event standard, the EVNTSZN Host path is open. Approved hosts work real city-facing nights, operate inside the live host commission structure, and build toward bigger market responsibility.
               </p>
-              <div className="mt-8 flex flex-wrap gap-3">
-                <Link href="/hosts/apply" className="ev-button-primary">
+              <div className="mt-10 flex flex-wrap gap-4">
+                <Link href="/hosts/apply" className="ev-button-primary px-8">
                   Apply as a host
                 </Link>
-                <Link href="/hosts" className="ev-button-secondary">
+                <Link href="/hosts" className="ev-button-secondary px-8">
                   Explore host path
                 </Link>
               </div>
             </div>
 
-            <div className="grid gap-4">
-              <div className="rounded-[28px] border border-white/10 bg-black/25 p-5">
-                <div className="text-xs uppercase tracking-[0.18em] text-white/45">Host perks</div>
-                <div className="mt-4 grid gap-3">
+            <div className="grid gap-6">
+              <div className="rounded-[32px] border border-white/10 bg-white/[0.02] p-7 md:p-8">
+                <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-white/30">Host perks</div>
+                <div className="mt-6 grid gap-4">
                   {[
                     "Host-led event revenue works inside the EVNTSZN host split.",
                     "Scanner and event-ops support stay aligned with the host lane.",
                     "Top hosts move into certified, pro, and city-lead pathways.",
                     "City-by-city openings are currently live in Baltimore, Atlanta, New York, Miami, DC, and Dover.",
                   ].map((item) => (
-                    <div key={item} className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm leading-6 text-white/72">
+                    <div key={item} className="rounded-2xl border border-white/5 bg-white/[0.03] p-5 text-sm md:text-base leading-relaxed text-white/70">
                       {item}
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div className="rounded-[28px] border border-white/10 bg-black/25 p-5">
-                <div className="text-xs uppercase tracking-[0.18em] text-white/45">Host revenue structure</div>
-                <div className="mt-3 text-lg font-semibold text-white">Host-led events</div>
-                <div className="mt-3 text-sm leading-6 text-white/72">
+              <div className="rounded-[32px] border border-white/10 bg-white/[0.02] p-7 md:p-8">
+                <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-white/30">Host revenue structure</div>
+                <div className="mt-4 text-2xl font-black text-white">Host-led events</div>
+                <div className="mt-4 text-base leading-relaxed text-white/70">
                   Approved host-led events work inside the live EVNTSZN host commission structure, so strong operators can build real upside on the nights they lead.
                 </div>
               </div>
@@ -542,18 +542,18 @@ export default function DiscoveryLanding({
       </section>
 
       {content.visibility.showPopularSection ? (
-      <section className="mx-auto max-w-7xl px-4 py-20 md:px-6 lg:px-8 lg:py-28">
-        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+      <section className="mx-auto max-w-[1600px] px-4 py-20 md:px-6 lg:px-8 lg:py-28">
+        <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <div className="max-w-4xl">
             <div className="ev-section-kicker">{hasSearched ? "Top results" : "Trending Now"}</div>
-            <h2 className="mt-4 text-4xl font-black tracking-[-0.04em] text-white md:text-6xl">
-              {hasSearched ? "The strongest matches for your next move." : "What people are showing up for right now."}
+            <h2 className="mt-4 text-5xl font-black tracking-[-0.04em] text-white md:text-7xl lg:text-8xl leading-[0.9]">
+              {hasSearched ? "The strongest matches." : "What people are showing up for."}
             </h2>
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-white/70">
+            <p className="mt-8 max-w-2xl text-lg md:text-xl leading-relaxed text-white/70">
               {content.discovery.body}
             </p>
           </div>
-          <div className="max-w-xs text-sm leading-6 text-white/40 md:text-right">
+          <div className="max-w-xs text-sm leading-relaxed text-white/40 md:text-right font-medium uppercase tracking-widest">
             {message ||
               (normalizedLocationLabel
                 ? `Using ${normalizedLocationLabel} for the closest city match.${weatherSummary ? ` ${weatherSummary}` : ""}`
@@ -562,17 +562,17 @@ export default function DiscoveryLanding({
         </div>
 
         {loading ? (
-          <div className="ev-empty mt-12">Loading fresh results...</div>
+          <div className="ev-empty mt-16 py-32">Loading fresh results...</div>
         ) : visibleResults.length === 0 ? (
-          <div className="ev-empty mt-12">
-            <div className="text-2xl font-bold text-white">{emptyState.title}</div>
-            <p className="mt-3 text-base leading-7 text-white/60">{message || emptyState.body}</p>
-            <div className="mt-8 flex flex-wrap gap-3">
+          <div className="ev-empty mt-16 py-32">
+            <div className="text-3xl font-black text-white tracking-tight">{emptyState.title}</div>
+            <p className="mt-4 text-lg text-white/60 max-w-md mx-auto">{message || emptyState.body}</p>
+            <div className="mt-10 flex flex-wrap justify-center gap-3">
               {PUBLIC_CITIES.map((suggestion) => (
                 <button
                   key={suggestion.slug}
                   type="button"
-                  className="ev-chip ev-chip--external h-11 px-6 text-sm"
+                  className="ev-chip ev-chip--external h-12 px-8 text-sm font-bold"
                   onClick={() => {
                     setCity(suggestion.name);
                     void runSearch({ city: suggestion.name });
@@ -584,9 +584,9 @@ export default function DiscoveryLanding({
             </div>
           </div>
         ) : (
-          <div className="mt-12 grid gap-8 xl:grid-cols-[1.1fr_0.9fr]">
+          <div className="mt-16 grid gap-8 lg:grid-cols-2 xl:grid-cols-[1.15fr_0.85fr]">
             {spotlight ? <DiscoveryCard event={spotlight} priority="hero" /> : null}
-            <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-1">
+            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
               {rail.slice(0, 4).map((event) => (
                 <DiscoveryCard key={event.id} event={event} priority="rail" />
               ))}
@@ -597,7 +597,7 @@ export default function DiscoveryLanding({
       ) : null}
 
       {sponsorPlacements.length ? (
-        <section className="mx-auto max-w-7xl px-4 pb-20 md:px-6 lg:px-8 lg:pb-28">
+        <section className="mx-auto max-w-[1600px] px-4 pb-20 md:px-6 lg:px-8 lg:pb-28">
           <SponsorPlacementStrip
             placements={sponsorPlacements}
             eyebrow={modules.sponsorBlock.eyebrow}
@@ -609,16 +609,16 @@ export default function DiscoveryLanding({
       ) : null}
 
       {content.visibility.showCategoryBlocks ? (
-        <section className="mx-auto max-w-7xl px-4 pb-16 md:px-6 lg:px-8 lg:pb-24">
+        <section className="mx-auto max-w-[1600px] px-4 pb-16 md:px-6 lg:px-8 lg:pb-24">
           <div className="flex items-end justify-between gap-4">
             <div className="max-w-3xl">
               <div className="ev-section-kicker">Explore by lane</div>
-              <h2 className="mt-4 text-4xl font-black tracking-[-0.04em] text-white md:text-5xl">
+              <h2 className="mt-4 text-5xl font-black tracking-[-0.04em] text-white md:text-6xl leading-[0.95]">
                 Search by nightlife, music, sports, or city plans.
               </h2>
             </div>
           </div>
-          <div className="mt-10 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+          <div className="mt-12 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
             {content.taxonomy.categories.map((category) => (
               <button
                 key={category.title}
@@ -627,13 +627,13 @@ export default function DiscoveryLanding({
                   setQuery(category.title);
                   void runSearch({ query: category.title });
                 }}
-                className="ev-panel group min-h-[220px] p-8 text-left transition-all hover:-translate-y-1 hover:bg-white/[0.04]"
+                className="rounded-[40px] border border-white/10 bg-white/5 group min-h-[260px] p-10 text-left transition-all hover:-translate-y-1 hover:bg-white/[0.08] hover:border-white/20"
               >
-                <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#cfb8ff]">
+                <div className="text-[11px] font-bold uppercase tracking-[0.3em] text-[#cfb8ff]/60">
                   Explore
                 </div>
-                <div className="mt-5 text-3xl font-black tracking-tight text-white">{category.title}</div>
-                <p className="mt-4 text-base leading-7 text-white/60">{category.description}</p>
+                <div className="mt-6 text-4xl font-black tracking-tight text-white">{category.title}</div>
+                <p className="mt-5 text-base md:text-lg leading-relaxed text-white/60">{category.description}</p>
               </button>
             ))}
           </div>
@@ -641,26 +641,26 @@ export default function DiscoveryLanding({
       ) : null}
 
       {content.visibility.showCityBlocks ? (
-        <section id="cities" className="mx-auto max-w-7xl px-4 pb-20 md:px-6 lg:px-8 lg:pb-28">
-          <div className="ev-panel p-8 md:p-12 lg:p-14">
+        <section id="cities" className="mx-auto max-w-[1600px] px-4 pb-20 md:px-6 lg:px-8 lg:pb-28">
+          <div className="rounded-[48px] border border-white/10 bg-[#0c0c15] p-10 md:p-16 lg:p-20">
             <div className="ev-section-kicker">Cities</div>
-            <h2 className="mt-4 text-4xl font-black tracking-[-0.04em] text-white md:text-5xl">
-              Start with the city. The right night follows.
+            <h2 className="mt-4 text-5xl font-black tracking-[-0.04em] text-white md:text-7xl lg:text-8xl leading-[0.9]">
+              Start with the city.
             </h2>
-            <div className="mt-12 grid gap-6 md:grid-cols-2 xl:grid-cols-5">
+            <div className="mt-16 grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
               {PUBLIC_CITIES.map((cityItem) => (
                 <Link
                   key={cityItem.slug}
                   href={`/${cityItem.slug}`}
-                  className="group rounded-[32px] border border-white/10 bg-white/5 p-7 transition-all hover:bg-white/[0.08] hover:shadow-2xl"
+                  className="group flex flex-col rounded-[40px] border border-white/10 bg-white/[0.03] p-8 transition-all hover:bg-white/[0.08] hover:shadow-2xl hover:border-white/20 hover:-translate-y-1"
                 >
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#cfb8ff]">
+                  <div className="text-[11px] font-bold uppercase tracking-[0.3em] text-[#cfb8ff]/60">
                     {cityItem.stateLabel}
                   </div>
-                  <div className="mt-4 text-3xl font-black tracking-tight text-white">{cityItem.shortLabel}</div>
-                  <p className="mt-4 text-sm leading-6 text-white/60">{cityItem.description}</p>
-                  <span className="mt-8 inline-flex items-center gap-2 text-sm font-bold text-white/90">
-                    Explore {cityItem.shortLabel}
+                  <div className="mt-6 text-4xl font-black tracking-tight text-white">{cityItem.shortLabel}</div>
+                  <p className="mt-5 text-sm md:text-base leading-relaxed text-white/60 flex-1">{cityItem.description}</p>
+                  <span className="mt-10 inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-white/90 group-hover:text-[#cfb8ff] transition-colors">
+                    Explore city
                     <span className="transition-transform group-hover:translate-x-1">→</span>
                   </span>
                 </Link>
@@ -671,9 +671,9 @@ export default function DiscoveryLanding({
       ) : null}
 
       {content.visibility.showEplPanel ? (
-        <section className="mx-auto max-w-7xl px-4 pb-20 md:px-6 lg:px-8 lg:pb-24">
-          <div className="overflow-hidden rounded-[32px] border border-white/10 bg-[#0c0c15] shadow-[0_22px_60px_rgba(0,0,0,0.45)] lg:grid lg:grid-cols-[1.05fr_0.95fr]">
-            <div className="relative min-h-[360px]">
+        <section className="mx-auto max-w-[1600px] px-4 pb-20 md:px-6 lg:px-8 lg:pb-24">
+          <div className="overflow-hidden rounded-[48px] border border-white/10 bg-[#0c0c15] shadow-[0_22px_60px_rgba(0,0,0,0.45)] lg:grid lg:grid-cols-[1.1fr_0.9fr]">
+            <div className="relative min-h-[480px]">
               <Image
                 src={FALLBACK_EPL_IMAGE}
                 alt="EVNTSZN Prime League"
@@ -682,37 +682,34 @@ export default function DiscoveryLanding({
                 sizes="(max-width: 1024px) 100vw, 50vw"
                 className="object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-r from-black via-black/60 to-black/15" />
-              <div className="relative p-6 md:p-8">
-                <div className="ev-kicker">EPL Season 1</div>
-                <h2 className="mt-5 max-w-xl text-4xl font-black tracking-[-0.05em] text-white md:text-5xl">
-                  Coed flag football, draft-night pressure, and a league people can actually follow week to week.
+              <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-transparent" />
+              <div className="relative p-10 md:p-14 lg:p-16 h-full flex flex-col justify-center">
+                <div className="ev-kicker text-[#b899ff]">EPL Season 1</div>
+                <h2 className="mt-6 max-w-xl text-5xl font-black tracking-[-0.05em] text-white md:text-6xl lg:text-7xl leading-[0.9]">
+                  Coed flag football.
                 </h2>
-                <p className="mt-4 max-w-xl text-base leading-7 text-white/76">
+                <p className="mt-8 max-w-xl text-lg md:text-xl leading-relaxed text-white/76">
                   EPL brings team identity, standings pressure, player registration, and game-day energy into one public league experience built to travel cleanly from city to city.
                 </p>
-                <div className="mt-6 flex flex-wrap gap-3">
-                  <Link href="https://epl.evntszn.com" className="ev-button-primary">
+                <div className="mt-10 flex flex-wrap gap-4">
+                  <Link href="https://epl.evntszn.com" className="ev-button-primary px-8">
                     Explore EPL
                   </Link>
-                  <Link href="https://epl.evntszn.com/season-1/register" className="ev-button-secondary">
+                  <Link href="https://epl.evntszn.com/season-1/register" className="ev-button-secondary px-8">
                     Register
-                  </Link>
-                  <Link href="https://epl.evntszn.com#schedule" className="ev-button-secondary">
-                    View Schedule
                   </Link>
                 </div>
               </div>
             </div>
-            <div className="grid gap-4 p-6 md:p-8">
+            <div className="grid gap-6 p-10 md:p-14 lg:p-16 bg-white/[0.01]">
               {[
                 "A coed flag football league with real clubs, real standings, and real city pride.",
                 "Draft night, registration, and game-day follow-through live in one place.",
                 "Supporters can move from team pages to standings to opportunities without losing the league thread.",
               ].map((item) => (
-                <div key={item} className="ev-panel p-5">
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#cfb8ff]">Why EPL lands</div>
-                  <div className="mt-3 text-lg font-semibold leading-7 text-white">{item}</div>
+                <div key={item} className="rounded-[32px] border border-white/10 bg-white/[0.02] p-8 flex flex-col justify-center">
+                  <div className="text-[11px] font-bold uppercase tracking-[0.3em] text-[#cfb8ff]/60">Why EPL lands</div>
+                  <div className="mt-5 text-xl md:text-2xl font-black leading-tight text-white">{item}</div>
                 </div>
               ))}
             </div>
@@ -724,14 +721,14 @@ export default function DiscoveryLanding({
       (content.visibility.showHostSection && groupedNative.host.length > 0) ||
       (content.visibility.showIndependentSection && groupedNative.independent.length > 0) ||
       (content.visibility.showExternalSection && groupedNative.external.length > 0) ? (
-        <section className="mx-auto max-w-7xl px-4 pb-16 md:px-6 lg:px-8">
+        <section className="mx-auto max-w-[1600px] px-4 pb-16 md:px-6 lg:px-8">
           <div className="ev-section-kicker">More discovery</div>
-          <div className="mt-3 space-y-10">
+          <div className="mt-10 space-y-16">
             {content.visibility.showNativeSection && groupedNative.evntszn.length > 0 ? (
               <div>
-                <h2 className="text-3xl font-black tracking-[-0.04em] text-white">{content.discovery.nativeHeadline}</h2>
-                <div className="mt-5 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-                  {groupedNative.evntszn.slice(0, 3).map((event) => (
+                <h2 className="text-4xl font-black tracking-[-0.04em] text-white md:text-5xl">{content.discovery.nativeHeadline}</h2>
+                <div className="mt-8 grid gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {groupedNative.evntszn.slice(0, 4).map((event) => (
                     <DiscoveryCard key={event.id} event={event} priority="rail" />
                   ))}
                 </div>
@@ -739,9 +736,9 @@ export default function DiscoveryLanding({
             ) : null}
             {content.visibility.showHostSection && groupedNative.host.length > 0 ? (
               <div>
-                <h2 className="text-3xl font-black tracking-[-0.04em] text-white">{content.discovery.hostHeadline}</h2>
-                <div className="mt-5 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-                  {groupedNative.host.slice(0, 3).map((event) => (
+                <h2 className="text-4xl font-black tracking-[-0.04em] text-white md:text-5xl">{content.discovery.hostHeadline}</h2>
+                <div className="mt-8 grid gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {groupedNative.host.slice(0, 4).map((event) => (
                     <DiscoveryCard key={event.id} event={event} priority="rail" />
                   ))}
                 </div>
@@ -749,9 +746,9 @@ export default function DiscoveryLanding({
             ) : null}
             {content.visibility.showIndependentSection && groupedNative.independent.length > 0 ? (
               <div>
-                <h2 className="text-3xl font-black tracking-[-0.04em] text-white">{content.discovery.independentHeadline}</h2>
-                <div className="mt-5 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-                  {groupedNative.independent.slice(0, 3).map((event) => (
+                <h2 className="text-4xl font-black tracking-[-0.04em] text-white md:text-5xl">{content.discovery.independentHeadline}</h2>
+                <div className="mt-8 grid gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {groupedNative.independent.slice(0, 4).map((event) => (
                     <DiscoveryCard key={event.id} event={event} priority="rail" />
                   ))}
                 </div>
@@ -759,9 +756,9 @@ export default function DiscoveryLanding({
             ) : null}
             {content.visibility.showExternalSection && groupedNative.external.length > 0 ? (
               <div>
-                <h2 className="text-3xl font-black tracking-[-0.04em] text-white">{content.discovery.externalHeadline}</h2>
-                <div className="mt-5 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-                  {groupedNative.external.slice(0, 3).map((event) => (
+                <h2 className="text-4xl font-black tracking-[-0.04em] text-white md:text-5xl">{content.discovery.externalHeadline}</h2>
+                <div className="mt-8 grid gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {groupedNative.external.slice(0, 4).map((event) => (
                     <DiscoveryCard key={event.id} event={event} priority="rail" />
                   ))}
                 </div>

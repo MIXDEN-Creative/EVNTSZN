@@ -154,38 +154,38 @@ export default function RegisterForm() {
             This registration is for coed adult flag football. It feeds the live draftboard, team builds, and season operations after approval.
           </div>
         </div>
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <div>
-            <label className="mb-2 block text-xs uppercase tracking-[0.22em] text-white/55">First Name</label>
+            <label className="mb-2 block text-xs uppercase tracking-[0.22em] text-white/55 font-bold">First Name</label>
             <input className={inputClassName()} autoComplete="given-name" value={form.firstName} onChange={(e) => setField("firstName", e.target.value)} required />
           </div>
           <div>
-            <label className="mb-2 block text-xs uppercase tracking-[0.22em] text-white/55">Last Name</label>
+            <label className="mb-2 block text-xs uppercase tracking-[0.22em] text-white/55 font-bold">Last Name</label>
             <input className={inputClassName()} autoComplete="family-name" value={form.lastName} onChange={(e) => setField("lastName", e.target.value)} required />
           </div>
           <div>
-            <label className="mb-2 block text-xs uppercase tracking-[0.22em] text-white/55">Email</label>
+            <label className="mb-2 block text-xs uppercase tracking-[0.22em] text-white/55 font-bold">Email</label>
             <input className={inputClassName()} autoComplete="email" type="email" value={form.email} onChange={(e) => setField("email", e.target.value)} required />
           </div>
           <div>
-            <label className="mb-2 block text-xs uppercase tracking-[0.22em] text-white/55">Phone</label>
+            <label className="mb-2 block text-xs uppercase tracking-[0.22em] text-white/55 font-bold">Phone</label>
             <input className={inputClassName()} autoComplete="tel" value={form.phone} onChange={(e) => setField("phone", e.target.value)} required />
           </div>
           <div>
-            <label className="mb-2 block text-xs uppercase tracking-[0.22em] text-white/55">Age</label>
+            <label className="mb-2 block text-xs uppercase tracking-[0.22em] text-white/55 font-bold">Age</label>
             <input className={inputClassName()} type="number" min="16" max="70" value={form.age} onChange={(e) => setField("age", e.target.value)} required />
           </div>
           <div>
-            <label className="mb-2 block text-xs uppercase tracking-[0.22em] text-white/55">Experience Level</label>
-            <input className={inputClassName()} placeholder="Beginner, recreational, competitive, etc." value={form.experienceLevel} onChange={(e) => setField("experienceLevel", e.target.value)} required />
-          </div>
-          <div>
-            <label className="mb-2 block text-xs uppercase tracking-[0.22em] text-white/55">City</label>
+            <label className="mb-2 block text-xs uppercase tracking-[0.22em] text-white/55 font-bold">City</label>
             <input className={inputClassName()} autoComplete="address-level2" value={form.city} onChange={(e) => setField("city", e.target.value)} required />
           </div>
           <div>
-            <label className="mb-2 block text-xs uppercase tracking-[0.22em] text-white/55">State</label>
+            <label className="mb-2 block text-xs uppercase tracking-[0.22em] text-white/55 font-bold">State</label>
             <input className={inputClassName()} autoComplete="address-level1" value={form.state} onChange={(e) => setField("state", e.target.value)} required />
+          </div>
+          <div className="md:col-span-2 lg:col-span-2">
+            <label className="mb-2 block text-xs uppercase tracking-[0.22em] text-white/55 font-bold">Experience Level</label>
+            <input className={inputClassName()} placeholder="Beginner, recreational, competitive, etc." value={form.experienceLevel} onChange={(e) => setField("experienceLevel", e.target.value)} required />
           </div>
         </div>
       </div>

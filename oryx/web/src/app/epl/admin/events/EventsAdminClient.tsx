@@ -439,24 +439,24 @@ export default function EventsAdminClient() {
         ) : null}
       </AnimatePresence>
 
-      <div className="mt-8 grid gap-8 xl:grid-cols-[0.92fr_1.08fr]">
-        <section className="ev-panel overflow-hidden border-white/10">
-          <div className="p-6 md:p-7">
+      <div className="mt-8 grid gap-8 xl:grid-cols-[1fr_1.1fr] 2xl:grid-cols-[0.85fr_1.15fr]">
+        <section className="ev-panel flex flex-col overflow-hidden border-white/10">
+          <div className="p-6 md:p-8">
             <div className="ev-section-kicker">Create shell</div>
-            <div className="mt-1 text-2xl font-bold">Launch new event</div>
-            <p className="mt-2 text-sm text-white/60">
+            <div className="mt-1 text-3xl font-bold tracking-tight">Launch new event</div>
+            <p className="mt-2 text-base text-white/60">
               Build the core event record. Define identity, attach the revenue model, and set initial ticket defaults.
             </p>
           </div>
           
-          <form onSubmit={createEvent} className="grid gap-px border-t border-white/10 bg-white/5">
-            <div className="bg-black/40 p-6 md:p-7">
+          <form onSubmit={createEvent} className="grid flex-1 gap-px border-t border-white/10 bg-white/5">
+            <div className="bg-black/40 p-6 md:p-8">
               <div className="flex items-center gap-3">
-                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#caa7ff]/20 text-[10px] font-bold text-[#caa7ff]">1</div>
-                <div className="text-sm font-bold uppercase tracking-widest text-[#caa7ff]">Identity</div>
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#caa7ff]/20 text-[11px] font-bold text-[#caa7ff]">1</div>
+                <div className="text-xs font-bold uppercase tracking-[0.2em] text-[#caa7ff]">Identity</div>
               </div>
               
-              <div className="mt-6 grid gap-4 md:grid-cols-2">
+              <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-2 2xl:grid-cols-3">
                 <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40">
                   <span>Vertical</span>
                   <select
@@ -481,7 +481,7 @@ export default function EventsAdminClient() {
                 </label>
 
                 {form.eventVertical === "evntszn" ? (
-                  <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40 md:col-span-2">
+                  <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40">
                     <span>Operational Class</span>
                     <select
                       value={form.eventClass}
@@ -495,14 +495,14 @@ export default function EventsAdminClient() {
                       }
                       className="h-11 rounded-xl border border-white/10 bg-white/[0.03] px-4 text-sm text-white outline-none focus:border-[#caa7ff]/40"
                     >
-                      <option value="evntszn">EVNTSZN Native</option>
-                      <option value="independent_organizer">Independent Organizer</option>
-                      <option value="mml">MML Foundation</option>
+                      <option value="evntszn">Native</option>
+                      <option value="independent_organizer">Independent</option>
+                      <option value="mml">MML</option>
                     </select>
                   </label>
-                ) : null}
+                ) : <div className="hidden 2xl:block" />}
 
-                <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40 md:col-span-2">
+                <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40 md:col-span-2 lg:col-span-3 xl:col-span-2 2xl:col-span-3">
                   <span>Title</span>
                   <input
                     value={form.title}
@@ -512,7 +512,7 @@ export default function EventsAdminClient() {
                     required
                   />
                 </label>
-                <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40 md:col-span-2">
+                <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40 md:col-span-2 lg:col-span-3 xl:col-span-2 2xl:col-span-3">
                   <span>Subtitle</span>
                   <input
                     value={form.subtitle}
@@ -524,14 +524,14 @@ export default function EventsAdminClient() {
               </div>
             </div>
 
-            <div className="bg-black/40 p-6 md:p-7">
+            <div className="bg-black/40 p-6 md:p-8">
               <div className="flex items-center gap-3">
-                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#caa7ff]/20 text-[10px] font-bold text-[#caa7ff]">2</div>
-                <div className="text-sm font-bold uppercase tracking-widest text-[#caa7ff]">Schedule & Location</div>
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#caa7ff]/20 text-[11px] font-bold text-[#caa7ff]">2</div>
+                <div className="text-xs font-bold uppercase tracking-[0.2em] text-[#caa7ff]">Schedule & Location</div>
               </div>
               
-              <div className="mt-6 grid gap-4 md:grid-cols-2">
-                <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40 md:col-span-2">
+              <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-2 2xl:grid-cols-3">
+                <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40 md:col-span-2 lg:col-span-3 xl:col-span-2 2xl:col-span-3">
                   <span>Venue</span>
                   <input
                     value={form.venueName}
@@ -568,6 +568,7 @@ export default function EventsAdminClient() {
                     required
                   />
                 </label>
+                <div className="hidden lg:block xl:hidden 2xl:block" />
                 <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40">
                   <span>Start Time</span>
                   <input
@@ -591,13 +592,13 @@ export default function EventsAdminClient() {
               </div>
             </div>
 
-            <div className="bg-black/40 p-6 md:p-7">
+            <div className="bg-black/40 p-6 md:p-8">
               <div className="flex items-center gap-3">
-                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#caa7ff]/20 text-[10px] font-bold text-[#caa7ff]">3</div>
-                <div className="text-sm font-bold uppercase tracking-widest text-[#caa7ff]">Revenue & Tickets</div>
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#caa7ff]/20 text-[11px] font-bold text-[#caa7ff]">3</div>
+                <div className="text-xs font-bold uppercase tracking-[0.2em] text-[#caa7ff]">Revenue & Tickets</div>
               </div>
               
-              <div className="mt-6 grid gap-4 md:grid-cols-2">
+              <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-2 2xl:grid-cols-3">
                 <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40">
                   <span>Revenue Profile</span>
                   <select
@@ -616,7 +617,7 @@ export default function EventsAdminClient() {
                   </select>
                 </label>
                 {(form.revenueEventType !== "independent" || form.independentOrigin === "city") ? (
-                  <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40">
+                  <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40 md:col-span-1 lg:col-span-2 xl:col-span-1 2xl:col-span-2">
                     <span>City Office</span>
                     <select
                       value={form.cityOfficeId}
@@ -632,7 +633,7 @@ export default function EventsAdminClient() {
                     </select>
                   </label>
                 ) : (
-                  <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40">
+                  <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40 md:col-span-1 lg:col-span-2 xl:col-span-1 2xl:col-span-2">
                     <span>Origin</span>
                     <select
                       value={form.independentOrigin}
@@ -650,9 +651,9 @@ export default function EventsAdminClient() {
                   </label>
                 )}
 
-                <div className="mt-2 grid gap-4 rounded-2xl border border-white/5 bg-white/[0.02] p-5 md:col-span-2">
+                <div className="mt-2 grid gap-6 rounded-2xl border border-white/5 bg-white/[0.02] p-6 md:col-span-2 lg:col-span-3 xl:col-span-2 2xl:col-span-3">
                   <div className="text-[10px] font-bold uppercase tracking-widest text-white/30">First Ticket Release</div>
-                  <div className="grid gap-4 md:grid-cols-3">
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-2 2xl:grid-cols-3">
                     <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40">
                       <span>Label</span>
                       <input value={form.ticketTypeName} onChange={(event) => setForm({ ...form, ticketTypeName: event.target.value })} placeholder="General Access" className="h-10 rounded-lg border border-white/10 bg-black/40 px-3 text-sm text-white outline-none" />
@@ -670,13 +671,13 @@ export default function EventsAdminClient() {
               </div>
             </div>
 
-            <div className="bg-black/40 p-6 md:p-7">
+            <div className="bg-black/40 p-6 md:p-8">
               <div className="flex items-center gap-3">
-                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#caa7ff]/20 text-[10px] font-bold text-[#caa7ff]">4</div>
-                <div className="text-sm font-bold uppercase tracking-widest text-[#caa7ff]">Public Content</div>
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#caa7ff]/20 text-[11px] font-bold text-[#caa7ff]">4</div>
+                <div className="text-xs font-bold uppercase tracking-[0.2em] text-[#caa7ff]">Public Content</div>
               </div>
               
-              <div className="mt-6 grid gap-4">
+              <div className="mt-8 grid gap-6">
                 <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40">
                   <span>Banner Image URL</span>
                   <input
@@ -686,27 +687,29 @@ export default function EventsAdminClient() {
                     className="h-11 rounded-xl border border-white/10 bg-white/[0.03] px-4 text-sm text-white outline-none placeholder:text-white/20 focus:border-[#caa7ff]/40"
                   />
                 </label>
-                <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40">
-                  <span>Hero Note</span>
-                  <textarea
-                    value={form.heroNote}
-                    onChange={(event) => setForm({ ...form, heroNote: event.target.value })}
-                    placeholder="Concise highlight for cards"
-                    className="h-20 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white outline-none placeholder:text-white/20 focus:border-[#caa7ff]/40"
-                  />
-                </label>
-                <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40">
-                  <span>Description</span>
-                  <textarea
-                    value={form.description}
-                    onChange={(event) => setForm({ ...form, description: event.target.value })}
-                    placeholder="Full event summary for attendees"
-                    className="h-32 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white outline-none placeholder:text-white/20 focus:border-[#caa7ff]/40"
-                  />
-                </label>
+                <div className="grid gap-6 md:grid-cols-2">
+                  <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40">
+                    <span>Hero Note</span>
+                    <textarea
+                      value={form.heroNote}
+                      onChange={(event) => setForm({ ...form, heroNote: event.target.value })}
+                      placeholder="Concise highlight for cards"
+                      className="h-32 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white outline-none placeholder:text-white/20 focus:border-[#caa7ff]/40"
+                    />
+                  </label>
+                  <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40">
+                    <span>Description</span>
+                    <textarea
+                      value={form.description}
+                      onChange={(event) => setForm({ ...form, description: event.target.value })}
+                      placeholder="Full event summary for attendees"
+                      className="h-32 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white outline-none placeholder:text-white/20 focus:border-[#caa7ff]/40"
+                    />
+                  </label>
+                </div>
               </div>
 
-              <div className="mt-8 flex flex-col gap-4">
+              <div className="mt-10 flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
                 <label className="inline-flex cursor-pointer items-center gap-3 text-sm font-medium text-white/72">
                   <input
                     type="checkbox"
@@ -720,7 +723,7 @@ export default function EventsAdminClient() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="mt-2 rounded-2xl bg-white px-5 py-4 font-bold text-black transition hover:bg-white/90 active:scale-[0.98] disabled:opacity-50"
+                  className="rounded-2xl bg-white px-8 py-4 font-bold text-black transition hover:bg-white/90 active:scale-[0.98] disabled:opacity-50"
                 >
                   {submitting ? "Launching..." : "Launch event shell"}
                 </button>
@@ -730,11 +733,11 @@ export default function EventsAdminClient() {
         </section>
 
         <section className="flex flex-col gap-8">
-          <section className="ev-panel p-6 md:p-7">
-            <div className="flex flex-wrap items-center justify-between gap-4">
+          <section className="ev-panel p-6 md:p-8">
+            <div className="flex flex-wrap items-center justify-between gap-6">
               <div>
                 <div className="ev-section-kicker">Event roster</div>
-                <div className="mt-1 text-2xl font-bold">Manage inventory</div>
+                <div className="mt-1 text-3xl font-bold tracking-tight">Manage inventory</div>
               </div>
               <div className="flex flex-wrap gap-2">
                 {(["all", "evntszn", "independent", "epl"] as const).map((value) => (
@@ -742,7 +745,7 @@ export default function EventsAdminClient() {
                     key={value}
                     type="button"
                     onClick={() => setFilter(value)}
-                    className={`rounded-full px-4 py-2 text-xs font-bold uppercase tracking-widest transition ${
+                    className={`rounded-full px-5 py-2.5 text-[11px] font-bold uppercase tracking-widest transition ${
                       filter === value
                         ? "bg-white text-black"
                         : "border border-white/10 bg-white/[0.04] text-white/60 hover:bg-white/[0.08]"
@@ -754,7 +757,7 @@ export default function EventsAdminClient() {
               </div>
             </div>
 
-            <div className="mt-6 grid gap-3">
+            <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
               {loading ? (
                 Array.from({ length: 3 }).map((_, index) => (
                   <div key={`event-skeleton-${index}`} className="animate-pulse rounded-2xl border border-white/5 bg-white/[0.02] p-5">

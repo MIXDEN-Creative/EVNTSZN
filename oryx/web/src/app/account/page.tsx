@@ -230,7 +230,7 @@ export default async function AccountPage() {
 
   return (
     <main className="min-h-screen bg-black text-white">
-      <div className="mx-auto max-w-7xl px-4 py-10 md:px-6 lg:px-8">
+      <div className="mx-auto max-w-[1600px] px-4 py-10 md:px-6 lg:px-8">
         <div className="mb-8 flex flex-wrap items-center justify-between gap-4 rounded-[28px] border border-white/10 bg-black/25 px-4 py-4 backdrop-blur-xl">
           <Link href={`${getWebOrigin()}/`} className="flex items-center gap-3" aria-label="EVNTSZN home">
             <span className="relative h-11 w-11 overflow-hidden rounded-2xl border border-white/10 bg-white/5">
@@ -250,44 +250,48 @@ export default async function AccountPage() {
             </Link>
           </div>
         </div>
-        <div className="rounded-[32px] border border-white/10 bg-gradient-to-br from-[#120f2a] via-[#0c0c15] to-black p-8 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
-          <div className="text-xs font-semibold uppercase tracking-[0.24em] text-[#b899ff]">
-            {viewer.user ? "Member hub" : "EVNTSZN account"}
-          </div>
-          <h1 className="mt-3 text-4xl font-black tracking-tight text-white md:text-6xl">
-            {viewer.user
-              ? "Move from your member account into the right EVNTSZN surface fast."
-              : "Sign in, create your account, and move straight into tickets, orders, and league access."}
-          </h1>
-          <p className="mt-4 max-w-3xl text-base leading-7 text-white/74">
-            {viewer.user
-              ? "Use this hub for discovery, order tracking, league activity, and any protected work surfaces already tied to your account."
-              : "Public discovery stays open. Your tickets, orders, saved activity, and attendee access all route through this member hub. Internal staff access stays separate."}
-          </p>
+        <div className="rounded-[40px] border border-white/10 bg-gradient-to-br from-[#120f2a] via-[#0c0c15] to-black p-8 md:p-12 lg:p-16 shadow-[0_20px_60px_rgba(0,0,0,0.45)] relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#a259ff]/10 blur-[120px] rounded-full -mr-48 -mt-48 pointer-events-none" />
+          
+          <div className="relative z-10">
+            <div className="text-xs font-bold uppercase tracking-[0.24em] text-[#b899ff]">
+              {viewer.user ? "Member hub" : "EVNTSZN account"}
+            </div>
+            <h1 className="mt-4 text-5xl font-black tracking-tight text-white md:text-7xl lg:text-8xl leading-[0.9] max-w-5xl">
+              {viewer.user
+                ? "Move from your member account into the right EVNTSZN surface fast."
+                : "Sign in, create your account, and move straight into tickets, orders, and league access."}
+            </h1>
+            <p className="mt-8 max-w-3xl text-lg md:text-xl leading-relaxed text-white/70">
+              {viewer.user
+                ? "Use this hub for discovery, order tracking, league activity, and any protected work surfaces already tied to your account."
+                : "Public discovery stays open. Your tickets, orders, saved activity, and attendee access all route through this member hub. Internal staff access stays separate."}
+            </p>
 
-          {accessSummary.length ? (
-            <div className="mt-6 flex flex-wrap gap-2">
-              {accessSummary.map((item) => (
-                <span key={item} className="rounded-full border border-white/10 bg-white/6 px-3 py-1 text-xs font-medium text-white/78">
-                  {item}
-                </span>
+            {accessSummary.length ? (
+              <div className="mt-10 flex flex-wrap gap-3">
+                {accessSummary.map((item) => (
+                  <span key={item} className="rounded-full border border-white/15 bg-white/8 px-4 py-1.5 text-xs font-bold text-white/90 uppercase tracking-widest">
+                    {item}
+                  </span>
+                ))}
+              </div>
+            ) : null}
+
+            <div className="mt-16 grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+              {quickLinks.map((item) => (
+                <div key={item.title} className="flex flex-col rounded-[32px] border border-white/10 bg-white/5 p-7 transition-all hover:bg-white/10 hover:border-white/20 group">
+                  <div className="text-2xl font-black tracking-tight text-white group-hover:text-[#b899ff] transition-colors">{item.title}</div>
+                  <p className="mt-3 text-sm leading-relaxed text-white/60 flex-1">{item.body}</p>
+                  <Link
+                    href={item.href}
+                    className="mt-8 rounded-full bg-white px-6 py-3 text-center text-xs font-black uppercase tracking-widest text-black transition hover:opacity-90 active:scale-[0.98]"
+                  >
+                    {item.label}
+                  </Link>
+                </div>
               ))}
             </div>
-          ) : null}
-
-          <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {quickLinks.map((item) => (
-              <div key={item.title} className="rounded-[24px] border border-white/10 bg-white/5 p-5">
-                <div className="text-xl font-bold tracking-tight text-white">{item.title}</div>
-                <p className="mt-2 text-sm leading-6 text-white/72">{item.body}</p>
-                <Link
-                  href={item.href}
-                  className="mt-5 inline-flex rounded-full bg-white px-4 py-2 text-sm font-semibold text-black transition hover:opacity-90"
-                >
-                  {item.label}
-                </Link>
-              </div>
-            ))}
           </div>
         </div>
       </div>
