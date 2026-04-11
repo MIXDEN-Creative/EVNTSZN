@@ -138,9 +138,9 @@ function toDateTimeLocalValue(value: string | null | undefined) {
 }
 
 function toIsoDateTime(value: string | null | undefined) {
-  if (!value) return "";
+  if (!value) return null;
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? "" : date.toISOString();
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
 }
 
 export default function EventsAdminClient() {
@@ -186,11 +186,11 @@ export default function EventsAdminClient() {
         cache: "no-store",
       });
       const payload = (await response.json()) as EventResponse;
-      if (!response.ok) throw new Error(payload.error || "Could not load events.");
+      if (!response.ok) throw new Error(payload.error || "Could not load events roster.");
       setEvents(payload.events || []);
     } catch (error) {
       setMessageTone("error");
-      setMessage(error instanceof Error ? error.message : "Could not load events.");
+      setMessage(error instanceof Error ? error.message : "Could not load events roster.");
     } finally {
       setLoading(false);
     }
@@ -239,14 +239,14 @@ export default function EventsAdminClient() {
         }),
       });
       const payload = (await response.json()) as { ok?: boolean; error?: string };
-      if (!response.ok) throw new Error(payload.error || "Could not create event.");
+      if (!response.ok) throw new Error(payload.error || "Could not create event shell.");
       setForm(EMPTY_FORM);
       await loadEvents(filter);
       setMessageTone("success");
-      setMessage("Event created.");
+      setMessage("Event shell created.");
     } catch (error) {
       setMessageTone("error");
-      setMessage(error instanceof Error ? error.message : "Could not create event.");
+      setMessage(error instanceof Error ? error.message : "Could not create event shell.");
     } finally {
       setSubmitting(false);
     }
@@ -274,11 +274,11 @@ export default function EventsAdminClient() {
       }
       setMessageTone("success");
       if (patch.status === "published") {
-        setMessage("Event published.");
+        setMessage("Event published to discovery.");
       } else if (patch.status === "draft") {
-        setMessage("Event moved back to draft.");
+        setMessage("Event reverted to draft.");
       } else {
-        setMessage("Event updated.");
+        setMessage("Event state updated.");
       }
     } catch (error) {
       setMessageTone("error");
@@ -341,7 +341,7 @@ export default function EventsAdminClient() {
         }),
       });
       const payload = (await response.json()) as { ok?: boolean; error?: string };
-      if (!response.ok) throw new Error(payload.error || "Could not create ticket type.");
+      if (!response.ok) throw new Error(payload.error || "Could not create ticket release.");
       setTicketForm({
         name: "",
         description: "",
@@ -357,10 +357,10 @@ export default function EventsAdminClient() {
       await loadEventDetail(selectedEventId);
       await loadEvents(filter);
       setMessageTone("success");
-      setMessage("Ticket type created.");
+      setMessage("Ticket release created.");
     } catch (error) {
       setMessageTone("error");
-      setMessage(error instanceof Error ? error.message : "Could not create ticket type.");
+      setMessage(error instanceof Error ? error.message : "Could not create ticket release.");
     } finally {
       setSubmitting(false);
     }
@@ -378,14 +378,14 @@ export default function EventsAdminClient() {
         body: JSON.stringify({ ticketTypeId, ...patch }),
       });
       const payload = (await response.json()) as { ok?: boolean; error?: string };
-      if (!response.ok) throw new Error(payload.error || "Could not update ticket type.");
+      if (!response.ok) throw new Error(payload.error || "Could not update ticket settings.");
       await loadEventDetail(selectedEventId);
       await loadEvents(filter);
       setMessageTone("success");
       setMessage("Ticket settings updated.");
     } catch (error) {
       setMessageTone("error");
-      setMessage(error instanceof Error ? error.message : "Could not update ticket type.");
+      setMessage(error instanceof Error ? error.message : "Could not update ticket settings.");
     } finally {
       setSubmitting(false);
     }
@@ -397,9 +397,9 @@ export default function EventsAdminClient() {
         <div className="ev-shell-hero-grid">
           <div>
             <div className="ev-kicker">Event desk</div>
-            <h1 className="ev-title">Create events, release tickets, and keep each live show ready to publish.</h1>
+            <h1 className="ev-title">Manage events, release tickets, and maintain live inventory.</h1>
             <p className="ev-subtitle">
-              Use the left side to launch the next event. Use the right side to manage live inventory, publish state, and run of show for anything already on the calendar.
+              Configure event identity and revenue models from the left. Manage rosters, publish states, and run of show detail from the right.
             </p>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
@@ -426,7 +426,7 @@ export default function EventsAdminClient() {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
-            className={`mt-4 rounded-2xl border p-4 text-sm ${
+            className={`mt-4 rounded-2xl border p-4 text-sm font-medium ${
               messageTone === "error"
                 ? "border-red-400/20 bg-red-500/10 text-red-100"
                 : messageTone === "success"
@@ -440,150 +440,166 @@ export default function EventsAdminClient() {
       </AnimatePresence>
 
       <div className="mt-8 grid gap-8 xl:grid-cols-[0.92fr_1.08fr]">
-        <section className="ev-panel p-6 md:p-7">
-          <div className="ev-section-kicker">Create event</div>
-          <div className="mt-3 text-2xl font-bold">Launch the next event</div>
-          <p className="mt-2 text-sm text-white/60">
-            Build the event in the same order the team will use it later: identity, revenue model, ticket defaults, league labels if needed, then public-facing copy.
-          </p>
-          <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-            {[
-              ["1", "Identity"],
-              ["2", "Revenue"],
-              ["3", "Tickets"],
-              ["4", form.eventVertical === "epl" ? "League + copy" : "Copy"],
-            ].map(([step, label]) => (
-              <div key={String(label)} className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3">
-                <div className="text-[11px] uppercase tracking-[0.18em] text-white/45">Step {step}</div>
-                <div className="mt-2 text-sm font-semibold text-white">{label}</div>
-              </div>
-            ))}
+        <section className="ev-panel overflow-hidden border-white/10">
+          <div className="p-6 md:p-7">
+            <div className="ev-section-kicker">Create shell</div>
+            <div className="mt-1 text-2xl font-bold">Launch new event</div>
+            <p className="mt-2 text-sm text-white/60">
+              Build the core event record. Define identity, attach the revenue model, and set initial ticket defaults.
+            </p>
           </div>
-          <form onSubmit={createEvent} className="mt-6 grid gap-4">
-            <div className="rounded-2xl border border-white/10 bg-black/25 p-5">
-              <div className="text-xs uppercase tracking-[0.22em] text-[#caa7ff]">Step 1</div>
-              <div className="mt-2 text-lg font-semibold text-white">Identity</div>
-              <div className="mt-4 grid gap-4 md:grid-cols-2">
-                <label className="grid gap-2 text-sm text-white/72">
-                  <span>Event vertical</span>
+          
+          <form onSubmit={createEvent} className="grid gap-px border-t border-white/10 bg-white/5">
+            <div className="bg-black/40 p-6 md:p-7">
+              <div className="flex items-center gap-3">
+                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#caa7ff]/20 text-[10px] font-bold text-[#caa7ff]">1</div>
+                <div className="text-sm font-bold uppercase tracking-widest text-[#caa7ff]">Identity</div>
+              </div>
+              
+              <div className="mt-6 grid gap-4 md:grid-cols-2">
+                <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40">
+                  <span>Vertical</span>
                   <select
                     value={form.eventVertical}
                     onChange={(event) =>
                       setForm({ ...form, eventVertical: event.target.value as "evntszn" | "epl" })
                     }
-                    className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none"
+                    className="h-11 rounded-xl border border-white/10 bg-white/[0.03] px-4 text-sm text-white outline-none focus:border-[#caa7ff]/40"
                   >
                     <option value="evntszn">EVNTSZN</option>
                     <option value="epl">EPL</option>
                   </select>
                 </label>
-                <label className="grid gap-2 text-sm text-white/72">
-                  <span>Collection label</span>
+                <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40">
+                  <span>Collection</span>
                   <input
                     value={form.eventCollection}
                     onChange={(event) => setForm({ ...form, eventCollection: event.target.value })}
-                    placeholder="nightlife, premium-series, epl-season-1"
-                    className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none"
+                    placeholder="e.g. nightlife, series-1"
+                    className="h-11 rounded-xl border border-white/10 bg-white/[0.03] px-4 text-sm text-white outline-none placeholder:text-white/20 focus:border-[#caa7ff]/40"
+                  />
+                </label>
+
+                {form.eventVertical === "evntszn" ? (
+                  <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40 md:col-span-2">
+                    <span>Operational Class</span>
+                    <select
+                      value={form.eventClass}
+                      onChange={(event) =>
+                        setForm({
+                          ...form,
+                          eventClass: event.target.value as "evntszn" | "independent_organizer" | "mml",
+                          revenueEventType:
+                            event.target.value === "independent_organizer" ? "independent" : form.revenueEventType,
+                        })
+                      }
+                      className="h-11 rounded-xl border border-white/10 bg-white/[0.03] px-4 text-sm text-white outline-none focus:border-[#caa7ff]/40"
+                    >
+                      <option value="evntszn">EVNTSZN Native</option>
+                      <option value="independent_organizer">Independent Organizer</option>
+                      <option value="mml">MML Foundation</option>
+                    </select>
+                  </label>
+                ) : null}
+
+                <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40 md:col-span-2">
+                  <span>Title</span>
+                  <input
+                    value={form.title}
+                    onChange={(event) => setForm({ ...form, title: event.target.value })}
+                    placeholder="Official event title"
+                    className="h-11 rounded-xl border border-white/10 bg-white/[0.03] px-4 text-sm text-white outline-none placeholder:text-white/20 focus:border-[#caa7ff]/40"
+                    required
+                  />
+                </label>
+                <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40 md:col-span-2">
+                  <span>Subtitle</span>
+                  <input
+                    value={form.subtitle}
+                    onChange={(event) => setForm({ ...form, subtitle: event.target.value })}
+                    placeholder="Secondary line or theme"
+                    className="h-11 rounded-xl border border-white/10 bg-white/[0.03] px-4 text-sm text-white outline-none placeholder:text-white/20 focus:border-[#caa7ff]/40"
                   />
                 </label>
               </div>
+            </div>
 
-              {form.eventVertical === "evntszn" ? (
-                <label className="mt-4 grid gap-2 text-sm text-white/72">
-                  <span>Event class</span>
-                  <select
-                    value={form.eventClass}
-                    onChange={(event) =>
-                      setForm({
-                        ...form,
-                        eventClass: event.target.value as "evntszn" | "independent_organizer" | "mml",
-                        revenueEventType:
-                          event.target.value === "independent_organizer" ? "independent" : form.revenueEventType,
-                      })
-                    }
-                    className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none"
-                  >
-                    <option value="evntszn">EVNTSZN native</option>
-                    <option value="independent_organizer">Independent organizer</option>
-                    <option value="mml">MML foundation</option>
-                  </select>
+            <div className="bg-black/40 p-6 md:p-7">
+              <div className="flex items-center gap-3">
+                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#caa7ff]/20 text-[10px] font-bold text-[#caa7ff]">2</div>
+                <div className="text-sm font-bold uppercase tracking-widest text-[#caa7ff]">Schedule & Location</div>
+              </div>
+              
+              <div className="mt-6 grid gap-4 md:grid-cols-2">
+                <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40 md:col-span-2">
+                  <span>Venue</span>
+                  <input
+                    value={form.venueName}
+                    onChange={(event) => setForm({ ...form, venueName: event.target.value })}
+                    placeholder="Venue name"
+                    className="h-11 rounded-xl border border-white/10 bg-white/[0.03] px-4 text-sm text-white outline-none placeholder:text-white/20 focus:border-[#caa7ff]/40"
+                    required
+                  />
                 </label>
-              ) : null}
-
-              <div className="mt-4 grid gap-4 md:grid-cols-2">
-                <input
-                  value={form.title}
-                  onChange={(event) => setForm({ ...form, title: event.target.value })}
-                  placeholder="Event title"
-                  className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none"
-                  required
-                />
-                <input
-                  value={form.subtitle}
-                  onChange={(event) => setForm({ ...form, subtitle: event.target.value })}
-                  placeholder="Subtitle"
-                  className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none"
-                />
-                <input
-                  value={form.venueName}
-                  onChange={(event) => setForm({ ...form, venueName: event.target.value })}
-                  placeholder="Venue name"
-                  className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none"
-                  required
-                />
-                <input
-                  value={form.city}
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      city: event.target.value,
-                      state: getCityStateCode(event.target.value) || current.state,
-                    }))
-                  }
-                  placeholder="City"
-                  className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none"
-                  required
-                  list="event-city-options"
-                />
-                <input
-                  value={form.state}
-                  onChange={(event) => setForm({ ...form, state: event.target.value })}
-                  placeholder="State"
-                  className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none"
-                  required
-                />
-                <input
-                  value={form.bannerImageUrl}
-                  onChange={(event) => setForm({ ...form, bannerImageUrl: event.target.value })}
-                  placeholder="Banner image URL"
-                  className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none"
-                />
-                <input
-                  value={form.startAt}
-                  onChange={(event) => setForm({ ...form, startAt: event.target.value })}
-                  type="datetime-local"
-                  className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none"
-                  required
-                />
-                <input
-                  value={form.endAt}
-                  onChange={(event) => setForm({ ...form, endAt: event.target.value })}
-                  type="datetime-local"
-                  className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none"
-                  required
-                />
+                <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40">
+                  <span>City</span>
+                  <input
+                    value={form.city}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        city: event.target.value,
+                        state: getCityStateCode(event.target.value) || current.state,
+                      }))
+                    }
+                    placeholder="City"
+                    className="h-11 rounded-xl border border-white/10 bg-white/[0.03] px-4 text-sm text-white outline-none placeholder:text-white/20 focus:border-[#caa7ff]/40"
+                    required
+                    list="event-city-options"
+                  />
+                </label>
+                <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40">
+                  <span>State</span>
+                  <input
+                    value={form.state}
+                    onChange={(event) => setForm({ ...form, state: event.target.value })}
+                    placeholder="State"
+                    className="h-11 rounded-xl border border-white/10 bg-white/[0.03] px-4 text-sm text-white outline-none placeholder:text-white/20 focus:border-[#caa7ff]/40"
+                    required
+                  />
+                </label>
+                <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40">
+                  <span>Start Time</span>
+                  <input
+                    value={toDateTimeLocalValue(form.startAt)}
+                    onChange={(event) => setForm({ ...form, startAt: event.target.value })}
+                    type="datetime-local"
+                    className="h-11 rounded-xl border border-white/10 bg-white/[0.03] px-4 text-sm text-white outline-none focus:border-[#caa7ff]/40"
+                    required
+                  />
+                </label>
+                <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40">
+                  <span>End Time</span>
+                  <input
+                    value={toDateTimeLocalValue(form.endAt)}
+                    onChange={(event) => setForm({ ...form, endAt: event.target.value })}
+                    type="datetime-local"
+                    className="h-11 rounded-xl border border-white/10 bg-white/[0.03] px-4 text-sm text-white outline-none focus:border-[#caa7ff]/40"
+                    required
+                  />
+                </label>
               </div>
             </div>
 
-            <div className="rounded-2xl border border-white/10 bg-black/25 p-5">
-              <div className="text-xs uppercase tracking-[0.22em] text-[#caa7ff]">Step 2</div>
-              <div className="mt-2 text-lg font-semibold text-white">Revenue model</div>
-              <p className="mt-2 text-sm text-white/60">
-                Attach the event to the right revenue profile now so ticket purchases can allocate shares without manual repair later.
-              </p>
-              <div className="mt-4 grid gap-4 md:grid-cols-2">
-                <label className="grid gap-2 text-sm text-white/72">
-                  <span>Revenue event type</span>
+            <div className="bg-black/40 p-6 md:p-7">
+              <div className="flex items-center gap-3">
+                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#caa7ff]/20 text-[10px] font-bold text-[#caa7ff]">3</div>
+                <div className="text-sm font-bold uppercase tracking-widest text-[#caa7ff]">Revenue & Tickets</div>
+              </div>
+              
+              <div className="mt-6 grid gap-4 md:grid-cols-2">
+                <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40">
+                  <span>Revenue Profile</span>
                   <select
                     value={form.revenueEventType}
                     onChange={(event) =>
@@ -592,16 +608,32 @@ export default function EventsAdminClient() {
                         revenueEventType: event.target.value as "host" | "city_leader" | "independent",
                       })
                     }
-                    className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none"
+                    className="h-11 rounded-xl border border-white/10 bg-white/[0.03] px-4 text-sm text-white outline-none focus:border-[#caa7ff]/40"
                   >
-                    <option value="host">Host event</option>
-                    <option value="city_leader">City leader event</option>
-                    <option value="independent">Independent organizer</option>
+                    <option value="host">Host Event</option>
+                    <option value="city_leader">City Leader Event</option>
+                    <option value="independent">Independent Organizer</option>
                   </select>
                 </label>
-                {form.revenueEventType === "independent" ? (
-                  <label className="grid gap-2 text-sm text-white/72">
-                    <span>Independent origin</span>
+                {(form.revenueEventType !== "independent" || form.independentOrigin === "city") ? (
+                  <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40">
+                    <span>City Office</span>
+                    <select
+                      value={form.cityOfficeId}
+                      onChange={(event) => setForm({ ...form, cityOfficeId: event.target.value })}
+                      className="h-11 rounded-xl border border-white/10 bg-white/[0.03] px-4 text-sm text-white outline-none focus:border-[#caa7ff]/40"
+                    >
+                      <option value="">No office attached</option>
+                      {filteredOfficeOptions.map((office) => (
+                        <option key={office.id} value={office.id}>
+                          {office.officeName}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ) : (
+                  <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40">
+                    <span>Origin</span>
                     <select
                       value={form.independentOrigin}
                       onChange={(event) =>
@@ -610,367 +642,347 @@ export default function EventsAdminClient() {
                           independentOrigin: event.target.value as "city" | "hq",
                         })
                       }
-                      className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none"
+                      className="h-11 rounded-xl border border-white/10 bg-white/[0.03] px-4 text-sm text-white outline-none focus:border-[#caa7ff]/40"
                     >
-                      <option value="city">City origin</option>
-                      <option value="hq">HQ origin</option>
+                      <option value="city">City Origin</option>
+                      <option value="hq">HQ Origin</option>
                     </select>
                   </label>
-                ) : null}
-                {(form.revenueEventType !== "independent" || form.independentOrigin === "city") ? (
-                  <label className="grid gap-2 text-sm text-white/72 md:col-span-2">
-                    <span>City office</span>
-                    <select
-                      value={form.cityOfficeId}
-                      onChange={(event) => setForm({ ...form, cityOfficeId: event.target.value })}
-                      className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none"
-                    >
-                      <option value="">Attach later</option>
-                      {filteredOfficeOptions.map((office) => (
-                        <option key={office.id} value={office.id}>
-                          {office.officeName} · {office.city} · {office.officeStatus}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                ) : null}
-              </div>
-            </div>
+                )}
 
-            <div className="rounded-2xl border border-white/10 bg-black/25 p-5">
-              <div className="text-xs uppercase tracking-[0.22em] text-[#caa7ff]">Step 3</div>
-              <div className="mt-2 text-lg font-semibold text-white">Default ticket setup</div>
-              <div className="mt-3 rounded-2xl border border-white/10 bg-black/25 p-4 text-sm text-white/62">
-                Build the first ticket type here so the event can launch without a second pass. Sales fields use local date and time, then save as ISO in the existing event API.
-              </div>
-              <div className="mt-4 grid gap-4 md:grid-cols-2">
-                <input value={form.payoutAccountLabel} onChange={(event) => setForm({ ...form, payoutAccountLabel: event.target.value })} placeholder="Payout account label" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
-                <input value={form.capacity} onChange={(event) => setForm({ ...form, capacity: event.target.value })} placeholder="Capacity" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
-                <input value={form.ticketTypeName} onChange={(event) => setForm({ ...form, ticketTypeName: event.target.value })} placeholder="Ticket type" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
-                <input value={form.ticketPriceCents} onChange={(event) => setForm({ ...form, ticketPriceCents: event.target.value })} placeholder="Ticket price cents" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
-                <input value={form.ticketQuantityTotal} onChange={(event) => setForm({ ...form, ticketQuantityTotal: event.target.value })} placeholder="Ticket quantity" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
-                <input value={form.maxPerOrder} onChange={(event) => setForm({ ...form, maxPerOrder: event.target.value })} placeholder="Max per order" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
-                <input value={form.salesStartAt} onChange={(event) => setForm({ ...form, salesStartAt: event.target.value })} type="datetime-local" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
-                <input value={form.salesEndAt} onChange={(event) => setForm({ ...form, salesEndAt: event.target.value })} type="datetime-local" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
-              </div>
-            </div>
-
-            {form.eventVertical === "epl" ? (
-              <div className="rounded-2xl border border-white/10 bg-black/25 p-5">
-                <div className="text-xs uppercase tracking-[0.22em] text-[#caa7ff]">Step 4</div>
-                <div className="mt-2 text-lg font-semibold text-white">League matchup labels</div>
-                <div className="mt-4 grid gap-4 md:grid-cols-2">
-                <input
-                  value={form.homeSideLabel}
-                  onChange={(event) => setForm({ ...form, homeSideLabel: event.target.value })}
-                  placeholder="Home side label"
-                  className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none"
-                />
-                <input
-                  value={form.awaySideLabel}
-                  onChange={(event) => setForm({ ...form, awaySideLabel: event.target.value })}
-                  placeholder="Away side label"
-                  className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none"
-                />
+                <div className="mt-2 grid gap-4 rounded-2xl border border-white/5 bg-white/[0.02] p-5 md:col-span-2">
+                  <div className="text-[10px] font-bold uppercase tracking-widest text-white/30">First Ticket Release</div>
+                  <div className="grid gap-4 md:grid-cols-3">
+                    <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40">
+                      <span>Label</span>
+                      <input value={form.ticketTypeName} onChange={(event) => setForm({ ...form, ticketTypeName: event.target.value })} placeholder="General Access" className="h-10 rounded-lg border border-white/10 bg-black/40 px-3 text-sm text-white outline-none" />
+                    </label>
+                    <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40">
+                      <span>Price (Cents)</span>
+                      <input value={form.ticketPriceCents} onChange={(event) => setForm({ ...form, ticketPriceCents: event.target.value })} placeholder="3500" className="h-10 rounded-lg border border-white/10 bg-black/40 px-3 text-sm text-white outline-none" />
+                    </label>
+                    <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40">
+                      <span>Total Inventory</span>
+                      <input value={form.ticketQuantityTotal} onChange={(event) => setForm({ ...form, ticketQuantityTotal: event.target.value })} placeholder="100" className="h-10 rounded-lg border border-white/10 bg-black/40 px-3 text-sm text-white outline-none" />
+                    </label>
+                  </div>
                 </div>
               </div>
-            ) : null}
-
-            <div className="rounded-2xl border border-white/10 bg-black/25 p-5">
-              <div className="text-xs uppercase tracking-[0.22em] text-[#caa7ff]">{form.eventVertical === "epl" ? "Step 5" : "Step 4"}</div>
-              <div className="mt-2 text-lg font-semibold text-white">Public-facing copy</div>
-              <p className="mt-2 text-sm text-white/60">
-                Save the attendee-facing summary and hero note here. Keep internal run-of-show detail in the event operations panel after creation.
-              </p>
-              <div className="mt-4 grid gap-4">
-                <textarea
-                  value={form.description}
-                  onChange={(event) => setForm({ ...form, description: event.target.value })}
-                  placeholder="Public event description"
-                  className="min-h-[150px] rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none"
-                />
-                <textarea
-                  value={form.heroNote}
-                  onChange={(event) => setForm({ ...form, heroNote: event.target.value })}
-                  placeholder="Short hero note for event cards and the event header"
-                  className="min-h-[120px] rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none"
-                />
-              </div>
             </div>
 
-            <label className="inline-flex items-center gap-3 text-sm text-white/72">
-              <input
-                type="checkbox"
-                checked={form.publishNow}
-                onChange={(event) => setForm({ ...form, publishNow: event.target.checked })}
-              />
-              Publish immediately into public discovery
-            </label>
+            <div className="bg-black/40 p-6 md:p-7">
+              <div className="flex items-center gap-3">
+                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#caa7ff]/20 text-[10px] font-bold text-[#caa7ff]">4</div>
+                <div className="text-sm font-bold uppercase tracking-widest text-[#caa7ff]">Public Content</div>
+              </div>
+              
+              <div className="mt-6 grid gap-4">
+                <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40">
+                  <span>Banner Image URL</span>
+                  <input
+                    value={form.bannerImageUrl}
+                    onChange={(event) => setForm({ ...form, bannerImageUrl: event.target.value })}
+                    placeholder="https://..."
+                    className="h-11 rounded-xl border border-white/10 bg-white/[0.03] px-4 text-sm text-white outline-none placeholder:text-white/20 focus:border-[#caa7ff]/40"
+                  />
+                </label>
+                <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40">
+                  <span>Hero Note</span>
+                  <textarea
+                    value={form.heroNote}
+                    onChange={(event) => setForm({ ...form, heroNote: event.target.value })}
+                    placeholder="Concise highlight for cards"
+                    className="h-20 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white outline-none placeholder:text-white/20 focus:border-[#caa7ff]/40"
+                  />
+                </label>
+                <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40">
+                  <span>Description</span>
+                  <textarea
+                    value={form.description}
+                    onChange={(event) => setForm({ ...form, description: event.target.value })}
+                    placeholder="Full event summary for attendees"
+                    className="h-32 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white outline-none placeholder:text-white/20 focus:border-[#caa7ff]/40"
+                  />
+                </label>
+              </div>
 
-            <button
-              type="submit"
-              disabled={submitting}
-              className="rounded-2xl bg-white px-5 py-4 font-semibold text-black disabled:opacity-50"
-            >
-              {submitting ? "Creating..." : "Create event"}
-            </button>
+              <div className="mt-8 flex flex-col gap-4">
+                <label className="inline-flex cursor-pointer items-center gap-3 text-sm font-medium text-white/72">
+                  <input
+                    type="checkbox"
+                    checked={form.publishNow}
+                    onChange={(event) => setForm({ ...form, publishNow: event.target.checked })}
+                    className="h-5 w-5 rounded-lg border-white/10 bg-white/5"
+                  />
+                  <span>Publish shell to discovery immediately</span>
+                </label>
+
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="mt-2 rounded-2xl bg-white px-5 py-4 font-bold text-black transition hover:bg-white/90 active:scale-[0.98] disabled:opacity-50"
+                >
+                  {submitting ? "Launching..." : "Launch event shell"}
+                </button>
+              </div>
+            </div>
           </form>
         </section>
 
-        <section className="ev-panel p-6 md:p-7">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <div className="ev-section-kicker">Event roster</div>
-              <div className="mt-2 text-2xl font-bold">Published, draft, and league-ready events</div>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {(["all", "evntszn", "independent", "epl"] as const).map((value) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setFilter(value)}
-                  className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-                    filter === value
-                      ? "bg-white text-black"
-                      : "border border-white/10 bg-white/[0.04] text-white/72 hover:bg-white/[0.08]"
-                  }`}
-                >
-                  {value === "all" ? "All" : value === "independent" ? "Independent" : value.toUpperCase()}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="mt-6 grid gap-4">
-            {loading ? (
-              Array.from({ length: 3 }).map((_, index) => (
-                <div key={`event-skeleton-${index}`} className="animate-pulse rounded-[24px] border border-white/10 bg-black/25 p-5">
-                  <div className="h-3 w-40 rounded bg-white/10" />
-                  <div className="mt-4 h-6 w-56 rounded bg-white/10" />
-                  <div className="mt-3 h-4 w-64 rounded bg-white/10" />
-                </div>
-              ))
-            ) : null}
-            {!loading && !events.length ? (
-              <div className="rounded-[28px] border border-dashed border-white/12 bg-white/[0.02] p-5 text-white/58">
-                No events in this filter yet. Create the next EVNTSZN or EPL event from the panel.
+        <section className="flex flex-col gap-8">
+          <section className="ev-panel p-6 md:p-7">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <div className="ev-section-kicker">Event roster</div>
+                <div className="mt-1 text-2xl font-bold">Manage inventory</div>
               </div>
-            ) : null}
-
-            {events.map((event) => (
-              <motion.div
-                key={event.id}
-                layout
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="rounded-[24px] border border-white/10 bg-black/25 p-5"
-              >
-                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                  <div>
-                    <div className="flex flex-wrap gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-white/50">
-                      <span>{event.event_vertical.toUpperCase()}</span>
-                      <span>{event.event_class.replace(/_/g, " ")}</span>
-                      <span>{event.status}</span>
-                      <span>{event.visibility}</span>
-                      <span>
-                        {event.city}, {event.state}
-                      </span>
-                    </div>
-                    <div className="mt-2 text-2xl font-semibold text-white">{event.title}</div>
-                    <div className="mt-2 text-sm text-white/62">
-                      {event.venue_name || "Venue pending"} · {new Date(event.start_at).toLocaleString()}
-                    </div>
-                    {event.event_collection ? (
-                      <div className="mt-3 text-sm text-[#d5c2ff]">Collection: {event.event_collection}</div>
-                    ) : null}
-                    {event.ticket_summary ? (
-                      <div className="mt-3 flex flex-wrap gap-2 text-xs text-white/62">
-                        <span>{event.ticket_summary.total} ticket types</span>
-                        <span>{event.ticket_summary.active} live</span>
-                        <span>{event.ticket_summary.scheduled} upcoming</span>
-                        <span>{event.ticket_summary.soldOut} sold out</span>
-                      </div>
-                    ) : null}
-                    {event.event_vertical === "epl" && (event.home_side_label || event.away_side_label) ? (
-                      <div className="mt-2 text-sm text-white/62">
-                        {event.home_side_label || "Home"} vs {event.away_side_label || "Away"}
-                      </div>
-                    ) : null}
-                  </div>
-
-                  <div className="flex flex-wrap gap-2">
-                    <a href={`/events/${event.slug}`} className="rounded-xl border border-white/15 px-3 py-2 text-sm text-white/78">
-                      Open event
-                    </a>
-                    <button
-                      type="button"
-                      onClick={() => void selectEvent(event.id)}
-                      className="rounded-xl border border-white/15 px-3 py-2 text-sm text-white/78"
-                    >
-                      Manage
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => quickPatch(event.id, { status: "published", visibility: "published" })}
-                      className="rounded-xl border border-[#A259FF]/30 bg-[#A259FF]/10 px-3 py-2 text-sm text-[#e5daff]"
-                    >
-                      Publish
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => quickPatch(event.id, { status: "draft", visibility: "private_preview" })}
-                      className="rounded-xl border border-white/15 px-3 py-2 text-sm text-white/78"
-                    >
-                      Revert to draft
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </section>
-
-        <section className="ev-panel p-6 md:p-7">
-          <div className="ev-section-kicker">Event operations</div>
-          <div className="mt-2 text-2xl font-bold">
-            {selectedEvent ? selectedEvent.title : "Select an event to manage ticketing and run of show."}
-          </div>
-
-          {!selectedEvent ? (
-            <div className="mt-6 rounded-[28px] border border-dashed border-white/12 bg-white/[0.02] p-5 text-white/58">
-              Pick an event from the roster to manage ticket release timing, visibility, publish state, and event operations notes.
-            </div>
-          ) : (
-            <div className="mt-6 grid gap-6">
-              <div className="rounded-[24px] border border-white/10 bg-black/20 p-5">
-                <div className="flex flex-wrap items-start justify-between gap-4">
-                  <div>
-                    <div className="text-sm font-semibold text-white">Revenue summary</div>
-                    <div className="mt-2 text-sm text-white/60">
-                      {revenueSummary?.profile
-                        ? `Model: ${revenueSummary.profile.event_type.replace(/_/g, " ")}${revenueSummary.profile.independent_origin ? ` · ${revenueSummary.profile.independent_origin} origin` : ""}`
-                        : "No revenue profile attached yet."}
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap gap-2 text-xs">
-                    <span className="rounded-full border border-white/10 px-3 py-2 text-white/72">
-                      Audit {revenueSummary?.auditStatus || "pending"}
-                    </span>
-                    <span className="rounded-full border border-white/10 px-3 py-2 text-white/72">
-                      Locked {revenueSummary?.ledgerStatuses?.locked || 0}
-                    </span>
-                    <span className="rounded-full border border-white/10 px-3 py-2 text-white/72">
-                      Pending {revenueSummary?.ledgerStatuses?.pending || 0}
-                    </span>
-                    <span className="rounded-full border border-white/10 px-3 py-2 text-white/72">
-                      Void {revenueSummary?.ledgerStatuses?.void || 0}
-                    </span>
-                  </div>
-                </div>
-                <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                  {[
-                    ["Gross ticket revenue", revenueSummary?.totals?.grossTicketRevenue || 0],
-                    ["Platform fee total", revenueSummary?.totals?.platformFeeTotal || 0],
-                    ["Net revenue total", revenueSummary?.totals?.netRevenueTotal || 0],
-                    ["Host share", revenueSummary?.totals?.hostShare || 0],
-                    ["City leader share", revenueSummary?.totals?.cityLeaderShare || 0],
-                    ["City office share", revenueSummary?.totals?.cityOfficeShare || 0],
-                    ["HQ share", revenueSummary?.totals?.hqShare || 0],
-                    ["Override total", revenueSummary?.totals?.overrideTotal || 0],
-                  ].map(([label, value]) => (
-                    <div key={String(label)} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                      <div className="text-[11px] uppercase tracking-[0.18em] text-white/45">{label}</div>
-                      <div className="mt-2 text-lg font-semibold text-white">${Number(value).toFixed(2)}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="rounded-[24px] border border-white/10 bg-black/20 p-5">
-                <div className="text-sm font-semibold text-white">Event operations</div>
-                <div className="mt-4 grid gap-4">
-                  <textarea
-                    value={operationsForm.objective}
-                    onChange={(event) => setOperationsForm({ ...operationsForm, objective: event.target.value })}
-                    placeholder="Objective"
-                    className="min-h-[100px] rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none"
-                  />
-                  <textarea
-                    value={operationsForm.runOfShow}
-                    onChange={(event) => setOperationsForm({ ...operationsForm, runOfShow: event.target.value })}
-                    placeholder="Run of show"
-                    className="min-h-[220px] rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none"
-                  />
-                  <textarea
-                    value={operationsForm.opsNotes}
-                    onChange={(event) => setOperationsForm({ ...operationsForm, opsNotes: event.target.value })}
-                    placeholder="Operational notes"
-                    className="min-h-[100px] rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none"
-                  />
-                  <button type="button" onClick={() => void saveOperations()} className="rounded-2xl bg-white px-5 py-4 font-semibold text-black">
-                    Save event operations
+              <div className="flex flex-wrap gap-2">
+                {(["all", "evntszn", "independent", "epl"] as const).map((value) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setFilter(value)}
+                    className={`rounded-full px-4 py-2 text-xs font-bold uppercase tracking-widest transition ${
+                      filter === value
+                        ? "bg-white text-black"
+                        : "border border-white/10 bg-white/[0.04] text-white/60 hover:bg-white/[0.08]"
+                    }`}
+                  >
+                    {value === "all" ? "All" : value === "independent" ? "Indie" : value}
                   </button>
-                </div>
+                ))}
               </div>
+            </div>
 
-              <div className="rounded-[24px] border border-white/10 bg-black/20 p-5">
-                <div className="text-sm font-semibold text-white">Ticket types</div>
-                <div className="mt-4 grid gap-3">
-                  {ticketTypes.map((ticketType) => (
-                    <div key={ticketType.id} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                      <div className="flex flex-wrap items-center justify-between gap-3">
-                        <div>
-                          <div className="text-lg font-semibold text-white">{ticketType.name}</div>
-                          <div className="mt-1 text-sm text-white/62">
-                            ${(ticketType.price_cents / 100).toFixed(2)} · {ticketType.quantity_sold}/{ticketType.quantity_total} sold · {ticketType.availability_state}
+            <div className="mt-6 grid gap-3">
+              {loading ? (
+                Array.from({ length: 3 }).map((_, index) => (
+                  <div key={`event-skeleton-${index}`} className="animate-pulse rounded-2xl border border-white/5 bg-white/[0.02] p-5">
+                    <div className="h-3 w-32 rounded bg-white/5" />
+                    <div className="mt-3 h-5 w-48 rounded bg-white/5" />
+                  </div>
+                ))
+              ) : null}
+              
+              {!loading && !events.length ? (
+                <div className="rounded-2xl border border-dashed border-white/10 bg-white/[0.01] p-8 text-center text-sm text-white/40">
+                  No events found. Launch a new shell from the panel.
+                </div>
+              ) : null}
+
+              {events.map((event) => (
+                <motion.div
+                  key={event.id}
+                  layout
+                  className={`group rounded-2xl border transition-all ${
+                    selectedEventId === event.id 
+                      ? "border-[#caa7ff]/40 bg-[#caa7ff]/5" 
+                      : "border-white/5 bg-black/20 hover:border-white/10"
+                  } p-5`}
+                >
+                  <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-white/40">
+                        <span className={`rounded-md px-1.5 py-0.5 ${event.status === "published" ? "bg-emerald-500/10 text-emerald-400" : "bg-white/5 text-white/60"}`}>
+                          {event.status}
+                        </span>
+                        <span className="text-white/20">/</span>
+                        <span>{event.event_vertical}</span>
+                        <span className="text-white/20">/</span>
+                        <span>{event.city}</span>
+                      </div>
+                      <div className="mt-2 text-xl font-bold text-white">{event.title}</div>
+                      <div className="mt-1 text-sm text-white/50">
+                        {event.venue_name || "Venue pending"} · {new Date(event.start_at).toLocaleDateString()}
+                      </div>
+                      
+                      {event.ticket_summary ? (
+                        <div className="mt-4 flex flex-wrap gap-4 border-t border-white/5 pt-4 text-[10px] font-bold uppercase tracking-widest">
+                          <div className="flex flex-col gap-1">
+                            <span className="text-white/30">Live</span>
+                            <span className="text-emerald-400">{event.ticket_summary.active}</span>
+                          </div>
+                          <div className="flex flex-col gap-1">
+                            <span className="text-white/30">Sold</span>
+                            <span className="text-white/70">{event.ticket_summary.soldOut}</span>
+                          </div>
+                          <div className="flex flex-col gap-1">
+                            <span className="text-white/30">Total</span>
+                            <span className="text-white/70">{event.ticket_summary.total}</span>
                           </div>
                         </div>
-                        <div className="flex flex-wrap gap-2">
-                          <button type="button" onClick={() => void patchTicketType(ticketType.id, { isActive: !ticketType.is_active })} className="rounded-xl border border-white/15 px-3 py-2 text-sm text-white/78">
-                            {ticketType.is_active ? "Turn off" : "Turn on"}
+                      ) : null}
+                    </div>
+
+                    <div className="flex flex-wrap gap-2 lg:flex-col lg:items-end lg:justify-start">
+                      <button
+                        type="button"
+                        onClick={() => void selectEvent(event.id)}
+                        className={`rounded-xl px-4 py-2 text-xs font-bold uppercase tracking-wider transition ${
+                          selectedEventId === event.id
+                            ? "bg-[#caa7ff] text-black"
+                            : "bg-white/5 text-white/80 hover:bg-white/10"
+                        }`}
+                      >
+                        {selectedEventId === event.id ? "Editing" : "Open Desk"}
+                      </button>
+                      <div className="flex gap-2">
+                        {event.status !== "published" ? (
+                          <button
+                            type="button"
+                            onClick={() => quickPatch(event.id, { status: "published", visibility: "published" })}
+                            className="rounded-xl bg-emerald-500/10 px-4 py-2 text-xs font-bold uppercase tracking-wider text-emerald-400 hover:bg-emerald-500/20"
+                          >
+                            Publish
                           </button>
-                          <button type="button" onClick={() => void patchTicketType(ticketType.id, { visibilityMode: ticketType.visibility_mode === "hidden" ? "visible" : "hidden" })} className="rounded-xl border border-white/15 px-3 py-2 text-sm text-white/78">
-                            {ticketType.visibility_mode === "hidden" ? "Show" : "Hide"}
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => quickPatch(event.id, { status: "draft", visibility: "private_preview" })}
+                            className="rounded-xl bg-white/5 px-4 py-2 text-xs font-bold uppercase tracking-wider text-white/60 hover:bg-white/10"
+                          >
+                            Unpublish
                           </button>
-                        </div>
+                        )}
+                        <a 
+                          href={`/events/${event.slug}`} 
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/5 text-white/60 hover:bg-white/10"
+                        >
+                          ↗
+                        </a>
                       </div>
                     </div>
-                  ))}
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </section>
+
+          <AnimatePresence mode="wait">
+            {selectedEvent ? (
+              <motion.section
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.98 }}
+                className="ev-panel p-6 md:p-7 border-[#caa7ff]/20 bg-[#caa7ff]/[0.02]"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="ev-section-kicker !text-[#caa7ff]">Active operations</div>
+                    <div className="mt-1 text-2xl font-bold">{selectedEvent.title}</div>
+                  </div>
+                  <button onClick={() => setSelectedEventId(null)} className="text-xs font-bold uppercase tracking-widest text-white/30 hover:text-white">Close</button>
                 </div>
 
-                <form onSubmit={createTicketType} className="mt-6 grid gap-4 border-t border-white/10 pt-5">
-                  <div className="text-sm font-semibold text-white">Add ticket type</div>
-                  <input value={ticketForm.name} onChange={(event) => setTicketForm({ ...ticketForm, name: event.target.value })} placeholder="Ticket name" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" required />
-                  <textarea value={ticketForm.description} onChange={(event) => setTicketForm({ ...ticketForm, description: event.target.value })} placeholder="Description" className="min-h-[90px] rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none" />
-                  <div className="grid gap-4 md:grid-cols-3">
-                    <input value={ticketForm.priceCents} onChange={(event) => setTicketForm({ ...ticketForm, priceCents: event.target.value })} placeholder="Price cents" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
-                    <input value={ticketForm.quantityTotal} onChange={(event) => setTicketForm({ ...ticketForm, quantityTotal: event.target.value })} placeholder="Inventory" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
-                    <input value={ticketForm.maxPerOrder} onChange={(event) => setTicketForm({ ...ticketForm, maxPerOrder: event.target.value })} placeholder="Max per order" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
+                <div className="mt-8 grid gap-6">
+                  <div className="rounded-2xl border border-white/5 bg-black/40 p-5">
+                    <div className="flex items-center justify-between">
+                      <div className="text-[10px] font-bold uppercase tracking-widest text-white/40">Revenue State</div>
+                      <div className="flex gap-2">
+                        <span className="rounded bg-white/5 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-widest text-white/40">
+                          {revenueSummary?.auditStatus || "pending"}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-4 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-white/5 bg-white/5 lg:grid-cols-4">
+                      {[
+                        ["Gross", revenueSummary?.totals?.grossTicketRevenue || 0],
+                        ["Platform", revenueSummary?.totals?.platformFeeTotal || 0],
+                        ["Net", revenueSummary?.totals?.netRevenueTotal || 0],
+                        ["Host", revenueSummary?.totals?.hostShare || 0],
+                      ].map(([label, value]) => (
+                        <div key={String(label)} className="bg-black/40 p-3 text-center">
+                          <div className="text-[9px] font-bold uppercase tracking-widest text-white/30">{label}</div>
+                          <div className="mt-1 text-sm font-bold text-white">${Number(value).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <div className="grid gap-4 md:grid-cols-3">
-                    <input value={ticketForm.salesStartAt} onChange={(event) => setTicketForm({ ...ticketForm, salesStartAt: event.target.value })} type="datetime-local" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
-                    <input value={ticketForm.salesEndAt} onChange={(event) => setTicketForm({ ...ticketForm, salesEndAt: event.target.value })} type="datetime-local" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
-                    <input value={ticketForm.sortOrder} onChange={(event) => setTicketForm({ ...ticketForm, sortOrder: event.target.value })} placeholder="Sort order" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
+
+                  <div className="rounded-2xl border border-white/5 bg-black/40 p-5">
+                    <div className="text-[10px] font-bold uppercase tracking-widest text-white/40">Run of Show</div>
+                    <div className="mt-4 grid gap-4">
+                      <textarea
+                        value={operationsForm.objective}
+                        onChange={(event) => setOperationsForm({ ...operationsForm, objective: event.target.value })}
+                        placeholder="Mission objective"
+                        className="h-20 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-white/20"
+                      />
+                      <textarea
+                        value={operationsForm.runOfShow}
+                        onChange={(event) => setOperationsForm({ ...operationsForm, runOfShow: event.target.value })}
+                        placeholder="Full sequence of events"
+                        className="h-40 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-white/20"
+                      />
+                      <button 
+                        type="button" 
+                        onClick={() => void saveOperations()} 
+                        className="rounded-xl bg-white/10 py-3 text-xs font-bold uppercase tracking-widest text-white transition hover:bg-white/20"
+                      >
+                        Save internal detail
+                      </button>
+                    </div>
                   </div>
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <select value={ticketForm.visibilityMode} onChange={(event) => setTicketForm({ ...ticketForm, visibilityMode: event.target.value as "visible" | "hidden" })} className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none">
-                      <option value="visible">Visible</option>
-                      <option value="hidden">Hidden</option>
-                    </select>
-                    <label className="inline-flex items-center gap-3 text-sm text-white/72">
-                      <input type="checkbox" checked={ticketForm.isActive} onChange={(event) => setTicketForm({ ...ticketForm, isActive: event.target.checked })} />
-                      Ticket type is active
-                    </label>
+
+                  <div className="rounded-2xl border border-white/5 bg-black/40 p-5">
+                    <div className="flex items-center justify-between">
+                      <div className="text-[10px] font-bold uppercase tracking-widest text-white/40">Ticket Inventory</div>
+                      <div className="text-[10px] font-bold uppercase tracking-widest text-white/40">{ticketTypes.length} types</div>
+                    </div>
+                    
+                    <div className="mt-4 grid gap-2">
+                      {ticketTypes.map((ticketType) => (
+                        <div key={ticketType.id} className="flex items-center justify-between rounded-xl bg-white/5 p-3">
+                          <div>
+                            <div className="text-sm font-bold text-white">{ticketType.name}</div>
+                            <div className="text-[10px] font-bold uppercase tracking-wider text-white/30">
+                              ${(ticketType.price_cents / 100).toFixed(2)} · {ticketType.quantity_sold}/{ticketType.quantity_total} sold
+                            </div>
+                          </div>
+                          <div className="flex gap-1">
+                            <button 
+                              type="button" 
+                              onClick={() => void patchTicketType(ticketType.id, { isActive: !ticketType.is_active })} 
+                              className={`h-7 rounded-lg px-2 text-[9px] font-bold uppercase tracking-widest transition ${ticketType.is_active ? "bg-emerald-500/10 text-emerald-400" : "bg-white/5 text-white/40"}`}
+                            >
+                              {ticketType.is_active ? "Active" : "Paused"}
+                            </button>
+                            <button 
+                              type="button" 
+                              onClick={() => void patchTicketType(ticketType.id, { visibilityMode: ticketType.visibility_mode === "hidden" ? "visible" : "hidden" })} 
+                              className="h-7 rounded-lg bg-white/5 px-2 text-[9px] font-bold uppercase tracking-widest text-white/60 hover:bg-white/10"
+                            >
+                              {ticketType.visibility_mode === "hidden" ? "Show" : "Hide"}
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <form onSubmit={createTicketType} className="mt-6 border-t border-white/10 pt-6">
+                      <div className="text-[10px] font-bold uppercase tracking-widest text-white/40">New Release</div>
+                      <div className="mt-4 grid gap-3">
+                        <input value={ticketForm.name} onChange={(event) => setTicketForm({ ...ticketForm, name: event.target.value })} placeholder="Release Name" className="h-10 rounded-lg border border-white/10 bg-white/5 px-3 text-sm text-white outline-none" required />
+                        <div className="grid grid-cols-2 gap-3">
+                          <input value={ticketForm.priceCents} onChange={(event) => setTicketForm({ ...ticketForm, priceCents: event.target.value })} placeholder="Price (Cents)" className="h-10 rounded-lg border border-white/10 bg-white/5 px-3 text-sm text-white outline-none" />
+                          <input value={ticketForm.quantityTotal} onChange={(event) => setTicketForm({ ...ticketForm, quantityTotal: event.target.value })} placeholder="Inventory" className="h-10 rounded-lg border border-white/10 bg-white/5 px-3 text-sm text-white outline-none" />
+                        </div>
+                        <button type="submit" disabled={submitting} className="rounded-xl bg-white py-3 text-xs font-bold uppercase tracking-widest text-black disabled:opacity-50">
+                          {submitting ? "Releasing..." : "Open release"}
+                        </button>
+                      </div>
+                    </form>
                   </div>
-                  <button type="submit" disabled={submitting} className="rounded-2xl bg-white px-5 py-4 font-semibold text-black disabled:opacity-50">
-                    Add ticket type
-                  </button>
-                </form>
-              </div>
-            </div>
-          )}
+                </div>
+              </motion.section>
+            ) : null}
+          </AnimatePresence>
         </section>
       </div>
+
       <datalist id="event-city-options">
         {INTERNAL_CITY_OPTIONS.map((city) => (
           <option key={city} value={city} />
