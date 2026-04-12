@@ -1,20 +1,24 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
-type LoginResponse = {
-  success?: boolean;
+type ErrorPayload = {
   error?: string;
+  message?: string;
 };
 
 export default function InternalAccessForm() {
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState("hello@mixdencreative.com");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+
+    if (loading) return;
+
     setLoading(true);
     setErrorMessage(null);
 
@@ -24,26 +28,31 @@ export default function InternalAccessForm() {
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify({
-          email,
+          email: email.trim(),
           password,
         }),
       });
 
-      const raw = await res.json().catch(() => null);
-      const data = (raw ?? {}) as LoginResponse;
-
-      if (!res.ok) {
-        throw new Error(data.error ?? "Login failed");
+      if (res.ok) {
+        window.location.replace("/admin");
+        return;
       }
 
-      window.location.assign("/admin");
+      let data: ErrorPayload = {};
+      try {
+        data = (await res.json()) as ErrorPayload;
+      } catch {
+        data = {};
+      }
+
+      throw new Error(data.error || data.message || "Internal sign-in failed.");
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : "Something went wrong";
-      console.error("Internal login error:", err);
+        err instanceof Error ? err.message : "Something went wrong during sign-in.";
+      console.error("Internal sign-in error:", err);
       setErrorMessage(message);
-    } finally {
       setLoading(false);
     }
   }
@@ -53,7 +62,7 @@ export default function InternalAccessForm() {
       <div className="space-y-2">
         <label
           htmlFor="internal-email"
-          className="block text-sm font-medium text-white/80"
+          className="block text-sm font-medium text-white/75"
         >
           Invited email
         </label>
@@ -64,15 +73,15 @@ export default function InternalAccessForm() {
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition placeholder:text-white/35 focus:border-white/25 focus:bg-white/10"
           placeholder="hello@mixdencreative.com"
-          className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition placeholder:text-white/35 focus:border-white/30 focus:bg-white/10"
         />
       </div>
 
       <div className="space-y-2">
         <label
           htmlFor="internal-password"
-          className="block text-sm font-medium text-white/80"
+          className="block text-sm font-medium text-white/75"
         >
           Password
         </label>
@@ -83,8 +92,8 @@ export default function InternalAccessForm() {
           required
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition placeholder:text-white/35 focus:border-white/25 focus:bg-white/10"
           placeholder="Enter your password"
-          className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition placeholder:text-white/35 focus:border-white/30 focus:bg-white/10"
         />
       </div>
 
@@ -97,15 +106,22 @@ export default function InternalAccessForm() {
       <button
         type="submit"
         disabled={loading}
-        className="w-full rounded-full bg-white px-5 py-3 text-sm font-semibold uppercase tracking-[0.24em] text-black transition hover:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
+        className="w-full rounded-full bg-white px-5 py-3 text-sm font-semibold uppercase tracking-[0.24em] text-black transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
       >
         {loading ? "Signing in..." : "Sign in"}
       </button>
 
-      <p className="text-xs text-white/45">
-        New internal users should open their invite email first to claim
-        access and set their password.
+      <p className="text-xs leading-6 text-white/45">
+        New internal users should open their invite email first to claim access
+        and set their password.
       </p>
+
+      <Link
+        href="/admin-login/recover"
+        className="inline-block text-sm font-medium text-[#c084fc] transition hover:text-white"
+      >
+        Forgot password?
+      </Link>
     </form>
   );
 }
