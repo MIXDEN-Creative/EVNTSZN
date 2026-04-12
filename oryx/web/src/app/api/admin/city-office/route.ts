@@ -249,8 +249,8 @@ export async function POST(request: NextRequest) {
   const description = String(body.description || "").trim() || null;
   const officeLeadUserId = body.officeLeadUserId ? toDatabaseUserId(String(body.officeLeadUserId || "").trim()) : null;
 
-  if (!officeName || !city) {
-    return NextResponse.json({ error: "Office name and city are required." }, { status: 400 });
+  if (!officeName || !city || !state) {
+    return NextResponse.json({ error: "Office name, city, and state are required." }, { status: 400 });
   }
 
   const payload = {

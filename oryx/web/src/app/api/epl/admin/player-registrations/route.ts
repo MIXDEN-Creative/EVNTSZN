@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdminPermission } from "@/lib/admin-auth";
 import { getSupabaseAdmin } from "@/lib/epl/supabase-admin";
+import { toDatabaseUserId } from "@/lib/access-control";
 
 type Payload = {
   applicationId?: string;
@@ -12,6 +13,7 @@ type Payload = {
   draftEligible?: boolean | null;
   waivedFee?: boolean | null;
   internalNotes?: string | null;
+  assignedReviewerUserId?: string | null;
 };
 
 export async function PATCH(request: Request) {
@@ -57,7 +59,12 @@ export async function PATCH(request: Request) {
     }
   }
 
-  if (body.pipelineStage !== undefined || body.internalNotes !== undefined || body.waiverStatus !== undefined) {
+  if (
+    body.pipelineStage !== undefined ||
+    body.internalNotes !== undefined ||
+    body.waiverStatus !== undefined ||
+    body.assignedReviewerUserId !== undefined
+  ) {
     const answers =
       body.waiverStatus !== undefined
         ? {
@@ -72,6 +79,7 @@ export async function PATCH(request: Request) {
       .update({
         ...(body.pipelineStage !== undefined ? { pipeline_stage: body.pipelineStage } : {}),
         ...(body.internalNotes !== undefined ? { internal_notes: body.internalNotes || null } : {}),
+        ...(body.assignedReviewerUserId !== undefined ? { assigned_reviewer_user_id: toDatabaseUserId(body.assignedReviewerUserId || null) } : {}),
         ...(answers ? { answers } : {}),
       })
       .eq("id", applicationId);

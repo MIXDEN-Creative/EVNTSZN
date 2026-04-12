@@ -5,5 +5,5 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminEventsPage() {
   await requireAdminPermission("events.manage", "/epl/admin/events");
-  return <EventsAdminClient />;
+  return <EventsAdminClient initialEvents={[]} offices={[]} />;
 }

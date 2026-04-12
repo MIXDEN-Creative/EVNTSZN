@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import PublicPageFrame from "@/components/public/PublicPageFrame";
-import { getHostsOrigin, getLoginUrl, getWebOrigin } from "@/lib/domains";
+import { getAppOrigin, getHostsOrigin, getLoginUrl, getWebOrigin } from "@/lib/domains";
 
 export const metadata: Metadata = {
   title: "EVNTSZN Host Network",
@@ -40,7 +40,7 @@ export default function HostsPage() {
             The EVNTSZN Host Network is for approved operators who can create energy, run a room, manage a guest lane, and execute events with the same premium standard the public brand promises.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link href={`${getHostsOrigin()}/apply`} className="ev-button-primary">
+            <Link href={`${getWebOrigin()}/hosts/apply`} className="ev-button-primary">
               Start operator application
             </Link>
             <Link href={getLoginUrl("/ops", "app.evntszn.com")} className="ev-button-secondary">
@@ -155,6 +155,18 @@ export default function HostsPage() {
 
         <div className="mt-8 grid gap-6 lg:grid-cols-2">
           <section className="ev-panel p-6">
+            <div className="ev-section-kicker">EVNTSZN Link</div>
+            <div className="mt-3 text-2xl font-black tracking-tight text-white">Give every creator a conversion page, not just a profile.</div>
+            <p className="mt-3 text-sm leading-6 text-white/72">
+              Anyone can start an EVNTSZN Link, then scale into stronger funnel tools as their events grow.
+            </p>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <Link href={`${getAppOrigin()}/account/register?next=${encodeURIComponent("/account/link")}`} className="ev-button-primary">Start free</Link>
+              <Link href={`${getAppOrigin()}/account/link`} className="ev-button-secondary">Open EVNTSZN Link</Link>
+            </div>
+          </section>
+
+          <section className="ev-panel p-6">
             <div className="ev-section-kicker">Signal</div>
             <div className="mt-3 text-2xl font-black tracking-tight text-white">Controlled city support and activation</div>
             <p className="mt-3 text-sm leading-6 text-white/72">
@@ -176,6 +188,26 @@ export default function HostsPage() {
             </div>
           </section>
         </div>
+
+        <section className="mt-8 ev-panel p-6">
+          <div className="ev-section-kicker">Link pricing</div>
+          <div className="mt-3 text-2xl font-black tracking-tight text-white">Start free, upgrade when the page turns into a sales engine.</div>
+          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+            {[
+              ["Free Tier", "$0", "Basic link page, EVNTSZN branding, 1 active event link, basic analytics."],
+              ["Starter Tier", "$7/mo", "Remove branding, unlimited links, simple themes, multiple events, funnel tracking."],
+              ["Pro Tier", "$15/mo", "Full funnel pages, EVNTSZN-native ticket embeds, lead capture, advanced analytics."],
+              ["Elite Tier", "$29/mo", "AI funnel builder, A/B testing, discovery priority, CRM-lite, monetization tools."],
+              ["Enterprise / City", "$79-$199/mo", "Multi-page ops, team access, revenue dashboards, city-wide funnel analytics."],
+            ].map(([title, price, body], index) => (
+              <div key={title} className={`rounded-[24px] border p-5 ${index === 2 ? "border-[#A259FF]/30 bg-[#A259FF]/10" : "border-white/10 bg-white/5"}`}>
+                <div className="text-[11px] uppercase tracking-[0.22em] text-[#caa7ff]">{title}</div>
+                <div className="mt-3 text-2xl font-black tracking-tight text-white">{price}</div>
+                <p className="mt-3 text-sm leading-6 text-white/68">{body}</p>
+              </div>
+            ))}
+          </div>
+        </section>
       </section>
     </PublicPageFrame>
   );

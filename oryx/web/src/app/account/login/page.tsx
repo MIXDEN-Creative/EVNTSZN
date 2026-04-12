@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import PublicNav from "@/components/public/PublicNav";
 import CustomerLoginForm from "./CustomerLoginForm";
 import { getAppOrigin, getSurfaceForPath, getWebOrigin } from "@/lib/domains";
 
@@ -43,7 +44,8 @@ export default async function AccountLoginPage({ searchParams }: LoginPageProps)
 
   return (
     <main className="min-h-screen bg-black text-white">
-      <div className="mx-auto grid min-h-screen max-w-7xl gap-8 px-4 py-10 md:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:px-8">
+      <PublicNav />
+      <div className="mx-auto grid max-w-[1500px] gap-8 px-4 py-10 md:px-6 lg:grid-cols-[1.08fr_0.92fr] lg:px-8 lg:py-14">
         <section className="relative overflow-hidden rounded-[36px] border border-white/10 bg-[radial-gradient(circle_at_top,rgba(162,89,255,0.22),transparent_38%),linear-gradient(180deg,#12111b_0%,#0a0a11_60%,#060609_100%)] p-8 shadow-[0_26px_70px_rgba(0,0,0,0.42)]">
           <div className="absolute inset-0 bg-[linear-gradient(125deg,rgba(255,255,255,0.05),transparent_20%),radial-gradient(circle_at_82%_0%,rgba(255,255,255,0.08),transparent_24%)] opacity-80" />
           <div className="relative">
@@ -106,7 +108,7 @@ export default async function AccountLoginPage({ searchParams }: LoginPageProps)
           </div>
         </section>
 
-        <section className="rounded-[32px] border border-white/10 bg-[#0c0c15] p-6 md:p-8">
+        <section className="rounded-[32px] border border-white/10 bg-[#0c0c15] p-6 md:p-8 lg:p-10">
           <div className="mb-4 text-xs font-semibold uppercase tracking-[0.24em] text-[#b899ff]">
             Sign In
           </div>

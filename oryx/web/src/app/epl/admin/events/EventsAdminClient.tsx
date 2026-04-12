@@ -61,6 +61,15 @@ type ManagedTicketType = {
   availability_state?: string;
 };
 
+type AdminEvent = ManagedEvent;
+
+type CityOffice = {
+  id: string;
+  officeName: string;
+  city: string;
+  officeStatus: string;
+};
+
 type EventDetailResponse = {
   ok?: boolean;
   error?: string;
@@ -129,33 +138,36 @@ const EMPTY_FORM = {
   independentOrigin: "city" as "city" | "hq",
 };
 
-function toDateTimeLocalValue(value: string | null | undefined) {
-  if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  const pad = (input: number) => String(input).padStart(2, "0");
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
-}
-
 function toIsoDateTime(value: string | null | undefined) {
   if (!value) return null;
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+  try {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return null;
+    return date.toISOString();
+  } catch {
+    return null;
+  }
 }
 
-export default function EventsAdminClient() {
-  const [events, setEvents] = useState<ManagedEvent[]>([]);
+export default function EventsAdminClient({
+  initialEvents,
+  offices,
+}: {
+  initialEvents: AdminEvent[];
+  offices: CityOffice[];
+}) {
+  const [events, setEvents] = useState(initialEvents);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [messageTone, setMessageTone] = useState<"neutral" | "success" | "error">("neutral");
   const [filter, setFilter] = useState<"all" | "evntszn" | "independent" | "epl">("all");
-  const [form, setForm] = useState(EMPTY_FORM);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<ManagedEvent | null>(null);
   const [ticketTypes, setTicketTypes] = useState<ManagedTicketType[]>([]);
+  const [officeOptions, setOfficeOptions] = useState<CityOffice[]>(offices);
   const [revenueSummary, setRevenueSummary] = useState<EventDetailResponse["revenue"]>(null);
-  const [officeOptions, setOfficeOptions] = useState<Array<{ id: string; officeName: string; city: string; officeStatus: string }>>([]);
+  const [form, setForm] = useState(EMPTY_FORM);
   const [ticketForm, setTicketForm] = useState({
     name: "",
     description: "",
@@ -252,7 +264,7 @@ export default function EventsAdminClient() {
     }
   }
 
-  async function quickPatch(eventId: string, patch: Record<string, unknown>) {
+  async function quickPatch(eventId: string, patch: Record<string, unknown>, successMessage: string) {
     setSubmitting(true);
     setMessage(null);
     setMessageTone("neutral");
@@ -273,13 +285,7 @@ export default function EventsAdminClient() {
         await loadEventDetail(eventId);
       }
       setMessageTone("success");
-      if (patch.status === "published") {
-        setMessage("Event published to discovery.");
-      } else if (patch.status === "draft") {
-        setMessage("Event reverted to draft.");
-      } else {
-        setMessage("Event state updated.");
-      }
+      setMessage(successMessage);
     } catch (error) {
       setMessageTone("error");
       setMessage(error instanceof Error ? error.message : "Could not update event.");
@@ -301,9 +307,9 @@ export default function EventsAdminClient() {
   );
 
   const filteredOfficeOptions = useMemo(() => {
-    if (!form.city) return officeOptions;
-    return officeOptions.filter((office) => office.city === form.city);
-  }, [form.city, officeOptions]);
+    if (!form.city) return offices;
+    return offices.filter((office) => office.city === form.city);
+  }, [form.city, offices]);
 
   async function selectEvent(eventId: string) {
     setSelectedEventId(eventId);
@@ -321,7 +327,7 @@ export default function EventsAdminClient() {
     if (!selectedEventId) return;
     await quickPatch(selectedEventId, {
       operations: operationsForm,
-    });
+    }, "Operations details saved.");
   }
 
   async function createTicketType(event: React.FormEvent) {
@@ -392,7 +398,7 @@ export default function EventsAdminClient() {
   }
 
   return (
-    <main className="mx-auto max-w-7xl">
+    <main className="mx-auto max-w-[1800px] px-4 py-8 md:px-6 lg:px-8">
       <section className="ev-shell-hero">
         <div className="ev-shell-hero-grid">
           <div>
@@ -402,7 +408,7 @@ export default function EventsAdminClient() {
               Configure event identity and revenue models from the left. Manage rosters, publish states, and run of show detail from the right.
             </p>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {[
               ["Total events", counts.total],
               ["EVNTSZN", counts.evntszn],
@@ -439,24 +445,48 @@ export default function EventsAdminClient() {
         ) : null}
       </AnimatePresence>
 
-      <div className="mt-8 grid gap-8 xl:grid-cols-[1fr_1.1fr] 2xl:grid-cols-[0.85fr_1.15fr]">
-        <section className="ev-panel flex flex-col overflow-hidden border-white/10">
-          <div className="p-6 md:p-8">
-            <div className="ev-section-kicker">Create shell</div>
-            <div className="mt-1 text-3xl font-bold tracking-tight">Launch new event</div>
-            <p className="mt-2 text-base text-white/60">
-              Build the core event record. Define identity, attach the revenue model, and set initial ticket defaults.
-            </p>
-          </div>
-          
-          <form onSubmit={createEvent} className="grid flex-1 gap-px border-t border-white/10 bg-white/5">
-            <div className="bg-black/40 p-6 md:p-8">
+      <div className="mt-8 grid gap-10 lg:grid-cols-[1.1fr_0.9fr]">
+        <section className="flex flex-col gap-8">
+          <form
+            onSubmit={createEvent}
+            className="ev-panel flex flex-col overflow-hidden border-white/10 !p-0"
+          >
+            <datalist id="event-city-options">
+              {INTERNAL_CITY_OPTIONS.map((city) => (
+                <option key={city} value={city} />
+              ))}
+            </datalist>
+            <div className="p-6 md:p-8 border-b border-white/5">
+              <div className="ev-section-kicker">Create shell</div>
+              <div className="mt-1 text-3xl font-bold tracking-tight">Launch new event</div>
+              <p className="mt-2 text-base text-white/60">
+                Build the live event record in order: identity, schedule and location, revenue and ticket defaults, then public-facing copy and publish readiness.
+              </p>
+              <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                {[
+                  ["1. Identity", "Brand surface, event title, and event class."],
+                  ["2. Schedule", "Venue, city, state, and start/end timing."],
+                  ["3. Revenue", "Revenue profile and first ticket release."],
+                  ["4. Publish", "Banner, public copy, and publish readiness."],
+                ].map(([label, value]) => (
+                  <div key={String(label)} className="rounded-2xl border border-white/10 bg-black/25 p-4">
+                    <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#caa7ff]">{label}</div>
+                    <div className="mt-2 text-sm text-white/62">{value}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-white/[0.03] p-6 md:p-8">
               <div className="flex items-center gap-3">
                 <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#caa7ff]/20 text-[11px] font-bold text-[#caa7ff]">1</div>
-                <div className="text-xs font-bold uppercase tracking-[0.2em] text-[#caa7ff]">Identity</div>
+                <div className="text-xs font-bold uppercase tracking-[0.2em] text-[#caa7ff]">Event Identity</div>
+              </div>
+              <div className="mt-6 rounded-2xl border border-white/10 bg-black/25 p-4 text-sm text-white/60">
+                Start with the basics attendees and operators both need: brand surface, event title, and the core event identity that everything else will inherit.
               </div>
               
-              <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-2 2xl:grid-cols-3">
+              <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40">
                   <span>Vertical</span>
                   <select
@@ -464,80 +494,72 @@ export default function EventsAdminClient() {
                     onChange={(event) =>
                       setForm({ ...form, eventVertical: event.target.value as "evntszn" | "epl" })
                     }
-                    className="h-11 rounded-xl border border-white/10 bg-white/[0.03] px-4 text-sm text-white outline-none focus:border-[#caa7ff]/40"
+                    className="ev-field"
                   >
                     <option value="evntszn">EVNTSZN</option>
                     <option value="epl">EPL</option>
                   </select>
                 </label>
-                <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40">
-                  <span>Collection</span>
-                  <input
-                    value={form.eventCollection}
-                    onChange={(event) => setForm({ ...form, eventCollection: event.target.value })}
-                    placeholder="e.g. nightlife, series-1"
-                    className="h-11 rounded-xl border border-white/10 bg-white/[0.03] px-4 text-sm text-white outline-none placeholder:text-white/20 focus:border-[#caa7ff]/40"
-                  />
-                </label>
 
-                {form.eventVertical === "evntszn" ? (
+                {form.eventVertical === "epl" ? (
                   <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40">
-                    <span>Operational Class</span>
+                    <span>EPL Collection</span>
                     <select
                       value={form.eventClass}
                       onChange={(event) =>
                         setForm({
                           ...form,
                           eventClass: event.target.value as "evntszn" | "independent_organizer" | "mml",
-                          revenueEventType:
-                            event.target.value === "independent_organizer" ? "independent" : form.revenueEventType,
                         })
                       }
-                      className="h-11 rounded-xl border border-white/10 bg-white/[0.03] px-4 text-sm text-white outline-none focus:border-[#caa7ff]/40"
+                      className="ev-field"
                     >
-                      <option value="evntszn">Native</option>
-                      <option value="independent_organizer">Independent</option>
+                      <option value="evntszn">League Night</option>
+                      <option value="independent_organizer">Independent EPL</option>
                       <option value="mml">MML</option>
                     </select>
                   </label>
-                ) : <div className="hidden 2xl:block" />}
+                ) : <div className="hidden lg:block" />}
 
-                <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40 md:col-span-2 lg:col-span-3 xl:col-span-2 2xl:col-span-3">
+                <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40 md:col-span-2 lg:col-span-3">
                   <span>Title</span>
                   <input
                     value={form.title}
                     onChange={(event) => setForm({ ...form, title: event.target.value })}
                     placeholder="Official event title"
-                    className="h-11 rounded-xl border border-white/10 bg-white/[0.03] px-4 text-sm text-white outline-none placeholder:text-white/20 focus:border-[#caa7ff]/40"
+                    className="ev-field"
                     required
                   />
                 </label>
-                <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40 md:col-span-2 lg:col-span-3 xl:col-span-2 2xl:col-span-3">
+                <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40 md:col-span-2 lg:col-span-3">
                   <span>Subtitle</span>
                   <input
                     value={form.subtitle}
                     onChange={(event) => setForm({ ...form, subtitle: event.target.value })}
                     placeholder="Secondary line or theme"
-                    className="h-11 rounded-xl border border-white/10 bg-white/[0.03] px-4 text-sm text-white outline-none placeholder:text-white/20 focus:border-[#caa7ff]/40"
+                    className="ev-field"
                   />
                 </label>
               </div>
             </div>
 
-            <div className="bg-black/40 p-6 md:p-8">
+            <div className="bg-black/20 p-6 md:p-8">
               <div className="flex items-center gap-3">
                 <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#caa7ff]/20 text-[11px] font-bold text-[#caa7ff]">2</div>
                 <div className="text-xs font-bold uppercase tracking-[0.2em] text-[#caa7ff]">Schedule & Location</div>
               </div>
+              <div className="mt-6 rounded-2xl border border-white/10 bg-black/25 p-4 text-sm text-white/60">
+                Lock the venue, market, and timing before you move into ticket defaults. These fields drive discovery timing, operations planning, and scanner readiness later.
+              </div>
               
-              <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-2 2xl:grid-cols-3">
-                <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40 md:col-span-2 lg:col-span-3 xl:col-span-2 2xl:col-span-3">
+              <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40 md:col-span-2 lg:col-span-3">
                   <span>Venue</span>
                   <input
                     value={form.venueName}
                     onChange={(event) => setForm({ ...form, venueName: event.target.value })}
                     placeholder="Venue name"
-                    className="h-11 rounded-xl border border-white/10 bg-white/[0.03] px-4 text-sm text-white outline-none placeholder:text-white/20 focus:border-[#caa7ff]/40"
+                    className="ev-field"
                     required
                   />
                 </label>
@@ -553,7 +575,7 @@ export default function EventsAdminClient() {
                       }))
                     }
                     placeholder="City"
-                    className="h-11 rounded-xl border border-white/10 bg-white/[0.03] px-4 text-sm text-white outline-none placeholder:text-white/20 focus:border-[#caa7ff]/40"
+                    className="ev-field"
                     required
                     list="event-city-options"
                   />
@@ -564,41 +586,46 @@ export default function EventsAdminClient() {
                     value={form.state}
                     onChange={(event) => setForm({ ...form, state: event.target.value })}
                     placeholder="State"
-                    className="h-11 rounded-xl border border-white/10 bg-white/[0.03] px-4 text-sm text-white outline-none placeholder:text-white/20 focus:border-[#caa7ff]/40"
+                    className="ev-field"
                     required
                   />
                 </label>
-                <div className="hidden lg:block xl:hidden 2xl:block" />
+                <div className="hidden lg:block" />
                 <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40">
                   <span>Start Time</span>
                   <input
-                    value={toDateTimeLocalValue(form.startAt)}
+                    value={form.startAt}
                     onChange={(event) => setForm({ ...form, startAt: event.target.value })}
                     type="datetime-local"
-                    className="h-11 rounded-xl border border-white/10 bg-white/[0.03] px-4 text-sm text-white outline-none focus:border-[#caa7ff]/40"
+                    step="60"
+                    className="ev-field"
                     required
                   />
                 </label>
                 <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40">
                   <span>End Time</span>
                   <input
-                    value={toDateTimeLocalValue(form.endAt)}
+                    value={form.endAt}
                     onChange={(event) => setForm({ ...form, endAt: event.target.value })}
                     type="datetime-local"
-                    className="h-11 rounded-xl border border-white/10 bg-white/[0.03] px-4 text-sm text-white outline-none focus:border-[#caa7ff]/40"
+                    step="60"
+                    className="ev-field"
                     required
                   />
                 </label>
               </div>
             </div>
 
-            <div className="bg-black/40 p-6 md:p-8">
+            <div className="bg-white/[0.01] p-6 md:p-8">
               <div className="flex items-center gap-3">
                 <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#caa7ff]/20 text-[11px] font-bold text-[#caa7ff]">3</div>
                 <div className="text-xs font-bold uppercase tracking-[0.2em] text-[#caa7ff]">Revenue & Tickets</div>
               </div>
+              <div className="mt-6 rounded-2xl border border-white/10 bg-black/25 p-4 text-sm text-white/60">
+                Attach the correct revenue profile, then set the first release so the event shell launches with a usable ticket default instead of an empty inventory.
+              </div>
               
-              <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-2 2xl:grid-cols-3">
+              <div className="mt-8 grid gap-6 md:grid-cols-2">
                 <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40">
                   <span>Revenue Profile</span>
                   <select
@@ -609,7 +636,7 @@ export default function EventsAdminClient() {
                         revenueEventType: event.target.value as "host" | "city_leader" | "independent",
                       })
                     }
-                    className="h-11 rounded-xl border border-white/10 bg-white/[0.03] px-4 text-sm text-white outline-none focus:border-[#caa7ff]/40"
+                    className="ev-field"
                   >
                     <option value="host">Host Event</option>
                     <option value="city_leader">City Leader Event</option>
@@ -617,12 +644,12 @@ export default function EventsAdminClient() {
                   </select>
                 </label>
                 {(form.revenueEventType !== "independent" || form.independentOrigin === "city") ? (
-                  <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40 md:col-span-1 lg:col-span-2 xl:col-span-1 2xl:col-span-2">
+                  <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40">
                     <span>City Office</span>
                     <select
                       value={form.cityOfficeId}
                       onChange={(event) => setForm({ ...form, cityOfficeId: event.target.value })}
-                      className="h-11 rounded-xl border border-white/10 bg-white/[0.03] px-4 text-sm text-white outline-none focus:border-[#caa7ff]/40"
+                      className="ev-field"
                     >
                       <option value="">No office attached</option>
                       {filteredOfficeOptions.map((office) => (
@@ -633,7 +660,7 @@ export default function EventsAdminClient() {
                     </select>
                   </label>
                 ) : (
-                  <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40 md:col-span-1 lg:col-span-2 xl:col-span-1 2xl:col-span-2">
+                  <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40">
                     <span>Origin</span>
                     <select
                       value={form.independentOrigin}
@@ -643,7 +670,7 @@ export default function EventsAdminClient() {
                           independentOrigin: event.target.value as "city" | "hq",
                         })
                       }
-                      className="h-11 rounded-xl border border-white/10 bg-white/[0.03] px-4 text-sm text-white outline-none focus:border-[#caa7ff]/40"
+                      className="ev-field"
                     >
                       <option value="city">City Origin</option>
                       <option value="hq">HQ Origin</option>
@@ -651,20 +678,20 @@ export default function EventsAdminClient() {
                   </label>
                 )}
 
-                <div className="mt-2 grid gap-6 rounded-2xl border border-white/5 bg-white/[0.02] p-6 md:col-span-2 lg:col-span-3 xl:col-span-2 2xl:col-span-3">
+                <div className="mt-2 grid gap-6 rounded-2xl border border-white/5 bg-black/40 p-6 md:col-span-2">
                   <div className="text-[10px] font-bold uppercase tracking-widest text-white/30">First Ticket Release</div>
-                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-2 2xl:grid-cols-3">
+                  <div className="grid gap-4 md:grid-cols-3">
                     <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40">
                       <span>Label</span>
-                      <input value={form.ticketTypeName} onChange={(event) => setForm({ ...form, ticketTypeName: event.target.value })} placeholder="General Access" className="h-10 rounded-lg border border-white/10 bg-black/40 px-3 text-sm text-white outline-none" />
+                      <input value={form.ticketTypeName} onChange={(event) => setForm({ ...form, ticketTypeName: event.target.value })} placeholder="General Access" className="ev-field" />
                     </label>
                     <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40">
                       <span>Price (Cents)</span>
-                      <input value={form.ticketPriceCents} onChange={(event) => setForm({ ...form, ticketPriceCents: event.target.value })} placeholder="3500" className="h-10 rounded-lg border border-white/10 bg-black/40 px-3 text-sm text-white outline-none" />
+                      <input value={form.ticketPriceCents} onChange={(event) => setForm({ ...form, ticketPriceCents: event.target.value })} placeholder="3500" className="ev-field" />
                     </label>
                     <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40">
                       <span>Total Inventory</span>
-                      <input value={form.ticketQuantityTotal} onChange={(event) => setForm({ ...form, ticketQuantityTotal: event.target.value })} placeholder="100" className="h-10 rounded-lg border border-white/10 bg-black/40 px-3 text-sm text-white outline-none" />
+                      <input value={form.ticketQuantityTotal} onChange={(event) => setForm({ ...form, ticketQuantityTotal: event.target.value })} placeholder="100" className="ev-field" />
                     </label>
                   </div>
                 </div>
@@ -676,6 +703,9 @@ export default function EventsAdminClient() {
                 <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#caa7ff]/20 text-[11px] font-bold text-[#caa7ff]">4</div>
                 <div className="text-xs font-bold uppercase tracking-[0.2em] text-[#caa7ff]">Public Content</div>
               </div>
+              <div className="mt-6 rounded-2xl border border-white/10 bg-black/25 p-4 text-sm text-white/60">
+                Finish the attendee-facing layer here: banner, public hero note, discovery description, and whether the shell should go live immediately after save.
+              </div>
               
               <div className="mt-8 grid gap-6">
                 <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40">
@@ -684,7 +714,7 @@ export default function EventsAdminClient() {
                     value={form.bannerImageUrl}
                     onChange={(event) => setForm({ ...form, bannerImageUrl: event.target.value })}
                     placeholder="https://..."
-                    className="h-11 rounded-xl border border-white/10 bg-white/[0.03] px-4 text-sm text-white outline-none placeholder:text-white/20 focus:border-[#caa7ff]/40"
+                    className="ev-field"
                   />
                 </label>
                 <div className="grid gap-6 md:grid-cols-2">
@@ -694,7 +724,7 @@ export default function EventsAdminClient() {
                       value={form.heroNote}
                       onChange={(event) => setForm({ ...form, heroNote: event.target.value })}
                       placeholder="Concise highlight for cards"
-                      className="h-32 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white outline-none placeholder:text-white/20 focus:border-[#caa7ff]/40"
+                      className="ev-textarea h-32"
                     />
                   </label>
                   <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40">
@@ -703,13 +733,13 @@ export default function EventsAdminClient() {
                       value={form.description}
                       onChange={(event) => setForm({ ...form, description: event.target.value })}
                       placeholder="Full event summary for attendees"
-                      className="h-32 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white outline-none placeholder:text-white/20 focus:border-[#caa7ff]/40"
+                      className="ev-textarea h-32"
                     />
                   </label>
                 </div>
               </div>
 
-              <div className="mt-10 flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+              <div className="mt-10 flex flex-col gap-6 md:flex-row md:items-center md:justify-between border-t border-white/10 pt-8">
                 <label className="inline-flex cursor-pointer items-center gap-3 text-sm font-medium text-white/72">
                   <input
                     type="checkbox"
@@ -723,7 +753,7 @@ export default function EventsAdminClient() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="rounded-2xl bg-white px-8 py-4 font-bold text-black transition hover:bg-white/90 active:scale-[0.98] disabled:opacity-50"
+                  className="rounded-2xl bg-[#caa7ff] px-8 py-4 font-bold text-black transition hover:opacity-90 active:scale-[0.98] disabled:opacity-50"
                 >
                   {submitting ? "Launching..." : "Launch event shell"}
                 </button>
@@ -757,7 +787,7 @@ export default function EventsAdminClient() {
               </div>
             </div>
 
-            <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
+            <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
               {loading ? (
                 Array.from({ length: 3 }).map((_, index) => (
                   <div key={`event-skeleton-${index}`} className="animate-pulse rounded-2xl border border-white/5 bg-white/[0.02] p-5">
@@ -774,12 +804,11 @@ export default function EventsAdminClient() {
               ) : null}
 
               {events.map((event) => (
-                <motion.div
+                <div
                   key={event.id}
-                  layout
                   className={`group rounded-2xl border transition-all ${
-                    selectedEventId === event.id 
-                      ? "border-[#caa7ff]/40 bg-[#caa7ff]/5" 
+                    selectedEventId === event.id
+                      ? "border-[#caa7ff]/40 bg-[#caa7ff]/5"
                       : "border-white/5 bg-black/20 hover:border-white/10"
                   } p-5`}
                 >
@@ -821,7 +850,7 @@ export default function EventsAdminClient() {
                       <button
                         type="button"
                         onClick={() => void selectEvent(event.id)}
-                        className={`rounded-xl px-4 py-2 text-xs font-bold uppercase tracking-wider transition ${
+                        className={`rounded-xl px-4 py-2 text-xs font-bold uppercase tracking-widest transition ${
                           selectedEventId === event.id
                             ? "bg-[#caa7ff] text-black"
                             : "bg-white/5 text-white/80 hover:bg-white/10"
@@ -833,16 +862,16 @@ export default function EventsAdminClient() {
                         {event.status !== "published" ? (
                           <button
                             type="button"
-                            onClick={() => quickPatch(event.id, { status: "published", visibility: "published" })}
-                            className="rounded-xl bg-emerald-500/10 px-4 py-2 text-xs font-bold uppercase tracking-wider text-emerald-400 hover:bg-emerald-500/20"
+                            onClick={() => quickPatch(event.id, { status: "published", visibility: "published" }, "Event published to discovery.")}
+                            className="rounded-xl bg-emerald-500/10 px-4 py-2 text-xs font-bold uppercase tracking-widest text-emerald-400 hover:bg-emerald-500/20"
                           >
                             Publish
                           </button>
                         ) : (
                           <button
                             type="button"
-                            onClick={() => quickPatch(event.id, { status: "draft", visibility: "private_preview" })}
-                            className="rounded-xl bg-white/5 px-4 py-2 text-xs font-bold uppercase tracking-wider text-white/60 hover:bg-white/10"
+                            onClick={() => quickPatch(event.id, { status: "draft", visibility: "private_preview" }, "Event reverted to draft.")}
+                            className="rounded-xl bg-white/5 px-4 py-2 text-xs font-bold uppercase tracking-widest text-white/60 hover:bg-white/10"
                           >
                             Unpublish
                           </button>
@@ -858,39 +887,31 @@ export default function EventsAdminClient() {
                       </div>
                     </div>
                   </div>
-                </motion.div>
+                </div>
               ))}
             </div>
           </section>
 
-          <AnimatePresence mode="wait">
-            {selectedEvent ? (
-              <motion.section
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.98 }}
-                className="ev-panel p-6 md:p-7 border-[#caa7ff]/20 bg-[#caa7ff]/[0.02]"
-              >
+          {selectedEvent ? (
+              <section className="ev-panel border-[#caa7ff]/20 bg-[#caa7ff]/[0.02] p-6 md:p-8">
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="ev-section-kicker !text-[#caa7ff]">Active operations</div>
-                    <div className="mt-1 text-2xl font-bold">{selectedEvent.title}</div>
+                    <div className="mt-1 text-2xl font-bold text-white">{selectedEvent.title}</div>
                   </div>
                   <button onClick={() => setSelectedEventId(null)} className="text-xs font-bold uppercase tracking-widest text-white/30 hover:text-white">Close</button>
                 </div>
 
                 <div className="mt-8 grid gap-6">
                   <div className="rounded-2xl border border-white/5 bg-black/40 p-5">
-                    <div className="flex items-center justify-between">
-                      <div className="text-[10px] font-bold uppercase tracking-widest text-white/40">Revenue State</div>
-                      <div className="flex gap-2">
-                        <span className="rounded bg-white/5 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-widest text-white/40">
-                          {revenueSummary?.auditStatus || "pending"}
-                        </span>
-                      </div>
+                    <div className="text-[10px] font-bold uppercase tracking-widest text-white/30">Revenue State</div>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <span className={`rounded bg-white/5 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-widest ${revenueSummary?.auditStatus === "balanced" ? "text-emerald-400" : "text-white/60"}`}>
+                        {revenueSummary?.auditStatus || "pending"}
+                      </span>
                     </div>
                     
-                    <div className="mt-4 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-white/5 bg-white/5 lg:grid-cols-4">
+                    <div className="mt-4 grid gap-px overflow-hidden rounded-xl border border-white/5 bg-black/40 md:grid-cols-2 lg:grid-cols-4">
                       {[
                         ["Gross", revenueSummary?.totals?.grossTicketRevenue || 0],
                         ["Platform", revenueSummary?.totals?.platformFeeTotal || 0],
@@ -906,34 +927,34 @@ export default function EventsAdminClient() {
                   </div>
 
                   <div className="rounded-2xl border border-white/5 bg-black/40 p-5">
-                    <div className="text-[10px] font-bold uppercase tracking-widest text-white/40">Run of Show</div>
+                    <div className="text-[10px] font-bold uppercase tracking-widest text-white/30">Run of Show</div>
                     <div className="mt-4 grid gap-4">
                       <textarea
                         value={operationsForm.objective}
                         onChange={(event) => setOperationsForm({ ...operationsForm, objective: event.target.value })}
                         placeholder="Mission objective"
-                        className="h-20 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-white/20"
+                        className="h-20 rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-sm text-white outline-none focus:border-white/20"
                       />
                       <textarea
                         value={operationsForm.runOfShow}
                         onChange={(event) => setOperationsForm({ ...operationsForm, runOfShow: event.target.value })}
                         placeholder="Full sequence of events"
-                        className="h-40 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-white/20"
+                        className="h-40 rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-sm text-white outline-none focus:border-white/20"
                       />
                       <button 
                         type="button" 
                         onClick={() => void saveOperations()} 
-                        className="rounded-xl bg-white/10 py-3 text-xs font-bold uppercase tracking-widest text-white transition hover:bg-white/20"
+                        className="rounded-xl bg-white/10 py-3 text-xs font-bold uppercase tracking-widest text-white hover:bg-white/20 transition"
                       >
-                        Save internal detail
+                        Save internal operations detail
                       </button>
                     </div>
                   </div>
 
                   <div className="rounded-2xl border border-white/5 bg-black/40 p-5">
                     <div className="flex items-center justify-between">
-                      <div className="text-[10px] font-bold uppercase tracking-widest text-white/40">Ticket Inventory</div>
-                      <div className="text-[10px] font-bold uppercase tracking-widest text-white/40">{ticketTypes.length} types</div>
+                      <div className="text-[10px] font-bold uppercase tracking-widest text-white/30">Ticket Inventory</div>
+                      <div className="text-[10px] font-bold uppercase tracking-widest text-white/30">{ticketTypes.length} types</div>
                     </div>
                     
                     <div className="mt-4 grid gap-2">
@@ -941,7 +962,7 @@ export default function EventsAdminClient() {
                         <div key={ticketType.id} className="flex items-center justify-between rounded-xl bg-white/5 p-3">
                           <div>
                             <div className="text-sm font-bold text-white">{ticketType.name}</div>
-                            <div className="text-[10px] font-bold uppercase tracking-wider text-white/30">
+                            <div className="mt-1 text-[10px] uppercase tracking-widest text-white/30">
                               ${(ticketType.price_cents / 100).toFixed(2)} · {ticketType.quantity_sold}/{ticketType.quantity_total} sold
                             </div>
                           </div>
@@ -966,31 +987,37 @@ export default function EventsAdminClient() {
                     </div>
 
                     <form onSubmit={createTicketType} className="mt-6 border-t border-white/10 pt-6">
-                      <div className="text-[10px] font-bold uppercase tracking-widest text-white/40">New Release</div>
-                      <div className="mt-4 grid gap-3">
-                        <input value={ticketForm.name} onChange={(event) => setTicketForm({ ...ticketForm, name: event.target.value })} placeholder="Release Name" className="h-10 rounded-lg border border-white/10 bg-white/5 px-3 text-sm text-white outline-none" required />
-                        <div className="grid grid-cols-2 gap-3">
-                          <input value={ticketForm.priceCents} onChange={(event) => setTicketForm({ ...ticketForm, priceCents: event.target.value })} placeholder="Price (Cents)" className="h-10 rounded-lg border border-white/10 bg-white/5 px-3 text-sm text-white outline-none" />
-                          <input value={ticketForm.quantityTotal} onChange={(event) => setTicketForm({ ...ticketForm, quantityTotal: event.target.value })} placeholder="Inventory" className="h-10 rounded-lg border border-white/10 bg-white/5 px-3 text-sm text-white outline-none" />
-                        </div>
-                        <button type="submit" disabled={submitting} className="rounded-xl bg-white py-3 text-xs font-bold uppercase tracking-widest text-black disabled:opacity-50">
-                          {submitting ? "Releasing..." : "Open release"}
-                        </button>
+                      <div className="text-[10px] font-bold uppercase tracking-widest text-white/30">New Release</div>
+                      <div className="mt-4 grid gap-3 md:grid-cols-2">
+                        <input value={ticketForm.name} onChange={(event) => setTicketForm({ ...ticketForm, name: event.target.value })} placeholder="Release Name" className="ev-field h-10" required />
+                        <input value={ticketForm.description} onChange={(event) => setTicketForm({ ...ticketForm, description: event.target.value })} placeholder="Optional description" className="ev-field h-10" />
                       </div>
+                      <div className="mt-4 grid gap-3 md:grid-cols-3">
+                        <input value={ticketForm.priceCents} onChange={(event) => setTicketForm({ ...ticketForm, priceCents: event.target.value })} placeholder="Price (cents)" className="ev-field h-10" />
+                        <input value={ticketForm.quantityTotal} onChange={(event) => setTicketForm({ ...ticketForm, quantityTotal: event.target.value })} placeholder="Inventory" className="ev-field h-10" />
+                        <input value={ticketForm.maxPerOrder} onChange={(event) => setTicketForm({ ...ticketForm, maxPerOrder: event.target.value })} placeholder="Max per order" className="ev-field h-10" />
+                      </div>
+                      <div className="mt-4 grid gap-3 md:grid-cols-2">
+                        <input value={ticketForm.salesStartAt} onChange={(event) => setTicketForm({ ...ticketForm, salesStartAt: event.target.value })} type="datetime-local" placeholder="Sales start" className="ev-field h-10" />
+                        <input value={ticketForm.salesEndAt} onChange={(event) => setTicketForm({ ...ticketForm, salesEndAt: event.target.value })} type="datetime-local" placeholder="Sales end" className="ev-field h-10" />
+                      </div>
+                      <button type="submit" disabled={submitting} className="mt-6 rounded-xl bg-white py-3 text-xs font-bold uppercase tracking-widest text-black hover:opacity-90 transition active:scale-95 disabled:opacity-50">
+                        {submitting ? "Releasing..." : "Open release"}
+                      </button>
                     </form>
                   </div>
                 </div>
-              </motion.section>
-            ) : null}
-          </AnimatePresence>
+              </section>
+            ) : (
+              <div className="h-full min-h-[600px] flex items-center justify-center rounded-[48px] border border-dashed border-white/10 bg-white/[0.01] p-12 text-center text-white/20">
+                <div className="max-w-md">
+                  <div className="text-2xl font-black tracking-tight text-white/40">No event selected.</div>
+                  <p className="mt-4 text-lg leading-relaxed">Select an event from the roster to manage its ticket inventory and operations.</p>
+                </div>
+              </div>
+            )}
         </section>
       </div>
-
-      <datalist id="event-city-options">
-        {INTERNAL_CITY_OPTIONS.map((city) => (
-          <option key={city} value={city} />
-        ))}
-      </datalist>
     </main>
   );
 }

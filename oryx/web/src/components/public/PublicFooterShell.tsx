@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { getAppOrigin, getEplOrigin, getHostsOrigin, getWebOrigin } from "@/lib/domains";
+import { getAppOrigin, getEplOrigin, getWebOrigin } from "@/lib/domains";
 import { PUBLIC_CITIES } from "@/lib/public-cities";
 import { getFaviconFallbackUrl, getLogoFallbackUrl } from "@/lib/external-integrations";
 import type { SponsorPlacement } from "@/lib/sponsor-placements";
@@ -63,7 +63,8 @@ export default function PublicFooterShell({
               <Link href={`${getWebOrigin()}/events`}>Events</Link>
               <Link href={`${getEplOrigin()}/`}>EPL</Link>
               <Link href={`${getEplOrigin()}/opportunities`}>EPL Opportunities</Link>
-              <Link href={`${getHostsOrigin()}/`}>Host Network</Link>
+              <Link href={`${getWebOrigin()}/hosts`}>Host Network</Link>
+              <Link href={`${getWebOrigin()}/crew`}>Crew Marketplace</Link>
               <Link href={`${getWebOrigin()}/signal/apply`}>Signal</Link>
               <Link href={`${getWebOrigin()}/ambassador/apply`}>Ambassador</Link>
               <Link href={`${getWebOrigin()}/partners/packages`}>Sponsor Packages</Link>
@@ -87,7 +88,7 @@ export default function PublicFooterShell({
             <div className="text-sm font-semibold uppercase tracking-[0.22em] text-white/48">Trust</div>
             <div className="mt-4 flex flex-col gap-3 text-sm text-white/78">
               <Link href={`${getAppOrigin()}/account/login`}>Sign In</Link>
-              <Link href={`${getAppOrigin()}/account/login?mode=signup&next=/account`}>Create Account</Link>
+              <Link href={`${getAppOrigin()}/account/register?next=/account`}>Create member account</Link>
               <Link href={`${getWebOrigin()}/privacy`}>Privacy Policy</Link>
               <Link href={`${getWebOrigin()}/terms`}>Terms</Link>
               <Link href={`${getWebOrigin()}/refund-policy`}>Refund Policy</Link>

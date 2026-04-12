@@ -118,10 +118,15 @@ export default function DraftBoardScreen({ seasonSlug }: { seasonSlug: string })
   const revealTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   async function loadState() {
-    const res = await fetch(`/api/epl/draft/state?seasonSlug=${seasonSlug}`, {
-      cache: "no-store",
-    });
+    const res = await fetch(`/api/epl/draft/state?seasonSlug=${seasonSlug}`, { cache: "no-store" });
     const json = (await res.json()) as DraftStateResponse;
+    if (!res.ok || json.error) {
+      setState((current) => ({
+        ...current,
+        error: json.error || "Could not load live draft board.",
+      }));
+      return;
+    }
 
     const incomingPick = json?.session?.current_pick_number || 0;
     const incomingCurrentPick = json?.currentPick || null;
@@ -189,14 +194,22 @@ export default function DraftBoardScreen({ seasonSlug }: { seasonSlug: string })
 
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(162,89,255,0.16),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.06),transparent_22%)]" />
 
-      <div className="grid min-h-screen grid-cols-[1.5fr_0.5fr]">
-        <div className="relative flex flex-col justify-between border-r border-white/10 p-10">
+      <div className="grid min-h-screen xl:grid-cols-[1.5fr_0.5fr]">
+        <div className="relative flex flex-col justify-between border-b border-white/10 p-6 md:p-8 xl:border-b-0 xl:border-r xl:p-10">
           <div>
             <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-xs uppercase tracking-[0.34em] text-[#A259FF]">
               {state.session?.title || "EPL Draft"}
             </motion.p>
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <div className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.22em] text-white/72">
+                EVNTSZN Prime League
+              </div>
+              <div className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.22em] text-white/52">
+                Live draft board
+              </div>
+            </div>
 
-            <div className="mt-10 rounded-[40px] border border-white/10 bg-gradient-to-b from-white/[0.06] to-white/[0.02] p-10 shadow-[0_0_60px_rgba(162,89,255,0.08)]">
+            <div className="mt-8 rounded-[32px] border border-white/10 bg-gradient-to-b from-white/[0.06] to-white/[0.02] p-6 shadow-[0_0_60px_rgba(162,89,255,0.08)] md:p-8 xl:mt-10 xl:rounded-[40px] xl:p-10">
               <AnimatePresence mode="wait">
                 {livePick ? (
                   <motion.div
@@ -205,7 +218,7 @@ export default function DraftBoardScreen({ seasonSlug }: { seasonSlug: string })
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -20, scale: 1.01 }}
                     transition={{ duration: 0.55 }}
-                    className="grid grid-cols-[340px_1fr] items-center gap-10"
+                    className="grid items-center gap-8 lg:grid-cols-[280px_1fr] xl:grid-cols-[340px_1fr] xl:gap-10"
                   >
                     <motion.div
                       initial={{ opacity: 0, x: -24 }}
@@ -229,8 +242,8 @@ export default function DraftBoardScreen({ seasonSlug }: { seasonSlug: string })
                         <img src={livePick.team_logo_url} alt={livePick.team_name} className="mb-6 mt-8 h-24 w-24 object-contain" />
                       ) : null}
 
-                      <div className="text-6xl font-semibold tracking-tight">{livePick.team_name}</div>
-                      <div className="mt-6 text-5xl text-white/95">{livePick.player_name}</div>
+                      <div className="text-4xl font-semibold tracking-tight md:text-5xl xl:text-6xl">{livePick.team_name}</div>
+                      <div className="mt-6 text-4xl text-white/95 md:text-5xl">{livePick.player_name}</div>
 
                       <div className="mt-4 flex flex-wrap gap-3">
                         <span className="rounded-full border border-[#A259FF]/40 bg-[#A259FF]/10 px-4 py-2 text-sm uppercase tracking-[0.18em] text-[#D3B2FF]">
@@ -253,7 +266,7 @@ export default function DraftBoardScreen({ seasonSlug }: { seasonSlug: string })
             </div>
           </div>
 
-          <div className="mt-8 grid grid-cols-3 gap-4">
+          <div className="mt-8 grid gap-4 md:grid-cols-3">
             <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5">
               <p className="text-[11px] uppercase tracking-[0.22em] text-white/45">Current Pick</p>
               <p className="mt-2 text-3xl font-semibold">{state.session?.current_pick_number || 0}</p>
@@ -269,7 +282,12 @@ export default function DraftBoardScreen({ seasonSlug }: { seasonSlug: string })
           </div>
         </div>
 
-        <div className="p-8">
+        <div className="p-6 md:p-8">
+          {state.error ? (
+            <div className="mb-6 rounded-[28px] border border-red-500/25 bg-red-500/10 p-5 text-sm text-red-100">
+              {state.error}
+            </div>
+          ) : null}
           <div className="rounded-[32px] border border-white/10 bg-white/[0.03] p-6">
             <p className="text-[11px] uppercase tracking-[0.22em] text-[#A259FF]">Next Up</p>
             {state.nextPick ? (

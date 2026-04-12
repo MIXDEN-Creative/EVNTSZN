@@ -1,6 +1,8 @@
+import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { buildTicketCode, ensurePlatformProfile, logEventActivity, requirePlatformUser } from "@/lib/evntszn";
 import { getAppOrigin, getCanonicalUrl } from "@/lib/domains";
+import { LINK_ATTRIBUTION_WINDOW_MS, LINK_CLICK_COOKIE, parseLinkClickCookie } from "@/lib/link-attribution";
 import { stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { canPurchaseTicketType, getTicketAvailabilityState } from "@/lib/ticketing";
@@ -12,6 +14,7 @@ export async function POST(request: Request, { params }: { params: Params }) {
   const { eventId } = await params;
   const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
   const quantity = Math.max(1, Number(body.quantity || 1));
+  const clickCookie = parseLinkClickCookie((await cookies()).get(LINK_CLICK_COOKIE)?.value);
 
   const [{ data: event }, { data: ticketType }] = await Promise.all([
     supabaseAdmin
@@ -121,6 +124,12 @@ export async function POST(request: Request, { params }: { params: Params }) {
   }
 
   const baseUrl = getAppOrigin(new URL(request.url).host);
+  const eligibleLinkClick =
+    clickCookie &&
+    clickCookie.eventId === eventId &&
+    Date.now() - clickCookie.clickedAt <= LINK_ATTRIBUTION_WINDOW_MS
+      ? clickCookie
+      : null;
   const session = await stripe.checkout.sessions.create({
     mode: "payment",
     success_url: `${baseUrl}/events/${event.slug}?purchase=success&session_id={CHECKOUT_SESSION_ID}`,
@@ -133,6 +142,8 @@ export async function POST(request: Request, { params }: { params: Params }) {
       evntszn_ticket_type_id: ticketType.id,
       evntszn_purchaser_user_id: viewer.user!.id,
       evntszn_quantity: String(quantity),
+      evntszn_link_click_id: eligibleLinkClick?.clickId || "",
+      evntszn_link_event_id: eligibleLinkClick?.eventId || "",
     },
     line_items: [
       {

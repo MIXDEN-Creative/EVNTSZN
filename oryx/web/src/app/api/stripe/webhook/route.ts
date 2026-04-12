@@ -2,6 +2,8 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { buildTicketCode, logEventActivity } from "@/lib/evntszn";
+import { attributeLinkConversionFromOrder } from "@/lib/link-attribution";
+import { getLinkPlanFromStripePriceId, getLinkPlanFromSubscription, mapStripeSubscriptionStatus } from "@/lib/link-billing";
 import { ensureTicketRevenueAllocation } from "@/lib/revenue-engine";
 import { stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabase-admin";
@@ -19,6 +21,107 @@ function getTierFromLifetimePoints(points: number) {
   if (points >= 500) return "Gold";
   if (points >= 250) return "Silver";
   return "Member";
+}
+
+async function syncLinkPlanRow(input: {
+  userId?: string | null;
+  linkPageId?: string | null;
+  customerId?: string | null;
+  subscriptionId?: string | null;
+  plan?: string | null;
+  status?: string | null;
+}) {
+  let query = supabaseAdmin.from("evntszn_link_pages").update({
+    ...(input.plan ? { plan_tier: input.plan } : {}),
+    ...(input.status ? { subscription_status: input.status } : {}),
+    ...(input.customerId !== undefined ? { stripe_customer_id: input.customerId } : {}),
+    ...(input.subscriptionId !== undefined ? { stripe_subscription_id: input.subscriptionId } : {}),
+  });
+
+  if (input.linkPageId) {
+    query = query.eq("id", input.linkPageId);
+  } else if (input.userId) {
+    query = query.eq("user_id", input.userId);
+  } else if (input.subscriptionId) {
+    query = query.eq("stripe_subscription_id", input.subscriptionId);
+  } else if (input.customerId) {
+    query = query.eq("stripe_customer_id", input.customerId);
+  } else {
+    throw new Error("Missing Link billing sync identifier.");
+  }
+
+  const { error } = await query;
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
+async function handleLinkSubscriptionCheckout(session: Stripe.Checkout.Session) {
+  const metadata = session.metadata || {};
+  if (metadata.checkout_kind !== "link_subscription" || session.mode !== "subscription") {
+    return false;
+  }
+
+  const selectedPlan =
+    getLinkPlanFromStripePriceId(
+      typeof session.line_items?.data?.[0]?.price?.id === "string" ? session.line_items.data[0].price.id : null,
+    ) || metadata.selected_plan;
+
+  await syncLinkPlanRow({
+    userId: metadata.user_id || session.client_reference_id || null,
+    linkPageId: metadata.link_page_id || null,
+    customerId: typeof session.customer === "string" ? session.customer : session.customer?.id || null,
+    subscriptionId:
+      typeof session.subscription === "string" ? session.subscription : session.subscription?.id || null,
+    plan: selectedPlan || null,
+    status: "active",
+  });
+
+  return true;
+}
+
+async function handleLinkSubscriptionUpdated(subscription: Stripe.Subscription) {
+  const plan = getLinkPlanFromSubscription(subscription);
+  await syncLinkPlanRow({
+    userId: subscription.metadata?.user_id || null,
+    linkPageId: subscription.metadata?.link_page_id || null,
+    customerId: typeof subscription.customer === "string" ? subscription.customer : subscription.customer?.id || null,
+    subscriptionId: subscription.id,
+    plan,
+    status: mapStripeSubscriptionStatus(subscription.status),
+  });
+}
+
+async function handleLinkSubscriptionDeleted(subscription: Stripe.Subscription) {
+  await syncLinkPlanRow({
+    userId: subscription.metadata?.user_id || null,
+    linkPageId: subscription.metadata?.link_page_id || null,
+    customerId: typeof subscription.customer === "string" ? subscription.customer : subscription.customer?.id || null,
+    subscriptionId: null,
+    plan: "free",
+    status: "canceled",
+  });
+}
+
+async function handleLinkInvoicePaymentFailed(invoice: Stripe.Invoice) {
+  const billingInvoice = invoice as Stripe.Invoice & {
+    parent?: {
+      subscription_details?: {
+        subscription?: string | Stripe.Subscription | null;
+      } | null;
+    } | null;
+  };
+  const subscriptionId =
+    typeof billingInvoice.parent?.subscription_details?.subscription === "string"
+      ? billingInvoice.parent.subscription_details.subscription
+      : billingInvoice.parent?.subscription_details?.subscription?.id || null;
+  const customerId = typeof invoice.customer === "string" ? invoice.customer : invoice.customer?.id || null;
+  if (!subscriptionId && !customerId) return;
+  await syncLinkPlanRow({
+    subscriptionId,
+    customerId,
+    status: "past_due",
+  });
 }
 
 async function handleEventTicketCheckout(session: Stripe.Checkout.Session) {
@@ -153,6 +256,21 @@ async function handleEventTicketCheckout(session: Stripe.Checkout.Session) {
       auditType: existingOrder ? "rebuild" : "purchase",
     });
   }
+
+  await attributeLinkConversionFromOrder({
+    orderId: order.id,
+    eventId: event.id,
+    purchaserUserId,
+    amountTotalCents: Number(order.amount_total_cents || session.amount_total || 0),
+    quantity: Number(order.quantity || quantity),
+    convertedAt: new Date().toISOString(),
+    checkoutSession: session,
+    metadata: {
+      checkoutKind: metadata.checkout_kind || "event_ticket",
+      customerEmail,
+      existingOrder: Boolean(existingOrder),
+    },
+  });
 
   return true;
 }
@@ -332,6 +450,10 @@ export async function POST(request: Request) {
 
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
+
+      if (await handleLinkSubscriptionCheckout(session)) {
+        return NextResponse.json({ received: true });
+      }
 
       if (await handleEventTicketCheckout(session)) {
         return NextResponse.json({ received: true });
@@ -572,6 +694,21 @@ export async function POST(request: Request) {
           console.error("Confirmation email failed:", emailError);
         }
       }
+    }
+
+    if (event.type === "customer.subscription.updated") {
+      await handleLinkSubscriptionUpdated(event.data.object as Stripe.Subscription);
+      return NextResponse.json({ received: true });
+    }
+
+    if (event.type === "customer.subscription.deleted") {
+      await handleLinkSubscriptionDeleted(event.data.object as Stripe.Subscription);
+      return NextResponse.json({ received: true });
+    }
+
+    if (event.type === "invoice.payment_failed") {
+      await handleLinkInvoicePaymentFailed(event.data.object as Stripe.Invoice);
+      return NextResponse.json({ received: true });
     }
 
     return NextResponse.json({ received: true });

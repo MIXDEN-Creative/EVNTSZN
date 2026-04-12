@@ -10,10 +10,12 @@ type RegistrationRow = {
     last_name: string | null;
     email: string | null;
     city: string | null;
+    state: string | null;
     status: string | null;
     pipeline_stage: string | null;
     submitted_at: string | null;
     internal_notes: string | null;
+    assigned_reviewer_user_id: string | null;
   };
   registration: {
     id: string;
@@ -34,6 +36,22 @@ type RegistrationRow = {
   paymentComplete: boolean;
 };
 
+type Reviewer = {
+  userId: string;
+  fullName: string | null;
+};
+
+type WaiverWebhookIssue = {
+  id: string;
+  email: string | null;
+  first_name: string | null;
+  last_name: string | null;
+  match_status: string;
+  notes: string | null;
+  candidate_application_ids: string[] | null;
+  created_at: string | null;
+};
+
 function stageBadge(label: string, tone: "ready" | "pending" | "review") {
   const toneClass =
     tone === "ready"
@@ -51,7 +69,15 @@ function formatDate(value: string | null | undefined) {
   return Number.isNaN(date.getTime()) ? "—" : date.toLocaleString();
 }
 
-export default function SeasonOneAdminClient({ rows }: { rows: RegistrationRow[] }) {
+export default function SeasonOneAdminClient({
+  rows,
+  reviewers,
+  waiverIssues,
+}: {
+  rows: RegistrationRow[];
+  reviewers: Reviewer[];
+  waiverIssues: WaiverWebhookIssue[];
+}) {
   const [registrationRows, setRegistrationRows] = useState(rows);
   const [search, setSearch] = useState("");
   const [message, setMessage] = useState("");
@@ -66,6 +92,7 @@ export default function SeasonOneAdminClient({ rows }: { rows: RegistrationRow[]
     draftEligible: rows[0]?.pool?.draft_eligible ?? false,
     waivedFee: rows[0]?.registration?.waived_fee ?? false,
     internalNotes: rows[0]?.application.internal_notes || "",
+    assignedReviewerUserId: rows[0]?.application.assigned_reviewer_user_id || "",
   });
 
   const filteredRows = useMemo(() => {
@@ -103,6 +130,7 @@ export default function SeasonOneAdminClient({ rows }: { rows: RegistrationRow[]
       draftEligible: row.pool?.draft_eligible ?? false,
       waivedFee: row.registration?.waived_fee ?? false,
       internalNotes: row.application.internal_notes || "",
+      assignedReviewerUserId: row.application.assigned_reviewer_user_id || "",
     });
   }
 
@@ -124,6 +152,7 @@ export default function SeasonOneAdminClient({ rows }: { rows: RegistrationRow[]
           draftEligible: form.draftEligible,
           waivedFee: form.waivedFee,
           internalNotes: form.internalNotes,
+          assignedReviewerUserId: form.assignedReviewerUserId || null,
         }),
       });
       const json = (await response.json()) as { error?: string };
@@ -138,6 +167,7 @@ export default function SeasonOneAdminClient({ rows }: { rows: RegistrationRow[]
                   status: form.applicationStatus,
                   pipeline_stage: form.pipelineStage,
                   internal_notes: form.internalNotes,
+                  assigned_reviewer_user_id: form.assignedReviewerUserId || null,
                 },
                 registration: row.registration
                   ? {
@@ -209,12 +239,12 @@ export default function SeasonOneAdminClient({ rows }: { rows: RegistrationRow[]
                       </div>
                       <div className="mt-1 text-sm text-white/62">{row.application.email || "No email"}</div>
                       <div className="mt-2 text-sm text-white/48">
-                        {[row.application.city, row.application.status, row.application.pipeline_stage].filter(Boolean).join(" • ") || "Awaiting review"}
+                        {[row.application.city, row.application.state, row.application.status, row.application.pipeline_stage].filter(Boolean).join(" • ") || "Awaiting review"}
                       </div>
                     </div>
                     <div className="text-right text-sm text-white/52">
                       <div>{formatDate(row.application.submitted_at)}</div>
-                      <div className="mt-2">{row.pool?.assigned_to_team ? "Assigned to team" : "Unassigned"}</div>
+                      <div className="mt-2">{row.application.assigned_reviewer_user_id ? reviewers.find((reviewer) => reviewer.userId === row.application.assigned_reviewer_user_id)?.fullName || "Assigned reviewer" : "Unassigned owner"}</div>
                     </div>
                   </div>
                   <div className="mt-4 flex flex-wrap gap-2">
@@ -245,7 +275,7 @@ export default function SeasonOneAdminClient({ rows }: { rows: RegistrationRow[]
                   {`${selectedRow.application.first_name || ""} ${selectedRow.application.last_name || ""}`.trim() || "Unnamed player"}
                 </h2>
                 <p className="mt-2 text-sm text-white/62">
-                  {selectedRow.application.email || "No email"} {selectedRow.application.city ? `• ${selectedRow.application.city}` : ""}
+                  {selectedRow.application.email || "No email"} {[selectedRow.application.city, selectedRow.application.state].filter(Boolean).length ? `• ${[selectedRow.application.city, selectedRow.application.state].filter(Boolean).join(", ")}` : ""}
                 </p>
               </div>
               <div className="flex flex-wrap gap-3">
@@ -261,6 +291,7 @@ export default function SeasonOneAdminClient({ rows }: { rows: RegistrationRow[]
                 ["Registration", selectedRow.registration?.registration_status || "pending_payment"],
                 ["Player status", selectedRow.registration?.player_status || "prospect"],
                 ["Draft", selectedRow.pool?.draft_eligible ? "eligible" : "not ready"],
+                ["Owner", reviewers.find((reviewer) => reviewer.userId === (selectedRow.application.assigned_reviewer_user_id || ""))?.fullName || "Unassigned"],
               ].map(([label, value]) => (
                 <div key={String(label)} className="rounded-2xl border border-white/10 bg-black/25 p-4">
                   <div className="text-[11px] uppercase tracking-[0.18em] text-white/45">{label}</div>
@@ -280,12 +311,39 @@ export default function SeasonOneAdminClient({ rows }: { rows: RegistrationRow[]
                 {stageBadge(selectedRow.pool?.assigned_to_team ? "assigned to team" : "not assigned", selectedRow.pool?.assigned_to_team ? "ready" : "review")}
                 {stageBadge(selectedRow.application.pipeline_stage || "review pending", selectedRow.application.pipeline_stage === "approved" ? "ready" : "review")}
               </div>
+              <div className="mt-4 rounded-2xl border border-white/10 bg-black/25 p-4 text-sm text-white/62">
+                <div className="text-[11px] uppercase tracking-[0.18em] text-white/45">Next action</div>
+                <div className="mt-2 text-white">
+                  {selectedRow.waiverStatus !== "complete"
+                    ? "Waiver is still blocking this file."
+                    : !selectedRow.paymentComplete
+                      ? "Payment still needs to clear."
+                      : !selectedRow.hasHeadshot
+                        ? "Headshot is still missing from the player file."
+                        : !selectedRow.hasJerseyDetails
+                          ? "Jersey details still need to be completed."
+                          : !selectedRow.pool?.draft_eligible
+                            ? "Review draft eligibility before assignment."
+                            : !selectedRow.pool?.assigned_to_team
+                              ? "Player is ready for draft-night assignment."
+                              : "Player file is complete and already tied to a team."}
+                </div>
+              </div>
             </div>
 
             <div className="grid gap-4 lg:grid-cols-2">
               <div className="rounded-[24px] border border-white/10 bg-black/20 p-5">
                 <div className="text-sm font-semibold text-white">Operator updates</div>
                 <div className="mt-4 grid gap-4">
+                  <label className="grid gap-2 text-sm text-white/72">
+                    <span>Assigned reviewer / owner</span>
+                    <select className="ev-field" value={form.assignedReviewerUserId} onChange={(event) => setForm((current) => ({ ...current, assignedReviewerUserId: event.target.value }))}>
+                      <option value="">Unassigned</option>
+                      {reviewers.map((reviewer) => (
+                        <option key={reviewer.userId} value={reviewer.userId}>{reviewer.fullName || reviewer.userId}</option>
+                      ))}
+                    </select>
+                  </label>
                   <label className="grid gap-2 text-sm text-white/72">
                     <span>Application status</span>
                     <select className="ev-field" value={form.applicationStatus} onChange={(event) => setForm((current) => ({ ...current, applicationStatus: event.target.value }))}>
@@ -353,6 +411,31 @@ export default function SeasonOneAdminClient({ rows }: { rows: RegistrationRow[]
             <div className="rounded-[24px] border border-white/10 bg-black/20 p-5 text-sm text-white/58">
               Team assignment still happens in the draft console and live draftboard flow. This desk handles registration readiness, waiver tracking, payment status, and review notes.
             </div>
+
+            {waiverIssues.length ? (
+              <div className="rounded-[24px] border border-white/10 bg-black/20 p-5">
+                <div className="text-sm font-semibold text-white">Waiver webhook exceptions</div>
+                <div className="mt-4 grid gap-3">
+                  {waiverIssues.map((issue) => (
+                    <div key={issue.id} className="rounded-2xl border border-white/10 bg-black/25 p-4 text-sm text-white/68">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div className="font-semibold text-white">
+                          {[issue.first_name, issue.last_name].filter(Boolean).join(" ").trim() || issue.email || "Unnamed submission"}
+                        </div>
+                        {stageBadge(issue.match_status, issue.match_status === "matched" ? "ready" : "review")}
+                      </div>
+                      <div className="mt-1 text-white/52">{issue.email || "No email"} • {formatDate(issue.created_at)}</div>
+                      <div className="mt-2 text-white/60">{issue.notes || "Needs operator review before this waiver can be attached safely."}</div>
+                      {issue.candidate_application_ids?.length ? (
+                        <div className="mt-2 text-xs uppercase tracking-[0.18em] text-white/40">
+                          {issue.candidate_application_ids.length} possible registration match{issue.candidate_application_ids.length === 1 ? "" : "es"}
+                        </div>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
 
             {message ? <div className="rounded-2xl border border-white/10 bg-black/25 p-4 text-sm text-white/75">{message}</div> : null}
 

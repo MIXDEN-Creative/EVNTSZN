@@ -18,6 +18,7 @@
     "prod:local": "npm run build && npm run start"
   },
   "dependencies": {
+    "@capacitor/core": "^8.3.0",
     "@opennextjs/cloudflare": "^1.18.0",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.101.1",
@@ -31,6 +32,7 @@
     "tailwind-merge": "^3.5.0"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.3.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

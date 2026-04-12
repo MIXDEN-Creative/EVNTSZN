@@ -33,7 +33,9 @@ export default function CityOfficeClient({
   const [officeLeads, setOfficeLeads] = useState<any[]>([]);
   const [selectedCity, setSelectedCity] = useState<string>("");
   const [message, setMessage] = useState("");
+  const [messageTone, setMessageTone] = useState<"neutral" | "success" | "error">("neutral");
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [officeForm, setOfficeForm] = useState(buildEmptyOfficeForm());
 
   async function load() {
@@ -41,6 +43,7 @@ export default function CityOfficeClient({
     const res = await fetch(apiPath, { cache: "no-store" });
     const json = (await res.json()) as { cities?: any[]; offices?: any[]; officeLeads?: any[]; error?: string };
     if (!res.ok) {
+      setMessageTone("error");
       setMessage(json.error || "Could not load office data.");
       setLoading(false);
       return;
@@ -71,19 +74,31 @@ export default function CityOfficeClient({
   async function saveOffice(event: React.FormEvent) {
     event.preventDefault();
     setMessage("");
-    const response = await fetch(apiPath, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(officeForm),
-    });
-    const json = (await response.json()) as { error?: string; officeId?: string };
-    if (!response.ok) {
-      setMessage(json.error || "Could not save office.");
-      return;
+    setSaving(true);
+    try {
+      const response = await fetch(apiPath, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(officeForm),
+      });
+      const json = (await response.json()) as { error?: string; officeId?: string };
+      if (!response.ok) {
+        setMessageTone("error");
+        setMessage(json.error || "Could not save office.");
+        return;
+      }
+      const nextCity = officeForm.city || selectedCity;
+      setMessageTone("success");
+      setMessage(officeForm.id ? "Office updated." : "Office created.");
+      setSelectedCity(nextCity);
+      setOfficeForm(buildEmptyOfficeForm(nextCity || "", getCityStateCode(nextCity || "") || ""));
+      await load();
+    } catch (error) {
+      setMessageTone("error");
+      setMessage(error instanceof Error ? error.message : "Could not save office.");
+    } finally {
+      setSaving(false);
     }
-    setMessage(officeForm.id ? "Office updated." : "Office created.");
-    setOfficeForm(buildEmptyOfficeForm(selectedCity || "", getCityStateCode(selectedCity || "") || ""));
-    await load();
   }
 
   return (
@@ -99,7 +114,11 @@ export default function CityOfficeClient({
         </div>
       </section>
 
-      {message ? <div className="mt-4 rounded-2xl border border-white/10 bg-black/30 p-4 text-sm text-white/75">{message}</div> : null}
+      {message ? (
+        <div className={`mt-4 rounded-2xl border p-4 text-sm ${messageTone === "error" ? "border-red-500/30 bg-red-500/10 text-red-100" : messageTone === "success" ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-100" : "border-white/10 bg-black/30 text-white/75"}`}>
+          {message}
+        </div>
+      ) : null}
 
       <section className="mt-6 ev-panel p-6 md:p-7">
         <div className="grid gap-4 md:grid-cols-[280px_1fr_auto]">
@@ -176,7 +195,7 @@ export default function CityOfficeClient({
                 Keep this scoped to the basics: location, status, lead assignment, description, and internal notes.
               </p>
               <div className="mt-4 rounded-2xl border border-white/10 bg-black/25 p-4 text-sm text-white/62">
-                {officeForm.id ? "You are editing an existing office record." : "Create one office record at a time, attach the lead if known, then use the city summary to review local coverage."}
+                {officeForm.id ? "You are editing an existing office record. Update the lead, status, and notes here, then save the record back into the city office roster." : "Create one office record at a time. Set the market, confirm the state and region, assign the lead if known, then save the office into the live city roster."}
               </div>
               <form onSubmit={saveOffice} className="mt-5 grid gap-4">
                 <div className="grid gap-4 md:grid-cols-2">
@@ -206,7 +225,7 @@ export default function CityOfficeClient({
                 <textarea className="ev-textarea" rows={4} placeholder="Office description" value={officeForm.description} onChange={(e) => setOfficeForm({ ...officeForm, description: e.target.value })} />
                 <textarea className="ev-textarea" rows={3} placeholder="Internal notes" value={officeForm.notes} onChange={(e) => setOfficeForm({ ...officeForm, notes: e.target.value })} />
                 <div className="flex flex-wrap gap-3">
-                  <button type="submit" className="ev-button-primary">{officeForm.id ? "Save office" : "Create office"}</button>
+                  <button type="submit" className="ev-button-primary" disabled={saving}>{saving ? "Saving..." : officeForm.id ? "Save office" : "Create office"}</button>
                   {officeForm.id ? (
                     <button
                       type="button"

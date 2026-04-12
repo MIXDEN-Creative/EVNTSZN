@@ -26,7 +26,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.9,
     },
     {
-      url: "https://hosts.evntszn.com/",
+      url: `${origin}/hosts`,
+      changeFrequency: "weekly",
+      priority: 0.7,
+    },
+    {
+      url: `${origin}/crew`,
       changeFrequency: "weekly",
       priority: 0.7,
     },

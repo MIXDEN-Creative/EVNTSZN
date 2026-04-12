@@ -9,8 +9,11 @@ import { getDiscoveryNativeEvents } from "@/lib/discovery";
 import { PUBLIC_CITIES, getPublicCityBySlug } from "@/lib/public-cities";
 import { DEFAULT_PUBLIC_MODULES, getPublicModulesContent } from "@/lib/site-content";
 import { getPublicSponsorPlacements } from "@/lib/sponsor-placements";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 import { searchTicketmasterEvents } from "@/lib/ticketmaster";
 import { safePublicLoad } from "@/lib/public-safe-load";
+import EvntsznLinkPage from "@/app/link/[slug]/page";
+import CrewProfilePage from "@/app/crew/[slug]/page";
 
 type CityPageProps = {
   params: Promise<{ citySlug: string }>;
@@ -61,6 +64,36 @@ export default async function PublicCityPage({ params }: CityPageProps) {
   const city = getPublicCityBySlug(citySlug);
 
   if (!city) {
+    const [linkRes, crewRes] = await Promise.all([
+      supabaseAdmin
+        .from("evntszn_link_pages")
+        .select("id")
+        .eq("slug", citySlug)
+        .eq("status", "published")
+        .maybeSingle(),
+      supabaseAdmin
+        .from("evntszn_crew_profiles")
+        .select("id")
+        .eq("slug", citySlug)
+        .eq("status", "published")
+        .maybeSingle(),
+    ]);
+
+    if (linkRes.error) {
+      throw new Error(linkRes.error.message);
+    }
+    if (crewRes.error) {
+      throw new Error(crewRes.error.message);
+    }
+
+    if (linkRes.data) {
+      return <EvntsznLinkPage params={Promise.resolve({ slug: citySlug })} />;
+    }
+
+    if (crewRes.data) {
+      return <CrewProfilePage params={Promise.resolve({ slug: citySlug })} />;
+    }
+
     notFound();
   }
 

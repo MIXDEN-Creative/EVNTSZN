@@ -4,8 +4,7 @@ import { getSupabaseAdmin } from "@/lib/epl/supabase-admin";
 import { JERSEY_NAME_DISCLAIMER } from "@/lib/epl/constants";
 import { absoluteUrl, getSeasonContext } from "@/lib/epl/helpers";
 import { stripe } from "@/lib/epl/stripe";
-
-const WAIVER_URL = "https://tally.so/r/XxY8xz";
+import { buildWaiverUrl } from "@/lib/epl/waiver";
 
 const registrationSchema = z.object({
   firstName: z.string().min(1).max(80),
@@ -247,7 +246,6 @@ export async function POST(req: Request) {
         source: "website",
         answers: {
           jerseyNameDisclaimer: JERSEY_NAME_DISCLAIMER,
-          waiverUrl: WAIVER_URL,
           waiverStatus: "pending",
         },
       })
@@ -304,6 +302,39 @@ export async function POST(req: Request) {
       applicationId: application.id,
       playerProfileId,
     });
+
+    const waiverUrl = buildWaiverUrl({
+      applicationId: application.id,
+      registrationId: registration.id,
+      registrationCode: registration.registration_code,
+      playerProfileId,
+      seasonId: season.seasonId,
+      email,
+      firstName: parsed.firstName.trim(),
+      lastName: parsed.lastName.trim(),
+    });
+
+    const { error: waiverUrlUpdateError } = await supabase
+      .schema("epl")
+      .from("player_applications")
+      .update({
+        answers: {
+          jerseyNameDisclaimer: JERSEY_NAME_DISCLAIMER,
+          waiverUrl,
+          waiverStatus: "pending",
+        },
+      })
+      .eq("id", application.id);
+
+    if (waiverUrlUpdateError) {
+      console.error("[epl-registration] waiver url update failed", {
+        email,
+        applicationId: application.id,
+        registrationId: registration.id,
+        error: waiverUrlUpdateError,
+      });
+      throw waiverUrlUpdateError;
+    }
 
     if (season.feeCents <= 0) {
       return NextResponse.json({

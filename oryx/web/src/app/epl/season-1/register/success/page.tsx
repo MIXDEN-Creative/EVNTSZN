@@ -1,8 +1,9 @@
+import { getSupabaseAdmin } from "@/lib/epl/supabase-admin";
+import { buildWaiverUrl, getBaseWaiverUrl } from "@/lib/epl/waiver";
+
 type SearchParams = {
   registration?: string;
 };
-
-const WAIVER_URL = "https://tally.so/r/XxY8xz";
 
 export default async function EPLRegistrationSuccessPage({
   searchParams,
@@ -10,6 +11,49 @@ export default async function EPLRegistrationSuccessPage({
   searchParams: Promise<SearchParams>;
 }) {
   const params = await searchParams;
+  const supabase = getSupabaseAdmin();
+  const baseWaiverUrl = getBaseWaiverUrl();
+  let waiverUrl = baseWaiverUrl;
+
+  if (params.registration) {
+    const { data: registration } = await supabase
+      .schema("epl")
+      .from("season_registrations")
+      .select(`
+        id,
+        registration_code,
+        season_id,
+        player_profile_id,
+        player_applications:application_id (
+          id,
+          email,
+          first_name,
+          last_name,
+          answers
+        )
+      `)
+      .eq("registration_code", params.registration)
+      .maybeSingle();
+
+    const application = Array.isArray((registration as any)?.player_applications)
+      ? (registration as any)?.player_applications?.[0]
+      : (registration as any)?.player_applications;
+
+    const storedWaiverUrl = String(application?.answers?.waiverUrl || "");
+    waiverUrl =
+      storedWaiverUrl && storedWaiverUrl !== baseWaiverUrl
+        ? storedWaiverUrl
+        : buildWaiverUrl({
+        applicationId: application?.id || null,
+        registrationId: registration?.id || null,
+        registrationCode: registration?.registration_code || null,
+        playerProfileId: registration?.player_profile_id || null,
+        seasonId: registration?.season_id || null,
+        email: application?.email || null,
+        firstName: application?.first_name || null,
+        lastName: application?.last_name || null,
+      });
+  }
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-black px-6 text-white">
@@ -33,7 +77,7 @@ export default async function EPLRegistrationSuccessPage({
             Keep your registration moving by finishing the waiver right away. League operations can review your file faster when payment, waiver, and player details are all in place.
           </p>
           <a
-            href={WAIVER_URL}
+            href={waiverUrl}
             target="_blank"
             rel="noreferrer"
             className="mt-4 inline-flex rounded-2xl bg-[#A259FF] px-5 py-3 font-semibold text-white"

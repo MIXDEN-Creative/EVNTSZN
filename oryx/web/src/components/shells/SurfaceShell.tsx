@@ -1,5 +1,8 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
 import type { EvntsznSurface } from "@/lib/domains";
 import { getAppOrigin, getEplOrigin, getWebOrigin } from "@/lib/domains";
 
@@ -22,51 +25,77 @@ export default function SurfaceShell({
   children: React.ReactNode;
   className?: string;
 }) {
+  const [open, setOpen] = useState(false);
+
   return (
     <main className={["ev-surface", `ev-surface--${surface}`, className].filter(Boolean).join(" ")}>
       <div className="ev-shell">
-        <div className="mb-8 flex flex-wrap items-center justify-between gap-4 rounded-[28px] border border-white/10 bg-black/25 px-4 py-4 backdrop-blur-xl">
-          <Link href={getWebOrigin()} className="flex items-center gap-3" aria-label="EVNTSZN home">
-            <span className="relative h-11 w-11 overflow-hidden rounded-2xl border border-white/10 bg-white/5">
-              <Image src="/brand/evntszn-icon.png" alt="EVNTSZN icon" fill sizes="44px" className="object-cover" />
-            </span>
+        <header className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-[28px] border border-white/10 bg-black/40 px-4 py-4 backdrop-blur-2xl md:mb-8 md:px-5">
+          <Link href={getWebOrigin()} className="flex items-center gap-3 transition hover:opacity-90" aria-label="EVNTSZN home">
+            <div className="relative h-10 w-10 overflow-hidden rounded-xl border border-white/10 bg-white/5">
+              <Image src="/brand/evntszn-icon.png" alt="EVNTSZN icon" fill sizes="40px" className="object-cover" />
+            </div>
             <span className="flex flex-col">
-              <span className="text-lg font-black tracking-tight text-white">EVNTSZN</span>
-              <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/42">
-                {surface === "epl" ? "League nights and season action" : surface === "app" ? "Member account and attendee access" : "Live events and city plans"}
+              <span className="text-lg font-black tracking-tighter text-white leading-tight">EVNTSZN</span>
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#caa7ff] leading-tight">
+                {surface.toUpperCase()}
               </span>
             </span>
           </Link>
-          <div className="flex flex-wrap gap-3">
-            <Link href={`${getAppOrigin()}/account`} className="rounded-full border border-white/12 bg-white/5 px-4 py-2 text-sm font-semibold text-white/84 transition hover:bg-white/10">
-              Member account
+
+          <div className="hidden items-center gap-2 md:flex">
+            <Link href={`${getAppOrigin()}/account`} className="rounded-full border border-white/10 bg-white/5 px-4 py-2.5 text-[11px] font-bold uppercase tracking-[0.18em] text-white/80 transition hover:bg-white/10 hover:text-white">
+              My account
             </Link>
             {surface !== "epl" ? (
-              <Link href={`${getEplOrigin()}/`} className="rounded-full border border-white/12 bg-white/5 px-4 py-2 text-sm font-semibold text-white/84 transition hover:bg-white/10">
-                EPL
+              <Link href={`${getEplOrigin()}/`} className="rounded-full border border-white/10 bg-white/5 px-4 py-2.5 text-[11px] font-bold uppercase tracking-[0.18em] text-white/80 transition hover:bg-white/10 hover:text-white">
+                League
               </Link>
             ) : null}
-            <Link href={`${getWebOrigin()}/support`} className="rounded-full border border-white/12 bg-white/5 px-4 py-2 text-sm font-semibold text-white/84 transition hover:bg-white/10">
-              Support
-            </Link>
-            <Link href={getWebOrigin()} className="rounded-full border border-white/12 bg-white/5 px-4 py-2 text-sm font-semibold text-white/84 transition hover:bg-white/10">
-              Return to homepage
+            <Link href={getWebOrigin()} className="rounded-full border border-white/10 bg-white/5 px-4 py-2.5 text-[11px] font-bold uppercase tracking-[0.18em] text-white/80 transition hover:bg-white/10 hover:text-white">
+              Return to discovery
             </Link>
           </div>
-        </div>
+
+          <button
+            type="button"
+            onClick={() => setOpen(!open)}
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white md:hidden"
+          >
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
+            </svg>
+          </button>
+        </header>
+
+        {open && (
+          <div className="mb-6 overflow-hidden rounded-3xl border border-white/10 bg-black/60 p-2 md:mb-8 md:hidden">
+            <div className="grid gap-1">
+              <Link href={`${getAppOrigin()}/account`} className="rounded-2xl px-5 py-3 text-sm font-bold text-white/80 hover:bg-white/10 hover:text-white">
+                My account
+              </Link>
+              <Link href={`${getEplOrigin()}/`} className="rounded-2xl px-5 py-3 text-sm font-bold text-white/80 hover:bg-white/10 hover:text-white">
+                League
+              </Link>
+              <Link href={getWebOrigin()} className="rounded-2xl px-5 py-3 text-sm font-bold text-white/80 hover:bg-white/10 hover:text-white">
+                Discovery
+              </Link>
+            </div>
+          </div>
+        )}
         <section className="ev-shell-hero">
           <div className="ev-shell-hero-grid">
             <div>
               <div className="ev-kicker">{eyebrow}</div>
               <h1 className="ev-title">{title}</h1>
               <p className="ev-subtitle">{description}</p>
-              {actions ? <div className="mt-8 flex flex-wrap gap-3">{actions}</div> : null}
+              {actions ? <div className="mt-6 flex flex-wrap gap-3 md:mt-8">{actions}</div> : null}
             </div>
             {meta ? <div className="ev-hero-meta">{meta}</div> : null}
           </div>
         </section>
 
-        <div className="mt-8">{children}</div>
+        <div className="mt-6 md:mt-8">{children}</div>
       </div>
     </main>
   );

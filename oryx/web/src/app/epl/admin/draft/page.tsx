@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { getEplOrigin } from "@/lib/domains";
 import DraftHostConsole from "./DraftHostConsole";
 
 export default function EPLDraftAdminPage() {
@@ -12,13 +14,18 @@ export default function EPLDraftAdminPage() {
             Access the player pool, team-needs board, live draftboard display, and pick controls from one place. Use this desk to manage and edit the live board on draft night.
           </p>
           </div>
-          <div className="rounded-[28px] border border-white/10 bg-white/[0.03] p-5">
+          <div className="rounded-[28px] border border-white/10 bg-black/30 p-5">
             <div className="text-[11px] uppercase tracking-[0.22em] text-white/45">Live display</div>
             <div className="mt-2 text-lg font-semibold text-white">Draftboard screen</div>
             <p className="mt-2 text-sm text-white/60">
               Open the public-facing draftboard in a separate tab or route it to the display machine before picks begin.
             </p>
-            <a href="/epl/draft/season-1" target="_blank" rel="noreferrer" className="mt-4 inline-flex rounded-2xl bg-[#A259FF] px-4 py-3 text-sm font-semibold text-white">
+            <a
+              href={`${getEplOrigin()}/draft/season-1`}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-4 inline-flex rounded-2xl bg-[#A259FF] px-4 py-3 text-sm font-semibold text-white"
+            >
               Open live draftboard
             </a>
           </div>

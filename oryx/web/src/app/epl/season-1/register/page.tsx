@@ -1,7 +1,9 @@
 import RegisterForm from "./RegisterForm";
+import { getBaseWaiverUrl } from "@/lib/epl/waiver";
 import SurfaceShell from "@/components/shells/SurfaceShell";
 
 export default function EPLSeasonOneRegisterPage() {
+  const waiverUrl = getBaseWaiverUrl();
   return (
     <SurfaceShell
       surface="epl"
@@ -20,7 +22,7 @@ export default function EPLSeasonOneRegisterPage() {
           </div>
           <div className="ev-meta-card">
             <div className="ev-meta-label">Waiver</div>
-            <div className="ev-meta-value">League waiver link: tally.so/r/XxY8xz. Finish it after checkout so your file stays ready for review and assignment.</div>
+            <div className="ev-meta-value">League waiver link: {waiverUrl.replace(/^https?:\/\//, "")}. Finish it after checkout so your file stays ready for review and assignment.</div>
           </div>
         </>
       }

@@ -475,15 +475,15 @@ export default function DiscoveryLanding({
                 <button type="button" className="ev-button-primary" onClick={() => void runSearch()}>
                   {loading ? "Searching..." : "Find events"}
                 </button>
-                <Link href="https://app.evntszn.com/account/login?mode=signup&next=/account" className="ev-button-secondary">
-                  Create Account
+                <Link href="https://app.evntszn.com/account/register?next=/account" className="ev-button-secondary">
+                  Create member account
                 </Link>
               </div>
 
               <div className="mt-4 text-sm leading-6 text-white/56">
                 Already have an account?{" "}
                 <Link href="https://app.evntszn.com/account/login" className="font-semibold text-white/80 transition hover:text-white">
-                  Sign in
+                  Member sign in
                 </Link>
               </div>
             </motion.div>

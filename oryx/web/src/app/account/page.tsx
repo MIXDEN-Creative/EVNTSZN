@@ -1,7 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
-import { getAppOrigin, getEplOrigin, getHostsOrigin, getWebOrigin } from "@/lib/domains";
+import PublicNav from "@/components/public/PublicNav";
+import { getAppOrigin, getEplOrigin, getWebOrigin } from "@/lib/domains";
 import { getPlatformViewer } from "@/lib/evntszn";
 
 export const dynamic = "force-dynamic";
@@ -27,87 +28,95 @@ export const metadata: Metadata = {
 
 function buildQuickLinks(viewer: Awaited<ReturnType<typeof getPlatformViewer>>) {
   const classification = viewer.operatorProfile?.organizer_classification;
-  const links = [
+  
+  const attendeeLinks = [
     {
       title: "Discover",
-      body: "Go straight into public events, city plans, nightlife picks, and what is worth going to next.",
+      body: "Browse public events, city plans, and nightlife picks.",
       href: `${getWebOrigin()}/`,
       label: "Open discovery",
     },
     {
       title: "EPL",
-      body: "Jump into the league surface for standings, registration, opportunities, and season movement.",
+      body: "Standings, registration, and season movement.",
       href: `${getEplOrigin()}/`,
       label: "Open EPL",
     },
   ];
 
-  if (!viewer.user) {
-    links.push(
+  if (viewer.user) {
+    attendeeLinks.push({
+      title: "Track orders",
+      body: "Follow purchases and order status.",
+      href: "/orders/track",
+      label: "Track orders",
+    });
+    attendeeLinks.push({
+      title: "Support",
+      body: "Open the support desk for any account or event issues.",
+      href: `${getWebOrigin()}/support`,
+      label: "Get support",
+    });
+    attendeeLinks.push(
+      {
+        title: "EVNTSZN Link",
+        body: "Manage your public host conversion page, offers, and event promotion.",
+        href: "/account/link",
+        label: "Open Link",
+      },
+      {
+        title: "Crew marketplace",
+        body: "Publish your crew profile and review booking requests.",
+        href: "/account/crew",
+        label: "Manage crew",
+      },
+    );
+  } else {
+    attendeeLinks.push(
       {
         title: "Sign in",
-        body: "Open your member account for tickets, orders, saved plans, and league follow-up.",
+        body: "Open your member account for tickets and orders.",
         href: `${getAppOrigin()}/account/login?next=/account`,
         label: "Sign in",
       },
       {
         title: "Create account",
-        body: "Start your attendee account and keep one clean path into discovery, tickets, and league activity.",
-        href: `${getAppOrigin()}/account/login?mode=signup&next=/account`,
+        body: "Join EVNTSZN for one clean path into everything.",
+        href: `${getAppOrigin()}/account/register?next=/account`,
         label: "Create account",
-      },
-      {
-        title: "Host Network",
-        body: "If you are applying to host events with EVNTSZN, start from the host path instead of the member account flow.",
-        href: `${getHostsOrigin()}/`,
-        label: "Explore Host Network",
-      },
+      }
     );
-
-    return links;
   }
 
-  links.push({
-    title: "Track orders",
-    body: "Follow purchases, confirmations, and order status without leaving the account surface.",
-    href: "/orders/track",
-    label: "Track orders",
-  });
-
-  links.push({
-    title: "Support",
-    body: "Open the support desk for ticketing, login, event, scanner, sponsor, or website issues with the right context attached.",
-    href: `${getWebOrigin()}/support`,
-    label: "Get support",
-  });
+  const operationalLinks = [];
 
   if (viewer.isPlatformAdmin) {
-    links.push(
+    operationalLinks.push(
       {
         title: "Control center",
-        body: "Move into the founder/admin command center for approvals, sponsors, issues, and daily operating health.",
+        body: "Approvals, sponsors, issues, and health.",
         href: "/epl/admin/control-center",
         label: "Open control center",
       },
       {
         title: "Hiring pipeline",
-        body: "Review EPL opportunities, applications, interviews, and final hiring decisions from one protected surface.",
+        body: "Review opportunities and hiring decisions.",
         href: "/epl/admin/hiring",
         label: "Open hiring",
       },
       {
         title: "Events desk",
-        body: "Create EVNTSZN and EPL events, publish them into discovery, and keep league event setup moving without code edits.",
+        body: "Manage EVNTSZN and EPL event inventory.",
         href: "/epl/admin/events",
         label: "Open events",
-      },
+      }
     );
   }
 
   if (viewer.operatorProfile?.is_active && viewer.operatorProfile.surface_access.includes("ops")) {
-    links.push({
+    operationalLinks.push({
       title: "Operations",
-      body: "Open your scoped operator workspace for EVNTSZN execution, approvals, and assigned operating access.",
+      body: "Scoped operator workspace for event execution.",
       href: "/ops",
       label: "Open ops",
     });
@@ -121,89 +130,50 @@ function buildQuickLinks(viewer: Awaited<ReturnType<typeof getPlatformViewer>>) 
       (viewer.operatorProfile.city_scope.length > 0 || Boolean(viewer.profile?.city))
     )
   ) {
-    links.push({
+    operationalLinks.push({
       title: "City office",
-      body: "Run city-scoped approvals, operators, revenue, and upcoming event activity without crossing into markets you do not own.",
+      body: "Run city-scoped approvals and revenue.",
       href: "/city-office",
       label: "Open city office",
     });
   }
 
   if (viewer.profile?.primary_role === "organizer" || viewer.isPlatformAdmin) {
-    links.push({
+    operationalLinks.push({
       title: "Organizer workspace",
-      body: "Manage event operations, organizer activity, and event-ready workflows from the protected organizer surface.",
+      body: "Manage event-ready workflows and activity.",
       href: "/organizer",
       label: "Open organizer",
     });
   }
 
-  if (viewer.isPlatformAdmin) {
-    links.push({
-      title: "Event desk",
-      body: "Create native events, manage ticket releases, update run of show, and keep discovery inventory moving from one protected desk.",
-      href: "/epl/admin/events",
-      label: "Open event desk",
-    });
-  }
-
   if (classification === "evntszn_host" || classification === "city_host") {
-    links.push(
+    operationalLinks.push(
       {
         title: "Host network",
-        body: "Move through the EVNTSZN Host network path with city support, operating progression, and the right internal next steps.",
-        href: `${getHostsOrigin()}/`,
+        body: "EVNTSZN Host network path and progression.",
+        href: `${getWebOrigin()}/hosts`,
         label: "Open host path",
       },
       {
         title: "Signal",
-        body: "Signal requests and assignments stay separate from general organizer workflows. Use the Signal path when you are supporting controlled activation or city support.",
+        body: "Requests and assignments for city support.",
         href: `${getWebOrigin()}/signal/apply`,
         label: "Open Signal",
-      },
-      {
-        title: "Ambassador",
-        body: "Ambassador is a separate city-growth program for visibility and referral pull, not the same thing as Signal or host ops.",
-        href: `${getWebOrigin()}/ambassador/apply`,
-        label: "Open Ambassador",
-      },
-    );
-  }
-
-  if (classification === "independent_organizer") {
-    links.push(
-      {
-        title: "Sponsor interest",
-        body: "If you want sponsor or partner support around your own events, start from the sponsor package and inquiry path instead of the host network surface.",
-        href: `${getWebOrigin()}/partners/packages`,
-        label: "Open sponsor options",
-      },
-      {
-        title: "Apply to Host Network",
-        body: "Independent Organizers stay on the external operator track by default. Use the Host Network only if you want to apply into the EVNTSZN internal network path.",
-        href: `${getHostsOrigin()}/`,
-        label: "Explore host upgrade",
-      },
+      }
     );
   }
 
   if (viewer.profile?.primary_role === "venue") {
-    links.push({
+    operationalLinks.push({
       title: "Venue workspace",
-      body: "Move into the venue surface for owned event activity, venue responsibilities, and event-day operations.",
+      body: "Venue responsibilities and day operations.",
       href: "/venue",
       label: "Open venue",
     });
   }
 
-  links.push({
-    title: "Log out",
-    body: "Sign out cleanly when you are done.",
-    href: "/account/logout",
-    label: "Log out",
-  });
-
-  return links;
+  return { attendeeLinks, operationalLinks };
 }
 
 export default async function AccountPage() {
@@ -217,19 +187,16 @@ export default async function AccountPage() {
     };
   });
 
-  const quickLinks = buildQuickLinks(viewer);
+  const { attendeeLinks, operationalLinks } = buildQuickLinks(viewer);
   const accessSummary = [
     viewer.user?.email ? `Signed in as ${viewer.user.email}` : "Public member hub",
     viewer.isPlatformAdmin ? "Founder/admin override" : null,
     viewer.profile?.primary_role ? `Primary role: ${viewer.profile.primary_role}` : null,
-    viewer.operatorProfile?.organizer_classification ? `Classification: ${String(viewer.operatorProfile.organizer_classification).replace(/_/g, " ")}` : null,
-    viewer.operatorProfile?.network_status ? `Network status: ${String(viewer.operatorProfile.network_status).replace(/_/g, " ")}` : null,
-    viewer.operatorProfile?.job_title ? `Job: ${viewer.operatorProfile.job_title}` : null,
-    viewer.operatorProfile?.city_scope?.length ? `City scope: ${viewer.operatorProfile.city_scope.join(", ")}` : viewer.profile?.city ? `City: ${viewer.profile.city}` : null,
   ].filter(Boolean);
 
   return (
     <main className="min-h-screen bg-black text-white">
+      <PublicNav />
       <div className="mx-auto max-w-[1600px] px-4 py-10 md:px-6 lg:px-8">
         <div className="mb-8 flex flex-wrap items-center justify-between gap-4 rounded-[28px] border border-white/10 bg-black/25 px-4 py-4 backdrop-blur-xl">
           <Link href={`${getWebOrigin()}/`} className="flex items-center gap-3" aria-label="EVNTSZN home">
@@ -242,14 +209,18 @@ export default async function AccountPage() {
             </span>
           </Link>
           <div className="flex flex-wrap gap-3">
-            <Link href={`${getWebOrigin()}/`} className="rounded-full border border-white/12 bg-white/5 px-4 py-2 text-sm font-semibold text-white/84 transition hover:bg-white/10">
-              Public homepage
-            </Link>
-            <Link href={`${getAppOrigin()}/account/login`} className="rounded-full border border-white/12 bg-white/5 px-4 py-2 text-sm font-semibold text-white/84 transition hover:bg-white/10">
-              Member sign in
-            </Link>
+            {viewer.user ? (
+              <Link href="/account/logout" className="rounded-full border border-white/12 bg-white/5 px-4 py-2 text-sm font-semibold text-white/84 transition hover:bg-white/10">
+                Sign out
+              </Link>
+            ) : (
+              <Link href={`${getAppOrigin()}/account/login`} className="rounded-full border border-white/12 bg-white/5 px-4 py-2 text-sm font-semibold text-white/84 transition hover:bg-white/10">
+                Member sign in
+              </Link>
+            )}
           </div>
         </div>
+
         <div className="rounded-[40px] border border-white/10 bg-gradient-to-br from-[#120f2a] via-[#0c0c15] to-black p-8 md:p-12 lg:p-16 shadow-[0_20px_60px_rgba(0,0,0,0.45)] relative overflow-hidden">
           <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#a259ff]/10 blur-[120px] rounded-full -mr-48 -mt-48 pointer-events-none" />
           
@@ -258,40 +229,51 @@ export default async function AccountPage() {
               {viewer.user ? "Member hub" : "EVNTSZN account"}
             </div>
             <h1 className="mt-4 text-5xl font-black tracking-tight text-white md:text-7xl lg:text-8xl leading-[0.9] max-w-5xl">
-              {viewer.user
-                ? "Move from your member account into the right EVNTSZN surface fast."
-                : "Sign in, create your account, and move straight into tickets, orders, and league access."}
+              {viewer.user ? "Your member account." : "One account for everything."}
             </h1>
             <p className="mt-8 max-w-3xl text-lg md:text-xl leading-relaxed text-white/70">
               {viewer.user
-                ? "Use this hub for discovery, order tracking, league activity, and any protected work surfaces already tied to your account."
-                : "Public discovery stays open. Your tickets, orders, saved activity, and attendee access all route through this member hub. Internal staff access stays separate."}
+                ? "Manage your tickets, orders, saved activity, and any creator tools tied to your profile from one hub."
+                : "Join EVNTSZN to track your tickets, orders, and league history with one member identity."}
             </p>
 
-            {accessSummary.length ? (
-              <div className="mt-10 flex flex-wrap gap-3">
-                {accessSummary.map((item) => (
-                  <span key={item} className="rounded-full border border-white/15 bg-white/8 px-4 py-1.5 text-xs font-bold text-white/90 uppercase tracking-widest">
-                    {item}
-                  </span>
+            <div className="mt-16">
+              <div className="text-sm font-bold uppercase tracking-[0.24em] text-white/40 mb-8">Member Experience</div>
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {attendeeLinks.map((item) => (
+                  <div key={item.title} className="flex flex-col rounded-[32px] border border-white/10 bg-white/5 p-7 transition-all hover:bg-white/10 hover:border-white/20 group">
+                    <div className="text-2xl font-black tracking-tight text-white group-hover:text-[#b899ff] transition-colors">{item.title}</div>
+                    <p className="mt-3 text-sm leading-relaxed text-white/60 flex-1">{item.body}</p>
+                    <Link
+                      href={item.href}
+                      className="mt-8 rounded-full bg-white px-6 py-3 text-center text-xs font-black uppercase tracking-widest text-black transition hover:opacity-90 active:scale-[0.98]"
+                    >
+                      {item.label}
+                    </Link>
+                  </div>
                 ))}
               </div>
-            ) : null}
-
-            <div className="mt-16 grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
-              {quickLinks.map((item) => (
-                <div key={item.title} className="flex flex-col rounded-[32px] border border-white/10 bg-white/5 p-7 transition-all hover:bg-white/10 hover:border-white/20 group">
-                  <div className="text-2xl font-black tracking-tight text-white group-hover:text-[#b899ff] transition-colors">{item.title}</div>
-                  <p className="mt-3 text-sm leading-relaxed text-white/60 flex-1">{item.body}</p>
-                  <Link
-                    href={item.href}
-                    className="mt-8 rounded-full bg-white px-6 py-3 text-center text-xs font-black uppercase tracking-widest text-black transition hover:opacity-90 active:scale-[0.98]"
-                  >
-                    {item.label}
-                  </Link>
-                </div>
-              ))}
             </div>
+
+            {operationalLinks.length > 0 && (
+              <div className="mt-16 pt-16 border-t border-white/10">
+                <div className="text-sm font-bold uppercase tracking-[0.24em] text-[#b899ff] mb-8">Operational Surfaces</div>
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {operationalLinks.map((item) => (
+                    <div key={item.title} className="flex flex-col rounded-[32px] border border-white/10 bg-black/40 p-7 transition-all hover:bg-white/10 hover:border-white/20 group">
+                      <div className="text-xl font-bold tracking-tight text-white group-hover:text-[#b899ff] transition-colors">{item.title}</div>
+                      <p className="mt-3 text-sm leading-relaxed text-white/50 flex-1">{item.body}</p>
+                      <Link
+                        href={item.href}
+                        className="mt-8 rounded-full border border-white/15 bg-white/5 px-6 py-3 text-center text-xs font-bold uppercase tracking-widest text-white transition hover:bg-white/10 active:scale-[0.98]"
+                      >
+                        {item.label}
+                      </Link>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -92,7 +92,7 @@ export async function GET() {
     supabaseAdmin
       .schema("epl")
       .from("player_applications")
-      .select("id, first_name, last_name, email, city, status, pipeline_stage, internal_notes, submitted_at, created_at")
+      .select("id, first_name, last_name, email, city, status, pipeline_stage, internal_notes, submitted_at, created_at, assigned_reviewer_user_id")
       .order("created_at", { ascending: false }),
     supabaseAdmin
       .from("evntszn_program_members")
@@ -193,13 +193,13 @@ export async function GET() {
       typeLabel: "player_registration",
       linkedRole: "Season 1 player",
       city: row.city || null,
-      stage: deriveStage({
-        kind: "player",
+        stage: deriveStage({
+          kind: "player",
+          status: row.status,
+          pipelineStage: row.pipeline_stage,
+        }),
         status: row.status,
-        pipelineStage: row.pipeline_stage,
-      }),
-      status: row.status,
-      assignedReviewerUserId: null,
+        assignedReviewerUserId: row.assigned_reviewer_user_id || null,
       interviewStatus: null,
       finalDecision: row.status === "approved" || row.status === "declined" ? row.status : null,
       linkedAccessStatus: null,
@@ -346,6 +346,7 @@ export async function POST(request: Request) {
       .update({
         ...(nextStatus ? { status: nextStatus, pipeline_stage: nextStatus } : {}),
         ...(notes !== undefined ? { internal_notes: notes } : {}),
+        ...(assignedReviewerUserId !== undefined ? { assigned_reviewer_user_id: toDatabaseUserId(assignedReviewerUserId) } : {}),
         updated_at: new Date().toISOString(),
       })
       .eq("id", id);

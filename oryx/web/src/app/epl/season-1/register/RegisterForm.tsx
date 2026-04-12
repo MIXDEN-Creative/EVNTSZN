@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { JERSEY_NAME_DISCLAIMER } from "@/lib/epl/constants";
+import { getBaseWaiverUrl } from "@/lib/epl/waiver";
 
 type FormState = {
   firstName: string;
@@ -39,7 +40,7 @@ const initialState: FormState = {
   headshot: null,
 };
 
-const WAIVER_URL = "https://tally.so/r/XxY8xz";
+const WAIVER_URL = getBaseWaiverUrl();
 
 type RegistrationResponse = {
   error?: string;

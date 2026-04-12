@@ -58,7 +58,7 @@ export default function HostApplyPage() {
           </form>
 
           <div className="mt-6">
-            <Link href="https://hosts.evntszn.com" className="ev-button-secondary">
+            <Link href="/hosts" className="ev-button-secondary">
               Back to Host Network
             </Link>
           </div>

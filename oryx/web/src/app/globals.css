@@ -30,6 +30,7 @@ body {
     linear-gradient(180deg, #050507 0%, #08080c 46%, #040406 100%);
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  line-height: 1.5;
 }
 
 a,
@@ -89,8 +90,8 @@ select {
   z-index: 1;
   margin: 0 auto;
   width: 100%;
-  max-width: 100rem;
-  padding: 2.5rem 1.5rem 5rem;
+  max-width: 104rem;
+  padding: 2rem 1rem 4rem;
 }
 
 .ev-shell-hero {
@@ -107,14 +108,36 @@ select {
 
 .ev-shell-hero-grid {
   display: grid;
-  gap: 1.5rem;
-  padding: 2.25rem;
+  gap: 1.75rem;
+  padding: 1.75rem;
 }
 
 @media (min-width: 900px) {
   .ev-shell-hero-grid {
     grid-template-columns: minmax(0, 1.15fr) minmax(18rem, 0.85fr);
     align-items: end;
+  }
+}
+
+@media (min-width: 768px) {
+  .ev-shell {
+    padding: 2.5rem 1.5rem 4.75rem;
+  }
+
+  .ev-shell-hero-grid {
+    gap: 2rem;
+    padding: 2.25rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .ev-shell {
+    padding: 2.75rem 2rem 5rem;
+  }
+
+  .ev-shell-hero-grid {
+    gap: 2.5rem;
+    padding: 2.75rem;
   }
 }
 
@@ -135,18 +158,19 @@ select {
 .ev-title {
   margin-top: 1rem;
   color: white;
-  font-size: clamp(2.5rem, 5vw, 4.75rem);
+  font-size: clamp(2.25rem, 4.8vw, 4.5rem);
   font-weight: 900;
-  line-height: 0.96;
+  line-height: 0.94;
   letter-spacing: -0.04em;
+  text-wrap: balance;
 }
 
 .ev-subtitle {
-  margin-top: 1.25rem;
+  margin-top: 1rem;
   max-width: 48rem;
   color: var(--text-soft);
-  font-size: 1.05rem;
-  line-height: 1.9;
+  font-size: 1rem;
+  line-height: 1.75;
 }
 
 .ev-hero-meta {
@@ -188,7 +212,7 @@ select {
 }
 
 .ev-panel {
-  padding: 1.75rem;
+  padding: 1.35rem;
 }
 
 .ev-panel-muted {
@@ -199,7 +223,7 @@ select {
 
 .ev-panel-title {
   color: white;
-  font-size: 1.65rem;
+  font-size: 1.55rem;
   font-weight: 700;
   letter-spacing: -0.03em;
 }
@@ -207,7 +231,7 @@ select {
 .ev-panel-copy {
   margin-top: 0.65rem;
   color: var(--text-soft);
-  line-height: 1.7;
+  line-height: 1.65;
 }
 
 .ev-section-kicker {
@@ -249,13 +273,13 @@ select {
 
 .ev-field,
 .ev-select {
-  min-height: 3rem;
-  padding: 0.85rem 1rem;
+  min-height: 3.35rem;
+  padding: 0.95rem 1rem;
 }
 
 .ev-textarea {
-  min-height: 7.5rem;
-  padding: 0.9rem 1rem;
+  min-height: 8.25rem;
+  padding: 1rem 1rem;
 }
 
 .ev-field:focus,
@@ -281,11 +305,12 @@ select {
 }
 
 .ev-button-primary {
-  padding: 1rem 2rem;
+  min-height: 3.35rem;
+  padding: 0.95rem 1.6rem;
   background: linear-gradient(180deg, #ffffff 0%, #ececf2 100%);
   color: #08080b;
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
-  font-size: 0.875rem;
+  font-size: 0.78rem;
 }
 
 .ev-button-primary:hover {
@@ -295,11 +320,12 @@ select {
 }
 
 .ev-button-secondary {
-  padding: 0.85rem 1.75rem;
+  min-height: 3.15rem;
+  padding: 0.8rem 1.35rem;
   border: 1px solid var(--line-strong);
   background: rgba(255, 255, 255, 0.04);
   color: #ffffff;
-  font-size: 0.8rem;
+  font-size: 0.76rem;
 }
 
 .ev-button-secondary:hover {
@@ -353,6 +379,26 @@ select {
   padding: 1.5rem;
   color: var(--text-soft);
   line-height: 1.65;
+}
+
+@media (min-width: 768px) {
+  .ev-panel {
+    padding: 1.75rem;
+  }
+
+  .ev-panel-title {
+    font-size: 1.65rem;
+  }
+
+  .ev-subtitle {
+    font-size: 1.05rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .ev-panel {
+    padding: 2rem;
+  }
 }
 
 .ev-glass {
