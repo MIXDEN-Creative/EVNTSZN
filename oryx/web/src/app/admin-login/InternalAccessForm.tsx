@@ -1,99 +1,111 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
-import { getLoginRedirectOrigin, normalizeNextPath } from "@/lib/domains";
 
-export default function InternalAccessForm({ next }: { next: string }) {
+type LoginResponse = {
+  success?: boolean;
+  error?: string;
+};
+
+export default function InternalAccessForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  async function handleSubmit(event: React.FormEvent) {
-    event.preventDefault();
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
     setLoading(true);
-    setMessage("");
+    setErrorMessage(null);
 
-    const nextPath = normalizeNextPath(next);
-    const accessCheck = await fetch("/api/admin/internal-access", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, next: nextPath }),
-    });
+    try {
+      const res = await fetch("/api/admin/internal-access", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      });
 
-    const accessJson = (await accessCheck.json().catch(() => ({}))) as { error?: string };
-    if (!accessCheck.ok) {
-      setMessage(accessJson.error || "Internal access is not available for that email.");
+      const raw = await res.json().catch(() => null);
+      const data = (raw ?? {}) as LoginResponse;
+
+      if (!res.ok) {
+        throw new Error(data.error ?? "Login failed");
+      }
+
+      window.location.assign("/admin");
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+      console.error("Internal login error:", err);
+      setErrorMessage(message);
+    } finally {
       setLoading(false);
-      return;
     }
-
-    const supabase = createClient();
-    const redirectOrigin = getLoginRedirectOrigin(nextPath, window.location.host);
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      setMessage(error.message);
-    } else {
-      window.location.href = `${redirectOrigin}${nextPath}`;
-    }
-
-    setLoading(false);
   }
 
   return (
-    <form onSubmit={handleSubmit} className="ev-panel border-white/12 bg-white/[0.02]">
-      <div className="ev-section-kicker">Invited staff access</div>
-      <h2 className="ev-panel-title mt-3">Sign in with your invited internal email</h2>
-      <p className="ev-panel-copy">
-        Admin, HQ, ops, scanner, and office access only open for invited accounts with active internal roles. This is a password sign-in for internal tools, not an attendee account flow.
-      </p>
-
-      <div className="mt-6">
-        <label className="mb-2 block text-sm text-white/70">Invited email</label>
+    <form onSubmit={handleSubmit} className="space-y-5">
+      <div className="space-y-2">
+        <label
+          htmlFor="internal-email"
+          className="block text-sm font-medium text-white/80"
+        >
+          Invited email
+        </label>
         <input
+          id="internal-email"
           type="email"
+          autoComplete="email"
+          required
           value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          className="ev-field"
-          placeholder="you@evntszn.com"
-          required
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="hello@mixdencreative.com"
+          className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition placeholder:text-white/35 focus:border-white/30 focus:bg-white/10"
         />
       </div>
 
-      <div className="mt-4">
-        <label className="mb-2 block text-sm text-white/70">Password</label>
+      <div className="space-y-2">
+        <label
+          htmlFor="internal-password"
+          className="block text-sm font-medium text-white/80"
+        >
+          Password
+        </label>
         <input
+          id="internal-password"
           type="password"
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-          className="ev-field"
-          placeholder="Your internal account password"
+          autoComplete="current-password"
           required
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="Enter your password"
+          className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition placeholder:text-white/35 focus:border-white/30 focus:bg-white/10"
         />
       </div>
 
-      <button type="submit" disabled={loading} className="ev-button-primary mt-6 w-full disabled:opacity-50">
-        {loading ? "Signing in..." : "Sign in to internal tools"}
-      </button>
-
-      {message ? (
-        <div className="mt-4 rounded-2xl border border-white/10 bg-black/40 p-4 text-sm text-white/75">
-          {message}
+      {errorMessage ? (
+        <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+          {errorMessage}
         </div>
       ) : null}
 
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-white/58">
-        <span>New internal users should open their invite email first to claim access and set their password.</span>
-        <Link href="/admin-login/recover" className="text-[#d8c2ff] hover:text-white">
-          Forgot password?
-        </Link>
-      </div>
+      <button
+        type="submit"
+        disabled={loading}
+        className="w-full rounded-full bg-white px-5 py-3 text-sm font-semibold uppercase tracking-[0.24em] text-black transition hover:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        {loading ? "Signing in..." : "Sign in"}
+      </button>
+
+      <p className="text-xs text-white/45">
+        New internal users should open their invite email first to claim
+        access and set their password.
+      </p>
     </form>
   );
 }
