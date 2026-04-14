@@ -70,6 +70,12 @@ function buildQuickLinks(viewer: Awaited<ReturnType<typeof getPlatformViewer>>) 
         href: "/account/crew",
         label: "Manage crew",
       },
+      {
+        title: "EVNTSZN Nodes",
+        body: "Manage discovery points, destination routing, and live node activity.",
+        href: "/account/nodes",
+        label: "Manage nodes",
+      },
     );
   } else {
     attendeeLinks.push(

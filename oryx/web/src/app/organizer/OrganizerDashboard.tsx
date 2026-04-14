@@ -345,9 +345,25 @@ export default function OrganizerDashboard({ canOperate, events }: OrganizerDash
         {activeTab === "create" && (
           <div className="mx-auto max-w-4xl">
             <section className="rounded-[32px] border border-white/10 bg-white/[0.03] p-8">
-              <div className="text-xs font-bold uppercase tracking-[0.26em] text-[#A259FF]">Setup</div>
-              <h2 className="mt-3 text-4xl font-black">Build your next move</h2>
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-xs font-bold uppercase tracking-[0.26em] text-[#A259FF]">Setup</div>
+                  <h2 className="mt-3 text-4xl font-black">Build your next move</h2>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-white/60">
+                  Track: {canOperate ? "Premium Operator" : "Independent"}
+                </div>
+              </div>
               <p className="mt-4 text-white/60">Set the identity, launch the tickets, and push it live.</p>
+              
+              <div className="mt-8 rounded-2xl border border-white/5 bg-white/[0.02] p-5">
+                <div className="text-[10px] font-bold uppercase tracking-widest text-white/40">Event classification</div>
+                <div className="mt-2 text-sm text-white/70">
+                  {canOperate 
+                    ? "As an approved operator, your event will be created in the EVNTSZN network track with access to premium staffing and discovery tools."
+                    : "Your event will be created as an independent production. You can manage ticketing and scanners here, but host-network discovery remains restricted until approval."}
+                </div>
+              </div>
               
               <form onSubmit={createEvent} className="mt-10 space-y-8">
                 <div className="grid gap-6 md:grid-cols-2">

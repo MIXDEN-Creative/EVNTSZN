@@ -60,6 +60,12 @@ export async function POST(req: Request) {
     let headshotStoragePath: string | null = null;
 
     if (photoFile && photoFile.size > 0) {
+      if (photoFile.size > 5 * 1024 * 1024) {
+        return NextResponse.json(
+          { error: "Headshot is too large. Max size is 5MB." },
+          { status: 400 }
+        );
+      }
       const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
       if (!allowedTypes.includes(photoFile.type)) {
         return NextResponse.json(

@@ -106,8 +106,8 @@ assert(
   "Missing EPL operating schema migration.",
 );
 assert(
-  migrationFiles.some((file) => file.includes("patch_epl_player_operations")),
-  "Missing EPL player operations patch migration.",
+  migrationFiles.some((file) => file.includes("enable_rls_and_security_hardening")),
+  "Missing security hardening and RLS migration.",
 );
 
 function readMigrationByName(fragment) {

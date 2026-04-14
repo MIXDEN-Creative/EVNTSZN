@@ -108,9 +108,42 @@ export function middleware(request: NextRequest) {
 
   if (surface === "web") {
     const publicCityPaths = new Set(PUBLIC_CITIES.map((city) => `/${city.slug}`));
+    const reservedSingleSegment = new Set([
+      "account",
+      "admin-login",
+      "admin-invite",
+      "auth",
+      "api",
+      "scanner",
+      "epl",
+      "organizer",
+      "venue",
+      "ops",
+      "hosts",
+      "events",
+      "crew",
+      "link",
+      "nodes",
+      "support",
+      "privacy",
+      "terms",
+      "refund-policy",
+      "liability-notice",
+      "orders",
+      "checkout",
+      "coming-soon",
+      "partners",
+      "signal",
+      "ambassador",
+      "store",
+    ]);
+    const isSingleSegmentPublicSlug = /^\/[^/]+$/.test(pathname)
+      && !reservedSingleSegment.has(pathname.slice(1).toLowerCase());
     const publicAllowed = [
     "/",
     "/events",
+    "/crew",
+    "/nodes",
     "/hosts/apply",
     "/organizer/apply",
     "/signal/apply",
@@ -130,9 +163,17 @@ export function middleware(request: NextRequest) {
     "/robots.txt",
     "/sitemap.xml",
     ];
-    const publicAllowedPrefixes = ["/events/"];
+    const publicAllowedPrefixes = ["/events/", "/crew/", "/link/", "/nodes/"];
     const publicAllowedApiPatterns = [
       /^\/api\/evntszn\/events\/[^/]+\/checkout$/,
+      /^\/api\/evntszn\/events\/[^/]+\/pulse$/,
+      /^\/api\/evntszn\/link\/[^/]+\/click$/,
+      /^\/api\/evntszn\/link\/[^/]+\/view$/,
+      /^\/api\/evntszn\/link\/leads$/,
+      /^\/api\/evntszn\/crew$/,
+      /^\/api\/evntszn\/crew\/requests(?:\/[^/]+)?$/,
+      /^\/api\/evntszn\/nodes\/[^/]+\/interactions$/,
+      /^\/api\/evntszn\/nodes\/[^/]+\/pulse$/,
       /^\/api\/discovery\/search$/,
       /^\/api\/public\/applications$/,
       /^\/api\/programs\/applications$/,
@@ -160,6 +201,7 @@ export function middleware(request: NextRequest) {
     const isPublicPath =
       publicAllowed.includes(pathname) ||
       publicCityPaths.has(pathname) ||
+      isSingleSegmentPublicSlug ||
       publicAllowedPrefixes.some((prefix) => pathname.startsWith(prefix)) ||
       publicAllowedApiPatterns.some((pattern) => pattern.test(pathname));
 

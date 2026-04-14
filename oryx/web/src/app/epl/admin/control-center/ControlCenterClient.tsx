@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import PlatformCapacityMonitor from "@/components/admin/PlatformCapacityMonitor";
 
 type QuickTask = {
   label: string;
@@ -10,7 +11,7 @@ type QuickTask = {
   action: string;
 };
 
-export default function ControlCenterClient() {
+export default function ControlCenterClient({ isFounder }: { isFounder?: boolean }) {
   const [data, setData] = useState<any>(null);
   const [message, setMessage] = useState("");
 
@@ -110,6 +111,11 @@ export default function ControlCenterClient() {
 
   return (
     <main className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8">
+      {isFounder && (
+        <div className="mt-8">
+          <PlatformCapacityMonitor />
+        </div>
+      )}
       <section className="ev-shell-hero">
         <div className="ev-shell-hero-grid lg:grid-cols-[1.2fr_0.8fr] 2xl:grid-cols-[1.3fr_0.7fr]">
           <div>

@@ -25,19 +25,57 @@ export default function CustomerLoginForm({ next }: CustomerLoginFormProps) {
     const supabase = createClient();
     const nextPath = normalizeNextPath(next);
     const redirectOrigin = getLoginRedirectOrigin(nextPath, window.location.host);
-    
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    let timeoutHandle: number | null = null;
 
-    if (error) {
-      setMessage(error.message);
-    } else {
-      window.location.href = `${redirectOrigin}${nextPath}`;
+    try {
+      const timeoutMs = 12000;
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        timeoutHandle = window.setTimeout(() => {
+          reject(new Error("Sign-in timed out. Check your connection and try again."));
+        }, timeoutMs);
+      });
+      const authResult = await Promise.race([
+        supabase.auth.signInWithPassword({
+          email,
+          password,
+        }),
+        timeoutPromise,
+      ]);
+      if (authResult.error) {
+        setMessage(authResult.error.message);
+        return;
+      }
+
+      const session = authResult.data.session;
+      if (!session?.access_token || !session.refresh_token) {
+        setMessage("Sign-in completed without a usable session. Please try again.");
+        return;
+      }
+
+      const syncResponse = await fetch("/api/auth/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          accessToken: session.access_token,
+          refreshToken: session.refresh_token,
+        }),
+      });
+      const syncPayload = (await syncResponse.json().catch(() => ({}))) as { error?: string };
+      if (!syncResponse.ok) {
+        setMessage(syncPayload.error || "Your account signed in, but the session could not be saved.");
+        await supabase.auth.signOut().catch(() => undefined);
+        return;
+      }
+
+      window.location.assign(`${redirectOrigin}${nextPath}`);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Sign-in did not complete. Please try again.");
+    } finally {
+      if (timeoutHandle) {
+        window.clearTimeout(timeoutHandle);
+      }
+      setLoading(false);
     }
-
-    setLoading(false);
   }
 
   return (

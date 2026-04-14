@@ -51,6 +51,30 @@ function readEnvValue(keys: readonly string[]) {
   };
 }
 
+function readBrowserPublicEnvValue(keys: readonly string[]) {
+  for (const key of keys) {
+    let value: string | undefined;
+
+    if (key === "NEXT_PUBLIC_SUPABASE_URL") {
+      value = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    } else if (key === "NEXT_PUBLIC_SUPABASE_ANON_KEY") {
+      value = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    }
+
+    if (typeof value === "string" && value.trim()) {
+      return {
+        value: value.trim(),
+        source: key,
+      };
+    }
+  }
+
+  return {
+    value: null,
+    source: null,
+  };
+}
+
 function getSupabaseProjectRef(url: string | null) {
   if (!url) return null;
 
@@ -166,9 +190,10 @@ function validateSupabaseKey(name: "NEXT_PUBLIC_SUPABASE_ANON_KEY" | "SUPABASE_S
 }
 
 export function getSupabaseRuntimeSnapshot() {
-  const url = readEnvValue(URL_ENV_KEYS);
-  const anon = readEnvValue(ANON_ENV_KEYS);
-  const service = readEnvValue(SERVICE_ENV_KEYS);
+  const isBrowser = typeof window !== "undefined";
+  const url = isBrowser ? readBrowserPublicEnvValue(URL_ENV_KEYS) : readEnvValue(URL_ENV_KEYS);
+  const anon = isBrowser ? readBrowserPublicEnvValue(ANON_ENV_KEYS) : readEnvValue(ANON_ENV_KEYS);
+  const service = isBrowser ? { value: null, source: null } : readEnvValue(SERVICE_ENV_KEYS);
   const projectRef = getSupabaseProjectRef(url.value);
   const anonDetails = getSupabaseKeyDetails(anon.value);
   const serviceDetails = getSupabaseKeyDetails(service.value);
@@ -192,9 +217,10 @@ export function getSupabaseRuntimeSnapshot() {
 }
 
 export function getSupabaseRuntimeConfig(mode: SupabaseRuntimeMode, source: string): SupabaseRuntimeConfig {
-  const urlConfig = readEnvValue(URL_ENV_KEYS);
-  const anonConfig = readEnvValue(ANON_ENV_KEYS);
-  const serviceConfig = readEnvValue(SERVICE_ENV_KEYS);
+  const isBrowser = typeof window !== "undefined";
+  const urlConfig = isBrowser ? readBrowserPublicEnvValue(URL_ENV_KEYS) : readEnvValue(URL_ENV_KEYS);
+  const anonConfig = isBrowser ? readBrowserPublicEnvValue(ANON_ENV_KEYS) : readEnvValue(ANON_ENV_KEYS);
+  const serviceConfig = isBrowser ? { value: null, source: null } : readEnvValue(SERVICE_ENV_KEYS);
   const url = urlConfig.value;
   const anonKey = anonConfig.value;
   const serviceRoleKey = serviceConfig.value;

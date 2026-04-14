@@ -43,6 +43,14 @@ function stripPort(host: string) {
   return host.replace(/:\d+$/, "").toLowerCase();
 }
 
+function getLocalRuntimeOrigin(runtimeHost?: string) {
+  if (runtimeHost && isLocalHost(runtimeHost)) {
+    return `http://${runtimeHost}`;
+  }
+
+  return cleanOrigin(process.env.NEXT_PUBLIC_DEV_ORIGIN || DEFAULT_DEV_ORIGIN);
+}
+
 function getEnvValue(keys: string[]) {
   for (const key of keys) {
     const value = process.env[key];
@@ -111,7 +119,7 @@ export function getBaseDomain() {
 
 export function getCanonicalOrigin(surface: EvntsznSurface, runtimeHost?: string) {
   if (runtimeHost && isLocalHost(runtimeHost)) {
-    return cleanOrigin(process.env.NEXT_PUBLIC_DEV_ORIGIN || DEFAULT_DEV_ORIGIN);
+    return getLocalRuntimeOrigin(runtimeHost);
   }
 
   const configured = getConfiguredOrigin(surface);

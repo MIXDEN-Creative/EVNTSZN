@@ -596,6 +596,9 @@ export default function LinkManagerClient() {
               </div>
             </div>
           </div>
+          <div className="mt-4 rounded-[24px] border border-white/10 bg-black/20 p-5 text-sm leading-6 text-white/62">
+            Link attribution uses a 7-day window and only credits real EVNTSZN-native paid ticket orders. Cross-device purchases or sessions without a surviving click cookie can still remain unattributed.
+          </div>
         </section>
       </section>
 
