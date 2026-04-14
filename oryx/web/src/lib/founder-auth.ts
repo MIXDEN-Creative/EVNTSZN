@@ -15,8 +15,9 @@ function logFounderIssueOnce(message: string, context: Record<string, unknown>) 
 
 export function getFounderPasswordConfig() {
   // Cloudflare and Next.js environments can vary in how they expose process.env.
-  // We check the most likely keys.
-  const env = (typeof process !== "undefined" ? process.env : {}) as Record<string, string | undefined>;
+  // We check the most likely keys. In Cloudflare workers, env is often passed to the handler.
+  // We attempt a common pattern and fall back to process.env if available.
+  const env = (typeof process !== "undefined" && process.env) || (typeof self !== "undefined" && (self as any).env) || {};
   
   const configuredEntry = FOUNDER_PASSWORD_ENV_KEYS
     .map((key) => [key, env[key]] as const)

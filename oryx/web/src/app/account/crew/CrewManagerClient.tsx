@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { CREW_CATEGORIES, getCrewCategoryLabel } from "@/lib/platform-products";
 
 type CrewProfile = {
   id?: string;
@@ -207,7 +208,13 @@ export default function CrewManagerClient() {
           <div className="grid gap-4 md:grid-cols-2">
             <input className="ev-field" placeholder="Display name" value={profile.display_name || ""} onChange={(event) => setProfile({ ...profile, display_name: event.target.value })} />
             <input className="ev-field" placeholder="Public slug" value={profile.slug || ""} onChange={(event) => setProfile({ ...profile, slug: event.target.value })} />
-            <input className="ev-field" placeholder="Category" value={profile.category || ""} onChange={(event) => setProfile({ ...profile, category: event.target.value })} />
+            <select className="ev-field" value={profile.category || "host"} onChange={(event) => setProfile({ ...profile, category: event.target.value })}>
+              {CREW_CATEGORIES.map((entry) => (
+                <option key={entry} value={entry}>
+                  {getCrewCategoryLabel(entry)}
+                </option>
+              ))}
+            </select>
             <input className="ev-field" placeholder="Custom category" value={profile.custom_category || ""} onChange={(event) => setProfile({ ...profile, custom_category: event.target.value })} />
             <input className="ev-field md:col-span-2" placeholder="Headline" value={profile.headline || ""} onChange={(event) => setProfile({ ...profile, headline: event.target.value })} />
             <textarea className="ev-textarea md:col-span-2" rows={5} placeholder="Short description" value={profile.short_bio || ""} onChange={(event) => setProfile({ ...profile, short_bio: event.target.value })} />

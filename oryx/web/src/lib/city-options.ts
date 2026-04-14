@@ -4,9 +4,6 @@ export const INTERNAL_CITY_OPTIONS = PUBLIC_CITIES.map((city) => city.name);
 
 const STATE_ABBREVIATIONS: Record<string, string> = {
   Maryland: "MD",
-  Georgia: "GA",
-  "New York": "NY",
-  Florida: "FL",
   "District of Columbia": "DC",
   Delaware: "DE",
 };

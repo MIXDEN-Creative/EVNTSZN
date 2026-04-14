@@ -104,7 +104,7 @@ export async function searchEventbriteEvents(input: {
   }
 }
 
-export async function getEventbriteShowcase(cities: string[] = ["Baltimore", "Atlanta", "New York", "Miami", "Washington"]) {
+export async function getEventbriteShowcase(cities: string[] = ["Baltimore", "Washington", "Rehoboth Beach", "Ocean City", "Bethany Beach"]) {
   const groups = await Promise.all(
     cities.map((city) =>
       searchEventbriteEvents({

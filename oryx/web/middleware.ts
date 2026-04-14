@@ -143,6 +143,7 @@ export function middleware(request: NextRequest) {
     "/",
     "/events",
     "/crew",
+    "/link",
     "/nodes",
     "/hosts/apply",
     "/organizer/apply",

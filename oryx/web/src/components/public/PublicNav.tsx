@@ -15,6 +15,7 @@ export default function PublicNav() {
     { label: "Discover", href: `${getWebOrigin()}/` },
     { label: "Events", href: `${getWebOrigin()}/events` },
     { label: "EPL", href: `${getEplOrigin()}/` },
+    { label: "Link", href: `${getWebOrigin()}/link` },
     { label: "Crew", href: `${getWebOrigin()}/crew` },
     { label: "Hosts", href: `${getWebOrigin()}/hosts` },
     { label: "Partners", href: `${getWebOrigin()}/partners/packages` },
@@ -48,6 +49,9 @@ export default function PublicNav() {
           </a>
           <a href={`${getEplOrigin()}/`} className="text-sm font-semibold text-white/60 transition hover:text-white">
             EPL
+          </a>
+          <a href={`${getWebOrigin()}/link`} className="text-sm font-semibold text-white/60 transition hover:text-white">
+            Link
           </a>
           <div className="relative">
             <button
@@ -98,8 +102,10 @@ export default function PublicNav() {
                   <div className="px-4 pb-2 pt-3 text-[10px] font-bold uppercase tracking-[0.22em] text-white/35">Network roles</div>
                   <div className="grid gap-1">
                     {[
-                      { label: "Hosts", href: `${getWebOrigin()}/hosts`, sublabel: "Run the room and hold the standard." },
-                      { label: "Crew", href: `${getWebOrigin()}/crew`, sublabel: "Activation and field support." },
+                      { label: "EVNTSZN Link", href: `${getWebOrigin()}/link`, sublabel: "Conversion pages for tickets, links, products, and audience capture." },
+                      { label: "EVNTSZN Hosts", href: `${getWebOrigin()}/hosts`, sublabel: "Approved operator path for city-facing EVNTSZN events." },
+                      { label: "Independent Organizers", href: `${getWebOrigin()}/organizer/apply`, sublabel: "Self-operated event builders using EVNTSZN as the platform." },
+                      { label: "Crew Marketplace", href: `${getWebOrigin()}/crew`, sublabel: "Book DJs, creators, bartenders, hosts, and event talent." },
                       { label: "Partners", href: `${getWebOrigin()}/partners/packages`, sublabel: "Sponsor and brand placements." },
                     ].map((link) => (
                       <a key={link.label} href={link.href} className="rounded-2xl px-4 py-3 transition hover:bg-white/10">

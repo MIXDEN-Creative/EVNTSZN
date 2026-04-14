@@ -222,24 +222,24 @@ export const DEFAULT_HOMEPAGE_CONTENT: Omit<HomepageContent, "storageReady"> = {
     ],
     cities: [
       {
-        name: "New York",
-        description: "Big nights, deep calendars, and quick access to what is really worth the trip.",
-      },
-      {
         name: "Baltimore",
         description: "Concerts, nightlife, and EPL game-day energy rooted in the city.",
       },
       {
-        name: "Atlanta",
-        description: "Music, sports, and city nights that move fast and stay loud.",
+        name: "Washington",
+        description: "Concerts, sports, and city nights with a cleaner read on what is actually worth the trip.",
       },
       {
-        name: "Miami",
-        description: "Destination energy, late starts, and nights people build weekends around.",
+        name: "Rehoboth Beach",
+        description: "Beach-weekend plans, nightlife, and coastal energy worth following without guesswork.",
       },
       {
-        name: "Dover",
-        description: "Community events, league nights, and local plans with a cleaner guide.",
+        name: "Ocean City",
+        description: "Boardwalk nights, beach crowds, and summer momentum in one cleaner city guide.",
+      },
+      {
+        name: "Bethany Beach",
+        description: "Community nights, coastal plans, and premium low-friction discovery for the quieter beach lane.",
       },
     ],
   },
@@ -260,22 +260,22 @@ export const DEFAULT_EPL_PUBLIC_CONTENT: Omit<EplPublicContent, "storageReady"> 
     eyebrow: "Coed Adult Flag Football",
     title: "Coed flag football with real teams, real standings, and a city that picks sides.",
     description:
-      "EPL brings league nights into one public home for players, supporters, applicants, and anyone tracking the season from draft night forward.",
+      "EPL brings league nights into one public home for players, supporters, applicants, and anyone tracking the season from the two-region draft structure through game day.",
     primaryCtaLabel: "Register for Season 1",
     primaryCtaHref: "/epl/season-1/register",
-    secondaryCtaLabel: "See the teams",
-    secondaryCtaHref: "/epl/teams",
+    secondaryCtaLabel: "See the schedule",
+    secondaryCtaHref: "/epl/schedule",
   },
   sections: {
     seasonHeadline: "Draft night starts it. The table finishes it.",
     seasonBody:
-      "Season 1 is built around coed flag football, neighborhood identity, and weekly games that matter. Every team has a reason to follow and every result shifts the race.",
+      "Season 1 is built around coed flag football, regional identity, and weekly games that matter. The player pool is structured around 144 players entering through two draft nights: a Baltimore draft first, then a coastal draft one week later.",
     scheduleHeadline: "Every game week should feel like it matters.",
     scheduleBody:
-      "Follow opening week, rivalry matchups, and the stretch that decides playoff pressure. The league page stays built around what players and supporters actually need next.",
+      "Follow the two-draft rollout, opening week, rivalry matchups, and the stretch that decides playoff pressure. The league page stays built around what players and supporters actually need next.",
     teamsHeadline: "Six clubs with their own look, voice, and pressure.",
     teamsBody:
-      "These are not filler placeholders. Each club carries its own identity, neighborhood edge, and game-day energy through the season.",
+      "These are not filler placeholders. Each club carries its own regional identity, game-night edge, and supporter pull through the season.",
     standingsHeadline: "The standings are where the talk gets real.",
     standingsBody:
       "Watch the table settle, then tighten. Wins, losses, points, and club momentum all land in one public place.",

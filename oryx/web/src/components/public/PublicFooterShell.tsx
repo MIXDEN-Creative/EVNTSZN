@@ -62,6 +62,7 @@ export default function PublicFooterShell({
               <Link href={`${getWebOrigin()}/`}>Discover</Link>
               <Link href={`${getWebOrigin()}/events`}>Events</Link>
               <Link href={`${getEplOrigin()}/`}>EPL</Link>
+              <Link href={`${getWebOrigin()}/link`}>EVNTSZN Link</Link>
               <Link href={`${getEplOrigin()}/opportunities`}>EPL Opportunities</Link>
               <Link href={`${getWebOrigin()}/hosts`}>Host Network</Link>
               <Link href={`${getWebOrigin()}/crew`}>Crew Marketplace</Link>

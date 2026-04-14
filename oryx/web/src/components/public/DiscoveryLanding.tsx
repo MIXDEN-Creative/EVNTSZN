@@ -71,8 +71,6 @@ type DiscoveryResponse = {
 
 const FALLBACK_DISCOVERY_IMAGE =
   "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=1800&q=80";
-const FALLBACK_EPL_IMAGE =
-  "https://images.unsplash.com/photo-1518604666860-9ed391f76460?auto=format&fit=crop&w=1800&q=80";
 
 function formatEventDate(value: string | null | undefined) {
   if (!value) return "Date coming soon";
@@ -348,7 +346,7 @@ export default function DiscoveryLanding({
       () => {
         setLoading(false);
         setHasSearched(true);
-        setMessage("We could not access your location. Try Baltimore, Atlanta, New York, Miami, or DC.");
+        setMessage("We could not access your location. Try Baltimore, Washington, Rehoboth Beach, Ocean City, or Bethany Beach.");
       },
       { enableHighAccuracy: true, timeout: 10000 },
     );
@@ -495,48 +493,56 @@ export default function DiscoveryLanding({
         <div className="ev-panel overflow-hidden p-8 md:p-10 lg:p-14">
           <div className="grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
             <div>
-              <div className="ev-section-kicker">Host applications open</div>
+              <div className="ev-section-kicker">Build on EVNTSZN</div>
               <h2 className="mt-4 text-4xl font-black tracking-[-0.04em] text-white md:text-5xl lg:text-6xl leading-[0.95]">
-                We are actively registering EVNTSZN Hosts.
+                Choose the right lane before you build the event.
               </h2>
               <p className="mt-6 max-w-3xl text-lg md:text-xl leading-relaxed text-white/72">
-                If you can run a room, lead guest energy, and hold a premium event standard, the EVNTSZN Host path is open. Approved hosts work real city-facing nights, operate inside the live host commission structure, and build toward bigger market responsibility.
+                EVNTSZN Host and Independent Organizer are not the same path. Hosts operate inside the approved EVNTSZN network. Independent Organizers use EVNTSZN as a self-operated event platform with their own brand, audience, and operating lane.
               </p>
               <div className="mt-10 flex flex-wrap gap-4">
                 <Link href="/hosts/apply" className="ev-button-primary px-8">
                   Apply as a host
                 </Link>
-                <Link href="/hosts" className="ev-button-secondary px-8">
-                  Explore host path
+                <Link href="/organizer/apply" className="ev-button-secondary px-8">
+                  Apply as an organizer
                 </Link>
               </div>
             </div>
 
-              <div className="mt-8 grid gap-6 md:grid-cols-2">
-                <div className="rounded-[32px] border border-white/10 bg-white/[0.02] p-7 md:p-8">
-                  <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#A259FF]">Host network</div>
-                  <div className="mt-6 grid gap-4">
-                    {[
-                      "Host-led event revenue works inside the EVNTSZN split.",
-                      "Full scanner and event-ops support for your nights.",
-                      "Move into certified, pro, and city-lead pathways.",
-                      "Current openings: Baltimore, DC, Rehoboth, Ocean City, and Bethany.",
-                    ].map((item) => (
-                      <div key={item} className="rounded-2xl border border-white/5 bg-white/[0.03] p-5 text-sm md:text-base leading-relaxed text-white/70">
-                        {item}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="rounded-[32px] border border-white/10 bg-white/[0.02] p-7 md:p-8">
-                  <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-white/30">Host upside</div>
-                  <div className="mt-4 text-2xl font-black text-white">Built for operators.</div>
-                  <div className="mt-4 text-base leading-relaxed text-white/70">
-                    Approved host-led events work inside the live EVNTSZN host commission structure, so strong operators can build real upside on the nights they lead.
-                  </div>
+            <div className="mt-8 grid gap-6 md:grid-cols-2">
+              <div className="rounded-[32px] border border-white/10 bg-white/[0.02] p-7 md:p-8">
+                <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#A259FF]">EVNTSZN Host</div>
+                <div className="mt-4 text-2xl font-black text-white">Approved operator lane.</div>
+                <div className="mt-6 grid gap-4">
+                  {[
+                    "Operate inside the EVNTSZN Host network and commission structure.",
+                    "Best for approved city-facing operators who can run a room and hold the standard.",
+                    "Current host markets: Baltimore, Washington, Rehoboth Beach, Ocean City, and Bethany Beach.",
+                  ].map((item) => (
+                    <div key={item} className="rounded-2xl border border-white/5 bg-white/[0.03] p-5 text-sm md:text-base leading-relaxed text-white/70">
+                      {item}
+                    </div>
+                  ))}
                 </div>
               </div>
+
+              <div className="rounded-[32px] border border-white/10 bg-white/[0.02] p-7 md:p-8">
+                <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-white/42">Independent Organizer</div>
+                <div className="mt-4 text-2xl font-black text-white">Self-operated event lane.</div>
+                <div className="mt-6 grid gap-4">
+                  {[
+                    "Use EVNTSZN as your event platform without being treated as internal Host network staff.",
+                    "Best for your own events, audience, venue relationships, and operating model.",
+                    "Crew Marketplace and EVNTSZN Link stay available without collapsing into the Host path.",
+                  ].map((item) => (
+                    <div key={item} className="rounded-2xl border border-white/5 bg-white/[0.03] p-5 text-sm md:text-base leading-relaxed text-white/70">
+                      {item}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -673,17 +679,9 @@ export default function DiscoveryLanding({
       {content.visibility.showEplPanel ? (
         <section className="mx-auto max-w-[1600px] px-4 pb-20 md:px-6 lg:px-8 lg:pb-24">
           <div className="overflow-hidden rounded-[48px] border border-white/10 bg-[#0c0c15] shadow-[0_22px_60px_rgba(0,0,0,0.45)] lg:grid lg:grid-cols-[1.1fr_0.9fr]">
-            <div className="relative min-h-[480px]">
-              <Image
-                src={FALLBACK_EPL_IMAGE}
-                alt="EVNTSZN Prime League"
-                fill
-                unoptimized
-                sizes="(max-width: 1024px) 100vw, 50vw"
-                className="object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-transparent" />
-              <div className="relative p-10 md:p-14 lg:p-16 h-full flex flex-col justify-center">
+            <div className="relative min-h-[480px] overflow-hidden">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(162,89,255,0.22),transparent_35%),linear-gradient(180deg,#0e0d17_0%,#08080d_100%)]" />
+              <div className="relative flex h-full flex-col justify-center p-10 md:p-14 lg:p-16">
                 <div className="ev-kicker text-[#b899ff]">EPL Season 1</div>
                 <h2 className="mt-6 max-w-xl text-5xl font-black tracking-[-0.05em] text-white md:text-6xl lg:text-7xl leading-[0.9]">
                   Coed flag football.
@@ -691,6 +689,23 @@ export default function DiscoveryLanding({
                 <p className="mt-8 max-w-xl text-lg md:text-xl leading-relaxed text-white/76">
                   EPL brings team identity, standings pressure, player registration, and game-day energy into one public league experience built to travel cleanly from city to city.
                 </p>
+                <div className="mt-8 grid grid-cols-3 gap-3 md:max-w-xl">
+                  {[
+                    { name: "Dewey Warriors", logo: "/epl_team_logos/warriors.jpg" },
+                    { name: "Bethany Bulldogs", logo: "/epl_team_logos/bulldogs.jpg" },
+                    { name: "Delmarva Hawks", logo: "/epl_team_logos/hawks.jpg" },
+                    { name: "Rehoboth Knights", logo: "/epl_team_logos/knights.jpg" },
+                    { name: "Ocean City Phantoms", logo: "/epl_team_logos/phantoms.jpg" },
+                    { name: "Ocean City Comets", logo: "/epl_team_logos/comets.jpg" },
+                  ].map((team) => (
+                    <div key={team.name} className="rounded-[22px] border border-white/10 bg-white/[0.04] p-3 text-center">
+                      <Image src={team.logo} alt={team.name} width={56} height={56} className="mx-auto h-14 w-14 rounded-2xl border border-white/10 object-cover" />
+                      <div className="mt-2 text-[10px] font-bold uppercase tracking-[0.16em] text-white/55">
+                        {team.name}
+                      </div>
+                    </div>
+                  ))}
+                </div>
                 <div className="mt-10 flex flex-wrap gap-4">
                   <Link href="https://epl.evntszn.com" className="ev-button-primary px-8">
                     Explore EPL
@@ -703,8 +718,8 @@ export default function DiscoveryLanding({
             </div>
             <div className="grid gap-6 p-10 md:p-14 lg:p-16 bg-white/[0.01]">
               {[
-                "A coed flag football league with real clubs, real standings, and real city pride.",
-                "Draft night, registration, and game-day follow-through live in one place.",
+                "A coed flag football league with real clubs, real standings, and real regional pride.",
+                "Two draft nights shape the player pool: Baltimore first, then the coastal region one week later.",
                 "Supporters can move from team pages to standings to opportunities without losing the league thread.",
               ].map((item) => (
                 <div key={item} className="rounded-[32px] border border-white/10 bg-white/[0.02] p-8 flex flex-col justify-center">

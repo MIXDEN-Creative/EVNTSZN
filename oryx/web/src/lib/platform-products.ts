@@ -1,12 +1,14 @@
 export const CREW_CATEGORIES = [
   "host",
   "dj",
+  "music_producer",
   "photographer",
   "videographer",
-  "security",
-  "promoter",
-  "producer",
-  "brand_ambassador",
+  "bartender",
+  "dancer",
+  "comedian",
+  "food_vendor",
+  "content_creator",
   "custom",
 ] as const;
 
@@ -18,6 +20,25 @@ export type CrewAvailabilityState = (typeof CREW_AVAILABILITY_STATES)[number];
 export type CrewBookingStatus = (typeof CREW_BOOKING_STATUSES)[number];
 export const LINK_PLANS = ["free", "starter", "pro", "elite"] as const;
 export type LinkPlan = (typeof LINK_PLANS)[number];
+
+export const CREW_CATEGORY_LABELS: Record<CrewCategory, string> = {
+  host: "Host",
+  dj: "DJ",
+  music_producer: "Music Producer",
+  photographer: "Photographer",
+  videographer: "Videographer",
+  bartender: "Bartender",
+  dancer: "Dancer",
+  comedian: "Comedian",
+  food_vendor: "Food Vendor",
+  content_creator: "Content Creator",
+  custom: "Custom",
+};
+
+export function getCrewCategoryLabel(value: string | null | undefined) {
+  const key = String(value || "").trim().toLowerCase() as CrewCategory;
+  return CREW_CATEGORY_LABELS[key] || String(value || "").trim() || "Crew";
+}
 
 export function normalizeLinkPlan(value: unknown): LinkPlan {
   const raw = String(value || "").trim().toLowerCase();

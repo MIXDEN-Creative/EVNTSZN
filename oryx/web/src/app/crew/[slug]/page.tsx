@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import PublicPageFrame from "@/components/public/PublicPageFrame";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { getCrewCategoryLabel } from "@/lib/platform-products";
 import BookingRequestForm from "./BookingRequestForm";
 
 type RouteContext = {
@@ -51,7 +52,7 @@ export default async function CrewProfilePage(context: RouteContext) {
           <div className="grid gap-6 xl:grid-cols-[1.08fr_0.92fr] xl:gap-8">
             <div className="rounded-[36px] border border-white/10 bg-black/35 p-6 md:p-8 lg:p-10">
               <div className="text-[11px] uppercase tracking-[0.22em] text-[#caa7ff]">
-                {profile.custom_category || profile.category}
+                {profile.custom_category || getCrewCategoryLabel(profile.category)}
               </div>
               <h1 className="mt-3 max-w-4xl text-4xl font-black tracking-[-0.05em] text-white md:text-6xl xl:text-7xl">{profile.display_name}</h1>
               {profile.headline ? <p className="mt-4 max-w-3xl text-lg leading-8 text-white/76">{profile.headline}</p> : null}

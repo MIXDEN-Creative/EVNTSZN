@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { CREW_CATEGORIES, getCrewCategoryLabel } from "@/lib/platform-products";
 
 type CrewProfile = {
   id: string;
@@ -53,9 +54,16 @@ export default function CrewMarketplaceClient() {
           <h2 className="mt-3 text-2xl font-black tracking-tight text-white">Filter the right talent fast.</h2>
         </div>
         <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr_0.8fr_0.8fr_auto]">
-          <input className="ev-field" placeholder="Search hosts, DJs, security, content..." value={query} onChange={(event) => setQuery(event.target.value)} />
+          <input className="ev-field" placeholder="Search DJs, creators, bartenders, hosts..." value={query} onChange={(event) => setQuery(event.target.value)} />
           <input className="ev-field" placeholder="City" value={city} onChange={(event) => setCity(event.target.value)} />
-          <input className="ev-field" placeholder="Category" value={category} onChange={(event) => setCategory(event.target.value)} />
+          <select className="ev-field" value={category} onChange={(event) => setCategory(event.target.value)}>
+            <option value="">Any category</option>
+            {CREW_CATEGORIES.filter((entry) => entry !== "custom").map((entry) => (
+              <option key={entry} value={entry}>
+                {getCrewCategoryLabel(entry)}
+              </option>
+            ))}
+          </select>
           <select className="ev-field" value={availability} onChange={(event) => setAvailability(event.target.value)}>
             <option value="">Any availability</option>
             <option value="available">Available</option>
@@ -72,10 +80,10 @@ export default function CrewMarketplaceClient() {
         {profiles.map((profile) => (
           <a key={profile.id} href={`/${profile.slug}`} className="rounded-[28px] border border-white/10 bg-white/[0.03] p-6 transition hover:-translate-y-0.5 hover:bg-white/[0.06] md:p-7">
             <div className="flex items-start justify-between gap-3">
-              <div>
-                <div className="text-[11px] uppercase tracking-[0.22em] text-[#caa7ff]">
-                  {profile.custom_category || profile.category}
-                </div>
+                <div>
+                  <div className="text-[11px] uppercase tracking-[0.22em] text-[#caa7ff]">
+                    {profile.custom_category || getCrewCategoryLabel(profile.category)}
+                  </div>
                 <h2 className="mt-2 text-2xl font-black tracking-tight text-white">{profile.display_name}</h2>
               </div>
               <div className="flex flex-col items-end gap-2">

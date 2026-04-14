@@ -27,8 +27,8 @@ export default function EPLSchedulePage() {
         </div>
         <h2 className="text-4xl font-black text-white tracking-tight">Schedule is being finalized.</h2>
         <p className="mt-6 text-lg text-white/60 max-w-xl leading-relaxed">
-          We are currently mapping the Season 1 matchups, field allocations, and draft-night flow. 
-          The full schedule will be released here following the Draft Night on Saturday, June 20.
+          We are currently mapping the Season 1 matchups, field allocations, and the two-night draft rollout.
+          Draft 1 covers the Baltimore region. Draft 2 covers the coastal region one week later across Rehoboth, Bethany, Dewey, and Ocean City. The full game schedule will publish after both draft nights are locked.
         </p>
         <div className="mt-10 flex flex-wrap gap-4 justify-center">
             <Link href="/epl" className="ev-button-primary px-8">
@@ -42,9 +42,9 @@ export default function EPLSchedulePage() {
 
       <div className="mt-12 grid gap-6 md:grid-cols-3">
         {[
-          { label: "Draft Night", value: "Saturday, June 20", note: "The official league intake and team assignment night." },
-          { label: "Opening Day", value: "Coming soon", note: "The first live game-day sessions for Season 1." },
-          { label: "Championship", value: "TBA", note: "The season finale where the league champion is crowned." },
+          { label: "Draft 1", value: "Baltimore region", note: "The first draft night handles the Baltimore-region player pool and team assignments." },
+          { label: "Draft 2", value: "Coastal region", note: "The coastal draft follows one week later for Rehoboth, Bethany, Dewey, and Ocean City." },
+          { label: "Player pool", value: "144 players", note: "Season 1 intake is structured around a 144-player draft pool across both draft events." },
         ].map((item) => (
           <div key={item.label} className="rounded-[32px] border border-white/10 bg-white/5 p-8">
             <div className="text-[11px] font-bold uppercase tracking-[0.24em] text-white/40">

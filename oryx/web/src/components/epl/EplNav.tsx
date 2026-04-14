@@ -11,7 +11,7 @@ export default function EplNav({ menu }: { menu: EplMenuVisibilityContent }) {
 
   const navItems = [
     menu.showDraftCountdown ? { href: "/epl#countdown", label: "Draft Countdown" } : null,
-    menu.showSchedule ? { href: "/epl#schedule", label: "Schedule" } : null,
+    menu.showSchedule ? { href: "/epl/schedule", label: "Schedule" } : null,
     menu.showTeams ? { href: "/epl/teams", label: "Teams" } : null,
     menu.showOpportunities ? { href: "/epl/opportunities", label: "Opportunities" } : null,
     menu.showStandings ? { href: "/epl/standings", label: "Standings" } : null,

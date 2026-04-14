@@ -55,12 +55,8 @@ export default async function EplPage() {
       <EplNav menu={content.menu} />
 
       <section className="relative overflow-hidden border-b border-white/10">
-        <img
-          src="https://images.unsplash.com/photo-1518604666860-9ed391f76460?auto=format&fit=crop&w=1800&q=80"
-          alt="EVNTSZN Prime League flag football"
-          className="absolute inset-0 h-full w-full object-cover"
-        />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(162,89,255,0.35),transparent_45%),linear-gradient(180deg,rgba(0,0,0,0.30),rgba(0,0,0,0.92))]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(162,89,255,0.28),transparent_38%),radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.08),transparent_20%),linear-gradient(180deg,#0d0c16_0%,#09090d_46%,#040405_100%)]" />
+        <div className="absolute inset-y-0 right-0 hidden w-[42%] bg-[linear-gradient(180deg,rgba(162,89,255,0.12),rgba(0,0,0,0))] xl:block" />
         <div className="relative mx-auto grid max-w-7xl gap-12 px-4 py-24 md:px-6 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16 lg:px-8 lg:py-36">
           <div className="flex flex-col justify-center">
             <div className="inline-flex w-fit rounded-full border border-white/15 bg-white/8 px-5 py-2 text-xs font-bold uppercase tracking-[0.24em] text-white/90">
@@ -96,6 +92,41 @@ export default async function EplPage() {
           </div>
 
           <div className="grid gap-6">
+            <div className="rounded-[36px] border border-white/10 bg-black/35 p-6 shadow-[0_30px_80px_rgba(0,0,0,0.35)] backdrop-blur-2xl md:p-8">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <div className="text-[11px] font-bold uppercase tracking-[0.24em] text-[#cfb8ff]/72">
+                    Season 1 clubs
+                  </div>
+                  <div className="mt-3 text-2xl font-black tracking-tight text-white">
+                    Built around real flag-football clubs.
+                  </div>
+                </div>
+                <div className="rounded-full border border-[#A259FF]/30 bg-[#A259FF]/10 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.22em] text-[#e1ceff]">
+                  Six-team launch
+                </div>
+              </div>
+
+              <div className="mt-6 grid grid-cols-3 gap-3">
+                {EPL_TEAM_PROFILES.slice(0, 6).map((team) => (
+                  <div
+                    key={team.slug}
+                    className="rounded-[24px] border border-white/10 bg-white/[0.04] p-3 text-center transition hover:border-white/20 hover:bg-white/[0.08]"
+                  >
+                    <img
+                      src={team.logoUrl}
+                      alt={team.name}
+                      className="mx-auto h-14 w-14 rounded-2xl border border-white/10 object-cover"
+                    />
+                    <div className="mt-3 text-[11px] font-bold uppercase tracking-[0.18em] text-white/50">
+                      {team.neighborhood}
+                    </div>
+                    <div className="mt-1 text-sm font-semibold text-white">{team.name}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             {[
               {
                 label: "League feel",
@@ -103,7 +134,7 @@ export default async function EplPage() {
               },
               {
                 label: "Why people come back",
-                body: "Players can register, supporters can follow the table, and every club has enough identity to keep people checking in between game nights.",
+                body: "Players can register, supporters can follow the table, and the two-draft rollout gives every region a real reason to track roster movement before opening week.",
               },
               {
                 label: "Built to travel city to city",
@@ -137,8 +168,8 @@ export default async function EplPage() {
           <div className="mt-12 grid gap-6 md:grid-cols-3">
             {[
               "Coed league structure",
-              "Saturday, June 20 draft night",
-              "City-rooted competition with real team identity",
+              "Draft 1: Baltimore region",
+              "Draft 2: Coastal region one week later",
             ].map((text) => (
 
               <div key={text} className="rounded-[32px] border border-white/10 bg-white/5 p-8">
@@ -165,9 +196,9 @@ export default async function EplPage() {
 
             <div className="mt-12 grid gap-6 md:grid-cols-3">
               {[
-                "Opening-night matchups and statement starts",
-                "Rivalry weeks that tighten the table",
-                "Stretch-run games that change playoff pressure",
+                "Baltimore draft night opens the player pool build",
+                "The coastal draft follows one week later across Dewey, Rehoboth, Bethany, and Ocean City",
+                "Opening-week matchups land after the two-event draft structure is complete",
               ].map((text) => (
                 <div key={text} className="rounded-[32px] border border-white/10 bg-white/5 p-8">
                   <div className="text-[11px] font-bold uppercase tracking-[0.24em] text-white/40">

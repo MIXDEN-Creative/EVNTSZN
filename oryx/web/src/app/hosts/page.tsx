@@ -58,16 +58,15 @@ export default function HostsPage() {
           <div className="ev-section-kicker">Open host markets</div>
           <div className="mt-3 text-2xl font-black tracking-tight text-white">Current EVNTSZN Host openings</div>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-white/72">
-            We are actively reviewing hosts for Baltimore, Atlanta, New York, Miami, DC, and Dover. Approved hosts work premium city nights, operate inside the live host commission structure, and build toward deeper city-office responsibility.
+            We are actively reviewing hosts for Baltimore, Washington, Rehoboth Beach, Ocean City, and Bethany Beach. Approved hosts work premium city nights, operate inside the live host commission structure, and build toward deeper city-office responsibility.
           </p>
           <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {[
               "Baltimore, MD",
-              "Atlanta, GA",
-              "New York, NY",
-              "Miami, FL",
               "Washington, DC",
-              "Dover, DE",
+              "Rehoboth Beach, DE",
+              "Ocean City, MD",
+              "Bethany Beach, DE",
             ].map((market) => (
               <div key={market} className="rounded-[22px] border border-white/10 bg-white/5 p-4 text-sm font-semibold text-white/78">
                 {market}

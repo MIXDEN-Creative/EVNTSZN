@@ -20,7 +20,7 @@ import { safePublicLoad } from "@/lib/public-safe-load";
 export const metadata: Metadata = {
   title: "EVNTSZN | Nights out, live games, concerts, and city plans worth showing up for",
   description:
-    "Find concerts, nightlife, sports, league nights, and city plans worth leaving home for across Baltimore, Atlanta, Miami, New York, DC, and Dover.",
+    "Find concerts, nightlife, sports, league nights, and city plans worth leaving home for across Baltimore, Washington, Rehoboth Beach, Ocean City, and Bethany Beach.",
   alternates: {
     canonical: "https://evntszn.com",
   },
@@ -32,10 +32,10 @@ export const metadata: Metadata = {
     "live entertainment",
     "things to do",
     "Baltimore events",
-    "Atlanta events",
-    "Miami events",
-    "New York nightlife",
-    "DC events",
+    "Washington events",
+    "Rehoboth Beach nightlife",
+    "Ocean City events",
+    "Bethany Beach events",
     "EVNTSZN",
   ],
   openGraph: {
