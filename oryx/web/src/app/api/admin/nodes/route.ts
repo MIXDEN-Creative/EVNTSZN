@@ -4,17 +4,17 @@ import { requireAdminPermission } from "@/lib/admin-auth";
 
 export async function GET() {
   try {
-    await requireAdminPermission("admin.manage", "/api/admin/operator-users");
+    await requireAdminPermission("admin.manage", "/api/admin/nodes");
     const supabase = getSupabaseAdmin();
     
-    const { data: users, error } = await supabase
-      .from("evntszn_profiles")
-      .select("id, full_name, email, primary_role, is_active, created_at")
+    const { data: nodes, error } = await supabase
+      .from("evntszn_nodes")
+      .select("*")
       .order("created_at", { ascending: false });
 
     if (error) throw error;
 
-    return NextResponse.json({ users });
+    return NextResponse.json({ nodes });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

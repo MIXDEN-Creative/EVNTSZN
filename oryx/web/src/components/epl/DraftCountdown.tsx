@@ -46,7 +46,7 @@ export default function DraftCountdown() {
       </h2>
 
       <p className="mt-4 max-w-2xl text-base leading-7 text-white/75">
-        Season 1 gets real on Saturday, June 6. Registration, roster movement, team identity, and league momentum all point here.
+        Season 1 gets real on Saturday, June 20. Registration, roster movement, team identity, and league momentum all point here.
       </p>
 
       {time.expired ? (

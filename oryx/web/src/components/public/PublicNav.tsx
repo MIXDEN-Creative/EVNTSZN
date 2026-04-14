@@ -36,16 +36,19 @@ export default function PublicNav() {
           </div>
           <span className="flex flex-col">
             <span className="text-lg font-black tracking-tighter text-white">EVNTSZN</span>
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#caa7ff]">Public Guide</span>
           </span>
         </Link>
 
         <nav className="hidden items-center gap-6 lg:flex">
-          {navLinks.map((link) => (
-            <a key={link.label} href={link.href} className="text-sm font-semibold text-white/60 transition hover:text-white">
-              {link.label}
-            </a>
-          ))}
+          <a href={`${getWebOrigin()}/`} className="text-sm font-semibold text-white/60 transition hover:text-white">
+            Discover
+          </a>
+          <a href={`${getWebOrigin()}/events`} className="text-sm font-semibold text-white/60 transition hover:text-white">
+            Events
+          </a>
+          <a href={`${getEplOrigin()}/`} className="text-sm font-semibold text-white/60 transition hover:text-white">
+            EPL
+          </a>
           <div className="relative">
             <button
               type="button"
@@ -83,7 +86,7 @@ export default function PublicNav() {
               onClick={() => setAccessOpen((value) => !value)}
               className={`flex items-center gap-1.5 text-sm font-semibold transition ${accessOpen ? "text-[#caa7ff]" : "text-white/60 hover:text-white"}`}
             >
-              Access
+              Programs
               <svg className={`h-4 w-4 transition-transform ${accessOpen ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
@@ -92,23 +95,25 @@ export default function PublicNav() {
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setAccessOpen(false)} />
                 <div className="absolute right-0 top-full z-50 mt-4 w-[22rem] overflow-hidden rounded-[28px] border border-white/10 bg-black/95 p-2 shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-3xl">
-                  <div className="px-4 pb-2 pt-3 text-[10px] font-bold uppercase tracking-[0.22em] text-white/35">Attendee access</div>
+                  <div className="px-4 pb-2 pt-3 text-[10px] font-bold uppercase tracking-[0.22em] text-white/35">Network roles</div>
                   <div className="grid gap-1">
-                    {accessLinks.slice(0, 2).map((link) => (
+                    {[
+                      { label: "Hosts", href: `${getWebOrigin()}/hosts`, sublabel: "Run the room and hold the standard." },
+                      { label: "Crew", href: `${getWebOrigin()}/crew`, sublabel: "Activation and field support." },
+                      { label: "Partners", href: `${getWebOrigin()}/partners/packages`, sublabel: "Sponsor and brand placements." },
+                    ].map((link) => (
                       <a key={link.label} href={link.href} className="rounded-2xl px-4 py-3 transition hover:bg-white/10">
                         <div className="text-sm font-semibold text-white">{link.label}</div>
                         <div className="mt-1 text-xs leading-5 text-white/55">{link.sublabel}</div>
                       </a>
                     ))}
                   </div>
-                  <div className="mt-2 px-4 pb-2 pt-3 text-[10px] font-bold uppercase tracking-[0.22em] text-white/35">Internal tools</div>
+                  <div className="mt-2 px-4 pb-2 pt-3 text-[10px] font-bold uppercase tracking-[0.22em] text-white/35">Support</div>
                   <div className="grid gap-1">
-                    {accessLinks.slice(2).map((link) => (
-                      <a key={link.label} href={link.href} className="rounded-2xl px-4 py-3 transition hover:bg-white/10">
-                        <div className="text-sm font-semibold text-white">{link.label}</div>
-                        <div className="mt-1 text-xs leading-5 text-white/55">{link.sublabel}</div>
-                      </a>
-                    ))}
+                    <a href={`${getWebOrigin()}/support`} className="rounded-2xl px-4 py-3 transition hover:bg-white/10">
+                      <div className="text-sm font-semibold text-white">Help Center</div>
+                      <div className="mt-1 text-xs leading-5 text-white/55">Ticketing support and platform help.</div>
+                    </a>
                   </div>
                 </div>
               </>

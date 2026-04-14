@@ -14,9 +14,14 @@ function logFounderIssueOnce(message: string, context: Record<string, unknown>) 
 }
 
 export function getFounderPasswordConfig() {
+  // Cloudflare and Next.js environments can vary in how they expose process.env.
+  // We check the most likely keys.
+  const env = (typeof process !== "undefined" ? process.env : {}) as Record<string, string | undefined>;
+  
   const configuredEntry = FOUNDER_PASSWORD_ENV_KEYS
-    .map((key) => [key, process.env[key]] as const)
+    .map((key) => [key, env[key]] as const)
     .find(([, value]) => typeof value === "string" && value.trim());
+  
   const raw = configuredEntry?.[1] ?? "";
   const value = String(raw).replace(/\r?\n$/, "").trim();
   const source = configuredEntry?.[0] || "missing";

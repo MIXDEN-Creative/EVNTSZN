@@ -1,11 +1,14 @@
+import Image from "next/image";
 import Link from "next/link";
 import SurfaceShell from "@/components/shells/SurfaceShell";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
+const FALLBACK_EVENT_IMAGE = "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=1600&q=80";
+
 export default async function EventsPage() {
   const { data: events } = await supabaseAdmin
     .from("evntszn_events")
-    .select("id, title, slug, subtitle, description, city, state, start_at, end_at, hero_note, scanner_status")
+    .select("id, title, slug, subtitle, description, city, state, start_at, end_at, hero_note, scanner_status, banner_image_url")
     .eq("visibility", "published")
     .order("start_at", { ascending: true });
 
@@ -13,52 +16,57 @@ export default async function EventsPage() {
     <SurfaceShell
       surface="web"
       eyebrow="Public events"
-      title="Events and ticket drops"
-      description="Browse published EVNTSZN events, open the one that fits, and move straight into tickets, details, and the next step."
-      meta={
-        <>
-          <div className="ev-meta-card">
-            <div className="ev-meta-label">What you can do here</div>
-            <div className="ev-meta-value">Scan the live calendar, open an event page, and buy access without getting pulled into the wrong flow.</div>
-          </div>
-          <div className="ev-meta-card">
-            <div className="ev-meta-label">Ticket flow</div>
-            <div className="ev-meta-value">Every event page carries the details, ticket options, and purchase path in one place.</div>
-          </div>
-        </>
-      }
+      title="The city is currently in motion."
+      description="Official ticket drops, hosted nights, and the moves actually worth being at. One clean feed for real-time discovery."
     >
-      <div className="grid gap-6">
+      <div className="grid gap-10 md:grid-cols-2">
           {(events || []).map((event) => (
             <article
               key={event.id}
-              className="grid gap-5 rounded-[32px] border border-white/10 bg-white/[0.03] p-6 shadow-[0_18px_50px_rgba(0,0,0,0.24)] lg:grid-cols-[1.2fr_0.8fr]"
+              className="group overflow-hidden rounded-[40px] border border-white/10 bg-[#0c0c15] shadow-[0_24px_60px_rgba(0,0,0,0.35)] transition-all hover:-translate-y-1 hover:border-white/20"
             >
-              <div>
-                <div className="text-xs uppercase tracking-[0.24em] text-white/45">
-                  {event.city}, {event.state}
+              <Link href={`/events/${event.slug}`} className="block relative h-64 overflow-hidden">
+                <Image 
+                    src={event.banner_image_url || FALLBACK_EVENT_IMAGE} 
+                    alt={event.title} 
+                    fill 
+                    unoptimized
+                    className="object-cover transition duration-500 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
+                <div className="absolute bottom-6 left-6 right-6">
+                    <div className="text-[10px] font-bold uppercase tracking-[0.24em] text-white/60">
+                        {event.city}, {event.state}
+                    </div>
+                    <h2 className="mt-2 text-3xl font-black text-white leading-tight tracking-tight">{event.title}</h2>
                 </div>
-                <h2 className="mt-3 text-3xl font-semibold">{event.title}</h2>
-                <p className="mt-3 text-white/62">{event.subtitle || event.description}</p>
+              </Link>
+
+              <div className="p-8">
+                <div className="flex flex-wrap items-center gap-6 text-sm">
+                    <div className="flex flex-col">
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-white/30">Doors</span>
+                        <span className="mt-1 font-semibold text-white/70">{new Date(event.start_at).toLocaleDateString()}</span>
+                    </div>
+                    <div className="flex flex-col">
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-white/30">Status</span>
+                        <span className="mt-1 font-semibold text-[#caa7ff] uppercase tracking-widest text-xs">Live Access</span>
+                    </div>
+                </div>
+
+                <p className="mt-6 text-white/50 leading-relaxed line-clamp-2">{event.subtitle || event.description}</p>
+                
                 {event.hero_note ? (
-                  <div className="mt-5 rounded-2xl border border-[#A259FF]/25 bg-[#A259FF]/10 px-4 py-3 text-sm text-[#dfd0ff]">
+                  <div className="mt-6 rounded-2xl border border-[#A259FF]/25 bg-[#A259FF]/5 px-5 py-4 text-sm text-[#dfd0ff] italic">
                     {event.hero_note}
                   </div>
                 ) : null}
-              </div>
 
-              <div className="rounded-[28px] border border-white/10 bg-black/30 p-5">
-                <p className="text-xs uppercase tracking-[0.22em] text-white/45">At a glance</p>
-                <div className="mt-4 space-y-2 text-sm text-white/72">
-                  <div>Doors: {new Date(event.start_at).toLocaleString()}</div>
-                  <div>Wrap: {new Date(event.end_at).toLocaleString()}</div>
-                  <div>Check-in: {event.scanner_status}</div>
-                </div>
                 <Link
                   href={`/events/${event.slug}`}
-                  className="mt-6 ev-button-primary w-full"
+                  className="mt-8 ev-button-primary w-full py-4 text-xs font-black uppercase tracking-widest"
                 >
-                  Open event
+                  Get Access
                 </Link>
               </div>
             </article>

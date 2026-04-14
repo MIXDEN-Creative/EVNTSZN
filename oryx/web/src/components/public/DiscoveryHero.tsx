@@ -54,15 +54,13 @@ export default function DiscoveryHero({ city }: DiscoveryHeroProps) {
 
             <FadeIn delay={0.12}>
               <h1 className="ev-headline max-w-4xl text-5xl font-black text-white md:text-6xl lg:text-7xl">
-                Discover what the city feels like before you step outside.
+                The move before you make it.
               </h1>
             </FadeIn>
 
             <FadeIn delay={0.2}>
-              <p className="mt-5 max-w-2xl text-base text-white/80 md:text-lg">
-                EVNTSZN surfaces official events, hosted experiences, independent organizers,
-                and external demand in one cinematic discovery layer built for real nightlife,
-                music, sports, and city energy.
+              <p className="mt-5 max-w-2xl text-base text-white/80 md:text-lg italic">
+                EVNTSZN surfaces the nightlife, music, sports, and city energy actually worth your time. One clean read on what’s next.
               </p>
             </FadeIn>
           </div>

@@ -9,7 +9,10 @@ type NavKey =
   | "coaches"
   | "sponsors"
   | "merch"
-  | "jobs";
+  | "jobs"
+  | "nodes"
+  | "users"
+  | "events";
 
 type RowAction = {
   label: string;
@@ -185,6 +188,9 @@ export default function LeagueOfficeAdminShell() {
   const [addOns, setAddOns] = useState<any[]>([]);
   const [revenueEntries, setRevenueEntries] = useState<any[]>([]);
   const [coaches, setCoaches] = useState<any[]>([]);
+  const [nodes, setNodes] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
+  const [events, setEvents] = useState<any[]>([]);
 
   const [selectedRow, setSelectedRow] = useState<any | null>(null);
   const [selectedTitle, setSelectedTitle] = useState("");
@@ -235,6 +241,9 @@ export default function LeagueOfficeAdminShell() {
       addOnsRes,
       revenueRes,
       coachesRes,
+      nodesRes,
+      usersRes,
+      eventsRes,
     ] = await Promise.all([
       fetch(`/api/epl/admin/seasons`),
       fetch(`/api/epl/admin/operations-player-pipeline?seasonSlug=${seasonSlug}`),
@@ -249,6 +258,9 @@ export default function LeagueOfficeAdminShell() {
       fetch(`/api/epl/admin/add-ons?seasonSlug=${seasonSlug}`),
       fetch(`/api/epl/admin/revenue-ledger?seasonSlug=${seasonSlug}`),
       fetch(`/api/epl/admin/coaches`),
+      fetch(`/api/admin/nodes`),
+      fetch(`/api/admin/operator-users`),
+      fetch(`/api/evntszn/events`),
     ]);
 
     const seasonsJson = (await seasonsRes.json()) as ArrayResponse;
@@ -264,6 +276,9 @@ export default function LeagueOfficeAdminShell() {
     const addOnsJson = (await addOnsRes.json()) as ArrayResponse;
     const revenueJson = (await revenueRes.json()) as ArrayResponse;
     const coachesJson = (await coachesRes.json()) as ArrayResponse;
+    const nodesJson = (await nodesRes.json()) as ArrayResponse;
+    const usersJson = (await usersRes.json()) as ArrayResponse;
+    const eventsJson = (await eventsRes.json()) as { events?: any[] };
 
     setSeasons(seasonsJson.seasons || []);
     setPlayerPipeline(playersJson.entries || []);
@@ -279,6 +294,9 @@ export default function LeagueOfficeAdminShell() {
     setAddOns(addOnsJson.addOns || []);
     setRevenueEntries(revenueJson.entries || []);
     setCoaches(coachesJson.coaches || []);
+    setNodes(nodesJson.nodes || []);
+    setUsers(usersJson.users || []);
+    setEvents(eventsJson.events || []);
   }
 
   useEffect(() => {
@@ -491,6 +509,9 @@ export default function LeagueOfficeAdminShell() {
     { key: "sponsors" as NavKey, label: "Sponsors", scopes: ["founder", "admin", "revenue"] },
     { key: "merch" as NavKey, label: "Merch & Revenue", scopes: ["founder", "admin", "revenue"] },
     { key: "jobs" as NavKey, label: "Jobs & Opportunities", scopes: ["founder", "admin", "staffing"] },
+    { key: "nodes" as NavKey, label: "Nodes", scopes: ["founder", "admin", "ops"] },
+    { key: "users" as NavKey, label: "Users", scopes: ["founder", "admin"] },
+    { key: "events" as NavKey, label: "Events", scopes: ["founder", "admin", "ops"] },
   ].filter((item) => item.scopes.includes(permissionScope));
 
   useEffect(() => {
@@ -1038,6 +1059,92 @@ export default function LeagueOfficeAdminShell() {
                               },
                             ]}
                           />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </SectionCard>
+          ) : null}
+
+          {active === "nodes" ? (
+            <SectionCard title="Nodes" subtitle="Physical and digital interaction points.">
+              <FilterBar search={globalSearch} setSearch={setGlobalSearch} status={statusFilter} setStatus={setStatusFilter} placeholder="Search nodes" />
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-white/10 text-left">
+                  <thead className="bg-white/[0.04] text-xs uppercase tracking-[0.2em] text-white/50">
+                    <tr><th className="px-4 py-4">Title</th><th className="px-4 py-4">Status</th><th className="px-4 py-4">Type</th><th className="px-4 py-4">Actions</th></tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/10 bg-black/30">
+                    {nodes.filter(n => matchesSearch(n, ["title", "status", "node_type"])).map((row: any) => (
+                      <tr key={row.id}>
+                        <td className="px-4 py-4">{row.title}</td>
+                        <td className="px-4 py-4 text-white/70">{row.status}</td>
+                        <td className="px-4 py-4 text-white/70">{row.node_type}</td>
+                        <td className="px-4 py-4">
+                          <ActionMenu actions={[
+                            { label: "View Details", onClick: () => openDetails("Node Details", row) },
+                            { label: "Archive", onClick: () => recordAction("evntszn_nodes", row.id, "archive"), danger: true },
+                            { label: "Hard Delete", onClick: () => recordAction("evntszn_nodes", row.id, "delete"), danger: true },
+                          ]} />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </SectionCard>
+          ) : null}
+
+          {active === "users" ? (
+            <SectionCard title="Users" subtitle="Platform-wide user and operator profiles.">
+              <FilterBar search={globalSearch} setSearch={setGlobalSearch} status={statusFilter} setStatus={setStatusFilter} placeholder="Search users" />
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-white/10 text-left">
+                  <thead className="bg-white/[0.04] text-xs uppercase tracking-[0.2em] text-white/50">
+                    <tr><th className="px-4 py-4">Name</th><th className="px-4 py-4">Email</th><th className="px-4 py-4">Role</th><th className="px-4 py-4">Actions</th></tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/10 bg-black/30">
+                    {users.filter(u => matchesSearch(u, ["full_name", "email", "primary_role"])).map((row: any) => (
+                      <tr key={row.id}>
+                        <td className="px-4 py-4">{row.full_name}</td>
+                        <td className="px-4 py-4 text-white/70">{row.email}</td>
+                        <td className="px-4 py-4 text-white/70">{row.primary_role}</td>
+                        <td className="px-4 py-4">
+                          <ActionMenu actions={[
+                            { label: "View Details", onClick: () => openDetails("User Details", row) },
+                            { label: "Suspend Access", onClick: () => recordAction("evntszn_profiles", row.id, "suspend"), danger: true },
+                          ]} />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </SectionCard>
+          ) : null}
+
+          {active === "events" ? (
+            <SectionCard title="Events" subtitle="All published and draft events.">
+              <FilterBar search={globalSearch} setSearch={setGlobalSearch} status={statusFilter} setStatus={setStatusFilter} placeholder="Search events" />
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-white/10 text-left">
+                  <thead className="bg-white/[0.04] text-xs uppercase tracking-[0.2em] text-white/50">
+                    <tr><th className="px-4 py-4">Title</th><th className="px-4 py-4">City</th><th className="px-4 py-4">Status</th><th className="px-4 py-4">Actions</th></tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/10 bg-black/30">
+                    {events.filter(e => matchesSearch(e, ["title", "city", "status"])).map((row: any) => (
+                      <tr key={row.id}>
+                        <td className="px-4 py-4">{row.title}</td>
+                        <td className="px-4 py-4 text-white/70">{row.city}</td>
+                        <td className="px-4 py-4 text-white/70">{row.status}</td>
+                        <td className="px-4 py-4">
+                          <ActionMenu actions={[
+                            { label: "View Details", onClick: () => openDetails("Event Details", row) },
+                            { label: row.status === "published" ? "Unpublish" : "Publish", onClick: () => recordAction("evntszn_events", row.id, row.status === "published" ? "unpublish" : "publish") },
+                            { label: "Archive", onClick: () => recordAction("evntszn_events", row.id, "archive"), danger: true },
+                          ]} />
                         </td>
                       </tr>
                     ))}

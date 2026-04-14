@@ -137,9 +137,10 @@ export default async function EplPage() {
           <div className="mt-12 grid gap-6 md:grid-cols-3">
             {[
               "Coed league structure",
-              "Saturday, June 6 draft night",
+              "Saturday, June 20 draft night",
               "City-rooted competition with real team identity",
             ].map((text) => (
+
               <div key={text} className="rounded-[32px] border border-white/10 bg-white/5 p-8">
                 <div className="text-[11px] font-bold uppercase tracking-[0.24em] text-white/40">
                   Season 1

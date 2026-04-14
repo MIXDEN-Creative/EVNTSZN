@@ -23,42 +23,6 @@ export const PUBLIC_CITIES: PublicCity[] = [
       "Join the league in Baltimore. Discover high-stakes flag football, neighborhood team pride, and the city's strongest nightlife moves through EVNTSZN.",
   },
   {
-    slug: "atlanta",
-    name: "Atlanta",
-    stateLabel: "Georgia",
-    shortLabel: "Atlanta",
-    headline: "Atlanta's headline culture, captured in one pulse.",
-    description:
-      "Tap into Atlanta music, sports, and late-night energy without digging through a cluttered calendar.",
-    seoTitle: "Atlanta Nightlife, Music Events & City Energy | EVNTSZN",
-    seoDescription:
-      "Find your next move in Atlanta. Access headline concerts, premium nightlife, and the city's most electric live sessions first.",
-  },
-  {
-    slug: "newyork",
-    name: "New York",
-    stateLabel: "New York",
-    shortLabel: "NYC",
-    headline: "The global standard for exclusive nightlife and city plans.",
-    description:
-      "Cut through the noise and get to the concerts, nightlife, and city plans that actually deserve a spot on the calendar.",
-    seoTitle: "NYC Nightlife, Exclusive Events & Headline Concerts | EVNTSZN",
-    seoDescription:
-      "The definitive source for NYC discovery. Access premium nightlife, exclusive artist events, and the plans worth arriving for.",
-  },
-  {
-    slug: "miami",
-    name: "Miami",
-    stateLabel: "Florida",
-    shortLabel: "Miami",
-    headline: "Destination energy. Destination-defining events.",
-    description:
-      "Find the nights, destination weekends, and high-energy events people actually travel for.",
-    seoTitle: "Miami Destination Events, Premium Nightlife & Luxury Discovery | EVNTSZN",
-    seoDescription:
-      "Unlock Miami's elite event scene. From luxury destination energy to destination-shaping nightlife, land exactly where the energy is.",
-  },
-  {
     slug: "dc",
     name: "Washington",
     stateLabel: "District of Columbia",
@@ -71,16 +35,40 @@ export const PUBLIC_CITIES: PublicCity[] = [
       "Connect to the capital's energy. EVNTSZN brings you direct access to Washington DC's live pulse, from sports to headline nightlife.",
   },
   {
-    slug: "dover",
-    name: "Dover",
+    slug: "rehoboth",
+    name: "Rehoboth Beach",
     stateLabel: "Delaware",
-    shortLabel: "Dover",
-    headline: "Community momentum. Clean, premium access to local leagues.",
+    shortLabel: "Rehoboth",
+    headline: "Coastal energy. Clean, premium access to the beach pulse.",
     description:
-      "Find community events, league nights, and local plans in Dover through the same cleaner EVNTSZN guide used across every city.",
-    seoTitle: "Dover Local Events, League Nights & Community Discovery | EVNTSZN",
+      "Find the nights, beach weekends, and high-energy events worth the trip to Rehoboth.",
+    seoTitle: "Rehoboth Beach Events, Nightlife & Coastal Discovery | EVNTSZN",
     seoDescription:
-      "Find local Dover events and league nights worth following. EVNTSZN provides a cleaner, premium surface for community-rooted discovery.",
+      "Find Rehoboth Beach events worth following. EVNTSZN provides a cleaner, premium surface for coastal-rooted discovery.",
+  },
+  {
+    slug: "oceancity",
+    name: "Ocean City",
+    stateLabel: "Maryland",
+    shortLabel: "Ocean City",
+    headline: "The boardwalk pulse, captured in one clean view.",
+    description:
+      "From beach nights to the city’s strongest concerts and nightlife plans, Ocean City is where the summer feels most alive.",
+    seoTitle: "Ocean City Events, Nightlife & Beach Discovery | EVNTSZN",
+    seoDescription:
+      "Find Ocean City events worth following. EVNTSZN provides a cleaner, premium surface for beach-rooted discovery.",
+  },
+  {
+    slug: "bethany",
+    name: "Bethany Beach",
+    stateLabel: "Delaware",
+    shortLabel: "Bethany",
+    headline: "Quiet coastal energy. Premium community access.",
+    description:
+      "Find community events, beach nights, and local plans in Bethany through the same cleaner EVNTSZN guide.",
+    seoTitle: "Bethany Beach Events, Community & Coastal Discovery | EVNTSZN",
+    seoDescription:
+      "Find Bethany Beach events worth following. EVNTSZN provides a cleaner, premium surface for community-rooted discovery.",
   },
 ];
 

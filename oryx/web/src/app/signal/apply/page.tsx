@@ -14,13 +14,14 @@ export const metadata: Metadata = {
 export default function SignalApplyPage() {
   return (
     <PublicPageFrame>
-      <section className="mx-auto max-w-4xl px-4 py-16 md:px-6 lg:px-8">
-        <div className="ev-kicker">Signal program</div>
-        <h1 className="ev-title max-w-4xl">Apply to Signal if you can support activation, visibility, and controlled network execution.</h1>
-        <p className="ev-subtitle max-w-2xl">
-          Signal is a managed program layer for city support, activation, and aligned field execution. It is not the same as Ambassador and it does not automatically grant broader operator access.
+      <section className="mx-auto max-w-4xl px-4 py-16 md:px-6 lg:py-24 lg:px-8 text-center flex flex-col items-center">
+        <div className="ev-kicker text-[#A259FF]">Restricted Program</div>
+        <h1 className="ev-title mt-6 max-w-4xl">Request consideration for Signal activation.</h1>
+        <p className="ev-subtitle mt-6 max-w-2xl text-white/60">
+          Signal is a controlled support and field activation layer. Activation is managed exclusively by HQ and local City Offices. 
+          Submission of this form is a request for consideration, not an automatic grant of access.
         </p>
-        <div className="mt-8">
+        <div className="mt-12 w-full text-left">
           <ProgramApplicationForm programKey="signal" />
         </div>
       </section>

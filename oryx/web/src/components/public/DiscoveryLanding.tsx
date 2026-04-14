@@ -512,31 +512,31 @@ export default function DiscoveryLanding({
               </div>
             </div>
 
-            <div className="grid gap-6">
-              <div className="rounded-[32px] border border-white/10 bg-white/[0.02] p-7 md:p-8">
-                <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-white/30">Host perks</div>
-                <div className="mt-6 grid gap-4">
-                  {[
-                    "Host-led event revenue works inside the EVNTSZN host split.",
-                    "Scanner and event-ops support stay aligned with the host lane.",
-                    "Top hosts move into certified, pro, and city-lead pathways.",
-                    "City-by-city openings are currently live in Baltimore, Atlanta, New York, Miami, DC, and Dover.",
-                  ].map((item) => (
-                    <div key={item} className="rounded-2xl border border-white/5 bg-white/[0.03] p-5 text-sm md:text-base leading-relaxed text-white/70">
-                      {item}
-                    </div>
-                  ))}
+              <div className="mt-8 grid gap-6 md:grid-cols-2">
+                <div className="rounded-[32px] border border-white/10 bg-white/[0.02] p-7 md:p-8">
+                  <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#A259FF]">Host network</div>
+                  <div className="mt-6 grid gap-4">
+                    {[
+                      "Host-led event revenue works inside the EVNTSZN split.",
+                      "Full scanner and event-ops support for your nights.",
+                      "Move into certified, pro, and city-lead pathways.",
+                      "Current openings: Baltimore, DC, Rehoboth, Ocean City, and Bethany.",
+                    ].map((item) => (
+                      <div key={item} className="rounded-2xl border border-white/5 bg-white/[0.03] p-5 text-sm md:text-base leading-relaxed text-white/70">
+                        {item}
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
 
-              <div className="rounded-[32px] border border-white/10 bg-white/[0.02] p-7 md:p-8">
-                <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-white/30">Host revenue structure</div>
-                <div className="mt-4 text-2xl font-black text-white">Host-led events</div>
-                <div className="mt-4 text-base leading-relaxed text-white/70">
-                  Approved host-led events work inside the live EVNTSZN host commission structure, so strong operators can build real upside on the nights they lead.
+                <div className="rounded-[32px] border border-white/10 bg-white/[0.02] p-7 md:p-8">
+                  <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-white/30">Host upside</div>
+                  <div className="mt-4 text-2xl font-black text-white">Built for operators.</div>
+                  <div className="mt-4 text-base leading-relaxed text-white/70">
+                    Approved host-led events work inside the live EVNTSZN host commission structure, so strong operators can build real upside on the nights they lead.
+                  </div>
                 </div>
               </div>
-            </div>
           </div>
         </div>
       </section>
