@@ -14,7 +14,7 @@ export const OPERATOR_ROLE_PRESETS = {
     approvals: ["host", "organizer", "partner"],
   },
   hq_operator: {
-    label: "HQ Operator",
+    label: "HQ Team",
     dashboards: ["hq", "analytics", "content"],
     surfaces: ["hq", "admin", "ops"],
     modules: ["content", "discovery", "analytics", "approvals", "sponsors"],
@@ -42,14 +42,14 @@ export const OPERATOR_ROLE_PRESETS = {
     approvals: ["host"],
   },
   host_development_manager: {
-    label: "Host Development Manager",
+    label: "Curator Development Manager",
     dashboards: ["ops", "hosts"],
     surfaces: ["ops", "hosts"],
     modules: ["hosts", "approvals", "training"],
     approvals: ["host"],
   },
   partnerships_manager: {
-    label: "Partnerships Manager",
+    label: "Sponsorships Manager",
     dashboards: ["admin", "analytics"],
     surfaces: ["admin"],
     modules: ["sponsors", "packages", "analytics"],
@@ -70,28 +70,28 @@ export const OPERATOR_ROLE_PRESETS = {
     approvals: [],
   },
   host: {
-    label: "Host",
+    label: "Curator",
     dashboards: ["ops", "hosts"],
     surfaces: ["ops", "hosts"],
     modules: ["events", "training"],
     approvals: [],
   },
   certified_host: {
-    label: "Certified Host",
+    label: "Certified Curator",
     dashboards: ["ops", "hosts", "scanner"],
     surfaces: ["ops", "hosts", "scanner"],
     modules: ["events", "training", "scanner"],
     approvals: [],
   },
   pro_host: {
-    label: "Pro Host",
+    label: "Pro Curator",
     dashboards: ["ops", "hosts", "scanner", "analytics"],
     surfaces: ["ops", "hosts", "scanner"],
     modules: ["events", "training", "scanner", "analytics"],
     approvals: ["host"],
   },
   independent_organizer: {
-    label: "Independent Organizer",
+    label: "Partner",
     dashboards: ["ops"],
     surfaces: ["ops", "scanner"],
     modules: ["events", "tickets", "scanner", "analytics"],
@@ -112,7 +112,7 @@ export const OPERATOR_ROLE_PRESETS = {
     approvals: [],
   },
   epl_operator: {
-    label: "EPL Operator",
+    label: "EPL Admin",
     dashboards: ["admin", "analytics"],
     surfaces: ["admin", "hq"],
     modules: ["epl", "teams", "standings", "schedule"],
@@ -130,11 +130,20 @@ export const OPERATOR_ROLE_PRESETS = {
 export type OperatorRoleKey = keyof typeof OPERATOR_ROLE_PRESETS;
 
 export const ORGANIZER_CLASSIFICATION_LABELS = {
-  evntszn_host: "EVNTSZN Host",
-  independent_organizer: "Independent Organizer",
-  city_host: "City Host / Leader",
+  evntszn_host: "EVNTSZN Curator",
+  independent_organizer: "Partner",
+  city_host: "City Curator / Leader",
   venue_partner: "Venue Partner",
-  internal_operator: "Internal Operator",
+  internal_operator: "Internal Ops",
+} as const;
+
+export const LEGACY_INTERNAL_TERMINOLOGY_ALIASES = {
+  host: "curator",
+  hosts: "curators",
+  organizer: "partner",
+  organizers: "partners",
+  partner: "sponsor",
+  partners: "sponsors",
 } as const;
 
 export type OrganizerClassification = keyof typeof ORGANIZER_CLASSIFICATION_LABELS;

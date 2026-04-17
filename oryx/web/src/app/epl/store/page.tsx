@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import PublicNav from "@/components/public/PublicNav";
 import PublicFooterShell from "@/components/public/PublicFooterShell";
 import { DEFAULT_PUBLIC_MODULES } from "@/lib/site-content";
 
@@ -223,6 +224,7 @@ export default function EPLStorePage() {
 
   return (
     <main className="min-h-screen bg-black text-white">
+      <PublicNav />
       <section className="border-b border-white/10 bg-gradient-to-b from-[#0a0a0a] to-black">
         <div className="mx-auto max-w-7xl px-6 py-14 lg:py-16">
           <div className="inline-flex items-center rounded-full border border-[#A259FF]/40 bg-[#A259FF]/10 px-4 py-1 text-sm text-[#d8c2ff]">

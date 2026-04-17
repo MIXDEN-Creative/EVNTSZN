@@ -200,5 +200,3 @@ insert into public.evntszn_venues (id, name, slug, city, state, timezone, capaci
 values
   ('00000000-0000-0000-0000-00000000e001', 'Oryx Field House', 'oryx-field-house', 'New York', 'NY', 'America/New_York', 240, 'ops@evntszn.com', true)
 on conflict (id) do nothing;
-
--- Removed Midnight Run event and ticket types insertion.

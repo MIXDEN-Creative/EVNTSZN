@@ -13,6 +13,8 @@ type ScannerResult = {
   checked_in_at: string | null;
 };
 
+type ScannerState = "idle" | "valid" | "invalid" | "already_checked_in";
+
 type TicketBreakdownRow = {
   id: string;
   name: string;
@@ -45,6 +47,7 @@ export default function ScannerConsole({
   const [statsOpen, setStatsOpen] = useState(false);
   const [breakdown, setBreakdown] = useState(ticketBreakdown);
   const [flashState, setFlashState] = useState<"idle" | "success" | "error">("idle");
+  const [scannerState, setScannerState] = useState<ScannerState>("idle");
 
   const remainingCount = useMemo(() => Math.max(ticketCapacity - count, 0), [count, ticketCapacity]);
 
@@ -60,6 +63,7 @@ export default function ScannerConsole({
     setLoading(true);
     setMessage("");
     setMessageTone("neutral");
+    setScannerState("idle");
 
     try {
       const res = await fetch(
@@ -85,6 +89,7 @@ export default function ScannerConsole({
     setLoading(true);
     setMessage("");
     setMessageTone("neutral");
+    setScannerState("idle");
 
     try {
       const res = await fetch(`/api/evntszn/events/${eventId}/scanner/check-in`, {
@@ -118,11 +123,22 @@ export default function ScannerConsole({
         );
       }
       setMessageTone("success");
-      setMessage("Check-in complete.");
+      setScannerState(data.scannerState === "valid" ? "valid" : "idle");
+      setMessage(data.scannerMessage || "Valid - Official EVNTSZN Ticket");
+      setTimeout(() => setScannerState("idle"), 1400);
       triggerFlash("success");
     } catch (error) {
+      const fallbackMessage = error instanceof Error ? error.message : "Check-in failed.";
+      const nextState =
+        fallbackMessage === "Already Checked In"
+          ? "already_checked_in"
+          : fallbackMessage === "Invalid Ticket"
+            ? "invalid"
+            : "invalid";
       setMessageTone("error");
-      setMessage(error instanceof Error ? error.message : "Check-in failed.");
+      setScannerState(nextState);
+      setMessage(fallbackMessage);
+      setTimeout(() => setScannerState("idle"), 1400);
       triggerFlash("error");
     } finally {
       setLoading(false);
@@ -141,6 +157,40 @@ export default function ScannerConsole({
               flashState === "success" ? "bg-emerald-500/12" : "bg-red-500/12"
             }`}
           />
+        ) : null}
+        {scannerState !== "idle" ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="pointer-events-none fixed inset-0 z-40 flex items-center justify-center px-4"
+          >
+            <div
+              className={`w-full max-w-xl rounded-[32px] border px-8 py-10 text-center shadow-[0_24px_80px_rgba(0,0,0,0.45)] ${
+                scannerState === "valid"
+                  ? "border-emerald-400/30 bg-[#04120b]/96"
+                  : scannerState === "already_checked_in"
+                    ? "border-amber-400/30 bg-[#171106]/96"
+                    : "border-red-400/30 bg-[#150809]/96"
+              }`}
+            >
+              <div className="text-[11px] uppercase tracking-[0.28em] text-[#caa7ff]">Scanner authority</div>
+              <div className="mt-4 text-4xl font-black tracking-tight md:text-5xl">
+                {scannerState === "valid"
+                  ? "Valid - Official EVNTSZN Ticket"
+                  : scannerState === "already_checked_in"
+                    ? "Already Checked In"
+                    : "Invalid Ticket"}
+              </div>
+              <div className="mt-4 text-base text-white/68">
+                {scannerState === "valid"
+                  ? "Guest is clear for entry."
+                  : scannerState === "already_checked_in"
+                    ? "This pass has already been used."
+                    : "No valid event ticket was found for entry."}
+              </div>
+            </div>
+          </motion.div>
         ) : null}
       </AnimatePresence>
       <div className="sticky top-0 z-20 border-b border-white/10 bg-black/85 backdrop-blur">
@@ -249,7 +299,7 @@ export default function ScannerConsole({
                       : "border-white/10 bg-black/40 text-white/72"
                 }`}
               >
-                {messageTone === "success" ? "Checked in. Guest is good to enter." : message}
+                {message}
               </motion.div>
             ) : null}
           </AnimatePresence>
@@ -297,6 +347,9 @@ export default function ScannerConsole({
                         {ticket.ticket_type_name}
                       </div>
                     ) : null}
+                    <div className="mt-2 text-[11px] uppercase tracking-[0.2em] text-white/38">
+                      Official EVNTSZN Ticket
+                    </div>
                   </div>
                   <button
                     onClick={() => checkIn(ticket.id)}

@@ -9,7 +9,11 @@ export default async function OpsEntryPage() {
   const viewer = await getPlatformViewer();
   const runtimeHost = (await headers()).get("host") || undefined;
 
-  if (viewer.isPlatformAdmin || viewer.profile?.primary_role === "organizer") {
+  if (viewer.isPlatformAdmin) {
+    redirect("/epl/admin");
+  }
+
+  if (viewer.profile?.primary_role === "organizer" || viewer.operatorProfile?.organizer_classification === "independent_organizer") {
     redirect("/organizer");
   }
 

@@ -46,6 +46,7 @@ export default function CrewIntakeForm() {
   });
   const [message, setMessage] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [bookingFeeAccepted, setBookingFeeAccepted] = useState(false);
 
   const categoryOptions = useMemo(
     () => CREW_CATEGORIES.filter((entry) => entry !== "custom"),
@@ -87,6 +88,7 @@ export default function CrewIntakeForm() {
       equipmentNotes: "",
       specialRequirements: "",
     });
+    setBookingFeeAccepted(false);
   }
 
   return (
@@ -94,7 +96,7 @@ export default function CrewIntakeForm() {
       <div className="ev-section-kicker">Book talent</div>
       <h2 className="mt-3 text-3xl font-black tracking-tight text-white">Send a structured booking brief.</h2>
       <p className="mt-3 max-w-3xl text-sm leading-6 text-white/68">
-        Use this when you need EVNTSZN to route the right DJs, photographers, bartenders, hosts, or performers to your event. Hosts and Independent Organizers can use the same intake.
+        Use this when you need EVNTSZN to route the right DJs, photographers, bartenders, curators, or performers to your event. Partners and EVNTSZN Curators can use the same intake.
       </p>
 
       <div className="mt-6 grid gap-4 md:grid-cols-2">
@@ -124,10 +126,10 @@ export default function CrewIntakeForm() {
           value={form.operatorType}
           onChange={(event) => setForm({ ...form, operatorType: event.target.value })}
         >
-          <option value="independent_organizer">Independent Organizer</option>
-          <option value="host">EVNTSZN Host</option>
+          <option value="independent_organizer">Partner</option>
+          <option value="host">EVNTSZN Curator</option>
           <option value="venue">Venue team</option>
-          <option value="brand">Brand / sponsor</option>
+          <option value="brand">Sponsor / brand</option>
         </select>
         <input
           className="ev-field"
@@ -201,6 +203,17 @@ export default function CrewIntakeForm() {
           onChange={(event) => setForm({ ...form, specialRequirements: event.target.value })}
         />
       </div>
+
+      <label className="mt-6 flex items-start gap-3 rounded-[24px] border border-white/10 bg-black/20 p-4 text-sm leading-6 text-white/72">
+        <input
+          type="checkbox"
+          checked={bookingFeeAccepted}
+          onChange={(event) => setBookingFeeAccepted(event.target.checked)}
+          className="mt-1 h-4 w-4 accent-[#A259FF]"
+          required
+        />
+        <span>I understand accepted crew bookings may include an EVNTSZN booking fee based on the talent profile and scope.</span>
+      </label>
 
       <button type="submit" disabled={submitting} className="ev-button-primary mt-7">
         {submitting ? "Sending brief..." : "Submit booking brief"}

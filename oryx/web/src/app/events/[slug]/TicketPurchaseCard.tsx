@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { getTicketAvailabilityLabel } from "@/lib/ticketing";
 
 type TicketType = {
@@ -31,23 +31,50 @@ export default function TicketPurchaseCard({
   eventSlug,
   ticketTypes,
 }: TicketPurchaseCardProps) {
-  const [ticketTypeId, setTicketTypeId] = useState(ticketTypes[0]?.id || "");
+  function getAuthoritySignal(ticketType: TicketType | undefined) {
+    if (!ticketType) return null;
+
+    const remaining = Math.max(0, (ticketType.quantity_total || 0) - (ticketType.quantity_sold || 0));
+    const remainingRatio = ticketType.quantity_total ? remaining / ticketType.quantity_total : 0;
+
+    if (ticketType.availability_state === "sold_out") {
+      return "Sold Out";
+    }
+    if (ticketType.availability_state === "active" && /door|final/i.test(ticketType.name)) {
+      return "Final Release";
+    }
+    if (ticketType.availability_state === "active" && remaining > 0 && (remaining <= 25 || remainingRatio <= 0.12)) {
+      return "Almost Gone";
+    }
+
+    return null;
+  }
+
+  const defaultTicketTypeId = useMemo(
+    () => ticketTypes.find((ticketType) => ticketType.availability_state === "active")?.id || ticketTypes[0]?.id || "",
+    [ticketTypes],
+  );
+  const [ticketTypeId, setTicketTypeId] = useState(defaultTicketTypeId);
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
+  useEffect(() => {
+    setTicketTypeId(defaultTicketTypeId);
+  }, [defaultTicketTypeId]);
+
   const selectedTicketType = ticketTypes.find((ticketType) => ticketType.id === ticketTypeId) || ticketTypes[0];
   const isPurchasable = selectedTicketType?.availability_state === "active";
-  const maxSelectableQuantity = Math.max(
-    1,
-    Math.min(
-      selectedTicketType?.max_per_order || 1,
-      Math.max(
-        1,
-        (selectedTicketType?.quantity_total || 0) - (selectedTicketType?.quantity_sold || 0),
-      ),
-    ),
+  const remainingQuantity = Math.max(
+    0,
+    (selectedTicketType?.quantity_total || 0) - (selectedTicketType?.quantity_sold || 0),
   );
+  const maxSelectableQuantity = Math.max(1, Math.min(selectedTicketType?.max_per_order || 1, remainingQuantity || 1));
+  const authoritySignal = getAuthoritySignal(selectedTicketType);
+
+  useEffect(() => {
+    setQuantity((current) => Math.min(current, maxSelectableQuantity));
+  }, [maxSelectableQuantity, ticketTypeId]);
 
   async function handleCheckout() {
     if (!selectedTicketType) return;
@@ -67,6 +94,11 @@ export default function TicketPurchaseCard({
       });
 
       const data = (await res.json()) as Record<string, any>;
+
+      if (res.status === 401 && data.redirectTo) {
+        window.location.href = data.redirectTo;
+        return;
+      }
 
       if (!res.ok) {
         throw new Error(data.error || "Checkout failed.");
@@ -94,25 +126,44 @@ export default function TicketPurchaseCard({
     <div className="rounded-[30px] border border-white/10 bg-white/[0.03] p-6">
       <p className="text-xs uppercase tracking-[0.24em] text-[#A259FF]">Ticketing</p>
       <h2 className="mt-3 text-3xl font-semibold">{eventTitle}</h2>
-      <p className="mt-3 text-white/60">
-        Pick your ticket, choose a quantity, and move straight into checkout.
-      </p>
+      <p className="mt-3 text-white/60">Choose a live tier, set quantity, and move straight into checkout.</p>
+      <div className="mt-4 rounded-2xl border border-[#A259FF]/20 bg-[#A259FF]/8 px-4 py-3 text-sm text-[#eadcff]">
+        <div className="font-semibold">Official EVNTSZN Ticket</div>
+        <div className="mt-1 text-[#d9c5ff]/88">Secure entry powered by EVNTSZN.</div>
+      </div>
 
       <div className="mt-6 grid gap-4">
-        <label className="grid gap-2 text-sm text-white/72">
-          Ticket type
-          <select
-            value={ticketTypeId}
-            onChange={(e) => setTicketTypeId(e.target.value)}
-            className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none"
-          >
-            {ticketTypes.map((ticketType) => (
-              <option key={ticketType.id} value={ticketType.id}>
-                {ticketType.name} · {getTicketAvailabilityLabel(ticketType.availability_state)} · ${Number(ticketType.price_usd || 0).toFixed(2)}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div className="grid gap-3">
+          {ticketTypes.map((ticketType) => {
+            const selected = ticketType.id === selectedTicketType?.id;
+            const availabilityLabel = getTicketAvailabilityLabel(ticketType.availability_state);
+            return (
+              <button
+                key={ticketType.id}
+                type="button"
+                onClick={() => setTicketTypeId(ticketType.id)}
+                className={`rounded-[24px] border p-4 text-left transition ${
+                  selected
+                    ? "border-white bg-white text-black"
+                    : "border-white/10 bg-black/30 text-white hover:border-white/18 hover:bg-white/[0.05]"
+                }`}
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <div className={`text-sm font-black uppercase tracking-[0.16em] ${selected ? "text-black/60" : "text-[#d9c5ff]"}`}>{ticketType.name}</div>
+                    {ticketType.description ? (
+                      <div className={`mt-2 text-sm ${selected ? "text-black/72" : "text-white/68"}`}>{ticketType.description}</div>
+                    ) : null}
+                  </div>
+                  <div className="text-right">
+                    <div className="text-2xl font-black">${Number(ticketType.price_usd || 0).toFixed(0)}</div>
+                    <div className={`mt-1 text-[11px] font-bold uppercase tracking-[0.18em] ${selected ? "text-black/55" : "text-white/50"}`}>{availabilityLabel}</div>
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
 
         <label className="grid gap-2 text-sm text-white/72">
           Quantity
@@ -137,13 +188,8 @@ export default function TicketPurchaseCard({
           <div className="mt-2 text-[#d8c2ff]">
             Status: {selectedTicketType ? getTicketAvailabilityLabel(selectedTicketType.availability_state) : "Unavailable"}
           </div>
-          <div className="mt-2">
-            Remaining:{" "}
-            {Math.max(
-              0,
-              (selectedTicketType?.quantity_total || 0) - (selectedTicketType?.quantity_sold || 0)
-            )}
-          </div>
+          {authoritySignal ? <div className="mt-2 text-white">{authoritySignal}</div> : null}
+          <div className="mt-2">Remaining: {remainingQuantity}</div>
           {selectedTicketType?.sales_start_at && selectedTicketType.availability_state === "scheduled" ? (
             <div className="mt-2">
               On sale: {new Date(selectedTicketType.sales_start_at).toLocaleString()}
@@ -168,10 +214,6 @@ export default function TicketPurchaseCard({
             ? `Checkout · $${(Number(selectedTicketType.price_usd || 0) * quantity).toFixed(2)}`
             : "Reserve complimentary access"}
         </button>
-
-        <div className="rounded-2xl border border-[#A259FF]/25 bg-[#A259FF]/10 p-4 text-sm text-[#dfd0ff]">
-          Your ticket details stay tied to your order so check-in stays simple on event day.
-        </div>
 
         {message ? (
           <div className="rounded-2xl border border-white/10 bg-black/40 p-4 text-sm text-white/72">

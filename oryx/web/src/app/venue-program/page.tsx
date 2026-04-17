@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import PublicPageFrame from "@/components/public/PublicPageFrame";
-import { getWebOrigin } from "@/lib/domains";
+import { getReserveOrigin, getWebOrigin } from "@/lib/domains";
 import {
   BOOSTED_MOMENTS,
   FEATURED_VENUE_PLACEMENT,
@@ -31,13 +31,13 @@ export default function VenueProgramPage() {
             Start with a free venue listing, move into Venue Pro for Smart Fill, Nodes, messaging, Pulse, and event requests, then add Reserve when reservations need to live inside the same operating system.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link href="/venue-agreement?intent=venue-onboarding" className="ev-button-primary">
+            <Link href="/venue/agreement?intent=venue-onboarding" className="ev-button-primary">
               Start venue onboarding
             </Link>
-            <Link href="/reserve" className="ev-button-secondary">
+            <Link href={`${getReserveOrigin()}/`} className="ev-button-secondary">
               Explore Reserve
             </Link>
-            <Link href="/venue-agreement" className="ev-button-secondary">
+            <Link href="/venue/agreement" className="ev-button-secondary">
               Venue agreement workflow
             </Link>
           </div>
@@ -108,8 +108,8 @@ export default function VenueProgramPage() {
             {[
               "If the venue is already listed on EVNTSZN, the venue agreement workflow can still be used for approval routing and venue confirmation.",
               "If the venue is not listed, the written venue agreement is required and can be completed and sent on-platform.",
-              "Hosts, Certified Hosts, Pro Hosts, and City Leaders all use the same agreement surface, but the approval stack changes by role and market.",
-              "Reserve, Venue Pro, and host-based venue operation should route into the same agreement intake when written venue approval is needed.",
+              "Curators, Pro Curators, and city leadership all use the same agreement surface, but the approval stack changes by role and market.",
+              "Reserve, Venue Pro, and curator-led venue operation route into the same agreement intake when written venue approval is needed.",
             ].map((item) => (
               <div key={item} className="rounded-[20px] border border-white/10 bg-black/20 px-4 py-3 text-sm leading-6 text-white/76">
                 {item}
@@ -117,7 +117,7 @@ export default function VenueProgramPage() {
             ))}
           </div>
           <div className="mt-6">
-            <Link href="/venue-agreement" className="ev-button-primary">
+            <Link href="/venue/agreement" className="ev-button-primary">
               Open venue agreement workflow
             </Link>
           </div>

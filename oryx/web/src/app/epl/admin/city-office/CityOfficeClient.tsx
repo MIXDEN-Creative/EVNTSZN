@@ -7,7 +7,7 @@ import { formatUsd } from "@/lib/money";
 export default function CityOfficeClient({
   apiPath = "/api/admin/city-office",
   title = "Run each market with a clean city-scoped operating view.",
-  description = "Track event volume, revenue, approvals, host and organizer coverage, and the operator roster for each city without mixing markets together.",
+  description = "Track event volume, revenue, approvals, EVNTSZN Curator and Partner coverage, and the operator roster for each city without mixing markets together.",
   scopeNote = "Founder and HQ can review every market. City operators should be scoped to their assigned city set.",
 }: {
   apiPath?: string;
@@ -172,9 +172,9 @@ export default function CityOfficeClient({
               ["Published", city.publishedEvents],
               ["Upcoming", city.upcomingEvents],
               ["Pending approvals", city.pendingApprovals],
-              ["Hosts", city.hosts],
-              ["Organizers", city.organizers],
-              ["Host upgrade leads", city.hostUpgradeCandidates],
+              ["EVNTSZN Curators", city.hosts],
+              ["Partners", city.organizers],
+              ["Curator upgrade leads", city.hostUpgradeCandidates],
               ["Signal members", city.signalMembers],
               ["Ambassadors", city.ambassadorMembers],
               ["Sponsor accounts", city.sponsorAccounts],

@@ -1,7 +1,5 @@
 "use client";
 
-import Link from 'next/link'; // Import Link for potential internal links
-
 export default function DraftCountdown() {
   const baltimoreDraftDate = "June 20";
   const coastalDraftDate = "June 27";

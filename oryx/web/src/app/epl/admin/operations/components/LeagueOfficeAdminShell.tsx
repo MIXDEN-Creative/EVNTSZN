@@ -848,7 +848,7 @@ export default function LeagueOfficeAdminShell() {
 
               <SectionCard title="Sponsor Deliverables Tracker" subtitle="Operational sponsor fulfillment.">
                 <div className="grid gap-4 md:grid-cols-4">
-                  <input value={deliverableForm.sponsorPartnerId} onChange={(e) => setDeliverableForm({ ...deliverableForm, sponsorPartnerId: e.target.value })} placeholder="Sponsor Partner ID" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
+                  <input value={deliverableForm.sponsorPartnerId} onChange={(e) => setDeliverableForm({ ...deliverableForm, sponsorPartnerId: e.target.value })} placeholder="Sponsor Record ID" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
                   <input value={deliverableForm.deliverableTitle} onChange={(e) => setDeliverableForm({ ...deliverableForm, deliverableTitle: e.target.value })} placeholder="Deliverable Title" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
                   <select value={deliverableForm.deliverableType} onChange={(e) => setDeliverableForm({ ...deliverableForm, deliverableType: e.target.value })} className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none">
                     <option value="logo_placement">Logo Placement</option>

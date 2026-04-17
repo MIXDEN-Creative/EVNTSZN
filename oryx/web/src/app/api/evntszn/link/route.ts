@@ -101,7 +101,7 @@ async function ensureLinkPageForUser(user: { id: string; email?: string | null }
     viewer.profile?.full_name ||
     viewer.user?.user_metadata?.full_name ||
     user.email?.split("@")[0] ||
-    "EVNTSZN Host";
+    "EVNTSZN Curator";
 
   const existingRes = await supabaseAdmin
     .from("evntszn_link_pages")
@@ -129,7 +129,7 @@ async function ensureLinkPageForUser(user: { id: string; email?: string | null }
       primary_email: user.email || null,
       city: viewer.profile?.city || null,
       state: viewer.profile?.state || null,
-      accent_label: "Host conversion page",
+      accent_label: "Curator conversion page",
       status: "draft",
       plan_tier: "free",
       email_capture_enabled: false,

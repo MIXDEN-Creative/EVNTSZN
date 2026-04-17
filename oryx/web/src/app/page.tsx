@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
-import Script from "next/script";
 import PublicNav from "@/components/public/PublicNav";
 import PublicFooter from "@/components/public/PublicFooter";
 import DiscoveryLanding from "@/components/public/DiscoveryLanding";
+import StructuredData from "@/components/seo/StructuredData";
 import { getDiscoveryNativeEvents, groupDiscoveryEventsBySource } from "@/lib/discovery";
 import { applyExternalDiscoveryControls } from "@/lib/external-discovery-controls";
+import { getReserveVenueListings } from "@/lib/public-directory";
 import {
   DEFAULT_HOMEPAGE_CONTENT,
   DEFAULT_PUBLIC_MODULES,
@@ -16,6 +17,7 @@ import { getTicketmasterShowcase } from "@/lib/ticketmaster";
 import { getWebOrigin } from "@/lib/domains";
 import { getPublicSponsorPlacements } from "@/lib/sponsor-placements";
 import { safePublicLoad } from "@/lib/public-safe-load";
+import { buildOrganizationSchema } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "EVNTSZN | Nights out, live games, concerts, and city plans worth showing up for",
@@ -45,42 +47,19 @@ export const metadata: Metadata = {
     url: "https://evntszn.com",
     siteName: "EVNTSZN",
     type: "website",
+    images: [{ url: "https://evntszn.com/brand/eplhero.png" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "EVNTSZN | Nights out, live games, concerts, and city plans worth showing up for",
     description:
       "Find the next concert, game, league night, or night out worth your time with EVNTSZN.",
+    images: ["https://evntszn.com/brand/eplhero.png"],
   },
 };
 
 function formatHomepageJsonLd() {
-  const origin = getWebOrigin();
-  return {
-    "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "Organization",
-        "@id": `${origin}/#organization`,
-        name: "EVNTSZN",
-        url: origin,
-        logo: `${origin}/favicon.ico`,
-        description:
-          "EVNTSZN helps people find nights out, live games, concerts, and local plans worth showing up for.",
-      },
-      {
-        "@type": "WebSite",
-        "@id": `${origin}/#website`,
-        url: origin,
-        name: "EVNTSZN",
-        potentialAction: {
-          "@type": "SearchAction",
-          target: `${origin}/?q={search_term_string}`,
-          "query-input": "required name=search_term_string",
-        },
-      },
-    ],
-  };
+  return buildOrganizationSchema();
 }
 
 function dedupeHomepageListings<
@@ -100,7 +79,7 @@ function dedupeHomepageListings<
 }
 
 export default async function HomePage() {
-  const [content, modules, nativeResult, ticketmasterShowcase, eventbriteShowcase, homepagePlacements] = await Promise.all([
+  const [content, modules, nativeResult, ticketmasterShowcase, eventbriteShowcase, homepagePlacements, reserveVenues] = await Promise.all([
     safePublicLoad("homepage-content", () => getHomepageContent(), {
       ...DEFAULT_HOMEPAGE_CONTENT,
       storageReady: false,
@@ -116,6 +95,7 @@ export default async function HomePage() {
     safePublicLoad("homepage-ticketmaster-showcase", async () => applyExternalDiscoveryControls("ticketmaster", await getTicketmasterShowcase()), []),
     safePublicLoad("homepage-eventbrite-showcase", () => getEventbriteShowcase(), []),
     safePublicLoad("homepage-sponsor-placements", () => getPublicSponsorPlacements("homepage"), []),
+    safePublicLoad("homepage-reserve-venues", () => getReserveVenueListings(8), []),
   ]);
 
   const externalShowcase = dedupeHomepageListings(
@@ -169,14 +149,8 @@ export default async function HomePage() {
   ]).slice(0, 8);
 
   return (
-    <main className="min-h-screen bg-black text-white">
-      <Script
-        id="evntszn-homepage-structured-data"
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(formatHomepageJsonLd()),
-        }}
-      />
+    <main className="ev-public-page bg-black text-white">
+      <StructuredData id="evntszn-homepage-structured-data" data={formatHomepageJsonLd()} />
       <PublicNav />
       <DiscoveryLanding
         content={content}
@@ -184,6 +158,7 @@ export default async function HomePage() {
         initialPopular={initialPopular}
         initialNativeSections={nativeSections}
         initialExternal={externalShowcase}
+        reserveVenues={reserveVenues}
         sponsorPlacements={homepagePlacements}
       />
       <PublicFooter />

@@ -137,10 +137,10 @@ export default function ScannerAdminClient() {
       <div className="mt-8 grid gap-8 xl:grid-cols-[0.92fr_1.08fr]">
         <section className="grid gap-6">
           <section className="ev-panel p-6">
-            <div className="ev-section-kicker">Operator access</div>
+            <div className="ev-section-kicker">Ops access</div>
             <h2 className="mt-3 text-2xl font-bold text-white">Enable the right gate staff</h2>
             <p className="mt-2 text-sm text-white/60">
-              Use this queue to control which operator profiles can open scanner tools at all.
+              Use this queue to control which ops profiles can open scanner tools at all.
             </p>
             <input
               className="ev-field mt-5"

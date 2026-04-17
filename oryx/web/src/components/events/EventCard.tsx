@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import HoverLift from "@/components/motion/HoverLift";
 
 type EventCardVenue = {
@@ -17,6 +18,7 @@ type EventCardEvent = {
   sourceLabel?: string | null;
   venue?: string | null;
   city?: string | null;
+  slug?: string | null;
   images?: EventCardImage[] | null;
   _embedded?: {
     venues?: EventCardVenue[] | null;
@@ -56,9 +58,12 @@ export default function EventCard({ event }: { event: EventCardEvent }) {
           </div>
 
           <div className="mt-5">
-            <button className="rounded-full border border-white/14 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white hover:text-black">
+            <Link
+              href={event.slug ? `/events/${event.slug}` : "/events"}
+              className="inline-flex rounded-full border border-white/14 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white hover:text-black"
+            >
               View event
-            </button>
+            </Link>
           </div>
         </div>
       </article>

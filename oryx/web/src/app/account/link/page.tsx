@@ -13,9 +13,9 @@ export default async function AccountLinkPage() {
       surface="app"
       eyebrow="Creator tools"
       title="EVNTSZN Link"
-      description="Run your public host conversion page from one desk without leaving the member side of the platform."
+      description="Run your public curator conversion page from one desk without leaving the member side of the platform."
     >
-      <PerformanceScorePanel scope="host" title="HPS" />
+      <PerformanceScorePanel scope="host" title="CPS" />
       <LinkManagerClient />
     </SurfaceShell>
   );

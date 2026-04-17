@@ -9,8 +9,8 @@ export default async function AdminPartnerManagementPage() {
     <SurfaceShell
       surface="hq"
       eyebrow="Records"
-      title="Partner Management"
-      description="Manage partner profiles, logo placements, and visibility across the EVNTSZN network."
+      title="Sponsor Management"
+      description="Manage sponsor profiles, logo placements, and visibility across the EVNTSZN network."
     >
       <PartnerManagementClient />
     </SurfaceShell>

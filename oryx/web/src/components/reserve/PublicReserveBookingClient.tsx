@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { formatUsd } from "@/lib/money";
 
 type SlotRow = {
@@ -35,8 +35,13 @@ export default function PublicReserveBookingClient({
   venue: VenuePayload;
   slots: SlotRow[];
 }) {
-  const [bookingDate, setBookingDate] = useState(new Date().toISOString().slice(0, 10));
-  const [bookingTime, setBookingTime] = useState(slots[0]?.start_time.slice(0, 5) || "19:00");
+  const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
+  const maxBookableDate = useMemo(() => {
+    const date = new Date();
+    date.setDate(date.getDate() + Math.max(1, Number(venue.settings?.booking_window_days || 30)));
+    return date.toISOString().slice(0, 10);
+  }, [venue.settings]);
+  const [bookingDate, setBookingDate] = useState(today);
   const [partySize, setPartySize] = useState("2");
   const [guestName, setGuestName] = useState("");
   const [guestEmail, setGuestEmail] = useState("");
@@ -45,12 +50,46 @@ export default function PublicReserveBookingClient({
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  const availableTimes = useMemo(() => slots.map((slot) => slot.start_time.slice(0, 5)), [slots]);
+  const activeDayOfWeek = useMemo(() => {
+    const date = new Date(`${bookingDate}T12:00:00`);
+    return Number.isNaN(date.getTime()) ? null : date.getUTCDay();
+  }, [bookingDate]);
+
+  const availableSlots = useMemo(() => {
+    if (activeDayOfWeek === null) return [];
+    return slots.filter((slot) => slot.is_active && slot.day_of_week === activeDayOfWeek);
+  }, [activeDayOfWeek, slots]);
+
+  const availableTimes = useMemo(() => {
+    const uniqueTimes = new Set<string>();
+    for (const slot of availableSlots) {
+      uniqueTimes.add(slot.start_time.slice(0, 5));
+    }
+    return [...uniqueTimes];
+  }, [availableSlots]);
+
+  const [bookingTime, setBookingTime] = useState("");
+
+  useEffect(() => {
+    if (!availableTimes.length) {
+      if (bookingTime) setBookingTime("");
+      return;
+    }
+    if (!availableTimes.includes(bookingTime)) {
+      setBookingTime(availableTimes[0] || "");
+    }
+  }, [availableTimes, bookingTime]);
 
   async function submitBooking() {
     setSubmitting(true);
     setMessage("");
     try {
+      if (!availableTimes.length) {
+        throw new Error("No Reserve slots are available for the selected date.");
+      }
+      if (!bookingTime) {
+        throw new Error("Select an available booking time.");
+      }
       const response = await fetch("/api/reserve/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -78,56 +117,96 @@ export default function PublicReserveBookingClient({
   }
 
   return (
-    <section className="rounded-[32px] border border-white/10 bg-black/35 p-6 md:p-8">
+    <section className="ev-section-frame">
+      <div className="ev-dashboard-hero">
       <div className="ev-section-kicker">Reserve booking</div>
-      <h2 className="mt-2 text-3xl font-black text-white">Book dining, nightlife tables, and waitlist access without leaving EVNTSZN.</h2>
-      <div className="mt-5 grid gap-4 md:grid-cols-3">
-        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+      <h2 className="mt-3 max-w-3xl text-3xl font-black tracking-[-0.04em] text-white md:text-[2.35rem]">Reserve dining, nightlife tables, and waitlist access without leaving EVNTSZN.</h2>
+      <p className="mt-4 max-w-2xl text-sm leading-7 text-white/68">
+        Availability sits up front, guest details stay clean, and confirmation happens in one calm flow.
+      </p>
+      <div className="mt-6 ev-dashboard-metrics">
+        <div className="ev-feature-card">
           <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#caa7ff]">Reservation fee</div>
           <div className="mt-3 text-2xl font-black text-white">{formatUsd(Number(venue.settings?.reservation_fee_usd || 0))}</div>
         </div>
-        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+        <div className="ev-feature-card">
           <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#caa7ff]">Average check</div>
           <div className="mt-3 text-2xl font-black text-white">{formatUsd(Number(venue.settings?.average_check_usd || 0))}</div>
         </div>
-        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+        <div className="ev-feature-card">
           <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#caa7ff]">Waitlist</div>
           <div className="mt-3 text-2xl font-black text-white">{venue.settings?.waitlist_enabled === false ? "Off" : "On"}</div>
         </div>
       </div>
 
-      <div className="mt-6 grid gap-4 md:grid-cols-2">
-        <input className="ev-field" placeholder="Guest name" value={guestName} onChange={(event) => setGuestName(event.target.value)} />
-        <input className="ev-field" placeholder="Guest email" value={guestEmail} onChange={(event) => setGuestEmail(event.target.value)} />
-        <input className="ev-field" placeholder="Guest phone" value={guestPhone} onChange={(event) => setGuestPhone(event.target.value)} />
-        <input className="ev-field" placeholder="Occasion" value={occasion} onChange={(event) => setOccasion(event.target.value)} />
-        <input className="ev-field" type="date" value={bookingDate} onChange={(event) => setBookingDate(event.target.value)} />
-        <select className="ev-field" value={bookingTime} onChange={(event) => setBookingTime(event.target.value)}>
+      <div className="mt-8 grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
+        <div className="space-y-4">
+          <div className="ev-list-card">
+            <div className="ev-card-label">Choose your date</div>
+            <input className="ev-field mt-3" type="date" min={today} max={maxBookableDate} value={bookingDate} onChange={(event) => setBookingDate(event.target.value)} />
+          </div>
+          <div className="ev-list-card">
+            <div className="ev-card-label">Preferred time</div>
+            <select className="ev-field mt-3" value={bookingTime} onChange={(event) => setBookingTime(event.target.value)} disabled={!availableTimes.length}>
           {availableTimes.map((time) => <option key={time} value={time}>{time}</option>)}
-        </select>
-        <input className="ev-field md:col-span-2" type="number" min="1" max={Number(venue.settings?.max_party_size || 8)} value={partySize} onChange={(event) => setPartySize(event.target.value)} />
-      </div>
+            </select>
+            <p className="mt-3 text-sm leading-6 text-white/58">
+              Reserve surfaces only bookable times for the selected date so guests do not submit blind requests.
+            </p>
+          </div>
+          <div className="ev-list-card">
+            <div className="ev-card-label">Guest details</div>
+            <div className="mt-3 grid gap-4">
+              <input className="ev-field" placeholder="Guest name" value={guestName} onChange={(event) => setGuestName(event.target.value)} />
+              <input className="ev-field" placeholder="Guest email" value={guestEmail} onChange={(event) => setGuestEmail(event.target.value)} />
+              <input className="ev-field" placeholder="Guest phone" value={guestPhone} onChange={(event) => setGuestPhone(event.target.value)} />
+              <input className="ev-field" placeholder="Occasion" value={occasion} onChange={(event) => setOccasion(event.target.value)} />
+              <input className="ev-field" type="number" min="1" max={Number(venue.settings?.max_party_size || 8)} value={partySize} onChange={(event) => setPartySize(event.target.value)} />
+            </div>
+          </div>
+        </div>
 
-      <div className="mt-4 grid gap-3 md:grid-cols-2">
-        {slots.map((slot) => (
-          <button
-            key={slot.id}
-            type="button"
-            onClick={() => setBookingTime(slot.start_time.slice(0, 5))}
-            className={`rounded-2xl border px-4 py-3 text-left transition ${
-              bookingTime === slot.start_time.slice(0, 5) ? "border-white bg-white text-black" : "border-white/10 bg-white/[0.03] text-white/72"
-            }`}
-          >
-            {slot.start_time.slice(0, 5)}-{slot.end_time.slice(0, 5)} · capacity {slot.capacity_limit}
-          </button>
-        ))}
-      </div>
+        <div className="space-y-4">
+          <div className="ev-list-card">
+            <div className="ev-card-label">Available slots</div>
+            <div className="mt-4 grid gap-3 md:grid-cols-2">
+              {availableSlots.map((slot) => (
+                <button
+                  key={slot.id}
+                  type="button"
+                  onClick={() => setBookingTime(slot.start_time.slice(0, 5))}
+                  className={`rounded-[22px] border px-4 py-4 text-left transition ${
+                    bookingTime === slot.start_time.slice(0, 5) ? "border-white bg-white text-black shadow-[0_14px_30px_rgba(0,0,0,0.18)]" : "border-white/10 bg-white/[0.03] text-white/72 hover:border-white/18 hover:bg-white/[0.06]"
+                  }`}
+                >
+                  <div className="text-sm font-black uppercase tracking-[0.16em]">{slot.start_time.slice(0, 5)}-{slot.end_time.slice(0, 5)}</div>
+                  <div className={`mt-2 text-sm ${bookingTime === slot.start_time.slice(0, 5) ? "text-black/70" : "text-white/56"}`}>
+                    Capacity {slot.capacity_limit}
+                  </div>
+                </button>
+              ))}
+            </div>
+            {!availableSlots.length ? (
+              <div className="ev-empty-state mt-4 text-sm">
+                No Reserve slots are configured for that date yet. Choose another date or contact the venue directly.
+              </div>
+            ) : null}
+          </div>
 
-      {message ? <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white/75">{message}</div> : null}
+          {message ? <div className="ev-list-card text-sm text-white/75">{message}</div> : null}
 
-      <button type="button" onClick={submitBooking} disabled={submitting} className="ev-button-primary mt-6 px-8">
+          <div className="ev-list-card">
+            <div className="ev-card-label">Confirmation</div>
+            <p className="mt-3 text-sm leading-6 text-white/62">
+              Submit the request once the date, time, and party size feel right. If live capacity is exhausted and waitlist is enabled, EVNTSZN will place the booking into the waitlist flow instead of dropping it.
+            </p>
+            <button type="button" onClick={submitBooking} disabled={submitting || !availableSlots.length || !bookingTime} className="ev-button-primary mt-5 w-full px-8">
         {submitting ? "Submitting..." : "Request reservation"}
       </button>
+          </div>
+        </div>
+      </div>
+      </div>
     </section>
   );
 }

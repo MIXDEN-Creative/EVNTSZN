@@ -186,7 +186,7 @@ export default async function EPLSeasonOneAdminPage() {
             </p>
           </div>
           <div className="rounded-[28px] border border-white/10 bg-white/[0.03] p-5">
-            <div className="text-[11px] uppercase tracking-[0.22em] text-white/45">Operator actions</div>
+            <div className="text-[11px] uppercase tracking-[0.22em] text-white/45">Ops actions</div>
             <div className="mt-4 grid gap-3">
               <Link href="/epl/admin/approvals" className="ev-button-primary">Open EPL player queue</Link>
               <Link href="/epl/admin/draft" className="ev-button-secondary">Open draft console</Link>

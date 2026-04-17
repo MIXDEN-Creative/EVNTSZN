@@ -1,17 +1,20 @@
 @import "tailwindcss";
 
 :root {
+  --public-nav-height: 5.5rem;
+  --public-page-top-space: calc(var(--public-nav-height) + 1.5rem);
   --background: #050507;
   --foreground: #f4f5f7;
   --surface-0: #050507;
-  --surface-1: #0b0b10;
-  --surface-2: rgba(255, 255, 255, 0.045);
-  --surface-3: rgba(255, 255, 255, 0.07);
+  --surface-1: rgba(10, 11, 16, 0.88);
+  --surface-2: rgba(255, 255, 255, 0.055);
+  --surface-3: rgba(255, 255, 255, 0.1);
   --line-soft: rgba(255, 255, 255, 0.1);
   --line-strong: rgba(255, 255, 255, 0.16);
   --text-soft: rgba(244, 245, 247, 0.68);
   --text-muted: rgba(244, 245, 247, 0.5);
   --ev-accent: #a259ff;
+  --ev-accent-2: #5de2ff;
   --ev-accent-soft: rgba(162, 89, 255, 0.16);
   --ev-highlight: rgba(255, 255, 255, 0.14);
 }
@@ -19,18 +22,39 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: "Poppins", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-mono: "SFMono-Regular", "SF Mono", Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
 body {
   min-height: 100vh;
   background:
-    radial-gradient(circle at top, rgba(162, 89, 255, 0.16), transparent 26%),
-    linear-gradient(180deg, #050507 0%, #08080c 46%, #040406 100%);
+    radial-gradient(circle at top, rgba(162, 89, 255, 0.18), transparent 22%),
+    radial-gradient(circle at 82% 8%, rgba(93, 226, 255, 0.12), transparent 18%),
+    linear-gradient(180deg, #030407 0%, #070810 46%, #040406 100%);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  font-family: "Poppins", "Helvetica Neue", Helvetica, Arial, sans-serif;
   line-height: 1.5;
+}
+
+html {
+  scroll-padding-top: calc(var(--public-nav-height) + 1rem);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.ev-title,
+.ev-panel-title,
+.ev-stat-value,
+.ev-kicker,
+.ev-section-kicker,
+.ev-button-primary,
+.ev-button-secondary {
+  font-family: "Montserrat", "Poppins", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 a,
@@ -50,8 +74,9 @@ select {
   position: relative;
   min-height: 100vh;
   background:
-    radial-gradient(circle at top, rgba(162, 89, 255, 0.18), transparent 22%),
-    linear-gradient(180deg, #050507 0%, #08080c 52%, #040406 100%);
+    radial-gradient(circle at top, rgba(162, 89, 255, 0.22), transparent 20%),
+    radial-gradient(circle at 84% 8%, rgba(93, 226, 255, 0.12), transparent 16%),
+    linear-gradient(180deg, #030407 0%, #070810 52%, #040406 100%);
 }
 
 .ev-surface::before {
@@ -60,9 +85,10 @@ select {
   inset: 0;
   pointer-events: none;
   background:
-    linear-gradient(115deg, rgba(255, 255, 255, 0.045), transparent 22%),
-    radial-gradient(circle at 80% 0%, rgba(255, 255, 255, 0.07), transparent 24%);
-  opacity: 0.8;
+    linear-gradient(115deg, rgba(255, 255, 255, 0.055), transparent 22%),
+    radial-gradient(circle at 80% 0%, rgba(255, 255, 255, 0.08), transparent 24%),
+    linear-gradient(180deg, rgba(255,255,255,0.035), transparent 40%);
+  opacity: 0.9;
 }
 
 .ev-surface--app::before {
@@ -91,7 +117,7 @@ select {
   margin: 0 auto;
   width: 100%;
   max-width: 104rem;
-  padding: 2rem 1rem 4rem;
+  padding: 1.5rem 1rem 4rem;
 }
 
 .ev-shell-hero {
@@ -99,11 +125,13 @@ select {
   border: 1px solid var(--line-soft);
   border-radius: 2rem;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.085), rgba(255, 255, 255, 0.028)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.03)),
+    linear-gradient(140deg, rgba(93, 226, 255, 0.07), transparent 30%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent);
+  backdrop-filter: blur(22px);
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.03) inset,
-    0 24px 64px rgba(0, 0, 0, 0.4);
+    0 30px 80px rgba(0, 0, 0, 0.45);
 }
 
 .ev-shell-hero-grid {
@@ -121,7 +149,7 @@ select {
 
 @media (min-width: 768px) {
   .ev-shell {
-    padding: 2.5rem 1.5rem 4.75rem;
+    padding: 2rem 1.5rem 4.75rem;
   }
 
   .ev-shell-hero-grid {
@@ -132,7 +160,7 @@ select {
 
 @media (min-width: 1280px) {
   .ev-shell {
-    padding: 2.75rem 2rem 5rem;
+    padding: 2.25rem 2rem 5rem;
   }
 
   .ev-shell-hero-grid {
@@ -173,6 +201,82 @@ select {
   line-height: 1.75;
 }
 
+.ev-public-page {
+  position: relative;
+  min-height: 100vh;
+  padding-top: var(--public-page-top-space);
+}
+
+.ev-public-section {
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+.ev-public-stack {
+  display: grid;
+  gap: 3rem;
+}
+
+.ev-public-hero {
+  overflow: hidden;
+  border: 1px solid var(--line-soft);
+  border-radius: 2rem;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.085), rgba(255, 255, 255, 0.028)),
+    linear-gradient(130deg, rgba(93, 226, 255, 0.06), transparent 30%),
+    rgba(6, 7, 11, 0.84);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.05) inset,
+    0 24px 68px rgba(0,0,0,0.34);
+}
+
+.ev-public-hero__content {
+  position: relative;
+  padding: 1.5rem 1.25rem 1.75rem;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --public-nav-height: 5.9rem;
+    --public-page-top-space: calc(var(--public-nav-height) + 2rem);
+  }
+
+  .ev-public-section {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+
+  .ev-public-stack {
+    gap: 3.5rem;
+  }
+
+  .ev-public-hero__content {
+    padding: 2.25rem 2rem 2.5rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  :root {
+    --public-page-top-space: calc(var(--public-nav-height) + 2.25rem);
+  }
+
+  .ev-public-section {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+
+  .ev-public-stack {
+    gap: 4rem;
+  }
+
+  .ev-public-hero__content {
+    padding: 2.75rem 2.5rem 3rem;
+  }
+}
+
 .ev-hero-meta {
   display: grid;
   gap: 0.85rem;
@@ -185,11 +289,13 @@ select {
   border: 1px solid var(--line-soft);
   border-radius: 1.75rem;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.058), rgba(255, 255, 255, 0.024)),
-    rgba(7, 7, 10, 0.74);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.026)),
+    linear-gradient(135deg, rgba(93, 226, 255, 0.05), transparent 28%),
+    rgba(7, 7, 10, 0.72);
+  backdrop-filter: blur(18px);
   box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.04) inset,
-    0 16px 40px rgba(0, 0, 0, 0.28);
+    0 1px 0 rgba(255, 255, 255, 0.05) inset,
+    0 20px 48px rgba(0, 0, 0, 0.32);
 }
 
 .ev-meta-card {
@@ -219,6 +325,17 @@ select {
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.016)),
     rgba(4, 4, 6, 0.78);
+}
+
+.ev-panel:hover,
+.ev-meta-card:hover,
+.ev-stat:hover,
+.ev-empty:hover {
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.06) inset,
+    0 24px 56px rgba(0, 0, 0, 0.36),
+    0 0 0 1px rgba(93, 226, 255, 0.05);
 }
 
 .ev-panel-title {
@@ -266,15 +383,18 @@ select {
   width: 100%;
   border: 1px solid var(--line-soft);
   border-radius: 1rem;
-  background: rgba(0, 0, 0, 0.42);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)),
+    rgba(0, 0, 0, 0.38);
   color: white;
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.035) inset;
+  backdrop-filter: blur(14px);
 }
 
 .ev-field,
 .ev-select {
-  min-height: 3.35rem;
-  padding: 0.95rem 1rem;
+  min-height: 3.05rem;
+  padding: 0.8rem 0.95rem;
 }
 
 .ev-textarea {
@@ -286,9 +406,9 @@ select {
 .ev-textarea:focus,
 .ev-select:focus {
   outline: none;
-  border-color: rgba(162, 89, 255, 0.45);
+  border-color: rgba(93, 226, 255, 0.38);
   box-shadow:
-    0 0 0 1px rgba(162, 89, 255, 0.28),
+    0 0 0 1px rgba(93, 226, 255, 0.22),
     0 0 0 5px rgba(162, 89, 255, 0.08);
 }
 
@@ -305,12 +425,12 @@ select {
 }
 
 .ev-button-primary {
-  min-height: 3.35rem;
-  padding: 0.95rem 1.6rem;
+  min-height: 3rem;
+  padding: 0.82rem 1.35rem;
   background: linear-gradient(180deg, #ffffff 0%, #ececf2 100%);
   color: #08080b;
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
-  font-size: 0.78rem;
+  font-size: 0.72rem;
 }
 
 .ev-button-primary:hover {
@@ -320,12 +440,12 @@ select {
 }
 
 .ev-button-secondary {
-  min-height: 3.15rem;
-  padding: 0.8rem 1.35rem;
+  min-height: 2.95rem;
+  padding: 0.72rem 1.15rem;
   border: 1px solid var(--line-strong);
   background: rgba(255, 255, 255, 0.04);
   color: #ffffff;
-  font-size: 0.76rem;
+  font-size: 0.72rem;
 }
 
 .ev-button-secondary:hover {
@@ -340,9 +460,9 @@ select {
   border-radius: 999px;
   border: 1px solid rgba(162, 89, 255, 0.24);
   background: rgba(162, 89, 255, 0.1);
-  padding: 0.5rem 0.85rem;
+  padding: 0.4rem 0.72rem;
   color: #dfd1ff;
-  font-size: 0.75rem;
+  font-size: 0.68rem;
 }
 
 .ev-chip--evntszn {
@@ -381,6 +501,189 @@ select {
   line-height: 1.65;
 }
 
+.ev-page-intro {
+  max-width: 46rem;
+}
+
+.ev-page-title {
+  color: white;
+  font-size: clamp(2.2rem, 4.2vw, 4.6rem);
+  font-weight: 900;
+  line-height: 0.94;
+  letter-spacing: -0.05em;
+  text-wrap: balance;
+}
+
+.ev-page-copy {
+  margin-top: 1rem;
+  max-width: 44rem;
+  color: var(--text-soft);
+  font-size: 1rem;
+  line-height: 1.8;
+}
+
+.ev-page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+  margin-top: 1.5rem;
+}
+
+.ev-section-frame {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 2.25rem;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02)),
+    radial-gradient(circle at top left, rgba(162, 89, 255, 0.1), transparent 30%),
+    rgba(7, 8, 11, 0.82);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.05) inset,
+    0 26px 72px rgba(0, 0, 0, 0.34);
+  backdrop-filter: blur(24px);
+}
+
+.ev-section-frame--muted {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.014)),
+    rgba(5, 6, 8, 0.78);
+}
+
+.ev-section-inner {
+  padding: 1.4rem;
+}
+
+.ev-card-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.ev-card-grid--tight {
+  gap: 0.8rem;
+}
+
+.ev-feature-card,
+.ev-list-card,
+.ev-utility-card {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1.7rem;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.065), rgba(255,255,255,0.02)),
+    rgba(10, 10, 14, 0.66);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.045) inset,
+    0 18px 44px rgba(0, 0, 0, 0.24);
+}
+
+.ev-feature-card {
+  padding: 1.35rem;
+}
+
+.ev-list-card {
+  padding: 1.1rem 1.15rem;
+}
+
+.ev-utility-card {
+  padding: 1rem 1.05rem;
+}
+
+.ev-feature-card:hover,
+.ev-list-card:hover,
+.ev-utility-card:hover {
+  border-color: rgba(255,255,255,0.16);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.055) inset,
+    0 22px 52px rgba(0, 0, 0, 0.28);
+}
+
+.ev-card-label {
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.ev-card-title {
+  margin-top: 0.7rem;
+  color: white;
+  font-size: 1.5rem;
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+}
+
+.ev-card-copy {
+  margin-top: 0.7rem;
+  color: var(--text-soft);
+  font-size: 0.95rem;
+  line-height: 1.7;
+}
+
+.ev-dashboard-shell {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.ev-dashboard-hero {
+  padding: 1.5rem;
+}
+
+.ev-dashboard-metrics {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.ev-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+}
+
+.ev-toolbar-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.7rem;
+  padding: 0.7rem 1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.04);
+  color: rgba(255,255,255,0.72);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.ev-toolbar-pill[data-active="true"] {
+  border-color: rgba(255,255,255,0.14);
+  background: white;
+  color: black;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.18);
+}
+
+.ev-empty-state {
+  border: 1px dashed rgba(255,255,255,0.12);
+  border-radius: 1.8rem;
+  background: rgba(255,255,255,0.025);
+  padding: 1.5rem;
+  color: var(--text-soft);
+}
+
+.ev-message-bubble {
+  border-radius: 1.5rem;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(8, 9, 12, 0.64);
+  padding: 1rem 1.05rem;
+}
+
+.ev-message-bubble--internal {
+  border-color: rgba(162,89,255,0.25);
+  background: rgba(162,89,255,0.1);
+}
+
 @media (min-width: 768px) {
   .ev-panel {
     padding: 1.75rem;
@@ -393,11 +696,25 @@ select {
   .ev-subtitle {
     font-size: 1.05rem;
   }
+
+  .ev-section-inner,
+  .ev-dashboard-hero {
+    padding: 1.8rem;
+  }
+
+  .ev-dashboard-metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 @media (min-width: 1280px) {
   .ev-panel {
     padding: 2rem;
+  }
+
+  .ev-section-inner,
+  .ev-dashboard-hero {
+    padding: 2.25rem;
   }
 }
 
@@ -515,7 +832,12 @@ select {
   .ev-panel,
   .ev-meta-card,
   .ev-stat,
-  .ev-empty {
+  .ev-empty,
+  .ev-section-frame,
+  .ev-feature-card,
+  .ev-list-card,
+  .ev-utility-card,
+  .ev-empty-state {
     border-radius: 1.5rem;
   }
 }

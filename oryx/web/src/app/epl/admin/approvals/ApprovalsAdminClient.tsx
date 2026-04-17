@@ -57,7 +57,7 @@ function badgeClass(stage: string) {
 function queueOwnerLabel(kind: ApplicationRecord["kind"]) {
   switch (kind) {
     case "operator":
-      return "Host + organizer intake";
+      return "Curator + partner intake";
     case "staffing":
       return "EPL staffing";
     case "player":
@@ -65,7 +65,7 @@ function queueOwnerLabel(kind: ApplicationRecord["kind"]) {
     case "program":
       return "Program applications";
     case "sponsor":
-      return "Partner interest";
+      return "Sponsor interest";
     default:
       return "Application desk";
   }

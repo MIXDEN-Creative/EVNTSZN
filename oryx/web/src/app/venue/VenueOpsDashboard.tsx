@@ -36,7 +36,8 @@ export default function VenueOpsDashboard({
 
   if (!canOperate) {
     return (
-      <div className="rounded-[32px] border border-white/10 bg-white/[0.03] p-6">
+      <div className="ev-section-frame">
+        <div className="ev-dashboard-hero">
         <h2 className="text-2xl font-semibold">Venue Access Required</h2>
         <p className="mt-3 max-w-2xl text-white/70">
           Activate your venue profile to launch event scanners, manage gate throughput, and track real-time attendance.
@@ -48,22 +49,33 @@ export default function VenueOpsDashboard({
         >
           {loading ? "Activating..." : "Set up venue access"}
         </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="grid gap-5">
+    <div className="ev-dashboard-shell">
       <PerformanceScorePanel scope="venue" title="V-Score" />
+      <div className="ev-section-frame">
+        <div className="ev-dashboard-hero">
+        <div className="ev-section-kicker">Venue readiness</div>
+        <h2 className="mt-3 text-3xl font-black tracking-[-0.04em] text-white">See what needs attention before doors open.</h2>
+        <div className="mt-4 max-w-3xl text-sm leading-7 text-white/70">
+          Venue operations keep scanner status, occupancy pressure, and event-day support in one lane. Crew recommendations stay tied to room format and service load instead of getting buried in notes.
+        </div>
+        </div>
+      </div>
       {events.map((event) => (
-        <div key={event.id} className="rounded-[30px] border border-white/10 bg-white/[0.03] p-6">
+        <div key={event.id} className="ev-section-frame ev-section-frame--muted">
+          <div className="ev-dashboard-hero">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex-1">
               <div className="text-xs font-bold uppercase tracking-[0.22em] text-[#A259FF]">
                 {event.city}, {event.state}
               </div>
-              <div className="mt-2 text-2xl font-black">{event.title}</div>
-              <div className="mt-2 text-sm text-white/60">
+              <div className="mt-3 text-3xl font-black tracking-[-0.04em]">{event.title}</div>
+              <div className="mt-3 text-sm text-white/60">
                 {new Date(event.start_at).toLocaleString("en-US", { 
                   weekday: 'short', 
                   month: 'short', 
@@ -75,7 +87,7 @@ export default function VenueOpsDashboard({
             </div>
             
             <div className="flex flex-wrap items-center gap-4 lg:w-1/2 lg:justify-end">
-              <div className="min-w-[140px] flex-1 lg:flex-none">
+              <div className="min-w-[220px] flex-1 lg:flex-none rounded-[22px] border border-white/10 bg-black/25 p-4">
                 <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-white/40">
                   <span>Occupancy</span>
                   <span>{event.check_in_count || 0}</span>
@@ -96,11 +108,12 @@ export default function VenueOpsDashboard({
               </a>
             </div>
           </div>
+          </div>
         </div>
       ))}
 
       {!events.length ? (
-        <div className="rounded-[30px] border border-dashed border-white/15 bg-white/[0.02] p-6 text-white/58">
+        <div className="ev-empty-state">
           No venue-assigned events yet. Organizers can connect venue ops through EVNTSZN staffing and event assignments.
         </div>
       ) : null}

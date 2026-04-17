@@ -34,8 +34,8 @@ export default async function AdminDashboardPage() {
                 {[
                   { label: "Organizer Desk", href: "/admin/organizer-desk", desc: "Manage independent operator applications and events." },
                   { label: "Venue Desk", href: "/admin/venue-desk", desc: "Review venue activations and Pro upgrades." },
-                  { label: "Host Desk", href: "/admin/host-desk", desc: "Network staff oversight and marketplace assignments." },
-                  { label: "Partner Desk", href: "/admin/partners-desk", desc: "Coordinate sponsorship deliverables and logos." },
+                  { label: "Curator Desk", href: "/admin/host-desk", desc: "Network staff oversight and marketplace assignments." },
+                  { label: "Sponsor Desk", href: "/admin/partners-desk", desc: "Coordinate sponsorship deliverables and logos." },
                   { label: "Reserve Desk", href: "/admin/reserve-desk", desc: "High-pressure nightlife and dining ops." },
                 ].map((desk) => (
                   <Link 
@@ -56,10 +56,10 @@ export default async function AdminDashboardPage() {
               <h2 className="mt-6 text-3xl font-black">Entity Control</h2>
               <div className="mt-10 grid gap-4">
                 {[
-                  { label: "Event Management", href: "/admin/event-management", desc: "Global event visibility and ticket overrides." },
-                  { label: "Venue Management", href: "/admin/venue-management", desc: "Direct venue profile and capacity control." },
-                  { label: "Partner Management", href: "/admin/partner-management", desc: "Manage partner profiles and logo uploads." },
-                  { label: "User Management", href: "/admin/user-management", desc: "Review member accounts and platform roles." },
+                  { label: "Application Command", href: "/epl/admin/approvals", desc: "Work application stages, reviews, and access readiness." },
+                  { label: "Control Center", href: "/epl/admin/control-center", desc: "Watch sponsor, user, and revenue health from one layer." },
+                  { label: "Sponsor Management", href: "/admin/partner-management", desc: "Manage sponsor profiles and logo uploads." },
+                  { label: "User Management", href: "/epl/admin/users", desc: "Review member accounts, roles, and access scope." },
                 ].map((item) => (
                   <Link 
                     key={item.label}
@@ -90,7 +90,7 @@ export default async function AdminDashboardPage() {
               <div className="text-[11px] font-bold uppercase tracking-[0.24em] text-white/40">Quick Stats</div>
               <div className="mt-8 space-y-6">
                 <div>
-                  <div className="text-sm font-medium text-white/50">Active Partners</div>
+                  <div className="text-sm font-medium text-white/50">Active Sponsors</div>
                   <div className="mt-1 text-3xl font-black">24</div>
                 </div>
                 <div>

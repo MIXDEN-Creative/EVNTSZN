@@ -9,6 +9,13 @@ function labelize(value: string) {
   return value.replace(/_/g, " ");
 }
 
+function formatAuthorityLabel(value: string) {
+  if (value === "host") return "curator";
+  if (value === "organizer") return "partner";
+  if (value === "partner") return "sponsor";
+  return labelize(value);
+}
+
 export default function OperatorOpsDashboard({
   profile,
   operatorProfile,
@@ -40,6 +47,12 @@ export default function OperatorOpsDashboard({
         Open city office
       </a>
     ) : null,
+    <Link key="pulse" href="/ops/pulse" className="ev-button-secondary">
+      Internal Pulse
+    </Link>,
+    <Link key="messages" href="/ops/messages" className="ev-button-secondary">
+      Internal messaging
+    </Link>,
     operatorProfile.module_access.includes("staffing") ? (
       <Link key="time" href="/ops/time" className="ev-button-secondary">
         Track time
@@ -47,11 +60,11 @@ export default function OperatorOpsDashboard({
     ) : null,
     organizerClassification === "evntszn_host" || organizerClassification === "city_host" ? (
       <Link key="host-network" href="/hosts" className="ev-button-secondary">
-        Host network path
+        Curator network path
       </Link>
     ) : null,
     organizerClassification === "independent_organizer" ? (
-      <Link key="sponsor-interest" href="/partners/packages" className="ev-button-secondary">
+      <Link key="sponsor-interest" href="/sponsors" className="ev-button-secondary">
         Sponsor options
       </Link>
     ) : null,
@@ -60,9 +73,9 @@ export default function OperatorOpsDashboard({
   return (
     <SurfaceShell
       surface="ops"
-      eyebrow="Operator workspace"
+      eyebrow="Operations workspace"
       title="Your EVNTSZN operating layer"
-      description="Approved hosts, city operators, and independent organizers land here first so they can see their scope, current access, and the next actions they are cleared to take."
+      description="Approved curators, city operators, and partners land here first so they can see scope, access, and the next actions they are cleared to take."
       actions={<>{actions}</>}
       meta={
         <>
@@ -85,7 +98,7 @@ export default function OperatorOpsDashboard({
         <div className="lg:col-span-2">
           <PerformanceScorePanel
             scope={organizerClassification === "independent_organizer" ? "organizer" : "host"}
-            title={organizerClassification === "independent_organizer" ? "O-Score" : "HPS"}
+            title={organizerClassification === "independent_organizer" ? "O-Score" : "CPS"}
           />
         </div>
         <section className="ev-panel p-6">
@@ -112,7 +125,7 @@ export default function OperatorOpsDashboard({
             <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
               <div className="text-xs uppercase tracking-[0.18em] text-white/45">Approval authority</div>
               <div className="mt-3 text-sm leading-7 text-white/72">
-                {operatorProfile.approval_authority.length ? operatorProfile.approval_authority.map(labelize).join(", ") : "No approval authority assigned."}
+                {operatorProfile.approval_authority.length ? operatorProfile.approval_authority.map(formatAuthorityLabel).join(", ") : "No approval authority assigned."}
               </div>
             </div>
           </div>
@@ -131,8 +144,8 @@ export default function OperatorOpsDashboard({
               <div className="text-sm font-semibold text-white">Network path</div>
               <div className="mt-2 text-sm text-white/65">
                 {organizerClassification === "independent_organizer"
-                  ? "You are on the Independent Organizer track. That means event operations stay available, but EVNTSZN Host network tools, internal growth paths, and program perks are not assumed by default."
-                  : "You are on an EVNTSZN network-aligned track. Host progression, city support, and controlled program visibility can expand as your role and approvals deepen."}
+                  ? "You are on the Partner track. Event operations stay available, but EVNTSZN Curator network tools and internal program access are not assumed by default."
+                  : "You are on an EVNTSZN Curator-aligned track. Curator progression, city support, and controlled program visibility can expand as your role and approvals deepen."}
               </div>
             </div>
             <div className="rounded-2xl border border-white/10 bg-black/30 p-4">

@@ -77,7 +77,7 @@ export default function ControlCenterClient({ isFounder }: { isFounder?: boolean
       title: "Audience and operations",
       items: [
         ["Users", stats?.totalUsers ?? "—"],
-        ["Operator profiles", stats?.operatorProfiles ?? "—"],
+        ["Ops profiles", stats?.operatorProfiles ?? "—"],
         ["Public events", stats?.publicEvents ?? "—"],
         ["Check-ins logged", stats?.checkInTotal ?? "—"],
       ],
@@ -95,8 +95,8 @@ export default function ControlCenterClient({ isFounder }: { isFounder?: boolean
       title: "Team and staffing",
       items: [
         ["Program members", stats?.programMembers ?? "—"],
-        ["Active hosts", stats?.activeHosts ?? "—"],
-        ["Independent organizers", stats?.independentOrganizers ?? "—"],
+        ["Active EVNTSZN Curators", stats?.activeHosts ?? "—"],
+        ["Partners", stats?.independentOrganizers ?? "—"],
         ["Scanner-capable users", stats?.scannerCapableOperators ?? "—"],
       ],
     },
@@ -309,7 +309,7 @@ export default function ControlCenterClient({ isFounder }: { isFounder?: boolean
                   cityReadinessCounts.slice(0, 6).map((row: any) => (
                     <div key={row.city} className="flex items-center justify-between py-1.5">
                       <span className="text-sm text-white/60">{row.city}</span>
-                      <span className="text-sm font-bold text-white">{row.hosts} hosts</span>
+                      <span className="text-sm font-bold text-white">{row.hosts} EVNTSZN Curators</span>
                     </div>
                   ))
                 )}

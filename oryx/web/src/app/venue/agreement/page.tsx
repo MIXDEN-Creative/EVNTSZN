@@ -1,6 +1,7 @@
 import Link from "next/link";
 import PublicPageFrame from "@/components/public/PublicPageFrame";
 import VenueAgreementForm from "@/components/public/VenueAgreementForm";
+import { getReserveOrigin } from "@/lib/domains";
 
 export default function VenueAgreementPage() {
   return (
@@ -23,8 +24,8 @@ export default function VenueAgreementPage() {
             </p>
             <div className="mt-6 space-y-3 text-sm text-white/70">
               <div className="rounded-2xl border border-white/10 bg-black/30 p-4">Agreement intake lands in the <span className="text-white">Agreements Desk</span>.</div>
-              <div className="rounded-2xl border border-white/10 bg-black/30 p-4">Venue onboarding context stays attached for <span className="text-white">Host</span>, <span className="text-white">Venue</span>, and <span className="text-white">Reserve</span> routing.</div>
-              <div className="rounded-2xl border border-white/10 bg-black/30 p-4">If the venue needs Reserve as part of launch, move directly into the <Link href="/reserve" className="text-white underline">Reserve path</Link>.</div>
+              <div className="rounded-2xl border border-white/10 bg-black/30 p-4">Venue onboarding context stays attached for <span className="text-white">Curator</span>, <span className="text-white">Venue</span>, and <span className="text-white">Reserve</span> routing.</div>
+              <div className="rounded-2xl border border-white/10 bg-black/30 p-4">If the venue needs Reserve as part of launch, move directly into the <Link href={`${getReserveOrigin()}/`} className="text-white underline">Reserve path</Link>.</div>
             </div>
           </div>
 

@@ -231,7 +231,8 @@ export default function OrganizerDashboard({ canOperate, events }: OrganizerDash
 
   if (!canOperate) {
     return (
-      <div className="rounded-[32px] border border-white/10 bg-white/[0.03] p-6">
+      <div className="ev-section-frame">
+        <div className="ev-dashboard-hero">
         <h2 className="text-2xl font-bold">Organizer Access Required</h2>
         <p className="mt-3 max-w-2xl text-white/70">
           Activate your organizer profile to build events, manage ticket inventory, 
@@ -245,6 +246,7 @@ export default function OrganizerDashboard({ canOperate, events }: OrganizerDash
           {loading ? "Activating..." : "Set up organizer access"}
         </button>
         {message ? <div className="mt-4 text-sm text-red-300">{message}</div> : null}
+        </div>
       </div>
     );
   }
@@ -252,9 +254,16 @@ export default function OrganizerDashboard({ canOperate, events }: OrganizerDash
   const selectedEvent = events.find((e) => e.id === selectedEventId);
 
   return (
-    <div className="space-y-8">
+    <div className="ev-dashboard-shell">
       <PerformanceScorePanel scope="organizer" title="O-Score" />
-      <div className="flex flex-wrap gap-2 border-b border-white/10 pb-4">
+      <div className="ev-section-frame">
+        <div className="ev-dashboard-hero">
+        <div className="ev-section-kicker">Partner workspace</div>
+        <h1 className="mt-3 text-4xl font-black tracking-[-0.05em] text-white">Create the event, manage the tickets, and stay on top of live operations.</h1>
+        <p className="mt-4 max-w-3xl text-sm leading-7 text-white/68">
+          This workspace keeps the next action obvious: monitor the queue, launch the next event, or work an existing event through ticketing and run-of-show.
+        </p>
+        <div className="ev-toolbar mt-6">
         {[
           { id: "queue", label: "Event Queue" },
           { id: "create", label: "Create Event" },
@@ -263,25 +272,25 @@ export default function OrganizerDashboard({ canOperate, events }: OrganizerDash
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id as any)}
-            className={`rounded-xl px-5 py-3 text-sm font-bold transition ${
-              activeTab === tab.id 
-                ? "bg-white text-black" 
-                : "border border-white/10 text-white/60 hover:bg-white/5"
-            }`}
+            className={activeTab === tab.id ? "ev-toolbar-pill" : "ev-toolbar-pill"}
+            data-active={activeTab === tab.id}
           >
             {tab.label}
           </button>
         ))}
+        </div>
+        </div>
       </div>
 
       <div className="grid gap-8">
         {activeTab === "queue" && (
           <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
-            <section className="rounded-[32px] border border-white/10 bg-white/[0.03] p-6">
+            <section className="ev-section-frame">
+              <div className="ev-dashboard-hero">
               <div className="flex items-end justify-between">
                 <div>
                   <div className="text-xs font-bold uppercase tracking-[0.26em] text-[#A259FF]">Queue</div>
-                  <h2 className="mt-3 text-3xl font-black">Live Event Timeline</h2>
+                  <h2 className="mt-3 text-3xl font-black tracking-[-0.04em]">Live Event Timeline</h2>
                 </div>
                 <button 
                   onClick={() => setActiveTab("create")}
@@ -293,7 +302,7 @@ export default function OrganizerDashboard({ canOperate, events }: OrganizerDash
               
               <div className="mt-8 grid gap-4">
                 {events.map((event) => (
-                  <div key={event.id} className="rounded-[28px] border border-white/10 bg-black/30 p-5">
+                  <div key={event.id} className="ev-list-card">
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                       <div>
                         <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/40">
@@ -322,10 +331,12 @@ export default function OrganizerDashboard({ canOperate, events }: OrganizerDash
                   </div>
                 ))}
               </div>
+              </div>
             </section>
 
             <aside className="space-y-6">
-              <div className="rounded-[32px] border border-white/10 bg-white/[0.03] p-6">
+              <div className="ev-section-frame ev-section-frame--muted">
+                <div className="ev-dashboard-hero">
                 <div className="text-[10px] font-bold uppercase tracking-widest text-white/40">Pulse</div>
                 <div className="mt-6 space-y-4">
                   {[
@@ -339,6 +350,7 @@ export default function OrganizerDashboard({ canOperate, events }: OrganizerDash
                     </div>
                   ))}
                 </div>
+                </div>
               </div>
             </aside>
           </div>
@@ -346,24 +358,32 @@ export default function OrganizerDashboard({ canOperate, events }: OrganizerDash
 
         {activeTab === "create" && (
           <div className="mx-auto max-w-4xl">
-            <section className="rounded-[32px] border border-white/10 bg-white/[0.03] p-8">
+            <section className="ev-section-frame">
+              <div className="ev-dashboard-hero">
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-xs font-bold uppercase tracking-[0.26em] text-[#A259FF]">Setup</div>
                   <h2 className="mt-3 text-4xl font-black">Build your next move</h2>
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-white/60">
-                  Track: {canOperate ? "Premium Operator" : "Independent"}
+                  Track: {canOperate ? "EVNTSZN Network" : "Partner"}
                 </div>
               </div>
               <p className="mt-4 text-white/60">Set the identity, launch the tickets, and push it live.</p>
               
-              <div className="mt-8 rounded-2xl border border-white/5 bg-white/[0.02] p-5">
+              <div className="mt-8 ev-list-card">
                 <div className="text-[10px] font-bold uppercase tracking-widest text-white/40">Event classification</div>
                 <div className="mt-2 text-sm text-white/70">
                   {canOperate 
-                    ? "As an approved operator, your event will be created in the EVNTSZN network track with access to premium staffing and discovery tools."
-                    : "Your event will be created as an independent production. You can manage ticketing and scanners here, but host-network discovery remains restricted until approval."}
+                    ? "As an approved EVNTSZN team account, your event will be created in the network track with access to premium staffing and discovery tools."
+                    : "Your event will be created as a partner production. You can manage ticketing and scanners here, but EVNTSZN Curator network discovery remains restricted until approval."}
+                </div>
+              </div>
+
+              <div className="mt-4 ev-list-card">
+                <div className="text-[10px] font-bold uppercase tracking-widest text-white/40">Crew recommendations</div>
+                <div className="mt-2 text-sm text-white/70">
+                  Add crew when the room needs coverage beyond ticketing. Recommended lanes: photographer or videographer for content, MC or curator support for hosted flow, security for larger rooms, and bartending or hospitality support for venue-backed service.
                 </div>
               </div>
               
@@ -384,7 +404,7 @@ export default function OrganizerDashboard({ canOperate, events }: OrganizerDash
                       <input
                         value={form[key as keyof typeof form] as string}
                         onChange={(e) => setForm({ ...form, [key]: e.target.value })}
-                        className="mt-2 h-12 w-full rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none focus:border-[#A259FF]/50"
+                        className="ev-field mt-2"
                         required={["title", "venueName", "city", "state", "startAt", "endAt"].includes(key)}
                       />
                     </div>
@@ -404,7 +424,7 @@ export default function OrganizerDashboard({ canOperate, events }: OrganizerDash
                         value={form[key as keyof typeof form] as string}
                         onChange={(e) => setForm({ ...form, [key]: e.target.value })}
                         placeholder={label}
-                        className="h-12 rounded-xl border border-white/10 bg-black/40 px-4 text-sm"
+                        className="ev-field"
                       />
                     ))}
                   </div>
@@ -415,7 +435,7 @@ export default function OrganizerDashboard({ canOperate, events }: OrganizerDash
                     value={form.description}
                     onChange={(e) => setForm({ ...form, description: e.target.value })}
                     placeholder="Public description"
-                    className="min-h-[160px] w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-4 text-white outline-none focus:border-[#A259FF]/50"
+                    className="ev-textarea min-h-[160px]"
                   />
                   <label className="flex items-center gap-3 text-sm font-bold text-white/70">
                     <input
@@ -435,6 +455,7 @@ export default function OrganizerDashboard({ canOperate, events }: OrganizerDash
                   </button>
                 </div>
               </form>
+              </div>
             </section>
           </div>
         )}
@@ -442,7 +463,8 @@ export default function OrganizerDashboard({ canOperate, events }: OrganizerDash
         {activeTab === "manage" && (
           <div className="grid gap-8 lg:grid-cols-[1fr_420px]">
             <section className="space-y-6">
-              <div className="rounded-[32px] border border-white/10 bg-white/[0.03] p-6">
+              <div className="ev-section-frame">
+                <div className="ev-dashboard-hero">
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="text-xs font-bold uppercase tracking-[0.26em] text-[#A259FF]">Controls</div>
@@ -480,10 +502,12 @@ export default function OrganizerDashboard({ canOperate, events }: OrganizerDash
                     </div>
                   </div>
                 </div>
+                </div>
               </div>
             </section>
 
-            <section className="rounded-[32px] border border-white/10 bg-white/[0.03] p-6">
+            <section className="ev-section-frame ev-section-frame--muted">
+              <div className="ev-dashboard-hero">
               <div className="text-xs font-bold uppercase tracking-widest text-[#A259FF]">Operations</div>
               <div className="mt-6 space-y-6">
                 <div>
@@ -491,7 +515,7 @@ export default function OrganizerDashboard({ canOperate, events }: OrganizerDash
                   <textarea 
                     value={operations.runOfShow} 
                     onChange={(e) => setOperations({ ...operations, runOfShow: e.target.value })} 
-                    className="mt-2 min-h-[300px] w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-4 text-sm outline-none" 
+                    className="ev-textarea mt-2 min-h-[300px]" 
                   />
                 </div>
                 <button 
@@ -501,6 +525,7 @@ export default function OrganizerDashboard({ canOperate, events }: OrganizerDash
                 >
                   Save Ops
                 </button>
+              </div>
               </div>
             </section>
           </div>

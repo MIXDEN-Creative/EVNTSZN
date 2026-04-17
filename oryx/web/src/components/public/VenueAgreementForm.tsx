@@ -67,7 +67,7 @@ export default function VenueAgreementForm({
       <div className="ev-section-kicker">Venue agreement workflow</div>
       <h2 className="mt-3 text-3xl font-black tracking-tight text-white">Complete the venue agreement on-platform.</h2>
       <p className="mt-3 max-w-3xl text-sm leading-6 text-white/68">
-        Use this intake when the venue is not already listed on EVNTSZN, when a written venue agreement is required, or when a host and venue need the agreement routed for approval.
+        Use this intake when the venue is not already listed on EVNTSZN, when a written venue agreement is required, or when a curator and venue need the agreement routed for approval.
       </p>
 
       <div className="mt-6 grid gap-4 md:grid-cols-2">
@@ -75,9 +75,9 @@ export default function VenueAgreementForm({
         <input className="ev-field" type="email" placeholder="Applicant email" value={form.applicantEmail} onChange={(event) => setForm({ ...form, applicantEmail: event.target.value })} required />
         <input className="ev-field" placeholder="Applicant phone" value={form.applicantPhone} onChange={(event) => setForm({ ...form, applicantPhone: event.target.value })} />
         <select className="ev-field" value={form.operatorLevel} onChange={(event) => setForm({ ...form, operatorLevel: event.target.value })}>
-          <option value="host">Host</option>
-          <option value="certified_host">Certified Host</option>
-          <option value="pro_host">Pro Host</option>
+          <option value="host">Curator</option>
+          <option value="certified_host">Certified Curator</option>
+          <option value="pro_host">Pro Curator</option>
           <option value="city_leader">City Leader</option>
           <option value="venue">Venue team</option>
         </select>

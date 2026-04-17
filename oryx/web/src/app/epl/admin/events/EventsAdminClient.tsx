@@ -515,7 +515,7 @@ export default function EventsAdminClient({
                       className="ev-field"
                     >
                       <option value="evntszn">League Night</option>
-                      <option value="independent_organizer">Independent EPL</option>
+                      <option value="independent_organizer">Partner EPL</option>
                       <option value="mml">MML</option>
                     </select>
                   </label>
@@ -638,9 +638,9 @@ export default function EventsAdminClient({
                     }
                     className="ev-field"
                   >
-                    <option value="host">Host Event</option>
+                    <option value="host">Curator Event</option>
                     <option value="city_leader">City Leader Event</option>
-                    <option value="independent">Independent Organizer</option>
+                    <option value="independent">Partner</option>
                   </select>
                 </label>
                 {(form.revenueEventType !== "independent" || form.independentOrigin === "city") ? (
@@ -916,7 +916,7 @@ export default function EventsAdminClient({
                         ["Gross", revenueSummary?.totals?.grossTicketRevenue || 0],
                         ["Platform", revenueSummary?.totals?.platformFeeTotal || 0],
                         ["Net", revenueSummary?.totals?.netRevenueTotal || 0],
-                        ["Host", revenueSummary?.totals?.hostShare || 0],
+                        ["Curator", revenueSummary?.totals?.hostShare || 0],
                       ].map(([label, value]) => (
                         <div key={String(label)} className="bg-black/40 p-3 text-center">
                           <div className="text-[9px] font-bold uppercase tracking-widest text-white/30">{label}</div>

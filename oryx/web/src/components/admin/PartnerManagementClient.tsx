@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 
 type PartnerRecord = {
@@ -8,54 +9,53 @@ type PartnerRecord = {
   logo_url?: string | null;
   logo_path?: string | null;
   website_url?: string | null;
-  tier?: string | null;
+  tier_label?: string | null;
 };
 
 export default function PartnerManagementClient() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [partners, setPartners] = useState<PartnerRecord[]>([]);
+  const [sponsors, setSponsors] = useState<PartnerRecord[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const [name, setName] = useState("");
-  const [tier, setTier] = useState("Partner");
+  const [tier, setTier] = useState("Sponsor");
   const [websiteUrl, setWebsiteUrl] = useState("");
   const [logoFile, setLogoFile] = useState<File | null>(null);
 
-  async function fetchPartners() {
+  async function fetchSponsors() {
     try {
       setLoading(true);
       setError(null);
 
-      const res = await fetch("/api/admin/partners", {
+      const res = await fetch("/api/admin/sponsor-accounts", {
         method: "GET",
         credentials: "include",
         cache: "no-store",
       });
 
       if (!res.ok) {
-        throw new Error("Failed to load partners");
+        throw new Error("Failed to load sponsors");
       }
 
-      const payload = (await res.json()) as any;
-      const safePayload = payload as any;
+      const payload = (await res.json()) as { sponsorAccounts?: PartnerRecord[] } | PartnerRecord[];
 
-      const rows = Array.isArray(safePayload)
-        ? safePayload
-        : Array.isArray(safePayload?.partners)
-          ? safePayload.partners
+      const rows = Array.isArray(payload)
+        ? payload
+        : Array.isArray(payload?.sponsorAccounts)
+          ? payload.sponsorAccounts
           : [];
 
-      setPartners(rows);
+      setSponsors(rows);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load partners");
+      setError(err instanceof Error ? err.message : "Failed to load sponsors");
     } finally {
       setLoading(false);
     }
   }
 
   useEffect(() => {
-    fetchPartners();
+    fetchSponsors();
   }, []);
 
   function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
@@ -76,15 +76,14 @@ export default function PartnerManagementClient() {
     });
 
     if (!res.ok) {
-      const payload = (await res.json().catch(() => ({}))) as any;
-      const safePayload = payload as any;
-      throw new Error(safePayload?.error || "Logo upload failed");
+      const payload = (await res.json().catch(() => ({}))) as { error?: string };
+      throw new Error(payload.error || "Logo upload failed");
     }
 
-    const payload = (await res.json()) as any;
+    const payload = (await res.json()) as { publicUrl?: string | null; path?: string | null };
     return {
-      logo_url: payload.publicUrl,
-      logo_path: payload.path,
+      logo_url: payload.publicUrl || null,
+      logo_path: payload.path || null,
     };
   }
 
@@ -97,7 +96,7 @@ export default function PartnerManagementClient() {
 
       const uploaded = await uploadLogo();
 
-      const res = await fetch("/api/admin/partners", {
+      const res = await fetch("/api/admin/sponsor-accounts", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -105,24 +104,28 @@ export default function PartnerManagementClient() {
         credentials: "include",
         body: JSON.stringify({
           name,
-          tier,
+          tier_label: tier,
+          account_type: "sponsor",
+          scope_type: "platform",
           website_url: websiteUrl || null,
           logo_url: uploaded.logo_url,
           logo_path: uploaded.logo_path,
+          status: "active",
+          activation_status: "active",
         }),
       });
 
       if (!res.ok) {
-        const payload = (await res.json().catch(() => ({}))) as any;
+        const payload = (await res.json().catch(() => ({}))) as { error?: string };
         throw new Error(payload?.error || "Failed to save partner");
       }
 
       setName("");
-      setTier("Partner");
+      setTier("Sponsor");
       setWebsiteUrl("");
       setLogoFile(null);
 
-      await fetchPartners();
+      await fetchSponsors();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save partner");
     } finally {
@@ -134,15 +137,15 @@ export default function PartnerManagementClient() {
     <section className="space-y-8">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-white">Partner Management</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-white">Sponsor Management</h1>
           <p className="mt-1 text-sm text-white/60">
-            Create and manage partner profiles, logos, and links.
+            Create and manage sponsor profiles, logos, and links.
           </p>
         </div>
 
         <button
           type="button"
-          onClick={fetchPartners}
+          onClick={fetchSponsors}
           className="rounded-full border border-white/15 bg-white px-4 py-2 text-sm font-medium text-black transition hover:bg-white/90"
         >
           Refresh
@@ -160,12 +163,12 @@ export default function PartnerManagementClient() {
         className="grid gap-4 rounded-3xl border border-white/10 bg-white/[0.03] p-6 md:grid-cols-2"
       >
         <div className="space-y-2">
-          <label className="text-sm text-white/70">Partner name</label>
+          <label className="text-sm text-white/70">Sponsor name</label>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
             className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none"
-            placeholder="Partner name"
+            placeholder="Sponsor name"
             required
           />
         </div>
@@ -177,10 +180,10 @@ export default function PartnerManagementClient() {
             onChange={(e) => setTier(e.target.value)}
             className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none"
           >
-            <option value="Partner">Partner</option>
-            <option value="Partner Pro">Partner Pro</option>
-            <option value="Partner Elite">Partner Elite</option>
-            <option value="Partner Premier">Partner Premier</option>
+            <option value="Sponsor">Sponsor</option>
+            <option value="Sponsor Pro">Sponsor Pro</option>
+            <option value="Sponsor Elite">Sponsor Elite</option>
+            <option value="Sponsor Premier">Sponsor Premier</option>
           </select>
         </div>
 
@@ -195,7 +198,7 @@ export default function PartnerManagementClient() {
         </div>
 
         <div className="space-y-2 md:col-span-2">
-          <label className="text-sm text-white/70">Partner logo</label>
+          <label className="text-sm text-white/70">Sponsor logo</label>
           <input
             type="file"
             accept="image/*"
@@ -210,7 +213,7 @@ export default function PartnerManagementClient() {
             disabled={saving}
             className="rounded-full bg-[#A259FF] px-5 py-3 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
           >
-            {saving ? "Saving..." : "Create partner"}
+            {saving ? "Saving..." : "Create sponsor"}
           </button>
         </div>
       </form>
@@ -218,25 +221,30 @@ export default function PartnerManagementClient() {
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {loading ? (
           <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5 text-sm text-white/70">
-            Loading partners...
+            Loading sponsors...
           </div>
-        ) : partners.length ? (
-          partners.map((partner) => (
+        ) : sponsors.length ? (
+          sponsors.map((partner) => (
             <article
               key={partner.id}
               className="rounded-3xl border border-white/10 bg-white/[0.03] p-5 text-white"
             >
               <div>
-                <h2 className="text-lg font-semibold">{partner.name ?? "Untitled Partner"}</h2>
-                <p className="mt-1 text-sm text-white/60">{partner.tier ?? "Partner"}</p>
+                <h2 className="text-lg font-semibold">{partner.name ?? "Untitled Sponsor"}</h2>
+                <p className="mt-1 text-sm text-white/60">{partner.tier_label ?? "Sponsor"}</p>
               </div>
 
               {partner.logo_url ? (
-                <img
-                  src={partner.logo_url}
-                  alt={partner.name ? `${partner.name} logo` : "Partner logo"}
-                  className="mt-4 h-16 w-16 rounded-2xl border border-white/10 object-cover"
-                />
+                <div className="relative mt-4 h-16 w-16 overflow-hidden rounded-2xl border border-white/10">
+                  <Image
+                    src={partner.logo_url}
+                    alt={partner.name ? `${partner.name} logo` : "Sponsor logo"}
+                    fill
+                    unoptimized
+                    sizes="64px"
+                    className="object-cover"
+                  />
+                </div>
               ) : null}
 
               {partner.website_url ? (
@@ -246,14 +254,14 @@ export default function PartnerManagementClient() {
                   rel="noreferrer"
                   className="mt-4 inline-flex text-sm font-medium text-[#b899ff] hover:text-white"
                 >
-                  Visit partner site
+                  Visit sponsor site
                 </a>
               ) : null}
             </article>
           ))
         ) : (
           <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5 text-sm text-white/70">
-            No partners found.
+            No sponsors found.
           </div>
         )}
       </div>

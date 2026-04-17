@@ -197,8 +197,8 @@ export const DEFAULT_HOMEPAGE_CONTENT: Omit<HomepageContent, "storageReady"> = {
     keywordPlaceholder: "Search term",
     cityPlaceholder: "City",
     nativeHeadline: "EVNTSZN picks",
-    hostHeadline: "Host-led events",
-    independentHeadline: "Independent organizers",
+    hostHeadline: "Curator-led events",
+    independentHeadline: "Partners",
     externalHeadline: "More around the city",
   },
   taxonomy: {
@@ -317,10 +317,10 @@ export const DEFAULT_PUBLIC_MODULES: Omit<PublicModules, "storageReady"> = {
     ctaHref: "/epl/store",
   },
   sponsorBlock: {
-    eyebrow: "Sponsors and partners",
+    eyebrow: "Sponsors",
     headline: "Brands showing up around the season.",
-    body: "League nights get stronger when the right brands and local partners are part of the build.",
-    footerHeadline: "The brands and partners showing up around EVNTSZN and EPL.",
+    body: "League nights get stronger when the right brands and sponsor activations are part of the build.",
+    footerHeadline: "The brands showing up around EVNTSZN and EPL.",
   },
   opportunitiesBlock: {
     eyebrow: "League opportunities",

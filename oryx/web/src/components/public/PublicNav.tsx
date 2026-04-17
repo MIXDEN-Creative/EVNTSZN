@@ -3,84 +3,119 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import React, { useState } from 'react';
-import { getReserveOrigin } from '@/lib/domains';
+import React, { useMemo, useState } from 'react';
+import { getAppOrigin, getEplOrigin, getHostsOrigin, getOpsOrigin, getReserveOrigin, getWebOrigin } from '@/lib/domains';
+import { useNavSession } from '@/components/navigation/useNavSession';
 
-const NAV_ITEMS = [
-  { href: '/events', label: 'Events' },
-  { href: '/epl', label: 'EPL' },
-  { href: '/link', label: 'Link' },
-  { href: '/crew', label: 'Crew' },
-  { href: getReserveOrigin(), label: 'Reserve' },
-  { href: '/venue', label: 'Venue' },
-  { href: '/partners', label: 'Partners' },
+const PRIMARY_NAV_ITEMS = [
+  { href: `${getWebOrigin()}/`, path: '/', label: 'Discover' },
+  { href: `${getWebOrigin()}/events`, path: '/events', label: 'Events' },
+  { href: `${getWebOrigin()}/pulse`, path: '/pulse', label: 'Pulse' },
+  { href: `${getReserveOrigin()}/`, path: '/reserve', label: 'Reserve' },
+  { href: `${getWebOrigin()}/crew`, path: '/crew', label: 'Crew' },
+  { href: `${getEplOrigin()}/`, path: '/epl', label: 'EPL' },
+  { href: `${getWebOrigin()}/link`, path: '/link', label: 'Link' },
+  { href: `${getOpsOrigin()}/venue`, path: '/venue', label: 'Venue' },
+  { href: `${getWebOrigin()}/sponsors`, path: '/sponsors', label: 'Sponsors' },
 ];
 
 const BUILD_ITEMS = [
-  { href: '/hosts/apply', label: 'Apply as Host' },
-  { href: '/organizer/apply', label: 'Apply as Organizer' },
-  { href: '/partners', label: 'Partner Program' },
+  { href: `${getHostsOrigin()}/apply`, label: 'Become a Curator' },
+  { href: `${getWebOrigin()}/organizer/apply`, label: 'Become a Partner' },
+  { href: `${getOpsOrigin()}/venue/agreement`, label: 'Bring a Venue' },
+  { href: `${getWebOrigin()}/sponsors`, label: 'Sponsor with EVNTSZN' },
 ];
 
-const AUTH_NAV_ITEMS = [
-  { href: '/account/login', label: 'Log In' },
-  { href: '/account/register', label: 'Sign Up' },
+const OPERATE_ITEMS = [
+  { href: `${getWebOrigin()}/hosts`, label: 'Curator lane', detail: 'Network-based event operators' },
+  { href: `${getWebOrigin()}/organizer`, label: 'Partner lane', detail: 'Self-operated event businesses' },
+  { href: `${getWebOrigin()}/venue`, label: 'Venue ops', detail: 'Reserve, bookings, and nightlife operations' },
+  { href: `${getEplOrigin()}/`, label: 'EPL league', detail: 'Prime League public and admin surfaces' },
 ];
 
-const isActive = (href: string, pathname: string) => {
-  if (href === '/' && pathname === '/') return true;
-  if (href.startsWith("http")) return pathname.startsWith("/reserve");
-  return pathname.startsWith(href) && href !== '/';
+const isActive = (path: string, pathname: string) => {
+  if (path === '/reserve') return pathname.startsWith('/reserve');
+  if (path === '/') return pathname === '/';
+  return pathname.startsWith(path);
 };
 
 export default function PublicNav() {
   const pathname = usePathname();
   const [buildOpen, setBuildOpen] = useState(false);
+  const [operateOpen, setOperateOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { session } = useNavSession();
+  const signInHref = useMemo(() => `${getAppOrigin()}/account/login?next=${encodeURIComponent(pathname || '/')}`, [pathname]);
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-black/70 backdrop-blur-lg py-4 px-6 shadow-lg border-b border-white/10">
-      <div className="mx-auto flex max-w-[1600px] items-center justify-between">
-        <div className="flex items-center">
-          <Link href="/" className="mr-10 flex items-center" onClick={() => setMobileOpen(false)}>
-            <span className="text-2xl font-black tracking-tighter text-white">EVNTSZN</span>
+    <nav className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[rgba(5,5,7,0.9)] backdrop-blur-2xl">
+      <div className="mx-auto flex min-h-[var(--public-nav-height)] max-w-[1600px] items-center justify-between gap-4 px-4 py-3 md:px-6">
+        <div className="flex items-center gap-4">
+          <Link href={getWebOrigin()} className="mr-2 flex items-center" onClick={() => setMobileOpen(false)}>
+            <span className="text-xl font-black tracking-[0.16em] text-white md:text-2xl">EVNTSZN</span>
           </Link>
-          <div className="hidden lg:flex items-center space-x-1">
-            {NAV_ITEMS.map((item) => (
+          <div className="hidden xl:flex items-center gap-1">
+            {PRIMARY_NAV_ITEMS.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`text-sm font-bold uppercase tracking-widest px-4 py-2 rounded-xl transition-all ${
-                  isActive(item.href, pathname) 
-                    ? 'text-white bg-white/10' 
-                    : 'text-white/60 hover:text-white hover:bg-white/5'
+                className={`rounded-full px-4 py-2 text-[11px] font-bold uppercase tracking-[0.18em] transition ${
+                  isActive(item.path, pathname)
+                    ? 'bg-white text-black'
+                    : 'text-white/62 hover:bg-white/6 hover:text-white'
                 }`}
               >
                 {item.label}
               </Link>
             ))}
+            <div className="relative">
+              <button
+                onMouseEnter={() => setOperateOpen(true)}
+                onClick={() => setOperateOpen(!operateOpen)}
+                className="rounded-full px-4 py-2 text-[11px] font-bold uppercase tracking-[0.18em] text-white/62 transition hover:bg-white/6 hover:text-white"
+              >
+                Operate
+              </button>
+              {operateOpen && (
+                <div
+                  onMouseLeave={() => setOperateOpen(false)}
+                  className="absolute left-0 mt-2 w-80 overflow-hidden rounded-[26px] border border-white/10 bg-[#0c0c15] p-2 shadow-2xl backdrop-blur-xl"
+                >
+                  {OPERATE_ITEMS.map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className="block rounded-2xl px-4 py-3 transition hover:bg-white/6"
+                    >
+                      <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-white/80">{item.label}</div>
+                      <div className="mt-1 text-sm text-white/55">{item.detail}</div>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
-        <div className="hidden md:flex items-center space-x-4">
+        <div className="hidden items-center gap-3 md:flex">
           <div className="relative">
-            <button 
+            <button
               onMouseEnter={() => setBuildOpen(true)}
               onClick={() => setBuildOpen(!buildOpen)}
-              className="text-sm font-bold uppercase tracking-widest text-white/60 hover:text-white px-4 py-2 transition-all"
+              className="rounded-full border border-white/12 bg-white/[0.04] px-4 py-2 text-[11px] font-bold uppercase tracking-[0.18em] text-white/74 transition hover:border-white/20 hover:bg-white/[0.08] hover:text-white"
             >
-              Build ↓
+              Build
             </button>
             {buildOpen && (
-              <div 
+              <div
                 onMouseLeave={() => setBuildOpen(false)}
-                className="absolute right-0 mt-2 w-56 overflow-hidden rounded-2xl border border-white/10 bg-[#0c0c15] p-2 shadow-2xl backdrop-blur-xl"
+                className="absolute right-0 mt-2 w-64 overflow-hidden rounded-[26px] border border-white/10 bg-[#0c0c15] p-2 shadow-2xl backdrop-blur-xl"
               >
                 {BUILD_ITEMS.map((item) => (
                   <Link
                     key={item.href}
                     href={item.href}
-                    className="block rounded-xl px-4 py-3 text-xs font-bold uppercase tracking-widest text-white/60 hover:bg-white/5 hover:text-white transition-all"
+                    className="block rounded-2xl px-4 py-3 text-[11px] font-bold uppercase tracking-[0.18em] text-white/68 transition hover:bg-white/6 hover:text-white"
                   >
                     {item.label}
                   </Link>
@@ -88,27 +123,27 @@ export default function PublicNav() {
               </div>
             )}
           </div>
-
-          <div className="h-4 w-px bg-white/10" />
-
-          {AUTH_NAV_ITEMS.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${
-                item.label === 'Sign Up'
-                  ? 'bg-white text-black hover:bg-white/90 active:scale-95'
-                  : 'text-white hover:bg-white/10 border border-white/20'
-              }`}
-            >
-              {item.label}
+          {session.signedIn ? (
+            <Link href={`${getAppOrigin()}${session.dashboardHref || "/account"}`} className="rounded-full border border-white/12 bg-white/[0.04] px-4 py-2 text-[11px] font-bold uppercase tracking-[0.18em] text-white/78 transition hover:border-white/20 hover:bg-white/[0.08] hover:text-white">
+              {session.dashboardLabel || "Dashboard"}
             </Link>
-          ))}
+          ) : null}
+          {session.signedIn ? (
+            <form action={session.signOutHref} method="POST">
+              <button type="submit" className="rounded-full bg-white px-5 py-2.5 text-[11px] font-black uppercase tracking-[0.18em] text-black transition hover:opacity-92">
+                Sign Out
+              </button>
+            </form>
+          ) : (
+            <Link href={signInHref} className="rounded-full bg-white px-5 py-2.5 text-[11px] font-black uppercase tracking-[0.18em] text-black transition hover:opacity-92">
+              Sign In / Enter
+            </Link>
+          )}
         </div>
 
-        <button 
+        <button
           onClick={() => setMobileOpen(!mobileOpen)}
-          className="lg:hidden text-white p-2"
+          className="rounded-full border border-white/12 bg-white/[0.04] p-2 text-white xl:hidden"
         >
           <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={mobileOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16m-7 6h7"} />
@@ -117,47 +152,71 @@ export default function PublicNav() {
       </div>
 
       {mobileOpen && (
-        <div className="lg:hidden absolute top-full left-0 right-0 bg-[#0c0c15] border-b border-white/10 p-6 space-y-6 shadow-2xl overflow-y-auto max-h-[80vh]">
-          <div className="grid grid-cols-2 gap-4">
-            {NAV_ITEMS.map((item) => (
+        <div className="absolute left-0 right-0 top-full max-h-[80vh] overflow-y-auto border-b border-white/10 bg-[#0c0c15] p-6 shadow-2xl xl:hidden">
+          <div className="grid gap-2">
+            {PRIMARY_NAV_ITEMS.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
                 onClick={() => setMobileOpen(false)}
-                className="text-xs font-bold uppercase tracking-widest text-white/60 hover:text-white py-2"
+                className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-[11px] font-bold uppercase tracking-[0.18em] text-white/72"
               >
                 {item.label}
               </Link>
             ))}
           </div>
-          <div className="pt-6 border-t border-white/5">
-            <div className="text-[10px] font-bold uppercase tracking-widest text-white/30 mb-4">Build on EVNTSZN</div>
+          <div className="mt-6 border-t border-white/8 pt-6">
+            <div className="mb-4 text-[10px] font-bold uppercase tracking-[0.22em] text-white/35">Operate</div>
+            <div className="grid gap-3">
+              {OPERATE_ITEMS.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setMobileOpen(false)}
+                  className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3"
+                >
+                  <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-white/76">{item.label}</div>
+                  <div className="mt-1 text-sm text-white/52">{item.detail}</div>
+                </Link>
+              ))}
+            </div>
+          </div>
+          <div className="mt-6 border-t border-white/8 pt-6">
+            <div className="mb-4 text-[10px] font-bold uppercase tracking-[0.22em] text-white/35">Build</div>
             <div className="grid gap-4">
               {BUILD_ITEMS.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
                   onClick={() => setMobileOpen(false)}
-                  className="text-xs font-bold uppercase tracking-widest text-white/60"
+                  className="text-[11px] font-bold uppercase tracking-[0.18em] text-white/70"
                 >
                   {item.label}
                 </Link>
               ))}
             </div>
           </div>
-          <div className="pt-6 border-t border-white/5 flex gap-4">
-            {AUTH_NAV_ITEMS.map((item) => (
+          <div className="mt-6 flex gap-4 border-t border-white/8 pt-6">
+            {session.signedIn ? (
               <Link
-                key={item.href}
-                href={item.href}
+                href={`${getAppOrigin()}${session.dashboardHref || "/account"}`}
                 onClick={() => setMobileOpen(false)}
-                className={`flex-1 text-center py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest ${
-                  item.label === 'Sign Up' ? 'bg-white text-black' : 'border border-white/20 text-white'
-                }`}
+                className="flex-1 rounded-xl border border-white/10 bg-white/[0.04] py-3 text-center text-[10px] font-black uppercase tracking-[0.18em] text-white"
               >
-                {item.label}
+                {session.dashboardLabel || "Dashboard"}
               </Link>
-            ))}
+            ) : null}
+            {session.signedIn ? (
+              <form action={session.signOutHref} method="POST" className="flex-1">
+                <button type="submit" className="w-full rounded-xl bg-white py-3 text-center text-[10px] font-black uppercase tracking-[0.18em] text-black">
+                  Sign Out
+                </button>
+              </form>
+            ) : (
+              <Link href={signInHref} onClick={() => setMobileOpen(false)} className="flex-1 rounded-xl bg-white py-3 text-center text-[10px] font-black uppercase tracking-[0.18em] text-black">
+                Sign In / Enter
+              </Link>
+            )}
           </div>
         </div>
       )}

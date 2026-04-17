@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { resolveNextRedirectUrl } from "@/lib/domains";
 
 const FOUNDER_EMAIL = "hello@mixdencreative.com";
 
@@ -24,13 +26,15 @@ async function findUserIdForEmail(email: string) {
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
   const email = String(body.email || "").trim().toLowerCase();
+  const password = String(body.password || "");
+  const next = String(body.next || "/epl/admin");
 
-  if (!email) {
-    return NextResponse.json({ error: "Email is required." }, { status: 400 });
+  if (!email || !password) {
+    return NextResponse.json({ error: "Email and password are required." }, { status: 400 });
   }
 
   if (email === FOUNDER_EMAIL) {
-    return NextResponse.json({ ok: true, mode: "founder" });
+    return NextResponse.json({ error: "Use the founder access path for founder sign-in." }, { status: 400 });
   }
 
   const now = new Date().toISOString();
@@ -81,5 +85,19 @@ export async function POST(request: Request) {
     );
   }
 
-  return NextResponse.json({ ok: true, mode: "member" });
+  const supabase = await createClient();
+  const { error: signInError } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+
+  if (signInError) {
+    return NextResponse.json({ error: signInError.message || "Invalid internal credentials." }, { status: 401 });
+  }
+
+  return NextResponse.json({
+    ok: true,
+    mode: "member",
+    redirectTo: resolveNextRedirectUrl(next, new URL(request.url).host),
+  });
 }

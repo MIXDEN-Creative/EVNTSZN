@@ -1,7 +1,8 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { buildTicketCode, ensurePlatformProfile, logEventActivity, requirePlatformUser } from "@/lib/evntszn";
-import { getAppOrigin, getCanonicalUrl } from "@/lib/domains";
+import { buildTicketCode, ensurePlatformProfile, getPlatformViewer, logEventActivity } from "@/lib/evntszn";
+import { getAppOrigin, getCanonicalUrl, getLoginUrl } from "@/lib/domains";
+import { ensureCreatorKickoffRuntimeSetup, isCreatorKickoffEvent } from "@/lib/events-runtime";
 import { LINK_ATTRIBUTION_WINDOW_MS, LINK_CLICK_COOKIE, parseLinkClickCookie } from "@/lib/link-attribution";
 import { toStripeCents } from "@/lib/money";
 import { stripe } from "@/lib/stripe";
@@ -11,29 +12,49 @@ import { canPurchaseTicketType, getTicketAvailabilityState } from "@/lib/ticketi
 type Params = Promise<{ eventId: string }>;
 
 export async function POST(request: Request, { params }: { params: Params }) {
-  const viewer = await requirePlatformUser("/events");
   const { eventId } = await params;
   const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
   const quantity = Math.max(1, Number(body.quantity || 1));
   const clickCookie = parseLinkClickCookie((await cookies()).get(LINK_CLICK_COOKIE)?.value);
 
-  const [{ data: event }, { data: ticketType }] = await Promise.all([
-    supabaseAdmin
-      .from("evntszn_events")
-      .select("id, slug, title, visibility")
-      .eq("id", eventId)
-      .eq("visibility", "published")
-      .maybeSingle(),
-    supabaseAdmin
-      .from("evntszn_ticket_types")
-      .select("id, name, description, price_usd, quantity_total, quantity_sold, max_per_order, sales_start_at, sales_end_at, is_active, visibility_mode")
-      .eq("id", body.ticketTypeId)
-      .eq("event_id", eventId)
-      .maybeSingle(),
-  ]);
+  const { data: event } = await supabaseAdmin
+    .from("evntszn_events")
+    .select("id, slug, title, visibility")
+    .eq("id", eventId)
+    .eq("visibility", "published")
+    .maybeSingle();
+
+  const runtimeTicketTypes = event && isCreatorKickoffEvent(event)
+    ? await ensureCreatorKickoffRuntimeSetup(event.id)
+    : null;
+
+  const { data: ticketType } = runtimeTicketTypes
+    ? {
+        data:
+          runtimeTicketTypes.find((row) => row && row.id === body.ticketTypeId) ||
+          runtimeTicketTypes.find((row) => row && row.name === body.ticketTypeName) ||
+          null,
+      }
+    : await supabaseAdmin
+        .from("evntszn_ticket_types")
+        .select("id, name, description, price_usd, quantity_total, quantity_sold, max_per_order, sales_start_at, sales_end_at, is_active, visibility_mode")
+        .eq("id", body.ticketTypeId)
+        .eq("event_id", eventId)
+        .maybeSingle();
 
   if (!event || !ticketType) {
     return NextResponse.json({ error: "Ticket inventory not found." }, { status: 404 });
+  }
+
+  const viewer = await getPlatformViewer();
+  if (!viewer.user) {
+    return NextResponse.json(
+      {
+        error: "Sign in to complete checkout.",
+        redirectTo: getLoginUrl(`/events/${event.slug}`, new URL(request.url).host),
+      },
+      { status: 401 },
+    );
   }
 
   if (quantity > ticketType.max_per_order) {
@@ -120,7 +141,7 @@ export async function POST(request: Request, { params }: { params: Params }) {
 
     return NextResponse.json({
       ok: true,
-      redirectTo: getCanonicalUrl("/account?tab=tickets", "app", new URL(request.url).host),
+      redirectTo: getCanonicalUrl("/account/tickets", "app", new URL(request.url).host),
     });
   }
 

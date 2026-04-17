@@ -64,7 +64,7 @@ export default async function EvntsznLinkPage(context: RouteContext) {
     .gte("start_at", new Date(Date.now() - 1000 * 60 * 60 * 24 * 14).toISOString())
     .order("start_at", { ascending: true })
     .limit(4);
-  const displayName = page.display_name || profileRes.data?.full_name || "EVNTSZN Host";
+  const displayName = page.display_name || profileRes.data?.full_name || "EVNTSZN Curator";
   const location = [page.city || profileRes.data?.city, page.state || profileRes.data?.state].filter(Boolean).join(", ");
   const viewCount = Number((page.metadata || {}).view_count || 0);
   const plan = normalizeLinkPlan(page.plan_tier);
@@ -107,13 +107,14 @@ export default async function EvntsznLinkPage(context: RouteContext) {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(162,89,255,0.3),transparent_38%),linear-gradient(180deg,#0f0d18_0%,#08080d_65%,#050507_100%)]" />
         <div className="relative mx-auto max-w-[1500px] px-4 py-12 md:px-6 lg:px-8 lg:py-18">
           <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr] xl:gap-8">
-            <div className="rounded-[36px] border border-white/10 bg-black/35 p-6 shadow-[0_24px_80px_rgba(0,0,0,0.4)] md:p-8 lg:p-10">
+            <div className="ev-section-frame">
+              <div className="ev-dashboard-hero">
               <div className="inline-flex rounded-full border border-white/10 bg-white/5 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.22em] text-[#caa7ff]">
                 {planConfig.brandingEnforced ? "Powered by EVNTSZN" : page.accent_label || displayName}
               </div>
               <h1 className="mt-5 max-w-4xl text-4xl font-black tracking-[-0.05em] text-white md:text-6xl xl:text-7xl">{displayName}</h1>
               {location ? <div className="mt-4 text-sm font-semibold uppercase tracking-[0.2em] text-white/48">{location}</div> : null}
-              <p className="mt-4 max-w-2xl text-lg leading-8 text-white/76">{page.headline || "Premium host conversion page"}</p>
+              <p className="mt-4 max-w-2xl text-lg leading-8 text-white/76">{page.headline || "Premium EVNTSZN conversion page"}</p>
               {page.intro ? <p className="mt-4 max-w-2xl text-base leading-7 text-white/62">{page.intro}</p> : null}
 
               <div className="mt-7 flex flex-wrap gap-3">
@@ -158,11 +159,12 @@ export default async function EvntsznLinkPage(context: RouteContext) {
                   ["Lead capture", page.email_capture_enabled ? "On" : "Off"],
                   ["Monetization", page.fee_bearing_enabled ? "Fee-ready" : "Direct links"],
                 ].map(([label, value]) => (
-                  <div key={String(label)} className="rounded-[24px] border border-white/10 bg-white/[0.03] p-5">
+                  <div key={String(label)} className="ev-feature-card">
                     <div className="text-[11px] uppercase tracking-[0.22em] text-white/42">{label}</div>
                     <div className="mt-2 text-lg font-bold capitalize text-white">{value}</div>
                   </div>
                 ))}
+              </div>
               </div>
             </div>
 
@@ -184,7 +186,8 @@ export default async function EvntsznLinkPage(context: RouteContext) {
       <section className="mx-auto max-w-[1500px] px-4 py-10 md:px-6 lg:px-8 lg:py-14">
         <div className="grid gap-8 xl:grid-cols-[1.15fr_0.85fr]">
           <section className="space-y-6">
-            <div className="ev-panel border-[#A259FF]/20 bg-[linear-gradient(180deg,rgba(162,89,255,0.1),rgba(255,255,255,0.03)),rgba(7,7,10,0.78)] p-6 md:p-8">
+            <div className="ev-section-frame">
+              <div className="ev-dashboard-hero">
               <div className="ev-section-kicker">Current events</div>
               <h2 className="mt-3 text-3xl font-black tracking-tight text-white">Push guests into the live calendar first.</h2>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-white/66">
@@ -213,20 +216,22 @@ export default async function EvntsznLinkPage(context: RouteContext) {
                     </TrackedEventLink>
                   ))
                 ) : (
-                  <div className="rounded-[26px] border border-dashed border-white/10 bg-black/20 p-6 text-sm leading-6 text-white/58">
+                  <div className="ev-empty-state text-sm leading-6">
                     No featured events are pinned to this EVNTSZN Link yet.
                   </div>
                 )}
               </div>
+              </div>
             </div>
 
             {featuredCrew.length ? (
-              <div className="ev-panel p-6 md:p-8">
+              <div className="ev-section-frame ev-section-frame--muted">
+                <div className="ev-dashboard-hero">
                 <div className="ev-section-kicker">Tonight&apos;s crew</div>
                 <h2 className="mt-3 text-3xl font-black tracking-tight text-white">The people shaping the room.</h2>
                 <div className="mt-6 grid gap-4 md:grid-cols-2">
                   {featuredCrew.map((member: any, index: number) => (
-                    <a key={member.id} href={`/${member.slug}`} className="rounded-[26px] border border-white/10 bg-white/[0.03] p-5 transition hover:bg-white/[0.06]">
+                    <a key={member.id} href={`/crew/${member.slug}`} className="ev-list-card transition hover:bg-white/[0.06]">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[#d5b8ff]">
                           {index === 0 ? "Tonight’s DJ" : index === 1 ? "Official photographer" : "Featured crew"}
@@ -245,12 +250,14 @@ export default async function EvntsznLinkPage(context: RouteContext) {
                     </a>
                   ))}
                 </div>
+                </div>
               </div>
             ) : null}
           </section>
 
           <section className="space-y-6">
-            <div className="ev-panel p-6 md:p-8">
+            <div className="ev-section-frame ev-section-frame--muted">
+              <div className="ev-dashboard-hero">
               <div className="ev-section-kicker">Offers</div>
               <h2 className="mt-3 text-3xl font-black tracking-tight text-white">Sell directly from the page.</h2>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-white/66">
@@ -288,6 +295,7 @@ export default async function EvntsznLinkPage(context: RouteContext) {
                     Funnel offers unlock on Pro.
                   </div>
                 )}
+              </div>
               </div>
             </div>
           </section>

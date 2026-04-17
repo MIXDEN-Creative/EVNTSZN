@@ -1,3 +1,4 @@
+import { isMidnightRunEvent } from "@/lib/events-runtime";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export type DiscoverySourceType = "evntszn" | "host" | "independent_organizer";
@@ -104,9 +105,9 @@ function normalizeSource(eventClass: string | null | undefined): DiscoverySource
 function getSourceLabel(source: DiscoverySourceType) {
   switch (source) {
     case "host":
-      return "EVNTSZN Host";
+      return "EVNTSZN Curator";
     case "independent_organizer":
-      return "Independent Organizer";
+      return "Partner";
     default:
       return "Official EVNTSZN";
   }
@@ -115,9 +116,9 @@ function getSourceLabel(source: DiscoverySourceType) {
 function getBadgeLabel(source: DiscoverySourceType) {
   switch (source) {
     case "host":
-      return "Host";
+      return "Curator";
     case "independent_organizer":
-      return "Organizer";
+      return "Partner";
     default:
       return "EVNTSZN";
   }
@@ -161,6 +162,7 @@ export async function getDiscoveryNativeEvents(input: {
   endAt?: string | undefined;
 }) {
   const limit = Math.min(Math.max(Number(input.limit || 12), 1), 50);
+  const effectiveStartAt = input.startAt || new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
 
   let query = supabaseAdmin
     .from("evntszn_events")
@@ -183,9 +185,7 @@ export async function getDiscoveryNativeEvents(input: {
       );
     }
   }
-  if (input.startAt) {
-    query = query.gte("start_at", input.startAt);
-  }
+  query = query.gte("start_at", effectiveStartAt);
   if (input.endAt) {
     query = query.lte("start_at", input.endAt);
   }
@@ -237,7 +237,9 @@ export async function getDiscoveryNativeEvents(input: {
     }
   }
 
-  const mappedEvents: DiscoveryEventRecord[] = ((data || []) as DiscoveryEventRow[]).map((row) => {
+  const mappedEvents: DiscoveryEventRecord[] = ((data || []) as DiscoveryEventRow[])
+    .filter((row) => !isMidnightRunEvent(row))
+    .map((row) => {
       const controls = controlsById.get(row.id);
       if (controls?.is_discoverable === false) return null;
       const source = normalizeSource(controls?.source_type || row.event_class);

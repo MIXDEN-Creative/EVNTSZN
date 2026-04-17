@@ -95,7 +95,7 @@ export default function ReserveIntakeForm() {
           <option value="table-service">Table service and waitlist</option>
           <option value="nightlife-booking">Nightlife booking control</option>
           <option value="event-reservations">Event reservation routing</option>
-          <option value="host-concierge">Host concierge and VIP</option>
+          <option value="host-concierge">Curator concierge and VIP</option>
         </select>
         <textarea className="ev-textarea md:col-span-2" rows={5} placeholder="Operations notes, guest flow issues, or launch timing" value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} />
       </div>

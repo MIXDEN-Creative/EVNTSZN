@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getLoginUrl } from "@/lib/domains";
+import { createInternalWorkItem, INTERNAL_DESK_SLUGS } from "@/lib/internal-os";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { inferOrganizerClassification, normalizeStringArray } from "@/lib/operator-access";
 
@@ -46,10 +47,37 @@ export async function POST(request: Request) {
     );
   }
 
-  const { error } = await supabaseAdmin.from("evntszn_applications").insert(payload);
-  if (error) {
+  const { data, error } = await supabaseAdmin
+    .from("evntszn_applications")
+    .insert(payload)
+    .select("id")
+    .single();
+  if (error || !data) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+
+  const deskSlug =
+    payload.organizer_classification === "independent_organizer"
+      ? INTERNAL_DESK_SLUGS.organizer
+      : INTERNAL_DESK_SLUGS.host;
+
+  await createInternalWorkItem({
+    deskSlug,
+    title: `${payload.organizer_classification === "independent_organizer" ? "Partner" : "Curator"} application · ${payload.full_name}`,
+    description: `${payload.full_name} applied for ${payload.organizer_classification === "independent_organizer" ? "partner" : "curator"} access${payload.city ? ` in ${payload.city}` : ""}.`,
+    priority: "high",
+    payload: {
+      applicationId: data.id,
+      source: "public_application",
+      applicationType: payload.application_type,
+      organizerClassification: payload.organizer_classification,
+      requestedRoleKey: payload.requested_role_key,
+      applicantName: payload.full_name,
+      applicantEmail: payload.email,
+      city: payload.city,
+      companyName: payload.company_name,
+    },
+  }).catch(() => null);
 
   if (!contentType.includes("application/json")) {
     return NextResponse.redirect(getLoginUrl("/ops", new URL(request.url).host), 303);

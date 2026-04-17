@@ -1,222 +1,111 @@
-// src/app/link/page.tsx
-'use client';
+import Link from "next/link";
+import PublicPageFrame from "@/components/public/PublicPageFrame";
 
-import Link from 'next/link';
-import React from 'react';
+const LINK_PLANS = [
+  {
+    title: "Link Free",
+    price: "$0",
+    note: "Built for launch",
+    points: ["Link page", "Event links", "Basic profile styling", "One clean public hub"],
+    cta: { href: "/account/register?next=/link", label: "Start free" },
+  },
+  {
+    title: "Link Pro",
+    price: "$29",
+    note: "Best for Partners",
+    points: ["Advanced analytics", "Priority discovery", "Premium ticket fee pass-through", "Deeper event conversion tools"],
+    cta: { href: "/account/register?next=/link", label: "Go Link Pro" },
+  },
+  {
+    title: "Included with Curator ops",
+    price: "Included",
+    note: "Inside the network",
+    points: ["Link Pro access", "Curator routing", "Priority city visibility", "Tighter Pulse and event integration"],
+    cta: { href: "/hosts", label: "Explore Curators" },
+  },
+];
 
-const LinkPage = () => {
+export default function LinkPage() {
   return (
-    <div className="container mx-auto px-4 py-12">
-      <header className="text-center mb-16">
-        <h1 className="text-5xl font-bold mb-4">EVNTSZN Link: Your Ultimate Event Hub</h1>
-        <p className="text-xl text-gray-600">Connect, promote, and convert with our powerful link-in-bio and event promotion tools.</p>
-      </header>
-
-      <section className="mb-16">
-        <h2 className="text-4xl font-bold text-center mb-8">Transform Your Event Presence</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-          <div>
-            <p className="text-lg mb-4">
-              EVNTSZN Link is designed to be the central point for your event promotions, artist profiles, and venue listings.
-              Whether you're an independent organizer looking to make a splash or a seasoned host aiming to streamline
-              your operations, Link provides the tools to drive engagement and conversions.
+    <PublicPageFrame
+      title="EVNTSZN Link"
+      description="One clean profile for events, tickets, Reserve, sponsor placements, and conversion-ready traffic."
+      heroImage="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=1800&q=80"
+      seo={{
+        title: "EVNTSZN Link | Conversion-ready event pages",
+        description: "Run one premium EVNTSZN Link page for events, profile traffic, Reserve, and sponsor-ready visibility.",
+      }}
+    >
+      <section className="mx-auto max-w-7xl px-4 py-12 md:px-6 lg:px-8">
+        <div className="grid gap-6 lg:grid-cols-[1.08fr_0.92fr]">
+          <div className="ev-panel p-7 md:p-8">
+            <div className="ev-section-kicker">EVNTSZN Link</div>
+            <h1 className="mt-3 max-w-4xl text-4xl font-black tracking-tight text-white md:text-5xl">
+              One page that moves traffic into the right room.
+            </h1>
+            <p className="mt-5 max-w-2xl text-base leading-7 text-white/68">
+              Link is the public layer for events, tickets, Reserve, venue activity, and sponsor-ready promotion. It is built to convert, not to look like a generic bio page.
             </p>
-            <p className="text-lg mb-4">
-              From basic event linking to advanced analytics and NFC compatibility, Link scales with your needs.
-            </p>
-          </div>
-          <div className="text-center">
-            {/* Placeholder for a relevant visual */}
-            <div className="w-64 h-64 bg-gradient-to-r from-purple-400 to-blue-500 rounded-lg shadow-xl mx-auto flex items-center justify-center text-white text-2xl font-semibold">
-              Link Your World
+            <div className="mt-7 grid gap-3 md:grid-cols-3">
+              {[
+                ["Conversion ready", "Push traffic into events, Reserve, or priority actions without clutter."],
+                ["Partner fit", "Built for independent event operators who need one clean profile lane."],
+                ["EVNTSZN Curator included", "EVNTSZN Curators keep Link inside the network with stronger discovery weight."],
+              ].map(([title, body]) => (
+                <div key={title} className="rounded-[22px] border border-white/10 bg-black/30 p-3.5">
+                  <div className="text-sm font-black text-white">{title}</div>
+                  <div className="mt-2 text-sm leading-5 text-white/62">{body}</div>
+                </div>
+              ))}
             </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="mb-16">
-        <h2 className="text-4xl font-bold text-center mb-12">Choose Your Plan</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Link Free */}
-          <div className="bg-white rounded-lg shadow-lg p-8 border border-gray-200 flex flex-col justify-between">
-            <div>
-              <h3 className="text-3xl font-bold mb-2">Link Free</h3>
-              <p className="text-gray-500 mb-6">For basic event linking and discovery.</p>
-              <div className="mb-6">
-                <span className="text-5xl font-bold">$0</span>
-                <span className="text-gray-500">/month</span>
-              </div>
-              <ul className="space-y-4 text-lg text-gray-700">
-                <li className="flex items-center">
-                  <svg className="w-6 h-6 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 4.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-3-3a1 1 0 111.414-1.414L9 10.586l6.293-6.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
-                  Basic link-in-bio page
-                </li>
-                <li className="flex items-center">
-                  <svg className="w-6 h-6 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 4.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-3-3a1 1 0 111.414-1.414L9 10.586l6.293-6.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
-                  Event linking
-                </li>
-                <li className="flex items-center">
-                  <svg className="w-6 h-6 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 4.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-3-3a1 1 0 111.414-1.414L9 10.586l6.293-6.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
-                  Basic customization
-                </li>
-                <li className="flex items-center">
-                  <svg className="w-6 h-6 text-red-500 mr-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"></path></svg>
-                  No NFC compatibility
-                </li>
-                <li className="flex items-center">
-                  <svg className="w-6 h-6 text-red-500 mr-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"></path></svg>
-                  Standard analytics only
-                </li>
-                 <li className="flex items-center">
-                  <svg className="w-6 h-6 text-red-500 mr-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"></path></svg>
-                  Cannot pass premium ticket fee
-                </li>
-              </ul>
-            </div>
-            <div className="mt-8">
-              <Link href="/auth/signup?plan=link-free" legacyBehavior>
-                <a className="block w-full text-center py-3 px-6 rounded-lg font-semibold bg-gray-200 text-gray-800 hover:bg-gray-300">
-                  Start Free
-                </a>
+            <div className="mt-7 flex flex-wrap gap-3">
+              <Link href="/account/register?next=/link" className="ev-button-primary px-8">
+                Start Link
+              </Link>
+              <Link href="/organizer" className="ev-button-secondary px-8">
+                View Partner path
               </Link>
             </div>
           </div>
 
-          {/* Link Pro */}
-          <div className="bg-white rounded-lg shadow-lg p-8 border border-purple-500 flex flex-col justify-between relative">
-            <div className="absolute top-0 right-0 bg-purple-500 text-white text-xs font-semibold px-3 py-1 rounded-bl-lg">PRO</div>
-            <div>
-              <h3 className="text-3xl font-bold mb-2">Link Pro</h3>
-              <p className="text-gray-500 mb-6">For organizers seeking advanced features and conversion tracking.</p>
-              <div className="mb-6">
-                <span className="text-5xl font-bold">$29</span>
-                <span className="text-gray-500">/month</span>
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-1">
+            {[
+              "Event drops and ticket conversion",
+              "Reserve routing for nights out",
+              "Sponsor placement support where needed",
+              "Pulse-ready discovery links",
+            ].map((item) => (
+              <div key={item} className="rounded-[24px] border border-white/10 bg-[linear-gradient(135deg,rgba(162,89,255,0.16),rgba(255,255,255,0.03))] px-5 py-4 text-base font-semibold text-white">
+                {item}
               </div>
-              <ul className="space-y-4 text-lg text-gray-700">
-                <li className="flex items-center">
-                  <svg className="w-6 h-6 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 4.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-3-3a1 1 0 111.414-1.414L9 10.586l6.293-6.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
-                  Custom branded page
-                </li>
-                <li className="flex items-center">
-                  <svg className="w-6 h-6 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 4.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-3-3a1 1 0 111.414-1.414L9 10.586l6.293-6.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
-                  Unlimited links
-                </li>
-                <li className="flex items-center">
-                  <svg className="w-6 h-6 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 4.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-3-3a1 1 0 111.414-1.414L9 10.586l6.293-6.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
-                  Event integration
-                </li>
-                <li className="flex items-center">
-                  <svg className="w-6 h-6 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 4.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-3-3a1 1 0 111.414-1.414L9 10.586l6.293-6.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
-                  NFC card compatibility
-                </li>
-                <li className="flex items-center">
-                  <svg className="w-6 h-6 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 4.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-3-3a1 1 0 111.414-1.414L9 10.586l6.293-6.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
-                  Advanced analytics
-                </li>
-                <li className="flex items-center">
-                  <svg className="w-6 h-6 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 4.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-3-3a1 1 0 111.414-1.414L9 10.586l6.293-6.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
-                  Conversion tracking
-                </li>
-                 <li className="flex items-center">
-                  <svg className="w-6 h-6 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 4.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-3-3a1 1 0 111.414-1.414L9 10.586l6.293-6.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
-                  Can pass premium ticket fee
-                </li>
-              </ul>
-            </div>
-            <div className="mt-8">
-              <Link href="/auth/upgrade?plan=link-pro" legacyBehavior>
-                <a className="block w-full text-center py-3 px-6 rounded-lg font-semibold bg-purple-500 text-white hover:bg-purple-600">
-                  Upgrade to Pro
-                </a>
-              </Link>
-            </div>
+            ))}
           </div>
+        </div>
+      </section>
 
-          {/* Included in Organizer Pro / Host Program */}
-          <div className="bg-white rounded-lg shadow-lg p-8 border border-gray-200 flex flex-col justify-between">
-            <div>
-              <h3 className="text-3xl font-bold mb-2">Included in Pro</h3>
-              <p className="text-gray-500 mb-6">Bundled with Organizer Pro and Host Program tiers.</p>
-              <div className="mb-6">
-                <span className="text-5xl font-bold">Included</span>
+      <section className="mx-auto max-w-7xl px-4 py-12 md:px-6 lg:px-8">
+        <div className="ev-section-kicker">Link plans</div>
+        <h2 className="mt-3 text-4xl font-black tracking-tight text-white">Clean pricing. No unreadable cards.</h2>
+        <div className="mt-8 grid gap-6 lg:grid-cols-3">
+          {LINK_PLANS.map((plan) => (
+            <article key={plan.title} className="rounded-[28px] border border-white/10 bg-black/30 p-5">
+              <div className="text-[11px] font-bold uppercase tracking-[0.24em] text-[#caa7ff]">{plan.note}</div>
+              <div className="mt-3 text-2xl font-black text-white">{plan.title}</div>
+              <div className="mt-4 text-4xl font-black text-white">{plan.price}</div>
+              <div className="mt-5 space-y-2.5 text-sm text-white/70">
+                {plan.points.map((point) => (
+                  <div key={point} className="rounded-[18px] border border-white/10 bg-white/[0.03] px-4 py-2.5">
+                    {point}
+                  </div>
+                ))}
               </div>
-              <ul className="space-y-4 text-lg text-gray-700">
-                <li className="flex items-center">
-                  <svg className="w-6 h-6 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 4.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-3-3a1 1 0 111.414-1.414L9 10.586l6.293-6.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
-                  Link Pro features
-                </li>
-                <li className="flex items-center">
-                  <svg className="w-6 h-6 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 4.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-3-3a1 1 0 111.414-1.414L9 10.586l6.293-6.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
-                  Priority discovery boost
-                </li>
-                <li className="flex items-center">
-                  <svg className="w-6 h-6 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 4.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-3-3a1 1 0 111.414-1.414L9 10.586l6.293-6.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
-                  Advanced analytics
-                </li>
-                 <li className="flex items-center">
-                  <svg className="w-6 h-6 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 4.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-3-3a1 1 0 111.414-1.414L9 10.586l6.293-6.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
-                  Can pass premium ticket fee
-                </li>
-                <li className="flex items-center">
-                  <svg className="w-6 h-6 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 4.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-3-3a1 1 0 111.414-1.414L9 10.586l6.293-6.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
-                  Smart Fill pricing benefits
-                </li>
-              </ul>
-            </div>
-            <div className="mt-8">
-              <Link href="/auth/signup?tier=pro-organizer" legacyBehavior>
-                <a className="block w-full text-center py-3 px-6 rounded-lg font-semibold bg-gray-200 text-gray-800 hover:bg-gray-300">
-                  Learn More
-                </a>
+              <Link href={plan.cta.href} className="ev-button-primary mt-5 w-full justify-center">
+                {plan.cta.label}
               </Link>
-            </div>
-          </div>
+            </article>
+          ))}
         </div>
       </section>
-
-      <section className="mb-16 text-center">
-        <h2 className="text-4xl font-bold mb-8">Role-Based Value</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h3 className="text-2xl font-semibold mb-3">Independent Organizer</h3>
-            <p className="text-gray-700">Leverage Link Free for basic event promotion or upgrade to Pro for advanced analytics and conversion tracking.</p>
-          </div>
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h3 className="text-2xl font-semibold mb-3">EVNTSZN Host</h3>
-            <p className="text-gray-700">Get Link Pro included. Enhance your venue's profile, track event performance, and drive more attendees.</p>
-          </div>
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h3 className="text-2xl font-semibold mb-3">Pro Host & City Leader</h3>
-            <p className="text-gray-700">Benefit from all Link Pro features, plus priority placement and deeper integration into the EVNTSZN ecosystem.</p>
-          </div>
-        </div>
-      </section>
-
-      <section className="mb-16 text-center">
-        <h2 className="text-4xl font-bold mb-8">Analytics & Conversion Tracking</h2>
-        <p className="text-lg text-gray-700 max-w-3xl mx-auto">
-          Understand your audience, track click-through rates, and measure the success of your promotions. Link Pro provides
-          robust analytics to optimize your event marketing efforts and drive real conversions.
-        </p>
-      </section>
-
-      <section className="text-center">
-        <h2 className="text-4xl font-bold mb-8">Ready to Amplify Your Events?</h2>
-        <div className="flex justify-center space-x-6">
-          <Link href="/auth/signup?plan=link-free" legacyBehavior>
-            <a className="inline-block py-3 px-8 rounded-lg font-semibold bg-gradient-to-r from-purple-500 to-blue-500 text-white hover:from-purple-600 hover:to-blue-600 text-lg">
-              Start Free
-            </a>
-          </Link>
-          <Link href="/auth/upgrade?plan=link-pro" legacyBehavior>
-            <a className="inline-block py-3 px-8 rounded-lg font-semibold border-2 border-purple-500 text-purple-500 hover:bg-purple-500 hover:text-white text-lg">
-              Go Pro
-            </a>
-          </Link>
-        </div>
-      </section>
-    </div>
+    </PublicPageFrame>
   );
-};
-
-export default LinkPage;
+}

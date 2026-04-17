@@ -47,7 +47,8 @@ export default function InternalAccessForm({ next = "/admin" }: { next?: string 
           window.location.replace(data.redirectTo || next);
           return;
         }
-        window.location.replace(next);
+        const data = (await res.json().catch(() => ({}))) as { redirectTo?: string };
+        window.location.replace(data.redirectTo || next);
         return;
       }
 

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import PublicNav from "@/components/public/PublicNav";
+import PublicFooter from "@/components/public/PublicFooter";
 import ForgotPasswordForm from "./ForgotPasswordForm";
 import { getAppOrigin, getWebOrigin } from "@/lib/domains";
 
@@ -27,6 +28,7 @@ export default function ForgotPasswordPage() {
           <ForgotPasswordForm />
         </section>
       </div>
+      <PublicFooter />
     </main>
   );
 }

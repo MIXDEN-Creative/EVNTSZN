@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { getWebOrigin } from "@/lib/domains";
+import { getReserveOrigin, getWebOrigin } from "@/lib/domains";
 import { EPL_TEAM_PROFILES } from "@/lib/epl-teams";
 import { PUBLIC_CITIES } from "@/lib/public-cities";
 import { supabaseAdmin } from "@/lib/supabase-admin";
@@ -14,6 +14,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .order("start_at", { ascending: true })
     .limit(200);
 
+  const reserveVenuesRes = await supabaseAdmin
+    .from("evntszn_reserve_venues")
+    .select("created_at, evntszn_venues!inner(slug)")
+    .eq("is_active", true)
+    .limit(200);
+  const reserveVenues = reserveVenuesRes.error ? [] : reserveVenuesRes.data || [];
+
   const entries: MetadataRoute.Sitemap = [
     {
       url: `${origin}/`,
@@ -24,6 +31,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${origin}/events`,
       changeFrequency: "daily",
       priority: 0.9,
+    },
+    {
+      url: `${origin}/city`,
+      changeFrequency: "weekly",
+      priority: 0.85,
     },
     {
       url: `${origin}/hosts`,
@@ -41,9 +53,24 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.7,
     },
     {
-      url: `${origin}/partners/packages`,
+      url: `${origin}/pulse`,
+      changeFrequency: "daily",
+      priority: 0.8,
+    },
+    {
+      url: `${getReserveOrigin()}/`,
       changeFrequency: "weekly",
-      priority: 0.6,
+      priority: 0.8,
+    },
+    {
+      url: `${origin}/partners`,
+      changeFrequency: "weekly",
+      priority: 0.7,
+    },
+    {
+      url: `${origin}/sponsors`,
+      changeFrequency: "weekly",
+      priority: 0.7,
     },
     {
       url: `${origin}/support`,
@@ -88,6 +115,36 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "daily",
       priority: 0.8,
     });
+    entries.push({
+      url: `${origin}/city/${city.slug}`,
+      changeFrequency: "daily",
+      priority: 0.8,
+    });
+    entries.push({
+      url: `${origin}/city/${city.slug}/events`,
+      changeFrequency: "daily",
+      priority: 0.8,
+    });
+    entries.push({
+      url: `${origin}/city/${city.slug}/nightlife`,
+      changeFrequency: "daily",
+      priority: 0.78,
+    });
+    entries.push({
+      url: `${origin}/city/${city.slug}/reservations`,
+      changeFrequency: "daily",
+      priority: 0.78,
+    });
+    entries.push({
+      url: `${origin}/city/${city.slug}/venues`,
+      changeFrequency: "daily",
+      priority: 0.76,
+    });
+    entries.push({
+      url: `${getReserveOrigin()}/${city.slug}`,
+      changeFrequency: "daily",
+      priority: 0.75,
+    });
   }
 
   for (const team of EPL_TEAM_PROFILES) {
@@ -116,6 +173,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: event.updated_at || undefined,
       changeFrequency: "daily",
       priority: 0.8,
+    });
+  }
+
+  for (const row of reserveVenues || []) {
+    const venue = Array.isArray(row.evntszn_venues) ? row.evntszn_venues[0] : row.evntszn_venues;
+    if (!venue?.slug) continue;
+    entries.push({
+      url: `${getReserveOrigin()}/${venue.slug}`,
+      lastModified: row.created_at || undefined,
+      changeFrequency: "daily",
+      priority: 0.76,
     });
   }
 

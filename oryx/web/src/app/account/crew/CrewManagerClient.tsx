@@ -310,7 +310,7 @@ export default function CrewManagerClient() {
             <button type="button" onClick={saveProfile} disabled={saving} className="ev-button-primary">
               {saving ? "Saving..." : "Save crew profile"}
             </button>
-            {profile.slug ? <a href={`/${profile.slug}`} target="_blank" rel="noreferrer" className="ev-button-secondary">Open public profile</a> : null}
+            {profile.slug ? <a href={`/crew/${profile.slug}`} target="_blank" rel="noreferrer" className="ev-button-secondary">Open public profile</a> : null}
           </div>
         </section>
 
@@ -332,6 +332,11 @@ export default function CrewManagerClient() {
                 <div className="mt-4 text-sm leading-6 text-white/68">
                   {[request.requested_role, request.event_name, [request.city, request.state].filter(Boolean).join(", ") || null].filter(Boolean).join(" • ")}
                 </div>
+                {request.flat_booking_fee_usd ? (
+                  <div className="mt-3 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-[11px] font-bold uppercase tracking-[0.18em] text-[#d7c0ff]">
+                    EVNTSZN fee ${Number(request.flat_booking_fee_usd).toFixed(2)}
+                  </div>
+                ) : null}
                 {request.message ? <p className="mt-3 text-sm leading-6 text-white/72">{request.message}</p> : null}
                 <div className="mt-4 flex flex-wrap gap-2">
                   {["reviewing", "accepted", "declined", "completed"].map((status) => (

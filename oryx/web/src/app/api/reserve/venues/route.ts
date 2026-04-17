@@ -118,8 +118,8 @@ export async function POST(request: NextRequest) {
         venueSlug: ownedVenue.slug,
         ownerUserId: user.id,
       },
-    });
-    await syncReservePerformance(user.id);
+    }).catch(() => null);
+    await syncReservePerformance(user.id).catch(() => null);
 
     return NextResponse.json({
       ok: true,

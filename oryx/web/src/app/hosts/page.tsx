@@ -15,32 +15,27 @@ const HostsPage = () => {
 
   return (
     <PublicPageFrame
-      title="EVNTSZN Host Program"
-      description="Become an approved EVNTSZN Host and operate premium city nights within our network."
+      title="EVNTSZN Curators"
+      description="Become an approved EVNTSZN Curator and operate premium city nights within the network."
       heroImage="https://images.unsplash.com/photo-1505236858219-8359eb29e329?auto=format&fit=crop&w=1800&q=80"
       seo={{
-        title: "EVNTSZN Host Program - Operate Premium City Nights",
-        description: "Join the EVNTSZN Host Program to run exclusive nightlife experiences in Baltimore, Washington, Rehoboth Beach, Ocean City, and Bethany Beach.",
+        title: "EVNTSZN Curators - Operate Premium City Nights",
+        description: "Become an approved EVNTSZN Curator and run premium nightlife experiences in Baltimore, Washington, Rehoboth Beach, Ocean City, and Bethany Beach.",
       }}
     >
       <section className="mx-auto max-w-7xl px-4 py-10 md:px-6 lg:px-8">
         <div className="ev-panel p-6">
           <div className="ev-section-kicker">Your next move</div>
-          <div className="mt-3 text-2xl font-black tracking-tight text-white md:text-3xl">
-            Operate as an EVNTSZN Host
-          </div>
+          <div className="mt-3 text-2xl font-black tracking-tight text-white md:text-3xl">Operate as an EVNTSZN Curator</div>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-white/72">
-            The EVNTSZN Host Program is for established operators, venue managers, and community leaders who want to run premium
-            city nights within the EVNTSZN network. Hosts benefit from our commission structure, access to advanced tools,
-            and a clear path to greater operational responsibility. This is distinct from an independent organizer path;
-            hosts are integrated partners in the EVNTSZN ecosystem.
+            The EVNTSZN Curator path is for established operators, venue managers, and community leaders who want to run premium city nights within the EVNTSZN network. Curators operate inside the EVNTSZN structure with deeper platform support and controlled access.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link href="/hosts/apply" className="ev-button-primary px-8">
-              Apply as a Host
+              Apply as a Curator
             </Link>
             <Link href={getLoginUrl("/ops", "app.evntszn.com")} className="ev-button-secondary px-8">
-              Enter Host Ops Portal
+              Enter Curator Ops
             </Link>
           </div>
         </div>
@@ -48,10 +43,10 @@ const HostsPage = () => {
 
       <section className="mx-auto max-w-7xl px-4 py-10 md:px-6 lg:px-8">
         <div className="ev-panel p-6">
-          <div className="ev-section-kicker">Open Host Markets</div>
-          <div className="mt-3 text-2xl font-black tracking-tight text-white">Current EVNTSZN Host Openings</div>
+          <div className="ev-section-kicker">Open Curator Markets</div>
+          <div className="mt-3 text-2xl font-black tracking-tight text-white">Current EVNTSZN Curator Openings</div>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-white/72">
-            We are actively reviewing hosts for Baltimore, Washington, Rehoboth Beach, Ocean City, and Bethany Beach. Approved hosts work premium city nights, operate inside the live host commission structure, and build toward deeper city-office responsibility.
+            We are actively reviewing curators for Baltimore, Washington, Rehoboth Beach, Ocean City, and Bethany Beach. Approved curators work premium city nights and build toward deeper city-office responsibility.
           </p>
           <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {hostMarketsWithState.map((market) => (
@@ -66,8 +61,8 @@ const HostsPage = () => {
 
       <section className="mx-auto max-w-7xl px-4 py-10 md:px-6 lg:px-8">
         <div className="ev-panel p-6">
-          <div className="ev-section-kicker">Host Program Value</div>
-          <div className="mt-3 text-2xl font-black tracking-tight text-white">Why EVNTSZN Host?</div>
+          <div className="ev-section-kicker">Curator program value</div>
+          <div className="mt-3 text-2xl font-black tracking-tight text-white">Why EVNTSZN Curator?</div>
           <div className="mt-6 grid gap-6 md:grid-cols-2">
             <div>
               <h3 className="text-2xl font-semibold mb-3 text-white">Integrated Ecosystem</h3>
@@ -80,7 +75,7 @@ const HostsPage = () => {
             <div>
               <h3 className="text-2xl font-semibold mb-3 text-white">Growth & Responsibility</h3>
               <p className="text-sm leading-relaxed text-white/70">
-                Progress through Host levels (Host, Certified Host, Pro Host, City Leader) with increasing system control
+                Progress through curator levels with increasing system control
                 and revenue share. Build your market presence and become a key operator within the EVNTSZN network.
               </p>
             </div>
@@ -89,12 +84,12 @@ const HostsPage = () => {
       </section>
 
       <section className="mx-auto max-w-7xl px-4 py-10 md:px-6 lg:px-8 text-center">
-        <h2 className="text-4xl font-bold mb-8 text-white">Not an EVNTSZN Host?</h2>
+        <h2 className="text-4xl font-bold mb-8 text-white">Not an EVNTSZN Curator?</h2>
         <p className="text-lg text-white/70 max-w-3xl mx-auto mb-8">
-          If you're organizing your own events, managing your brand, or building your audience independently, the Independent Organizer path might be for you.
+          If you're organizing your own events, managing your brand, or building your audience independently, the Partner path might be for you.
         </p>
         <Link href="/organizer/apply" className="ev-button-primary px-8 py-3 text-lg">
-          Learn about Independent Organizers
+          Learn about Partners
         </Link>
       </section>
     </PublicPageFrame>

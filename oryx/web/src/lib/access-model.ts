@@ -26,8 +26,8 @@ export const PRIMARY_ROLE_OPTIONS = [
   },
   {
     value: "host",
-    label: "Host",
-    description: "Host-owned event access with city or office relationship where needed.",
+    label: "Curator",
+    description: "Curator-owned event access with city or office relationship where needed.",
   },
 ] as const;
 
@@ -76,7 +76,7 @@ export const ROLE_SUBTYPE_OPTIONS: Record<string, { value: string; label: string
   ops: [
     {
       value: "ops_operator",
-      label: "Ops Operator",
+      label: "Ops Team",
       description: "Daily execution across assigned offices, cities, or events.",
     },
   ],
@@ -90,8 +90,8 @@ export const ROLE_SUBTYPE_OPTIONS: Record<string, { value: string; label: string
   host: [
     {
       value: "network_host",
-      label: "Host",
-      description: "Host-owned event access with limited internal controls.",
+      label: "Curator",
+      description: "Curator-owned event access with limited internal controls.",
     },
   ],
 };
@@ -119,9 +119,9 @@ export const ROLE_SCOPE_OPTIONS: Record<string, { value: string; label: string; 
   ],
   scanner: [{ value: "event", label: "Event", description: "Assigned event check-in only." }],
   host: [
-    { value: "self", label: "Self", description: "Only this host’s events and activity." },
-    { value: "city", label: "City", description: "Host access for a local city relationship." },
-    { value: "office", label: "Office", description: "Host relationship tied to an office." },
+    { value: "self", label: "Self", description: "Only this curator’s events and activity." },
+    { value: "city", label: "City", description: "Curator access for a local city relationship." },
+    { value: "office", label: "Office", description: "Curator relationship tied to an office." },
   ],
 };
 

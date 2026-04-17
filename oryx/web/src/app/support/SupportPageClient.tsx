@@ -174,10 +174,10 @@ export default function SupportPageClient({
               <option value="player">I am a player</option>
               <option value="attendee">I am an attendee</option>
               <option value="organizer">I am an organizer</option>
-              <option value="host">I am a host</option>
+              <option value="host">I am an EVNTSZN Curator</option>
               <option value="scanner">I work scanner</option>
               <option value="ops">I work ops</option>
-              <option value="sponsor">I am a sponsor or partner</option>
+              <option value="sponsor">I am a sponsor</option>
               <option value="staff">I am staff</option>
             </select>
             <select className="ev-field" value={form.issueType} onChange={(event) => setForm((current) => ({ ...current, issueType: event.target.value }))}>

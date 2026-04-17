@@ -60,6 +60,7 @@ export async function POST(request: Request) {
       specialRequirements?: string;
       message?: string;
       budgetAmountUsd?: number | null;
+      bookingFeeAccepted?: boolean;
     };
 
     const crewProfileId = String(body.crewProfileId || "").trim();
@@ -79,8 +80,18 @@ export async function POST(request: Request) {
     if (!profile || profile.status !== "published" || !profile.accepts_booking_requests) {
       return NextResponse.json({ error: "This crew profile is not accepting requests." }, { status: 404 });
     }
+    if (!body.bookingFeeAccepted) {
+      return NextResponse.json({ error: "Booking-fee acknowledgment is required before submitting a request." }, { status: 400 });
+    }
 
     const user = await getUser();
+    const resolvedBookingFeeUsd =
+      profile.booking_fee_usd && Number(profile.booking_fee_usd) > 0
+        ? Number(profile.booking_fee_usd)
+        : body.budgetAmountUsd && Number(body.budgetAmountUsd) > 0
+          ? Number((Number(body.budgetAmountUsd) / 1000).toFixed(2))
+          : null;
+
     const { data: requestRow, error } = await supabaseAdmin.from("evntszn_crew_booking_requests").insert({
       crew_profile_id: profile.id,
       requester_user_id: user?.id || null,
@@ -94,7 +105,7 @@ export async function POST(request: Request) {
       state: String(body.state || "").trim() || null,
       message: String(body.message || "").trim() || null,
       budget_amount_usd: body.budgetAmountUsd ? Number(body.budgetAmountUsd) : null,
-      flat_booking_fee_usd: profile.booking_fee_usd || null,
+      flat_booking_fee_usd: resolvedBookingFeeUsd,
       status: "requested",
       metadata: {
         eventType: String(body.eventType || "").trim() || null,
@@ -103,6 +114,8 @@ export async function POST(request: Request) {
         equipmentNotes: String(body.equipmentNotes || "").trim() || null,
         audienceSize: String(body.audienceSize || "").trim() || null,
         specialRequirements: String(body.specialRequirements || "").trim() || null,
+        bookingFeeAccepted: true,
+        bookingFeeRule: profile.booking_fee_usd ? "flat_fee" : "ten_percent_marketplace_fee",
         userAgent: request.headers.get("user-agent"),
       },
     }).select("id").single();

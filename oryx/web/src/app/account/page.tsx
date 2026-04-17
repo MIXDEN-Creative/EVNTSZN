@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
 import PublicNav from "@/components/public/PublicNav";
+import PublicFooter from "@/components/public/PublicFooter";
 import { getAppOrigin, getEplOrigin, getWebOrigin } from "@/lib/domains";
 import { getPlatformViewer } from "@/lib/evntszn";
 
@@ -46,6 +47,24 @@ function buildQuickLinks(viewer: Awaited<ReturnType<typeof getPlatformViewer>>) 
 
   if (viewer.user) {
     attendeeLinks.push({
+      title: "Official tickets",
+      body: "Open your live ticket wallet with status, secure entry, and event access.",
+      href: "/account/tickets",
+      label: "Open tickets",
+    });
+    attendeeLinks.push({
+      title: "Pulse Feed",
+      body: "Track public event movement, venue momentum, and live city signals.",
+      href: "/account/pulse",
+      label: "Open Pulse",
+    });
+    attendeeLinks.push({
+      title: "Messages",
+      body: "See confirmations, updates, and account-linked replies in one thread view.",
+      href: "/account/messages",
+      label: "Open messages",
+    });
+    attendeeLinks.push({
       title: "Track orders",
       body: "Follow purchases and order status.",
       href: "/orders/track",
@@ -60,7 +79,7 @@ function buildQuickLinks(viewer: Awaited<ReturnType<typeof getPlatformViewer>>) 
     attendeeLinks.push(
       {
         title: "EVNTSZN Link",
-        body: "Manage your public host conversion page, offers, and event promotion.",
+        body: "Manage your public curator conversion page, offers, and event promotion.",
         href: "/account/link",
         label: "Open Link",
       },
@@ -79,6 +98,12 @@ function buildQuickLinks(viewer: Awaited<ReturnType<typeof getPlatformViewer>>) 
     );
   } else {
     attendeeLinks.push(
+      {
+        title: "Pulse Feed",
+        body: "Preview public city signals, then sign in for account-level access.",
+        href: `${getAppOrigin()}/account/login?next=/account/pulse`,
+        label: "Open Pulse",
+      },
       {
         title: "Sign in",
         body: "Open your member account for tickets and orders.",
@@ -115,6 +140,18 @@ function buildQuickLinks(viewer: Awaited<ReturnType<typeof getPlatformViewer>>) 
         body: "Manage EVNTSZN and EPL event inventory.",
         href: "/epl/admin/events",
         label: "Open events",
+      },
+      {
+        title: "Pulse feed",
+        body: "Moderate public and internal Pulse signals.",
+        href: "/epl/admin/pulse",
+        label: "Open Pulse",
+      },
+      {
+        title: "Messaging",
+        body: "Run public-safe and internal threads without leaving admin.",
+        href: "/epl/admin/messages",
+        label: "Open messaging",
       }
     );
   }
@@ -125,6 +162,18 @@ function buildQuickLinks(viewer: Awaited<ReturnType<typeof getPlatformViewer>>) 
       body: "Scoped operator workspace for event execution.",
       href: "/ops",
       label: "Open ops",
+    });
+    operationalLinks.push({
+      title: "Internal Pulse",
+      body: "Review internal ops signals, assignments, and reserve pressure.",
+      href: "/ops/pulse",
+      label: "Open internal Pulse",
+    });
+    operationalLinks.push({
+      title: "Internal messaging",
+      body: "Coordinate internal work without mixing public conversations.",
+      href: "/ops/messages",
+      label: "Open internal messages",
     });
   }
 
@@ -146,20 +195,20 @@ function buildQuickLinks(viewer: Awaited<ReturnType<typeof getPlatformViewer>>) 
 
   if (viewer.profile?.primary_role === "organizer" || viewer.isPlatformAdmin) {
     operationalLinks.push({
-      title: "Organizer workspace",
+      title: "Partner workspace",
       body: "Manage event-ready workflows and activity.",
       href: "/organizer",
-      label: "Open organizer",
+      label: "Open partner workspace",
     });
   }
 
   if (classification === "evntszn_host" || classification === "city_host") {
     operationalLinks.push(
       {
-        title: "Host network",
-        body: "EVNTSZN Host network path and progression.",
+        title: "Curator network",
+        body: "EVNTSZN Curator path and progression.",
         href: `${getWebOrigin()}/hosts`,
-        label: "Open host path",
+        label: "Open curator path",
       },
       {
         title: "Signal",
@@ -182,6 +231,70 @@ function buildQuickLinks(viewer: Awaited<ReturnType<typeof getPlatformViewer>>) 
   return { attendeeLinks, operationalLinks };
 }
 
+function buildRoleLanes(viewer: Awaited<ReturnType<typeof getPlatformViewer>>) {
+  const lanes = [
+    {
+      title: "Member",
+      body: "Tickets, orders, messages, Pulse, and league activity stay in the member lane.",
+      href: viewer.user ? "/account/tickets" : `${getAppOrigin()}/account/login?next=/account`,
+      label: viewer.user ? "Open tickets" : "Enter member lane",
+      active: true,
+    },
+  ];
+
+  if (viewer.profile?.primary_role === "organizer" || viewer.operatorProfile?.organizer_classification === "independent_organizer") {
+    lanes.push({
+      title: "Partner",
+      body: "Create events, manage ticketing, and work the self-operated event lane.",
+      href: "/organizer",
+      label: "Open partner workspace",
+      active: true,
+    });
+  }
+
+  if (viewer.operatorProfile?.organizer_classification === "evntszn_host" || viewer.operatorProfile?.organizer_classification === "city_host") {
+    lanes.push({
+      title: "EVNTSZN Curator",
+      body: "Network-led event operations, city support, and curator progression stay here.",
+      href: "/ops",
+      label: "Open curator ops",
+      active: true,
+    });
+  }
+
+  if (viewer.profile?.primary_role === "venue") {
+    lanes.push({
+      title: "Venue",
+      body: "Reserve, event readiness, and scanner-day venue operations run from this lane.",
+      href: "/venue",
+      label: "Open venue workspace",
+      active: true,
+    });
+  }
+
+  if (viewer.operatorProfile?.dashboard_access.includes("city") || viewer.isPlatformAdmin) {
+    lanes.push({
+      title: "City Office",
+      body: "Market-level approvals, city performance, and operational oversight stay separate from attendee tools.",
+      href: "/city-office",
+      label: "Open city office",
+      active: true,
+    });
+  }
+
+  if (viewer.isPlatformAdmin) {
+    lanes.push({
+      title: "HQ / Admin",
+      body: "League controls, internal messaging, queues, issues, and sponsorship operations stay here.",
+      href: "/epl/admin",
+      label: "Open HQ admin",
+      active: true,
+    });
+  }
+
+  return lanes;
+}
+
 export default async function AccountPage() {
   const viewer = await getPlatformViewer().catch((error) => {
     console.error("[account] viewer load failed", error);
@@ -194,6 +307,7 @@ export default async function AccountPage() {
   });
 
   const { attendeeLinks, operationalLinks } = buildQuickLinks(viewer);
+  const roleLanes = buildRoleLanes(viewer);
   const accessSummary = [
     viewer.user?.email ? `Signed in as ${viewer.user.email}` : "Public member hub",
     viewer.isPlatformAdmin ? "Founder/admin override" : null,
@@ -242,6 +356,28 @@ export default async function AccountPage() {
                 ? "Manage your tickets, orders, saved activity, and any creator tools tied to your profile from one hub."
                 : "Join EVNTSZN to track your tickets, orders, and league history with one member identity."}
             </p>
+            <div className="mt-8 flex flex-wrap gap-2">
+              {accessSummary.map((item) => (
+                <div key={item} className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.18em] text-white/68">
+                  {item}
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-12">
+              <div className="text-sm font-bold uppercase tracking-[0.24em] text-white/40 mb-6">Your Active Lanes</div>
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {roleLanes.map((lane) => (
+                  <div key={lane.title} className="rounded-[28px] border border-white/10 bg-black/35 p-6">
+                    <div className="text-xl font-black tracking-tight text-white">{lane.title}</div>
+                    <p className="mt-3 text-sm leading-6 text-white/60">{lane.body}</p>
+                    <Link href={lane.href} className="mt-6 inline-flex rounded-full bg-white px-5 py-3 text-xs font-black uppercase tracking-[0.18em] text-black transition hover:opacity-90">
+                      {lane.label}
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            </div>
 
             <div className="mt-16">
               <div className="text-sm font-bold uppercase tracking-[0.24em] text-white/40 mb-8">Member Experience</div>
@@ -283,6 +419,7 @@ export default async function AccountPage() {
           </div>
         </div>
       </div>
+      <PublicFooter />
     </main>
   );
 }

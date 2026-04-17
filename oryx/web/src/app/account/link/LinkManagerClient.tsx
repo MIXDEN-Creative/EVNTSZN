@@ -279,7 +279,7 @@ export default function LinkManagerClient() {
         <div className="ev-shell-hero-grid">
           <div>
             <div className="ev-kicker">EVNTSZN Link</div>
-            <h1 className="ev-title">Build a host conversion page that actually moves people.</h1>
+            <h1 className="ev-title">Build a curator conversion page that actually moves people.</h1>
             <p className="ev-subtitle">
               Manage identity, social links, live event promotion, email capture, and paid offers from one internal desk.
             </p>

@@ -4,7 +4,7 @@ import AdminPasswordRecoveryClient from "./AdminPasswordRecoveryClient";
 
 export const metadata: Metadata = {
   title: "Internal Password Recovery | EVNTSZN",
-  description: "Reset internal EVNTSZN access for HQ, admin, office, ops, scanner, and host users.",
+  description: "Reset internal EVNTSZN access for HQ, admin, office, ops, scanner, and curator users.",
   alternates: {
     canonical: `${getAppOrigin()}/admin-login/recover`,
   },

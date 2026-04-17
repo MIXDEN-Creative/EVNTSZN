@@ -1,10 +1,12 @@
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { createSystemLogEntry, hasSystemLogLedger } from "@/lib/system-log-ledger";
 
 export const INTERNAL_DESK_SLUGS = {
   organizer: "organizer",
   host: "host",
   venue: "venue",
   reserve: "reserve",
+  sponsor: "partner",
   partner: "partner",
   crew: "crew",
   agreements: "agreements",
@@ -47,26 +49,53 @@ async function getDeskIdBySlug(slug: InternalDeskSlug) {
 }
 
 export async function createInternalWorkItem(input: WorkItemInput) {
-  const deskId = await getDeskIdBySlug(input.deskSlug);
+  try {
+    const deskId = await getDeskIdBySlug(input.deskSlug);
 
-  const { data, error } = await supabaseAdmin
-    .from("internal_work_items")
-    .insert({
-      desk_id: deskId,
-      title: input.title,
-      description: input.description || null,
-      priority: input.priority || "medium",
-      assigned_to: input.assignedTo || null,
-      payload: input.payload || {},
-    })
-    .select("id, status, created_at")
-    .single();
+    const { data, error } = await supabaseAdmin
+      .from("internal_work_items")
+      .insert({
+        desk_id: deskId,
+        title: input.title,
+        description: input.description || null,
+        priority: input.priority || "medium",
+        assigned_to: input.assignedTo || null,
+        payload: input.payload || {},
+      })
+      .select("id, status, created_at")
+      .single();
 
-  if (error) {
-    throw new Error(error.message);
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return data;
+  } catch (error) {
+    if (!(await hasSystemLogLedger())) {
+      throw error instanceof Error ? error : new Error("Could not create internal work item.");
+    }
+
+    const fallback = await createSystemLogEntry({
+      source: "internal_work_item",
+      severity: input.priority === "critical" ? "critical" : input.priority === "high" ? "warning" : "info",
+      status: "open",
+      message: input.title,
+      context: {
+        deskSlug: input.deskSlug,
+        description: input.description || null,
+        assignedTo: input.assignedTo || null,
+        priority: input.priority || "medium",
+        payload: input.payload || {},
+        fallbackType: "system_log_work_item",
+      },
+    });
+
+    return {
+      id: fallback.id,
+      status: "open",
+      created_at: fallback.occurred_at,
+    };
   }
-
-  return data;
 }
 
 export async function createPerformanceAlertWorkItem(input: {

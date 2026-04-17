@@ -96,8 +96,8 @@ export async function POST(request: NextRequest) {
         reserveVenueId,
         venueId: reserveVenue.venue_id,
       },
-    });
-    await syncReservePerformance(venue?.owner_user_id);
+    }).catch(() => null);
+    await syncReservePerformance(venue?.owner_user_id).catch(() => null);
 
     return NextResponse.json({ ok: true, slots: data || [] });
   } catch (error) {

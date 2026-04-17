@@ -108,6 +108,10 @@ function getConfiguredOrigin(surface: EvntsznSurface) {
   return null;
 }
 
+export function hasConfiguredOrigin(surface: EvntsznSurface) {
+  return getConfiguredOrigin(surface) !== null;
+}
+
 export function isLocalHost(host = "") {
   const bare = stripPort(host);
   return (
@@ -129,6 +133,18 @@ export function getCanonicalOrigin(surface: EvntsznSurface, runtimeHost?: string
 
   const configured = getConfiguredOrigin(surface);
   if (configured) return configured;
+
+  if (runtimeHost) {
+    const bareHost = stripPort(runtimeHost);
+    const baseDomain = getBaseDomain();
+    if (
+      bareHost === baseDomain ||
+      bareHost === `www.${baseDomain}` ||
+      bareHost.endsWith(`.${baseDomain}`)
+    ) {
+      return `https://${bareHost}`;
+    }
+  }
 
   return DEFAULT_ORIGINS[surface];
 }
@@ -315,6 +331,9 @@ export function getCanonicalUrl(path: string, surface: EvntsznSurface, runtimeHo
 
 export function resolveNextRedirectUrl(next?: string | null, runtimeHost?: string) {
   const nextPath = normalizeNextPath(next);
+  if (runtimeHost && isLocalHost(runtimeHost)) {
+    return new URL(nextPath, getAppOrigin(runtimeHost)).toString();
+  }
   const surface = inferSurfaceForNext(nextPath, runtimeHost);
   return getCanonicalUrl(nextPath, surface, runtimeHost);
 }

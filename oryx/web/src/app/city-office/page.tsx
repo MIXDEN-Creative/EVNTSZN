@@ -32,7 +32,7 @@ export default async function CityOfficeSurfacePage() {
     <CityOfficeClient
       apiPath="/api/city-office"
       title="Run your city office without crossing into markets you do not own."
-      description="City commissioners, deputies, and city leaders can work from a scoped operating view that keeps revenue, approvals, hosts, organizers, and upcoming event volume tied to the cities they are actually assigned."
+      description="City commissioners, deputies, and city leaders can work from a scoped operating view that keeps revenue, approvals, EVNTSZN Curators, Partners, and upcoming event volume tied to the cities they are actually assigned."
       scopeNote="You are only seeing the cities attached to your operator profile. Founder and HQ override still sit above this surface."
     />
   );

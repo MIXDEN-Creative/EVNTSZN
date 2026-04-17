@@ -6,9 +6,12 @@ import {
   getCanonicalPath,
   getEplOrigin,
   getOpsOrigin,
+  getReserveOrigin,
   getScannerOrigin,
   getSurfaceFromHost,
   getWebOrigin,
+  hasConfiguredOrigin,
+  isLocalHost,
 } from "./src/lib/domains";
 import { PUBLIC_CITIES } from "./src/lib/public-cities";
 
@@ -43,6 +46,20 @@ export function middleware(request: NextRequest) {
   const canonicalWebHost = new URL(getWebOrigin(host)).host.toLowerCase();
   const hostsWebHost = `hosts.${getBaseDomain()}`.toLowerCase();
   const url = request.nextUrl.clone();
+  const redirectToOrigin = (targetPath: string, targetOrigin: string) => {
+    const targetUrl = new URL(targetPath, targetOrigin);
+    const targetHost = targetUrl.host.replace(/:\d+$/, "").toLowerCase();
+
+    if (
+      targetHost === bareHost &&
+      targetUrl.pathname === pathname &&
+      targetUrl.search === request.nextUrl.search
+    ) {
+      return NextResponse.next();
+    }
+
+    return NextResponse.redirect(targetUrl);
+  };
 
   if (bareHost === hostsWebHost || bareHost === `www.${hostsWebHost}`) {
     if (pathname === "/") {
@@ -121,8 +138,10 @@ export function middleware(request: NextRequest) {
       "ops",
       "hosts",
       "events",
+      "pulse",
       "crew",
       "link",
+      "reserve",
       "nodes",
       "support",
       "privacy",
@@ -133,6 +152,7 @@ export function middleware(request: NextRequest) {
       "checkout",
       "coming-soon",
       "partners",
+      "sponsors",
       "signal",
       "ambassador",
       "store",
@@ -142,14 +162,17 @@ export function middleware(request: NextRequest) {
     const publicAllowed = [
     "/",
     "/events",
+    "/pulse",
     "/crew",
     "/link",
+    "/reserve",
     "/nodes",
+    "/partners",
+    "/sponsors",
     "/hosts/apply",
     "/organizer/apply",
     "/signal/apply",
     "/ambassador/apply",
-    "/partners/packages",
     "/orders/track",
     "/checkout/success",
     "/checkout/cancel",
@@ -184,19 +207,26 @@ export function middleware(request: NextRequest) {
     ];
 
     if (pathname.startsWith("/account") || pathname.startsWith("/auth/callback")) {
-      return NextResponse.redirect(new URL(getCanonicalPath(pathname, "app"), getAppOrigin(host)));
+      return redirectToOrigin(getCanonicalPath(pathname, "app"), getAppOrigin(host));
     }
 
     if (pathname.startsWith("/scanner")) {
-      return NextResponse.redirect(new URL(getCanonicalPath(pathname, "scanner"), getScannerOrigin(host)));
+      return redirectToOrigin(getCanonicalPath(pathname, "scanner"), getScannerOrigin(host));
+    }
+
+    if (pathname.startsWith("/reserve")) {
+      if (isLocalHost(host) || !hasConfiguredOrigin("reserve")) {
+        return NextResponse.next();
+      }
+      return redirectToOrigin(pathname, getReserveOrigin(host));
     }
 
     if (pathname.startsWith("/epl")) {
-      return NextResponse.redirect(new URL(getCanonicalPath(pathname, "epl"), getEplOrigin(host)));
+      return redirectToOrigin(getCanonicalPath(pathname, "epl"), getEplOrigin(host));
     }
 
     if (pathname.startsWith("/organizer") || pathname.startsWith("/venue")) {
-      return NextResponse.redirect(new URL(pathname, getOpsOrigin(host)));
+      return redirectToOrigin(pathname, getOpsOrigin(host));
     }
 
     const isPublicPath =
@@ -214,22 +244,53 @@ export function middleware(request: NextRequest) {
   }
 
   if (surface === "app") {
+    if (pathname.startsWith("/reserve")) {
+      if (isLocalHost(host) || !hasConfiguredOrigin("reserve")) {
+        return NextResponse.next();
+      }
+      return redirectToOrigin(pathname, getReserveOrigin(host));
+    }
+
     if (pathname.startsWith("/scanner")) {
-      return NextResponse.redirect(new URL(getCanonicalPath(pathname, "scanner"), getScannerOrigin(host)));
+      return redirectToOrigin(getCanonicalPath(pathname, "scanner"), getScannerOrigin(host));
     }
 
     if (pathname.startsWith("/epl")) {
-      return NextResponse.redirect(new URL(getCanonicalPath(pathname, "epl"), getEplOrigin(host)));
+      return redirectToOrigin(getCanonicalPath(pathname, "epl"), getEplOrigin(host));
     }
 
     if (pathname.startsWith("/organizer") || pathname.startsWith("/venue")) {
-      return NextResponse.redirect(new URL(pathname, getOpsOrigin(host)));
+      return redirectToOrigin(pathname, getOpsOrigin(host));
     }
 
     if (pathname === "/") {
       url.pathname = "/account";
       return NextResponse.redirect(url);
     }
+    return NextResponse.next();
+  }
+
+  if (surface === "reserve") {
+    if (pathname === "/") {
+      url.pathname = "/reserve";
+      return NextResponse.rewrite(url);
+    }
+
+    if (
+      pathname.startsWith("/account") ||
+      pathname.startsWith("/auth/callback") ||
+      pathname.startsWith("/api/reserve") ||
+      pathname.startsWith("/api/admin") ||
+      pathname.startsWith("/admin-login")
+    ) {
+      return NextResponse.next();
+    }
+
+    if (!pathname.startsWith("/reserve")) {
+      url.pathname = `/reserve${pathname === "/" ? "" : pathname}`;
+      return NextResponse.rewrite(url);
+    }
+
     return NextResponse.next();
   }
 

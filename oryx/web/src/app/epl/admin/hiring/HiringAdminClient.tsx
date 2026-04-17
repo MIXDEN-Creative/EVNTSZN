@@ -476,7 +476,7 @@ export default function HiringAdminClient() {
                 <div className="mt-5 grid gap-4 md:grid-cols-2">
                   <select className="ev-field" value={conversionForm.roleKey} onChange={(e) => setConversionForm({ ...conversionForm, roleKey: e.target.value })}>
                     <option value="operations_coordinator">Operations Coordinator</option>
-                    <option value="partnerships_manager">Partnerships Manager</option>
+                    <option value="partnerships_manager">Sponsorships Manager</option>
                     <option value="audience_growth_manager">Audience & Growth Manager</option>
                     <option value="scanner_staff">Scanner Staff</option>
                     <option value="epl_operator">EPL Operator</option>

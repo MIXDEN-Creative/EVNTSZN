@@ -8,7 +8,29 @@ export default function robots(): MetadataRoute.Robots {
   return {
     rules: {
       userAgent: "*",
-      allow: ["/", "/events", "/events/", "/baltimore", "/dc", "/privacy", "/terms", "/refund-policy", "/liability-notice", "/reserve", "/crew", "/link", "/partners", "/epl", "/epl/schedule", "/epl/teams"], // Added new routes, removed old cities
+      allow: [
+        "/",
+        "/events",
+        "/events/",
+        "/city",
+        "/city/",
+        "/reserve",
+        "/reserve/",
+        "/baltimore",
+        "/dc",
+        "/privacy",
+        "/terms",
+        "/refund-policy",
+        "/liability-notice",
+        "/crew",
+        "/link",
+        "/partners",
+        "/sponsors",
+        "/pulse",
+        "/epl",
+        "/epl/schedule",
+        "/epl/teams",
+      ],
       disallow: [
         "/account",
         "/scanner",

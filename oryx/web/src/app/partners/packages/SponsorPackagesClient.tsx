@@ -70,9 +70,9 @@ export default function SponsorPackagesClient({ packages }: { packages: SponsorP
 
     const data = (await response.json()) as { error?: string };
     if (!response.ok) {
-      setMessage(data.error || "Could not submit partner inquiry.");
+      setMessage(data.error || "Could not submit sponsor inquiry.");
     } else {
-      setMessage("Your partner inquiry has been captured for review.");
+      setMessage("Your sponsor inquiry has been captured for review.");
     }
 
     setLoadingId(null);
@@ -109,15 +109,15 @@ export default function SponsorPackagesClient({ packages }: { packages: SponsorP
   return (
     <>
       <section className="ev-panel mt-8 p-6">
-        <div className="ev-section-kicker">Partnership intake</div>
-        <h2 className="mt-3 text-2xl font-bold text-white">Enter your sponsorship contact details once.</h2>
+        <div className="ev-section-kicker">Sponsorship intake</div>
+        <h2 className="mt-3 text-2xl font-bold text-white">Enter your sponsor contact details once.</h2>
         <div className="mt-5 grid gap-4 md:grid-cols-2">
           <input className="ev-field" placeholder="Company name" value={companyName} onChange={(e) => setCompanyName(e.target.value)} />
           <input className="ev-field" placeholder="Contact name" value={contactName} onChange={(e) => setContactName(e.target.value)} />
           <input className="ev-field" type="email" placeholder="Contact email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} />
           <input className="ev-field" placeholder="Contact phone" value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} />
         </div>
-        <textarea className="ev-textarea mt-4" rows={4} placeholder="What kind of partnership, city activation, or sponsor package are you exploring?" value={notes} onChange={(e) => setNotes(e.target.value)} />
+        <textarea className="ev-textarea mt-4" rows={4} placeholder="What kind of sponsorship, city activation, or sponsor package are you exploring?" value={notes} onChange={(e) => setNotes(e.target.value)} />
         <div className="mt-4 flex flex-wrap gap-3">
           <button
             type="button"
@@ -125,10 +125,10 @@ export default function SponsorPackagesClient({ packages }: { packages: SponsorP
             disabled={loadingId === "general" || !companyName || !contactEmail}
             className="ev-button-primary disabled:opacity-50"
           >
-            {loadingId === "general" ? "Submitting..." : "Submit partner inquiry"}
+            {loadingId === "general" ? "Submitting..." : "Submit sponsor inquiry"}
           </button>
           <div className="text-sm leading-6 text-white/62">
-            Use this if you want a partnership conversation first. Package-specific inquiry and checkout still remain available below.
+            Use this if you want a sponsorship conversation first. Package-specific inquiry and checkout still remain available below.
           </div>
         </div>
         {message ? <div className="mt-4 rounded-2xl border border-white/10 bg-black/30 p-4 text-sm text-white/75">{message}</div> : null}

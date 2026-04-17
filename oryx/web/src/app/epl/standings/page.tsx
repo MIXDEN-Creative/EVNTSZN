@@ -1,83 +1,80 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import EplNav from "@/components/epl/EplNav";
+import PublicFooter from "@/components/public/PublicFooter";
 import { getEplOrigin } from "@/lib/domains";
-import { EPL_TEAM_PROFILES, resolveEplTeamProfile } from "@/lib/epl-teams";
 import { getEplPublicContent } from "@/lib/site-content";
-import { supabaseAdmin } from "@/lib/supabase-admin";
+import { getEplPublicSnapshot } from "@/lib/epl/public";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "EPL Standings",
-  description:
-    "Follow the EVNTSZN Prime League table, club order, and the Season 1 standings race.",
+  title: "EPL Club Table",
+  description: "Track EPL club readiness, draft depth, roster buildout, and the current public Season 1 league table.",
   alternates: {
     canonical: `${getEplOrigin()}/standings`,
   },
-  openGraph: {
-    title: "EPL Standings",
-    description:
-      "Follow the EVNTSZN Prime League table, club order, and the Season 1 standings race.",
-    url: `${getEplOrigin()}/standings`,
-    siteName: "EVNTSZN",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "EPL Standings",
-    description:
-      "Follow the EVNTSZN Prime League table, club order, and the Season 1 standings race.",
-  },
-};
-
-type TeamRow = {
-  slug: string;
-  team_name: string;
-  draft_order: number | null;
 };
 
 export default async function EplStandingsPage() {
-  const [content, seasonRes, teamsRes] = await Promise.all([
-    getEplPublicContent(),
-    supabaseAdmin.schema("epl").from("seasons").select("id").eq("slug", "season-1").maybeSingle(),
-    supabaseAdmin.schema("epl").from("teams").select("slug, team_name, draft_order, season_id").eq("is_active", true).order("draft_order", { ascending: true }),
-  ]);
-
-  const seasonId = seasonRes.data?.id || null;
-  const teams = ((teamsRes.data || []) as Array<TeamRow & { season_id?: string | null }>).filter(
-    (team) => !seasonId || team.season_id === seasonId,
-  );
-  const bySlug = new Map(teams.map((team) => [resolveEplTeamProfile({ slug: team.slug, teamName: team.team_name })?.slug || team.slug, team]));
-  const activeRows = EPL_TEAM_PROFILES.map((profile, index) => {
-    const team = bySlug.get(profile.slug);
-    return {
-      rank: index + 1,
-      name: team?.team_name || profile.name,
-      slug: profile.slug,
-      note: profile.headline,
-      hasLiveRecord: Boolean(team),
-    };
-  });
-  const hasSeasonRows = teams.length > 0;
+  const [content, snapshot] = await Promise.all([getEplPublicContent(), getEplPublicSnapshot()]);
+  const conferenceLeaders = [
+    ["Baltimore", snapshot.teams.find((team) => team.conference === "Baltimore") || null],
+    ["Coastal", snapshot.teams.find((team) => team.conference === "Coastal") || null],
+  ] as const;
 
   return (
     <main className="min-h-screen bg-black text-white">
       <EplNav menu={content.menu} />
       <section className="mx-auto max-w-7xl px-4 py-16 md:px-6 lg:px-8 lg:py-20">
-        <div className="ev-kicker">Standings</div>
-        <h1 className="ev-title">Season 1 standings and league table.</h1>
-        <p className="ev-subtitle max-w-3xl">
-          Follow the official Season 1 table here. Once score reporting opens, wins, losses, scoring, and weekly movement will publish in the same league view players and supporters are already using.
-        </p>
-
-        {!hasSeasonRows ? (
-          <div className="ev-panel mt-10 p-7">
-            <div className="ev-section-kicker">Table opens soon</div>
-            <h2 className="mt-3 text-2xl font-black text-white">The clubs are set. The standings go live after the first whistle.</h2>
-            <p className="mt-3 max-w-3xl text-sm leading-6 text-white/72">
-              Season 1 teams are locked in below, and the public table is ready. Match results will start populating as soon as opening-night scores are reported.
+        <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+          <div>
+            <div className="ev-kicker">Season 1 club table</div>
+            <h1 className="ev-title">Follow the league exactly where it stands today.</h1>
+            <p className="ev-subtitle max-w-3xl">
+              EPL is still in live roster-build and draft operations. Until official game results exist, the public table ranks clubs by roster strength, draft progress, and position-need pressure instead of publishing fake win-loss records.
             </p>
           </div>
-        ) : null}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="ev-meta-card">
+              <div className="ev-meta-label">Draft-ready players</div>
+              <div className="ev-meta-value">{snapshot.stats.draftEligibleCount}</div>
+            </div>
+            <div className="ev-meta-card">
+              <div className="ev-meta-label">Rostered players</div>
+              <div className="ev-meta-value">{snapshot.stats.assignedCount}</div>
+            </div>
+            <div className="ev-meta-card">
+              <div className="ev-meta-label">Paid registrations</div>
+              <div className="ev-meta-value">{snapshot.stats.paidCount}</div>
+            </div>
+            <div className="ev-meta-card">
+              <div className="ev-meta-label">League events</div>
+              <div className="ev-meta-value">{snapshot.stats.eventCount}</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-8 grid gap-4 md:grid-cols-2">
+          {conferenceLeaders.map(([conference, leader]) => (
+            <div key={conference} className="rounded-[28px] border border-white/10 bg-white/[0.03] p-5">
+              <div className="text-[11px] uppercase tracking-[0.22em] text-[#caa7ff]">{conference} leader</div>
+              {leader ? (
+                <>
+                  <div className="mt-3 text-2xl font-black text-white">{leader.name}</div>
+                  <div className="mt-2 text-sm text-white/62">{leader.headline}</div>
+                  <div className="mt-4 flex flex-wrap gap-2 text-[11px] uppercase tracking-[0.18em] text-white/55">
+                    <span className="rounded-full border border-white/10 bg-black/30 px-3 py-1">Roster {leader.rosterSize}</span>
+                    <span className="rounded-full border border-white/10 bg-black/30 px-3 py-1">Need {leader.totalNeed}</span>
+                    <span className="rounded-full border border-white/10 bg-black/30 px-3 py-1">{leader.readinessLabel}</span>
+                  </div>
+                </>
+              ) : (
+                <div className="mt-3 text-sm text-white/60">No club data yet.</div>
+              )}
+            </div>
+          ))}
+        </div>
 
         <div className="ev-panel mt-8 overflow-hidden p-0">
           <div className="overflow-x-auto">
@@ -86,37 +83,44 @@ export default async function EplStandingsPage() {
                 <tr>
                   <th className="px-4 py-4">Rank</th>
                   <th className="px-4 py-4">Club</th>
-                  <th className="px-4 py-4">W</th>
-                  <th className="px-4 py-4">L</th>
-                  <th className="px-4 py-4">Win %</th>
-                  <th className="px-4 py-4">PF</th>
-                  <th className="px-4 py-4">PA</th>
+                  <th className="px-4 py-4">Conference</th>
+                  <th className="px-4 py-4">Roster</th>
+                  <th className="px-4 py-4">Need</th>
+                  <th className="px-4 py-4">Draft Order</th>
+                  <th className="px-4 py-4">Readiness</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/10">
-                {activeRows.map((row) => (
-                  <tr key={row.slug}>
-                    <td className="px-4 py-4 text-white/75">{row.rank}</td>
+                {snapshot.teams.map((team, index) => (
+                  <tr key={team.id}>
+                    <td className="px-4 py-4 text-white/75">{index + 1}</td>
                     <td className="px-4 py-4">
                       <div className="flex items-center gap-3">
-                        <img
-                          src={EPL_TEAM_PROFILES.find((team) => team.slug === row.slug)?.logoUrl}
-                          alt={row.name}
-                          className="h-12 w-12 rounded-2xl border border-white/10 object-cover"
-                        />
+                        {team.logoUrl ? (
+                          <img src={team.logoUrl} alt={team.name} className="h-12 w-12 rounded-2xl border border-white/10 object-cover" />
+                        ) : null}
                         <div>
-                          <Link href={`/epl/teams/${row.slug}`} className="font-semibold text-white hover:text-[#d5c0ff]">
-                            {row.name}
+                          <Link href={`/epl/teams/${team.slug}`} className="font-semibold text-white hover:text-[#d5c0ff]">
+                            {team.name}
                           </Link>
-                          <div className="mt-1 text-sm text-white/52">{row.note}</div>
+                          <div className="mt-1 text-sm text-white/52">{team.headline}</div>
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-4 text-white/55">{row.hasLiveRecord ? "—" : "—"}</td>
-                    <td className="px-4 py-4 text-white/55">{row.hasLiveRecord ? "—" : "—"}</td>
-                    <td className="px-4 py-4 text-white/55">{row.hasLiveRecord ? "—" : "—"}</td>
-                    <td className="px-4 py-4 text-white/55">{row.hasLiveRecord ? "—" : "—"}</td>
-                    <td className="px-4 py-4 text-white/55">{row.hasLiveRecord ? "—" : "—"}</td>
+                    <td className="px-4 py-4 text-white/60">{team.conference}</td>
+                    <td className="px-4 py-4 text-white/80">{team.rosterSize}</td>
+                    <td className="px-4 py-4 text-white/60">
+                      QB {team.qbNeed} · WR {team.receiverNeed} · DEF {team.defenseNeed}
+                    </td>
+                    <td className="px-4 py-4 text-white/60">{team.draftOrder || "—"}</td>
+                    <td className="px-4 py-4">
+                      <div className="flex items-center gap-3">
+                        <span className="text-white/85">{team.readinessScore}</span>
+                        <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[#d7c0ff]">
+                          {team.readinessLabel}
+                        </span>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -126,19 +130,21 @@ export default async function EplStandingsPage() {
 
         <div className="mt-6 grid gap-4 md:grid-cols-2">
           <div className="ev-panel p-5">
-            <div className="ev-section-kicker">Preseason state</div>
+            <div className="ev-section-kicker">How this table works</div>
             <p className="mt-3 text-sm leading-6 text-white/72">
-              This table is already set for the season. Once scores go official, the same page carries every weekly move without dumping seeded leftovers into public view.
+              The public table ranks clubs by actual roster buildout, draft needs, and draft-position leverage until official score reporting begins. Once game results enter the operating system, this page can switch to a standard standings table without changing the public route.
             </p>
           </div>
           <div className="ev-panel p-5">
-            <div className="ev-section-kicker">What to expect</div>
-            <p className="mt-3 text-sm leading-6 text-white/72">
-              Expect win-loss order, scoring totals, and team pages to stay linked so players and supporters can move from the table straight into the clubs driving the season.
-            </p>
+            <div className="ev-section-kicker">Next moves</div>
+            <div className="mt-3 flex flex-wrap gap-3">
+              <Link href="/epl/schedule" className="ev-button-secondary">View schedule</Link>
+              <Link href="/epl/season-1/register" className="ev-button-primary">Register for Season 1</Link>
+            </div>
           </div>
         </div>
       </section>
+      <PublicFooter />
     </main>
   );
 }

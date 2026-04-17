@@ -6,6 +6,8 @@ export const HOST_PUBLIC_MARKETS = [
   "Bethany Beach",
 ] as const;
 
+export const CURATOR_PUBLIC_MARKETS = HOST_PUBLIC_MARKETS;
+
 export const HOST_PUBLIC_MARKETS_WITH_STATE = [
   "Baltimore, MD",
   "Washington, DC",
@@ -14,13 +16,15 @@ export const HOST_PUBLIC_MARKETS_WITH_STATE = [
   "Bethany Beach, DE",
 ] as const;
 
+export const CURATOR_PUBLIC_MARKETS_WITH_STATE = HOST_PUBLIC_MARKETS_WITH_STATE;
+
 export const LINK_TIERS = [
   {
     key: "free",
     label: "Link Free",
     priceLabel: "$0",
-    audience: "Independent Organizer Free",
-    includedIn: "Available to any organizer account",
+    audience: "Partner Free",
+    includedIn: "Available to any partner account",
     features: [
       "Basic link-in-bio page",
       "Event linking",
@@ -31,8 +35,8 @@ export const LINK_TIERS = [
     key: "pro",
     label: "Link Pro",
     priceLabel: "Included",
-    audience: "Independent Organizer Pro and EVNTSZN Host Program",
-    includedIn: "Included in Organizer Pro, Host, Certified Host, Pro Host, and City Leader paths",
+    audience: "Partner Pro and EVNTSZN Curator Program",
+    includedIn: "Included in Partner Pro, EVNTSZN Curator, Pro Curator, and City Leader paths",
     features: [
       "Custom branded page",
       "Unlimited links",
@@ -47,7 +51,7 @@ export const LINK_TIERS = [
 export const ORGANIZER_PLANS = [
   {
     key: "free",
-    label: "Independent Organizer",
+    label: "Partner",
     priceLabel: "$0",
     platformFee: 0.99, // Standard ticket fee in USD
     premiumRule: "Cannot pass the premium $1.99 ticket fee to the attendee.",
@@ -61,7 +65,7 @@ export const ORGANIZER_PLANS = [
   },
   {
     key: "pro",
-    label: "Independent Organizer Pro",
+    label: "Partner Pro",
     priceLabel: "$29/month",
     platformFee: 0.99, // Standard ticket fee in USD
     premiumRule: "Can optionally pass the premium $1.99 ticket fee to the attendee.",
@@ -78,7 +82,7 @@ export const ORGANIZER_PLANS = [
 
 export const HOST_PROGRAM_LEVELS = [
   {
-    label: "Host",
+    label: "Curator",
     platformFee: 1.49,
     highlights: [
       "Link Pro included",
@@ -97,7 +101,7 @@ export const HOST_PROGRAM_LEVELS = [
     ],
   },
   {
-    label: "Certified Host",
+    label: "Certified Curator",
     platformFee: 1.49,
     highlights: [
       "Requires approval",
@@ -114,7 +118,7 @@ export const HOST_PROGRAM_LEVELS = [
     ],
   },
   {
-    label: "Pro Host",
+    label: "Pro Curator",
     platformFee: 1.49,
     highlights: [
       "Full system access in operating scope",
@@ -151,14 +155,16 @@ export const HOST_PROGRAM_LEVELS = [
   },
 ] as const;
 
+export const CURATOR_PROGRAM_LEVELS = HOST_PROGRAM_LEVELS;
+
 export const PLATFORM_FEE_RULES = [
-  "Independent Organizers pay $0.99 per standard ticket.",
-  "EVNTSZN network operators pay $1.49 per standard ticket.",
+  "Partners pay $0.99 per standard ticket.",
+  "EVNTSZN Curators and internal network operators pay $1.49 per standard ticket.",
   "If ticket price is over $30.00, the platform fee becomes $1.99.",
   "Passing the fee to attendees is optional on standard tickets for everyone.",
-  "Independent Organizer Free cannot pass the premium $1.99 fee.",
-  "Independent Organizer Pro can optionally pass the premium $1.99 fee.",
-  "Pro Host, City Leader, City Office, and HQ can optionally pass the premium $1.99 fee.",
+  "Partner Free cannot pass the premium $1.99 fee.",
+  "Partner Pro can optionally pass the premium $1.99 fee.",
+  "Pro Curator, City Leader, City Office, and HQ can optionally pass the premium $1.99 fee.",
 ] as const;
 
 export const VENUE_PLANS = [
@@ -245,8 +251,8 @@ export const NODES_PRICING = [
 ] as const;
 
 export const SMART_FILL_RULES = [
-  "Standard opportunities: Hosts free, Organizer Pro $5.00, Organizer Free $15.00.",
-  "Hot opportunities: Hosts free, Organizer Pro $10.00, Organizer Free $20.00.",
+  "Standard opportunities: EVNTSZN Curators free, Partner Pro $5.00, Partner Free $15.00.",
+  "Hot opportunities: EVNTSZN Curators free, Partner Pro $10.00, Partner Free $20.00.",
   "Smart Fill is managed by City Office, HQ, or Admin.",
   "Venues must be listed to access Smart Fill.",
 ] as const;
@@ -266,11 +272,11 @@ export const FEATURED_VENUE_PLACEMENT = [
 
 export const COMMISSION_RULES = [
   "Before a City Office exists, HQ keeps 100% of revenue.",
-  "Host event after City Office activation: Host 60%, City Office 15%, HQ 25%.",
+  "Curator event after City Office activation: EVNTSZN Curator 60%, City Office 15%, HQ 25%.",
   "City Leader event after City Office activation: City Leader 65%, City Office 15%, HQ 20%.",
-  "Independent Organizer keeps 100% of event revenue and pays platform fees.",
+  "Partner keeps 100% of event revenue and pays platform fees.",
   "City Office earns 35% of platform fees if onboarded, plus 15% event share and internal overrides.",
-  "If a Host is onboarded by HQ, HQ receives 40%. If that Host later becomes a City Leader, HQ receives 35%.",
+  "If an EVNTSZN Curator is onboarded by HQ, HQ receives 40%. If that EVNTSZN Curator later becomes a City Leader, HQ receives 35%.",
 ] as const;
 
 export const EPL_SCHEDULE_BLOCKS = {

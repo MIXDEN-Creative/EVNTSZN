@@ -59,7 +59,7 @@ export const CREW_CATEGORIES: CrewCategory[] = [
     name: "Comedians",
     description: "For laughter.",
     icon: "😂",
-    roles: ["Stand-up Comedian", "MC", "Host"],
+    roles: ["Stand-up Comedian", "MC", "Curator"],
   },
   {
     id: "catering-food-vendor",
@@ -77,10 +77,10 @@ export const CREW_CATEGORIES: CrewCategory[] = [
   },
   {
     id: "event-hosting",
-    name: "Hosts",
+    name: "Curators",
     description: "Event MCs & guides.",
     icon: "🌟",
-    roles: ["MC", "Event Host", "Moderator"],
+    roles: ["MC", "Event Curator", "Moderator"],
   },
 ];
 

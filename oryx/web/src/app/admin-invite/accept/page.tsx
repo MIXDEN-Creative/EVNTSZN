@@ -1,21 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { getAdminOrigin } from "@/lib/domains";
 
-export default function AdminInviteAcceptPage({
-  searchParams,
-}: {
-  searchParams: { token?: string; email?: string };
-}) {
+function AdminInviteAcceptForm() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [fullName, setFullName] = useState("");
   const [password, setPassword] = useState("");
+  const searchParams = useSearchParams();
 
-  const token = searchParams?.token || "";
-  const email = searchParams?.email || "";
+  const token = searchParams.get("token") || "";
+  const email = searchParams.get("email") || "";
 
   async function acceptInvite() {
     setLoading(true);
@@ -97,5 +95,13 @@ export default function AdminInviteAcceptPage({
         </div>
       </div>
     </main>
+  );
+}
+
+export default function AdminInviteAcceptPage() {
+  return (
+    <Suspense fallback={<main className="min-h-screen bg-black text-white grid place-items-center p-6"><div className="text-sm text-white/65">Loading invite...</div></main>}>
+      <AdminInviteAcceptForm />
+    </Suspense>
   );
 }

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import PublicNav from "@/components/public/PublicNav";
+import PublicFooter from "@/components/public/PublicFooter";
 import ResetPasswordForm from "./ResetPasswordForm";
 import { getWebOrigin } from "@/lib/domains";
 
@@ -24,6 +25,7 @@ export default function ResetPasswordPage() {
           <ResetPasswordForm />
         </section>
       </div>
+      <PublicFooter />
     </main>
   );
 }

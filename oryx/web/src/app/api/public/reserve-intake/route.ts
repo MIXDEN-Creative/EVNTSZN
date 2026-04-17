@@ -59,7 +59,7 @@ export async function POST(request: Request) {
       reservePlan: String(body.reservePlan || "").trim() || null,
       primaryNeed: String(body.primaryNeed || "").trim() || null,
     },
-  });
+  }).catch(() => null);
 
   return NextResponse.json({ ok: true, applicationId: data.id });
 }

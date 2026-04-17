@@ -333,7 +333,7 @@ export default function SeasonOneAdminClient({
 
             <div className="grid gap-4 lg:grid-cols-2">
               <div className="rounded-[24px] border border-white/10 bg-black/20 p-5">
-                <div className="text-sm font-semibold text-white">Operator updates</div>
+                <div className="text-sm font-semibold text-white">Ops updates</div>
                 <div className="mt-4 grid gap-4">
                   <label className="grid gap-2 text-sm text-white/72">
                     <span>Assigned reviewer / owner</span>

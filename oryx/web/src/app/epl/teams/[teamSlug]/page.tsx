@@ -132,7 +132,7 @@ export default async function EplTeamPage({ params }: TeamPageProps) {
             <SponsorPlacementStrip
               placements={sponsorPlacements}
               eyebrow={modules.sponsorBlock.eyebrow}
-              headline={`${team.name} partner placements`}
+              headline={`${team.name} sponsor placements`}
               body={modules.sponsorBlock.body}
               compact
             />

@@ -215,7 +215,7 @@ export default function SponsorsAdminClient() {
       <section className="ev-shell-hero">
         <div className="ev-shell-hero-grid">
           <div>
-            <div className="ev-kicker">Sponsors & partners</div>
+            <div className="ev-kicker">Sponsors</div>
             <h1 className="ev-title">Manage package orders, sponsor readiness, and public placements from one sponsor desk.</h1>
             <p className="ev-subtitle">
               Track package purchases, move sponsors from lead to live placement, and decide exactly where their logos and links appear across EVNTSZN and EPL.
@@ -251,7 +251,7 @@ export default function SponsorsAdminClient() {
               <div className="grid gap-6 md:grid-cols-2">
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-bold uppercase tracking-widest text-white/30 ml-1">Entity Name</label>
-                  <input className="ev-field" placeholder="Sponsor or partner name" value={accountForm.name} onChange={(e) => setAccountForm({ ...accountForm, name: e.target.value })} required />
+                  <input className="ev-field" placeholder="Sponsor name" value={accountForm.name} onChange={(e) => setAccountForm({ ...accountForm, name: e.target.value })} required />
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-bold uppercase tracking-widest text-white/30 ml-1">Slug</label>
@@ -264,7 +264,7 @@ export default function SponsorsAdminClient() {
                   <label className="text-[10px] font-bold uppercase tracking-widest text-white/30 ml-1">Account Type</label>
                   <select className="ev-field" value={accountForm.account_type} onChange={(e) => setAccountForm({ ...accountForm, account_type: e.target.value })}>
                     <option value="sponsor">Sponsor</option>
-                    <option value="partner">Partner</option>
+                    <option value="partner">Legacy Sponsor</option>
                   </select>
                 </div>
                 <div className="space-y-1.5">
@@ -288,7 +288,7 @@ export default function SponsorsAdminClient() {
               <div className="grid gap-6 md:grid-cols-2">
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-bold uppercase tracking-widest text-white/30 ml-1">Tier / Package Label</label>
-                  <input className="ev-field" placeholder="e.g. Gold Partner" value={accountForm.tier_label} onChange={(e) => setAccountForm({ ...accountForm, tier_label: e.target.value })} />
+                  <input className="ev-field" placeholder="e.g. Gold Sponsor" value={accountForm.tier_label} onChange={(e) => setAccountForm({ ...accountForm, tier_label: e.target.value })} />
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-bold uppercase tracking-widest text-white/30 ml-1">City Scope (Comma separated)</label>
@@ -310,11 +310,11 @@ export default function SponsorsAdminClient() {
                   <label className="text-[10px] font-bold uppercase tracking-widest text-white/30 ml-1">EPL Category</label>
                   <select className="ev-field" value={accountForm.epl_category} onChange={(e) => setAccountForm({ ...accountForm, epl_category: e.target.value })}>
                     <option value="">None</option>
-                    <option value="league_partner">League partner</option>
-                    <option value="presenting_partner">Presenting partner</option>
-                    <option value="game_day_partner">Game-day partner</option>
-                    <option value="community_partner">Community partner</option>
-                    <option value="apparel_equipment_partner">Apparel partner</option>
+                    <option value="league_partner">League sponsor</option>
+                    <option value="presenting_partner">Presenting sponsor</option>
+                    <option value="game_day_partner">Game-day sponsor</option>
+                    <option value="community_partner">Community sponsor</option>
+                    <option value="apparel_equipment_partner">Apparel sponsor</option>
                   </select>
                 </div>
               </div>

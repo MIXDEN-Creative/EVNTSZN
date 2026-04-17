@@ -24,7 +24,14 @@ export async function POST(request: Request, { params }: { params: Params }) {
   ]);
 
   if (!event || !ticket) {
-    return NextResponse.json({ error: "Ticket or event not found." }, { status: 404 });
+    return NextResponse.json(
+      {
+        error: "Invalid Ticket",
+        scannerState: "invalid",
+        scannerMessage: "Invalid Ticket",
+      },
+      { status: 404 },
+    );
   }
 
   const accessRows = await getEventAccessForUser(viewer.user!.id, event.slug);
@@ -38,7 +45,14 @@ export async function POST(request: Request, { params }: { params: Params }) {
   }
 
   if (ticket.status === "checked_in") {
-    return NextResponse.json({ error: "Ticket is already checked in." }, { status: 409 });
+    return NextResponse.json(
+      {
+        error: "Already Checked In",
+        scannerState: "already_checked_in",
+        scannerMessage: "Already Checked In",
+      },
+      { status: 409 },
+    );
   }
 
   const checkedInAt = new Date().toISOString();
@@ -63,5 +77,10 @@ export async function POST(request: Request, { params }: { params: Params }) {
     attendeeName: ticket.attendee_name,
   });
 
-  return NextResponse.json({ ok: true, checkedInAt });
+  return NextResponse.json({
+    ok: true,
+    checkedInAt,
+    scannerState: "valid",
+    scannerMessage: "Valid - Official EVNTSZN Ticket",
+  });
 }

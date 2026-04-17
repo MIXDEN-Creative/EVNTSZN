@@ -70,6 +70,26 @@ export default async function AdminHomePage() {
       description: "Create, publish, and update events and ticketing.",
     },
     permissions.includes("admin.manage") && {
+      title: "Pulse Feed",
+      href: `${getAdminOrigin(host)}/pulse`,
+      description: "Moderate public-safe discovery signals and internal ops alerts.",
+    },
+    permissions.includes("admin.manage") && {
+      title: "Messaging",
+      href: `${getAdminOrigin(host)}/messages`,
+      description: "Run public-safe and internal threads from one command view.",
+    },
+    permissions.includes("admin.manage") && {
+      title: "Reserve Desk",
+      href: `${getAdminOrigin(host)}/reserve-desk`,
+      description: "Manage reservations, waitlist pressure, and reserve-linked work items.",
+    },
+    permissions.includes("catalog.manage") && {
+      title: "Sponsor Accounts",
+      href: `${getAdminOrigin(host)}/partner-management`,
+      description: "Manage sponsor records, logos, and external placements.",
+    },
+    permissions.includes("admin.manage") && {
       title: "Draft Console",
       href: `${getAdminOrigin(host)}/draft`,
       description: "Run the live draftboard, player pool, team needs, and pick controls from one desk.",

@@ -73,7 +73,7 @@ export function getNodeTypeLabel(type: NodeType) {
     case "campaign_node":
       return "Campaign node";
     case "partner_node":
-      return "Partner node";
+      return "Sponsor node";
     case "popup_node":
       return "Pop-up node";
     case "ops_node":

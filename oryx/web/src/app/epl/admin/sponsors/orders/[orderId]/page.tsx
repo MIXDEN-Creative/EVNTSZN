@@ -28,7 +28,7 @@ export default async function SponsorOrderDetailPage({ params }: PageProps) {
             <div className="ev-kicker">Sponsor order detail</div>
             <h1 className="ev-title">{order.company_name}</h1>
             <p className="ev-subtitle">
-              Review the package, payment state, sponsor readiness, and follow-up notes tied to this sponsor or partner order.
+              Review the package, payment state, sponsor readiness, and follow-up notes tied to this sponsor order.
             </p>
           </div>
         </div>

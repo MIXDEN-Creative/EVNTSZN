@@ -22,7 +22,7 @@ export const LINK_PLANS = ["free", "starter", "pro", "elite"] as const;
 export type LinkPlan = (typeof LINK_PLANS)[number];
 
 export const CREW_CATEGORY_LABELS: Record<CrewCategory, string> = {
-  host: "Host",
+  host: "Curator",
   dj: "DJ",
   music_producer: "Music Producer",
   photographer: "Photographer",

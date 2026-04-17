@@ -366,7 +366,7 @@ export default function DiscoveryAdminClient() {
             <div className="ev-meta-card">
               <div className="ev-meta-label">Native listings</div>
               <div className="ev-meta-value">
-                {discoveryStats.native} EVNTSZN · {discoveryStats.hosts} host · {discoveryStats.independent} independent
+                {discoveryStats.native} EVNTSZN · {discoveryStats.hosts} EVNTSZN Curator · {discoveryStats.independent} Partner
               </div>
             </div>
             <div className="ev-meta-card">
@@ -490,8 +490,8 @@ export default function DiscoveryAdminClient() {
             <div className="mt-5 grid gap-3 md:grid-cols-2">
               {[
                 ["showNativeSection", "Show EVNTSZN event section"],
-                ["showHostSection", "Show EVNTSZN Host section"],
-                ["showIndependentSection", "Show Independent Organizer section"],
+                ["showHostSection", "Show EVNTSZN Curator section"],
+                ["showIndependentSection", "Show Partner section"],
                 ["showExternalSection", "Show external discovery section"],
                 ["showEplPanel", "Show EPL homepage spotlight"],
                 ["showPopularSection", "Show popular/search results rail"],
@@ -667,8 +667,8 @@ export default function DiscoveryAdminClient() {
                         }
                       >
                         <option value="evntszn">EVNTSZN Event</option>
-                        <option value="host">EVNTSZN Host Event</option>
-                        <option value="independent_organizer">Independent Organizer Event</option>
+                        <option value="host">EVNTSZN Curator Event</option>
+                        <option value="independent_organizer">Partner Event</option>
                       </select>
                       <input
                         className="ev-field"
@@ -1115,8 +1115,8 @@ export default function DiscoveryAdminClient() {
                         }
                       >
                         <option value="evntszn">EVNTSZN event</option>
-                        <option value="host">EVNTSZN host</option>
-                        <option value="independent_organizer">Independent organizer</option>
+                        <option value="host">EVNTSZN Curator</option>
+                        <option value="independent_organizer">Partner</option>
                       </select>
                       <input
                         type="number"

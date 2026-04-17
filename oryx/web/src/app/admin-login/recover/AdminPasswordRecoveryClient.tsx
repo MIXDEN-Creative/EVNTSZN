@@ -80,7 +80,7 @@ export default function AdminPasswordRecoveryClient() {
           <div className="ev-section-kicker">Password recovery</div>
           <h2 className="mt-3 text-2xl font-black text-white">Send a reset link to your invited internal email</h2>
           <p className="mt-3 text-sm leading-6 text-white/70">
-            Use the same email tied to your HQ, admin, office, ops, scanner, or host access.
+            Use the same email tied to your HQ, admin, office, ops, scanner, or curator access.
           </p>
           <div className="mt-3 rounded-2xl border border-white/10 bg-black/30 p-4 text-sm text-white/62">
             Pending invite users should reopen their invite email. Active internal users get a password reset link without reopening magic-link entry for internal tools.

@@ -18,7 +18,7 @@ export default function PublicFooterShell({
       <div className="mx-auto max-w-7xl px-4 py-14 md:px-6 lg:px-8 lg:py-16">
         {placements.length ? (
           <div className="mb-10 rounded-[28px] border border-white/10 bg-white/[0.03] p-6">
-            <div className="text-xs font-semibold uppercase tracking-[0.24em] text-[#b899ff]">Sponsors & partners</div>
+            <div className="text-xs font-semibold uppercase tracking-[0.24em] text-[#b899ff]">Sponsors</div>
             <h2 className="mt-3 max-w-3xl text-2xl font-black tracking-tight text-white">{modules.sponsorBlock.footerHeadline}</h2>
             <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
               {placements.map((placement) => (
@@ -61,18 +61,19 @@ export default function PublicFooterShell({
             <div className="mt-4 flex flex-col gap-3 text-sm text-white/78">
               <Link href={`${getWebOrigin()}/`}>Discover</Link>
               <Link href={`${getWebOrigin()}/events`}>Events</Link>
+              <Link href={`${getWebOrigin()}/city`}>City Guides</Link>
               <Link href={`${getEplOrigin()}/`}>EPL</Link>
               <Link href={`${getWebOrigin()}/link`}>EVNTSZN Link</Link>
-              <Link href={`${getReserveOrigin()}/reserve`}>EVNTSZN Reserve</Link>
+              <Link href={`${getReserveOrigin()}/`}>Reserve</Link>
               <Link href={`${getWebOrigin()}/venue-program`}>Venue Plans</Link>
-              <Link href={`${getWebOrigin()}/venue-agreement`}>Venue Agreement</Link>
+              <Link href={`${getWebOrigin()}/venue/agreement`}>Venue Agreement</Link>
               <Link href={`${getEplOrigin()}/opportunities`}>EPL Opportunities</Link>
-              <Link href={`${getWebOrigin()}/hosts`}>Host Program</Link>
-              <Link href={`${getWebOrigin()}/organizer/apply`}>Independent Organizer</Link>
+              <Link href={`${getWebOrigin()}/hosts`}>Curators</Link>
+              <Link href={`${getWebOrigin()}/partners`}>Partners</Link>
               <Link href={`${getWebOrigin()}/crew`}>Crew Marketplace</Link>
               <Link href={`${getWebOrigin()}/signal/apply`}>Signal</Link>
               <Link href={`${getWebOrigin()}/ambassador/apply`}>Ambassador</Link>
-              <Link href={`${getWebOrigin()}/partners/packages`}>Sponsor Packages</Link>
+              <Link href={`${getWebOrigin()}/sponsors`}>Sponsors</Link>
               <Link href={`${getEplOrigin()}/store`}>Store</Link>
               <Link href={`${getWebOrigin()}/support`}>Support</Link>
             </div>
@@ -82,7 +83,7 @@ export default function PublicFooterShell({
             <div className="text-sm font-semibold uppercase tracking-[0.22em] text-white/48">Cities</div>
             <div className="mt-4 flex flex-col gap-3 text-sm text-white/78">
               {PUBLIC_CITIES.map((city) => (
-                <Link key={city.slug} href={`${getWebOrigin()}/${city.slug}`}>
+                <Link key={city.slug} href={`${getWebOrigin()}/city/${city.slug}`}>
                   {city.name}
                 </Link>
               ))}

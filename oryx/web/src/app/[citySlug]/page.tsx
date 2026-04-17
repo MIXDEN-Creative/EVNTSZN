@@ -55,6 +55,13 @@ export async function generateMetadata({ params }: CityPageProps): Promise<Metad
       description: city.seoDescription,
       url: `${getWebOrigin()}/${city.slug}`,
       type: "website",
+      images: [{ url: city.heroImage }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${city.seoTitle} | EVNTSZN`,
+      description: city.seoDescription,
+      images: [city.heroImage],
     },
   };
 }
@@ -157,6 +164,9 @@ export default async function PublicCityPage({ params }: CityPageProps) {
             <Link href="/events" className="ev-button-secondary">
               Browse all events
             </Link>
+            <Link href={`/city/${city.slug}`} className="ev-button-secondary">
+              Open city guide
+            </Link>
           </div>
         </div>
       </section>
@@ -167,6 +177,12 @@ export default async function PublicCityPage({ params }: CityPageProps) {
           {modules.citySpotlight.headline}
         </h2>
         <p className="mt-4 max-w-3xl text-base leading-7 text-white/72">{modules.citySpotlight.body}</p>
+        <div className="mt-6 flex flex-wrap gap-3 text-xs font-bold uppercase tracking-[0.18em] text-white/48">
+          <Link href={`/city/${city.slug}/events`} className="hover:text-white/78">Explore in {city.shortLabel}</Link>
+          <Link href={`/city/${city.slug}/nightlife`} className="hover:text-white/78">Nightlife</Link>
+          <Link href={`/city/${city.slug}/reservations`} className="hover:text-white/78">Reservations</Link>
+          <Link href={`/city/${city.slug}/venues`} className="hover:text-white/78">Venues</Link>
+        </div>
         {cards.length ? (
           <div className="mt-6 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
             {cards.map((event) => (
@@ -200,7 +216,7 @@ export default async function PublicCityPage({ params }: CityPageProps) {
           <SponsorPlacementStrip
             placements={sponsorPlacements}
             eyebrow={modules.sponsorBlock.eyebrow}
-            headline={`${city.name} sponsors and partners`}
+            headline={`${city.name} sponsors`}
             body={modules.sponsorBlock.body}
             compact
           />

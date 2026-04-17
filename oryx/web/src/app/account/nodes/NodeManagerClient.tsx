@@ -506,7 +506,7 @@ export default function NodeManagerClient() {
             ) : null}
 
             <div className="mt-4">
-              <label className="mb-2 block text-sm font-semibold text-white/70">Operator notes</label>
+              <label className="mb-2 block text-sm font-semibold text-white/70">Ops notes</label>
               <textarea value={draft.notes} onChange={(event) => setDraft((current) => ({ ...current, notes: event.target.value }))} className="ev-field min-h-[120px]" placeholder="Where this node is installed, what campaign it belongs to, and why it exists." />
             </div>
 

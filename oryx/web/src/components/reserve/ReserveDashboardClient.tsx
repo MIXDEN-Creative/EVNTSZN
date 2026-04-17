@@ -212,6 +212,10 @@ export default function ReserveDashboardClient({
   }
 
   const filteredBookings = bookings.filter((booking) => bookingFilter === "all" || booking.status === bookingFilter);
+  const confirmedBookings = bookings.filter((booking) => booking.status === "confirmed");
+  const waitlistedBookings = bookings.filter((booking) => booking.status === "waitlisted");
+  const projectedReservationRevenue = confirmedBookings.length * Number(selectedVenue?.settings?.reservation_fee_usd || 0);
+  const projectedGuestCovers = confirmedBookings.reduce((sum, booking) => sum + Number(booking.party_size || 0), 0);
 
   return (
     <div className="space-y-8">
@@ -255,6 +259,22 @@ export default function ReserveDashboardClient({
             <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
               <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#caa7ff]">Nightlife</div>
               <div className="mt-3 text-2xl font-black text-white">{selectedVenue.settings?.nightlife_enabled === false ? "Off" : "On"}</div>
+            </div>
+          </div>
+        ) : null}
+        {selectedVenue ? (
+          <div className="mt-4 grid gap-4 md:grid-cols-3">
+            <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
+              <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-white/45">Projected booking revenue</div>
+              <div className="mt-3 text-2xl font-black text-white">{formatUsd(projectedReservationRevenue)}</div>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
+              <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-white/45">Confirmed covers</div>
+              <div className="mt-3 text-2xl font-black text-white">{projectedGuestCovers}</div>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
+              <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-white/45">Waitlist pressure</div>
+              <div className="mt-3 text-2xl font-black text-white">{waitlistedBookings.length}</div>
             </div>
           </div>
         ) : null}

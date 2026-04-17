@@ -566,7 +566,7 @@ export default function LeagueOfficeAdmin({ seasonSlug }: Props) {
               </div>
             </SectionCard>
 
-            <SectionCard title="Sponsor Manager" subtitle="Track partner opportunities and value.">
+            <SectionCard title="Sponsor Manager" subtitle="Track sponsor opportunities and value.">
               <div className="grid gap-4 md:grid-cols-4">
                 <input value={sponsorForm.companyName} onChange={(e) => setSponsorForm({ ...sponsorForm, companyName: e.target.value })} placeholder="Company Name" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
                 <input value={sponsorForm.contactName} onChange={(e) => setSponsorForm({ ...sponsorForm, contactName: e.target.value })} placeholder="Contact Name" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />

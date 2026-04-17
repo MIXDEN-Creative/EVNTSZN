@@ -181,8 +181,8 @@ export async function POST(request: NextRequest) {
         venueId: reserveVenue.venue_id,
         bookingId: data.id,
       },
-    });
-    await syncReservePerformance(venue?.owner_user_id);
+    }).catch(() => null);
+    await syncReservePerformance(venue?.owner_user_id).catch(() => null);
 
     return NextResponse.json({ ok: true, booking: data });
   } catch (error) {
@@ -260,8 +260,8 @@ export async function PATCH(request: NextRequest) {
         previousStatus: bookingRow.status,
         status: statusValue,
       },
-    });
-    await syncReservePerformance(venue?.owner_user_id);
+    }).catch(() => null);
+    await syncReservePerformance(venue?.owner_user_id).catch(() => null);
 
     return NextResponse.json({ ok: true, booking: data });
   } catch (error) {
