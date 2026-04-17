@@ -19,6 +19,9 @@ export const metadata: Metadata = {
     default: "EVNTSZN | Nights out, live games, concerts, and league nights",
     template: "%s | EVNTSZN",
   },
+  icons: {
+    icon: "/brand/evntszn-icon.png",
+  },
   description:
     "Find the nights out, live games, concerts, and league moments worth showing up for with EVNTSZN.",
   alternates: {

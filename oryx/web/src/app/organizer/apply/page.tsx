@@ -8,24 +8,27 @@ export default function OrganizerApplyPage() {
         <div className="ev-kicker">Organizer application</div>
         <h1 className="ev-title">Apply for independent organizer access.</h1>
         <p className="ev-subtitle">
-          Independent Organizers use EVNTSZN as an external operating platform. Approved organizers get scoped access to ops, discovery eligibility review, and only the surfaces that match their role, without being treated as EVNTSZN Hosts by default.
+          Independent Organizers use EVNTSZN as a self-operated event platform. Approved organizers get scoped access to operations, discovery review, and professional tools for managing their own brand, audience, and operating model.
         </p>
 
-        <div className="ev-panel mt-8 p-6">
-          <div className="ev-section-kicker">Choose the right path</div>
-          <div className="mt-5 grid gap-4 md:grid-cols-2">
-            <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
-              <div className="text-lg font-semibold text-white">Independent Organizer</div>
-              <p className="mt-2 text-sm leading-6 text-white/72">
-                Best for external operators who want event management, scoped visibility review, and a clean path into sponsor interest or paid growth without assuming internal network perks.
-              </p>
-            </div>
-            <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
-              <div className="text-lg font-semibold text-white">EVNTSZN Host Network</div>
-              <p className="mt-2 text-sm leading-6 text-white/72">
-                Best for operators who want to apply into the EVNTSZN internal network path for host progression, city support, and deeper network-aligned operating access.
-              </p>
-            </div>
+        <div className="ev-panel mt-8 p-8">
+          <div className="ev-section-kicker">Independent operator path</div>
+          <h3 className="mt-4 text-2xl font-black">Your brand. Our system.</h3>
+          <p className="mt-4 text-base leading-relaxed text-white/70">
+            Use EVNTSZN to power your event lifecycle without being treated as internal network staff. This lane is built for operators who want control over their own events, venue relationships, and attendee data while leveraging EVNTSZN discovery and ticketing.
+          </p>
+          <div className="mt-8 grid gap-4 md:grid-cols-2">
+            {[
+              "Keep 100% of event revenue.",
+              "Manage your own ticket types and holds.",
+              "Access Crew Marketplace and EVNTSZN Link.",
+              "Professional analytics and pulse tracking.",
+            ].map(item => (
+              <div key={item} className="flex items-center gap-3 text-sm text-white/80">
+                <span className="text-[#A259FF]">✓</span>
+                {item}
+              </div>
+            ))}
           </div>
         </div>
 

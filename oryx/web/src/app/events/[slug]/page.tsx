@@ -180,7 +180,7 @@ export default async function EventDetailPage({ params }: { params: Params }) {
                 </p>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-3">
+              <div className="grid gap-4 md:grid-cols-2">
                 <div className="rounded-[28px] border border-white/10 bg-white/[0.03] p-5">
                   <p className="text-xs uppercase tracking-[0.22em] text-white/45">Venue</p>
                   <p className="mt-3 text-xl font-semibold">
@@ -195,17 +195,9 @@ export default async function EventDetailPage({ params }: { params: Params }) {
                     {new Date(event.start_at).toLocaleString()}
                   </p>
                 </div>
-                <div className="rounded-[28px] border border-white/10 bg-white/[0.03] p-5">
-                  <p className="text-xs uppercase tracking-[0.22em] text-white/45">Check-in</p>
-                  <p className="mt-3 text-xl font-semibold">{event.scanner_status}</p>
-                </div>
               </div>
 
-              <div className={`grid gap-4 md:grid-cols-3 ${isHotEvent ? "rounded-[30px] border border-[#A259FF]/25 bg-[#A259FF]/10 p-4" : ""}`}>
-                <div className="rounded-[28px] border border-white/10 bg-white/[0.03] p-5">
-                  <p className="text-xs uppercase tracking-[0.22em] text-white/45">Going</p>
-                  <p className="mt-3 text-xl font-semibold">{goingCount.toLocaleString()}</p>
-                </div>
+              <div className={`grid gap-4 md:grid-cols-2 ${isHotEvent ? "rounded-[30px] border border-[#A259FF]/25 bg-[#A259FF]/10 p-4" : ""}`}>
                 <div className="rounded-[28px] border border-white/10 bg-white/[0.03] p-5">
                   <p className="text-xs uppercase tracking-[0.22em] text-white/45">Live energy</p>
                   <p className="mt-3 text-xl font-semibold">
@@ -226,17 +218,7 @@ export default async function EventDetailPage({ params }: { params: Params }) {
 
               <EventPulseCard eventId={event.id} />
 
-              <div className="rounded-[30px] border border-white/10 bg-white/[0.03] p-6">
-                <p className="text-xs uppercase tracking-[0.22em] text-[#A259FF]">Crew support</p>
-                <h2 className="mt-3 text-2xl font-black tracking-tight text-white">Need a DJ or photographer?</h2>
-                <p className="mt-3 max-w-2xl text-sm leading-6 text-white/68">
-                  Pull bookable crew already listed in the marketplace for {event.city || "this market"} and move faster on the event build.
-                </p>
-                <div className="mt-5 flex flex-wrap gap-3">
-                  <a href={djHref} className="ev-button-secondary">Find DJs in {event.city || "market"}</a>
-                  <a href={photographerHref} className="ev-button-secondary">Find photographers</a>
-                </div>
-              </div>
+
 
               {operations?.objective || operations?.run_of_show ? (
                 <div className="rounded-[30px] border border-white/10 bg-white/[0.03] p-6">

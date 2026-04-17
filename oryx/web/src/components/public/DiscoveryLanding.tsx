@@ -389,15 +389,12 @@ export default function DiscoveryLanding({
               </h1>
               <p className="ev-subtitle max-w-2xl">{content.hero.description}</p>
 
-              <div className="mt-10 flex flex-wrap gap-3">
-                <Link href={content.hero.primaryCtaHref} className="ev-button-primary">
-                  {content.hero.primaryCtaLabel}
+              <div className="mt-10 flex flex-wrap gap-4">
+                <Link href="/events" className="ev-button-primary px-10">
+                  Find Events
                 </Link>
-                <Link href={content.hero.secondaryCtaHref} className="ev-button-secondary">
-                  {content.hero.secondaryCtaLabel}
-                </Link>
-                <Link href={content.hero.tertiaryCtaHref} className="text-sm font-semibold text-white/72 transition hover:text-white">
-                  {content.hero.tertiaryCtaLabel}
+                <Link href="/epl" className="ev-button-secondary px-10">
+                  Prime League
                 </Link>
               </div>
 
@@ -653,7 +650,7 @@ export default function DiscoveryLanding({
             <h2 className="mt-4 text-5xl font-black tracking-[-0.04em] text-white md:text-7xl lg:text-8xl leading-[0.9]">
               Start with the city.
             </h2>
-            <div className="mt-16 grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+            <div className="mt-16 grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {PUBLIC_CITIES.map((cityItem) => (
                 <Link
                   key={cityItem.slug}
@@ -663,7 +660,7 @@ export default function DiscoveryLanding({
                   <div className="text-[11px] font-bold uppercase tracking-[0.3em] text-[#cfb8ff]/60">
                     {cityItem.stateLabel}
                   </div>
-                  <div className="mt-6 text-4xl font-black tracking-tight text-white">{cityItem.shortLabel}</div>
+                  <div className="mt-6 text-3xl font-black tracking-tight text-white leading-none">{cityItem.shortLabel}</div>
                   <p className="mt-5 text-sm md:text-base leading-relaxed text-white/60 flex-1">{cityItem.description}</p>
                   <span className="mt-10 inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-white/90 group-hover:text-[#cfb8ff] transition-colors">
                     Explore city

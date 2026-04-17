@@ -115,13 +115,13 @@ values (
   '00000000-0000-0000-0000-00000000e901',
   'The Creator Kickoff',
   'the-creator-kickoff',
-  'A premium Baltimore launch night built for creators, chemistry, and repeatable EVNTSZN energy.',
-  'A high-energy social launch experience at Mystique Barrel Brewing & Lager House designed to make EVNTSZN feel unmistakably premium from check-in to closeout.',
+  'Baltimore connections that actually open doors.',
+  'Hey Baltimore,\n\nThis is where connections actually happen.\n\nThe Creator Kickoff is a curated networking experience bringing together creators, entrepreneurs, and ambitious individuals who are serious about building, collaborating, and leveling up.\n\nNo awkward small talk. No wasted time.\n\nJust real conversations, real opportunities, and the kind of room where one connection can open the next door.\n\nIf you’re ready to be in the right environment with the right people, this is where you need to be. 21+ event.',
   'Baltimore gets a premium social launch built around real chemistry, clean check-in, and intentional room energy.',
   'published',
   'published',
   '2026-05-01T19:00:00-04:00',
-  '2026-05-01T23:30:00-04:00',
+  '2026-05-01T22:00:00-04:00',
   'America/New_York',
   'Baltimore',
   'MD',
@@ -129,8 +129,8 @@ values (
   'EVNTSZN HQ',
   'ready',
   'evntszn',
-  'launch-series',
-  'evntszn'
+  'social',
+  'launch'
 )
 on conflict (id) do update
 set
@@ -171,14 +171,14 @@ insert into public.evntszn_ticket_types (
 values
   (
     '00000000-0000-0000-0000-00000000e902',
-    'Early Bird',
+    'Early Bird Access',
     'Launch-price access for the first wave into The Creator Kickoff.',
-    1000,
+    800,
     120,
     0,
     4,
-    now(),
-    '2026-04-25T23:59:59-04:00',
+    '2026-04-10T00:00:00-04:00',
+    '2026-04-16T23:59:59-04:00',
     true,
     'visible',
     10
@@ -186,29 +186,29 @@ values
   (
     '00000000-0000-0000-0000-00000000e902',
     'General Admission',
-    'Standard advance access for The Creator Kickoff once the next release opens.',
-    1200,
+    'Standard advance access for The Creator Kickoff.',
+    1500,
     90,
     0,
     4,
-    '2026-04-26T00:00:00-04:00',
+    '2026-04-17T00:00:00-04:00',
     '2026-05-01T18:45:00-04:00',
-    false,
+    true,
     'visible',
     20
   ),
   (
     '00000000-0000-0000-0000-00000000e902',
-    'At the Door',
-    'Door inventory reserved for event-day release when HQ decides to turn it on.',
-    1500,
+    'At The Door',
+    'Door inventory reserved for event-day release.',
+    2000,
     30,
     0,
     2,
-    '2026-05-01T18:45:00-04:00',
-    '2026-05-01T22:30:00-04:00',
-    false,
-    'hidden',
+    '2026-05-01T19:00:00-04:00',
+    '2026-05-01T22:00:00-04:00',
+    true,
+    'visible',
     30
   )
 on conflict (event_id, name) do update
