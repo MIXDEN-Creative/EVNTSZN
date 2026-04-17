@@ -1,216 +1,90 @@
-"use client";
+// src/components/public/PublicNav.tsx
+'use client';
 
-import Image from "next/image";
-import Link from "next/link";
-import { useState } from "react";
-import { getAppOrigin, getEplOrigin, getWebOrigin } from "@/lib/domains";
-import { PUBLIC_CITIES } from "@/lib/public-cities";
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import React from 'react';
+import { getReserveOrigin } from '@/lib/domains';
+
+// Assuming these are available constants or can be inferred
+const NAV_ITEMS = [
+  { href: '/', label: 'Home' },
+  { href: '/events', label: 'Events' },
+  { href: '/epl', label: 'EPL' },
+  { href: '/link', label: 'Link' },
+  { href: '/crew', label: 'Crew' },
+  { href: getReserveOrigin(), label: 'Reserve' },
+  { href: '/venue', label: 'Venue' },
+  { href: '/partners', label: 'Partners' },
+];
+
+const SECONDARY_NAV_ITEMS = [
+  { href: '/hosts/apply', label: 'Apply as Host' },
+  { href: '/organizer/apply', label: 'Apply as Organizer' },
+];
+
+const AUTH_NAV_ITEMS = [
+  { href: '/auth/login', label: 'Log In' },
+  { href: '/auth/signup', label: 'Sign Up' },
+];
+
+const isActive = (href: string, pathname: string) => {
+  if (href === '/' && pathname === '/') return true;
+  if (href.startsWith("http")) return pathname.startsWith("/reserve");
+  return pathname.startsWith(href) && href !== '/';
+};
 
 export default function PublicNav() {
-  const [open, setOpen] = useState(false);
-  const [citiesOpen, setCitiesOpen] = useState(false);
-  const [accessOpen, setAccessOpen] = useState(false);
-
-  const navLinks = [
-    { label: "Discover", href: `${getWebOrigin()}/` },
-    { label: "Events", href: `${getWebOrigin()}/events` },
-    { label: "EPL", href: `${getEplOrigin()}/` },
-    { label: "Link", href: `${getWebOrigin()}/link` },
-    { label: "Crew", href: `${getWebOrigin()}/crew` },
-    { label: "Hosts", href: `${getWebOrigin()}/hosts` },
-    { label: "Partners", href: `${getWebOrigin()}/partners/packages` },
-    { label: "Support", href: `${getWebOrigin()}/support` },
-  ];
-
-  const accessLinks = [
-    { label: "Member sign in", href: `${getAppOrigin()}/account/login`, sublabel: "Tickets, saved events, and account access" },
-    { label: "Create account", href: `${getAppOrigin()}/account/register?next=/account`, sublabel: "Attendee registration and checkout history" },
-    { label: "Internal access", href: `${getAppOrigin()}/admin-login`, sublabel: "Ops, scanner, city office, and admin desks" },
-  ];
+  const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-50 border-b border-white/10 bg-black/80 backdrop-blur-2xl">
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 md:px-6 lg:px-8">
-        <Link href={getWebOrigin()} className="flex items-center gap-3 transition hover:opacity-90" aria-label="EVNTSZN home">
-          <div className="relative h-10 w-10 overflow-hidden rounded-xl border border-white/10 bg-white/5 shadow-2xl">
-            <Image src="/brand/evntszn-icon.png" alt="EVNTSZN icon" fill sizes="40px" className="object-cover" priority />
-          </div>
-          <span className="flex flex-col">
-            <span className="text-lg font-black tracking-tighter text-white">EVNTSZN</span>
-          </span>
-        </Link>
-
-        <nav className="hidden items-center gap-6 lg:flex">
-          <a href={`${getWebOrigin()}/`} className="text-sm font-semibold text-white/60 transition hover:text-white">
-            Discover
-          </a>
-          <a href={`${getWebOrigin()}/events`} className="text-sm font-semibold text-white/60 transition hover:text-white">
-            Events
-          </a>
-          <a href={`${getEplOrigin()}/`} className="text-sm font-semibold text-white/60 transition hover:text-white">
-            EPL
-          </a>
-          <a href={`${getWebOrigin()}/link`} className="text-sm font-semibold text-white/60 transition hover:text-white">
-            Link
-          </a>
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setCitiesOpen((value) => !value)}
-              className={`flex items-center gap-1.5 text-sm font-semibold transition ${citiesOpen ? "text-[#caa7ff]" : "text-white/60 hover:text-white"}`}
-            >
-              Cities
-              <svg className={`h-4 w-4 transition-transform ${citiesOpen ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-            {citiesOpen ? (
-              <>
-                <div className="fixed inset-0 z-40" onClick={() => setCitiesOpen(false)} />
-                <div className="absolute left-1/2 top-full z-50 mt-4 w-64 -translate-x-1/2 overflow-hidden rounded-[28px] border border-white/10 bg-black/95 p-2 shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-3xl">
-                  <div className="px-4 pb-2 pt-3 text-[10px] font-bold uppercase tracking-[0.22em] text-white/35">Explore by city</div>
-                  <div className="grid gap-1">
-                    {PUBLIC_CITIES.map((city) => (
-                      <a
-                        key={city.slug}
-                        href={`${getWebOrigin()}/${city.slug}`}
-                        className="rounded-2xl px-4 py-3 text-sm font-semibold text-white/70 transition hover:bg-white/10 hover:text-white"
-                      >
-                        {city.name}
-                      </a>
-                    ))}
-                  </div>
-                </div>
-              </>
-            ) : null}
-          </div>
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setAccessOpen((value) => !value)}
-              className={`flex items-center gap-1.5 text-sm font-semibold transition ${accessOpen ? "text-[#caa7ff]" : "text-white/60 hover:text-white"}`}
-            >
-              Programs
-              <svg className={`h-4 w-4 transition-transform ${accessOpen ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-            {accessOpen ? (
-              <>
-                <div className="fixed inset-0 z-40" onClick={() => setAccessOpen(false)} />
-                <div className="absolute right-0 top-full z-50 mt-4 w-[22rem] overflow-hidden rounded-[28px] border border-white/10 bg-black/95 p-2 shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-3xl">
-                  <div className="px-4 pb-2 pt-3 text-[10px] font-bold uppercase tracking-[0.22em] text-white/35">Network roles</div>
-                  <div className="grid gap-1">
-                    {[
-                      { label: "EVNTSZN Link", href: `${getWebOrigin()}/link`, sublabel: "Conversion pages for tickets, links, products, and audience capture." },
-                      { label: "EVNTSZN Hosts", href: `${getWebOrigin()}/hosts`, sublabel: "Approved operator path for city-facing EVNTSZN events." },
-                      { label: "Independent Organizers", href: `${getWebOrigin()}/organizer/apply`, sublabel: "Self-operated event builders using EVNTSZN as the platform." },
-                      { label: "Crew Marketplace", href: `${getWebOrigin()}/crew`, sublabel: "Book DJs, creators, bartenders, hosts, and event talent." },
-                      { label: "Partners", href: `${getWebOrigin()}/partners/packages`, sublabel: "Sponsor and brand placements." },
-                    ].map((link) => (
-                      <a key={link.label} href={link.href} className="rounded-2xl px-4 py-3 transition hover:bg-white/10">
-                        <div className="text-sm font-semibold text-white">{link.label}</div>
-                        <div className="mt-1 text-xs leading-5 text-white/55">{link.sublabel}</div>
-                      </a>
-                    ))}
-                  </div>
-                  <div className="mt-2 px-4 pb-2 pt-3 text-[10px] font-bold uppercase tracking-[0.22em] text-white/35">Support</div>
-                  <div className="grid gap-1">
-                    <a href={`${getWebOrigin()}/support`} className="rounded-2xl px-4 py-3 transition hover:bg-white/10">
-                      <div className="text-sm font-semibold text-white">Help Center</div>
-                      <div className="mt-1 text-xs leading-5 text-white/55">Ticketing support and platform help.</div>
-                    </a>
-                  </div>
-                </div>
-              </>
-            ) : null}
-          </div>
-        </nav>
-
-        <div className="hidden items-center gap-3 lg:flex">
-          <a href={`${getAppOrigin()}/account/login`} className="text-sm font-bold text-white/70 transition hover:text-white">
-            Member sign in
-          </a>
-          <a href={`${getAppOrigin()}/account/register?next=/account`} className="rounded-full bg-white px-5 py-3 text-[11px] font-black uppercase tracking-[0.18em] text-black transition hover:opacity-90 active:scale-95">
-            Create account
-          </a>
-        </div>
-
-        <button
-          type="button"
-          onClick={() => setOpen((value) => !value)}
-          className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white lg:hidden"
-        >
-          {open ? (
-            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l18 18" />
-            </svg>
-          ) : (
-            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
-            </svg>
-          )}
-        </button>
-      </div>
-
-      {open ? (
-        <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden" onClick={() => setOpen(false)} />
-      ) : null}
-
-      <div className={`fixed inset-x-0 top-0 z-50 h-auto origin-top transform border-b border-white/10 bg-black/95 transition-transform duration-300 lg:hidden ${open ? "translate-y-0" : "-translate-y-full"}`}>
-        <div className="p-4 pt-20">
-          <div className="grid gap-2">
-            {navLinks.map((link) => (
-              <a key={link.label} href={link.href} className="flex items-center justify-between rounded-2xl border border-white/5 bg-white/5 px-5 py-4 text-base font-bold text-white">
-                {link.label}
-                <svg className="h-5 w-5 text-white/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </a>
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-black/70 backdrop-blur-lg py-4 px-6 shadow-lg border-b border-white/10">
+      <div className="mx-auto flex max-w-[1600px] items-center justify-between">
+        <div className="flex items-center">
+          <Link href="/" className="mr-8 flex items-center space-x-2">
+            <div className="h-8 w-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg flex items-center justify-center text-xl font-bold text-white">E</div>
+            <span className="text-xl font-bold text-white">EVNTSZN</span>
+          </Link>
+          <div className="hidden md:flex space-x-4">
+            {NAV_ITEMS.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`text-gray-300 hover:text-purple-400 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  isActive(item.href, pathname) ? 'text-purple-400' : ''
+                }`}
+              >
+                {item.label}
+              </Link>
             ))}
-            <div className="mt-4 rounded-3xl border border-white/5 bg-white/5 p-5">
-              <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#caa7ff]">Explore Cities</div>
-              <div className="mt-4 flex flex-wrap gap-2">
-                {PUBLIC_CITIES.map((city) => (
-                  <a key={city.slug} href={`${getWebOrigin()}/${city.slug}`} className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-bold text-white">
-                    {city.shortLabel}
-                  </a>
-                ))}
-              </div>
-            </div>
-            <div className="mt-4 grid gap-3">
-              <div className="rounded-3xl border border-white/5 bg-white/5 p-5">
-                <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#caa7ff]">Attendee access</div>
-                <div className="mt-4 grid gap-3">
-                  {accessLinks.slice(0, 2).map((link) => (
-                    <a key={link.label} href={link.href} className="rounded-2xl border border-white/10 bg-black/20 px-5 py-4">
-                      <div className="text-base font-bold text-white">{link.label}</div>
-                      <div className="mt-1 text-sm text-white/55">{link.sublabel}</div>
-                    </a>
-                  ))}
-                </div>
-              </div>
-              <div className="rounded-3xl border border-white/5 bg-white/5 p-5">
-                <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#caa7ff]">Internal tools</div>
-                <div className="mt-4 grid gap-3">
-                  {accessLinks.slice(2).map((link) => (
-                    <a key={link.label} href={link.href} className="rounded-2xl border border-white/10 bg-black/20 px-5 py-4">
-                      <div className="text-base font-bold text-white">{link.label}</div>
-                      <div className="mt-1 text-sm text-white/55">{link.sublabel}</div>
-                    </a>
-                  ))}
-                </div>
-              </div>
-              <a href={`${getAppOrigin()}/account/login`} className="flex items-center justify-center rounded-2xl border border-white/10 py-4 text-base font-bold text-white">
-                Member sign in
-              </a>
-              <a href={`${getAppOrigin()}/account/register?next=/account`} className="flex items-center justify-center rounded-2xl bg-white py-4 text-base font-black text-black">
-                Create account
-              </a>
-            </div>
           </div>
         </div>
+        <div className="hidden md:flex items-center space-x-4">
+          {SECONDARY_NAV_ITEMS.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="text-gray-300 hover:text-purple-400 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+            >
+              {item.label}
+            </Link>
+          ))}
+          {AUTH_NAV_ITEMS.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`px-4 py-2 rounded-lg font-semibold text-sm transition-colors ${
+                item.label === 'Sign Up'
+                  ? 'bg-gradient-to-br from-purple-500 to-blue-500 text-white hover:from-purple-600 hover:to-blue-600'
+                  : 'text-white hover:bg-white/10 border border-white/20'
+              }`}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </div>
+        {/* Mobile Menu Button would go here */}
       </div>
-    </header>
+    </nav>
   );
 }

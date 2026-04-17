@@ -7,7 +7,7 @@ type SeasonContextRow = {
   league_id: string;
   slug: string;
   name: string;
-  player_fee_cents: number;
+  player_fee_usd: number;
 };
 
 type LeagueContextRow = {
@@ -22,7 +22,7 @@ export async function getSeasonContext() {
   const { data: seasonRow, error: seasonError } = await supabase
     .schema("epl")
     .from("seasons")
-    .select("id, league_id, slug, name, player_fee_cents")
+    .select("id, league_id, slug, name, player_fee_usd")
     .eq("slug", EPL_SEASON_SLUG)
     .maybeSingle();
 
@@ -58,7 +58,7 @@ export async function getSeasonContext() {
     seasonName: row.name,
     leagueId: row.league_id,
     leagueName: league.name,
-    feeCents: row.player_fee_cents,
+    feeUsd: Number(row.player_fee_usd || 0),
   };
 }
 

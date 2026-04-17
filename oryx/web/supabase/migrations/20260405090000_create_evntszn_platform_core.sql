@@ -91,7 +91,7 @@ create table if not exists public.evntszn_ticket_types (
   event_id uuid not null references public.evntszn_events(id) on delete cascade,
   name text not null,
   description text,
-  price_cents integer not null default 0,
+  price_usd integer not null default 0,
   quantity_total integer not null default 0,
   quantity_sold integer not null default 0,
   max_per_order integer not null default 6,
@@ -113,7 +113,7 @@ create table if not exists public.evntszn_ticket_orders (
   purchaser_email text not null,
   purchaser_name text,
   quantity integer not null default 1,
-  amount_total_cents integer not null default 0,
+  amount_total_usd integer not null default 0,
   currency_code text not null default 'usd',
   status text not null default 'pending' check (status in ('pending', 'paid', 'comped', 'refunded', 'canceled'))
 );
@@ -246,7 +246,7 @@ insert into public.evntszn_ticket_types (
   event_id,
   name,
   description,
-  price_cents,
+  price_usd,
   quantity_total,
   max_per_order,
   is_active

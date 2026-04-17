@@ -7,7 +7,7 @@ type TicketType = {
   id: string;
   name: string;
   description: string | null;
-  price_cents: number;
+  price_usd: number;
   quantity_total: number;
   quantity_sold: number;
   max_per_order: number;
@@ -108,7 +108,7 @@ export default function TicketPurchaseCard({
           >
             {ticketTypes.map((ticketType) => (
               <option key={ticketType.id} value={ticketType.id}>
-                {ticketType.name} · {getTicketAvailabilityLabel(ticketType.availability_state)} · ${(ticketType.price_cents / 100).toFixed(2)}
+                {ticketType.name} · {getTicketAvailabilityLabel(ticketType.availability_state)} · ${Number(ticketType.price_usd || 0).toFixed(2)}
               </option>
             ))}
           </select>
@@ -164,8 +164,8 @@ export default function TicketPurchaseCard({
                 : selectedTicketType?.availability_state === "sold_out"
                   ? "Sold out"
                   : "Unavailable"
-            : selectedTicketType?.price_cents
-            ? `Checkout · $${((selectedTicketType.price_cents * quantity) / 100).toFixed(2)}`
+            : selectedTicketType?.price_usd
+            ? `Checkout · $${(Number(selectedTicketType.price_usd || 0) * quantity).toFixed(2)}`
             : "Reserve complimentary access"}
         </button>
 

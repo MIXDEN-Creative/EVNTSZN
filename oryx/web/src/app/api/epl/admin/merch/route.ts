@@ -44,8 +44,8 @@ export async function POST(req: NextRequest) {
     sku: body.sku,
     item_name: body.itemName,
     item_type: body.itemType,
-    price_cents: Number(body.priceCents || 0),
-    cost_cents: Number(body.costCents || 0),
+    price_usd: Number(body.priceUsd || 0),
+    cost_usd: Number(body.costUsd || 0),
     inventory_count: Number(body.inventoryCount || 0),
     is_active: body.isActive ?? true,
   };

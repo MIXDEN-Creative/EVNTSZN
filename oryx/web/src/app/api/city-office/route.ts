@@ -32,11 +32,11 @@ export async function GET() {
       .select("user_id, role_key, organizer_classification, city_scope, is_active"),
     supabaseAdmin
       .from("evntszn_ticket_orders")
-      .select("id, amount_total_cents, status, evntszn_events(city)")
+      .select("id, amount_total_usd, status, evntszn_events(city)")
       .eq("status", "paid"),
     supabaseAdmin
       .from("evntszn_sponsor_package_orders")
-      .select("id, amount_cents, status, metadata"),
+      .select("id, amount_usd, status, metadata"),
     supabaseAdmin
       .from("evntszn_program_members")
       .select("id, full_name, program_key, city, status, activation_state, activation_readiness, assigned_manager_user_id"),
@@ -65,8 +65,8 @@ export async function GET() {
         hostUpgradeCandidates: 0,
         signalMembers: 0,
         ambassadorMembers: 0,
-        paidRevenueCents: 0,
-        sponsorRevenueCents: 0,
+        paidRevenueUsd: 0,
+        sponsorRevenueUsd: 0,
         sponsorAccounts: 0,
         operators: [] as any[],
         applications: [] as any[],
@@ -117,13 +117,13 @@ export async function GET() {
   for (const order of ordersRes.data || []) {
     const eventCity = normalizeCity((order.evntszn_events as any)?.city);
     const row = ensureCity(eventCity);
-    row.paidRevenueCents += order.amount_total_cents || 0;
+    row.paidRevenueUsd += Number(order.amount_total_usd || 0);
   }
 
   for (const order of sponsorOrdersRes.data || []) {
     const city = normalizeCity((order.metadata as Record<string, unknown> | null)?.city as string | undefined);
     const row = ensureCity(city);
-    if (order.status === "paid") row.sponsorRevenueCents += order.amount_cents || 0;
+    if (order.status === "paid") row.sponsorRevenueUsd += Number(order.amount_usd || 0);
   }
 
   for (const member of programsRes.data || []) {

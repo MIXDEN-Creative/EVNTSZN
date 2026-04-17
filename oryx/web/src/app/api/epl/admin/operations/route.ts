@@ -75,8 +75,8 @@ export async function POST(req: NextRequest) {
       p_staff_application_id: body.staffApplicationId,
       p_role_id: body.roleId,
       p_compensation_tier: body.compensationTier,
-      p_pay_rate_cents: body.payRateCents ?? null,
-      p_stipend_cents: body.stipendCents ?? null,
+      p_pay_rate_usd: body.payRateUsd ?? null,
+      p_stipend_usd: body.stipendUsd ?? null,
       p_can_access_admin: !!body.canAccessAdmin,
       p_can_access_draft_console: !!body.canAccessDraftConsole,
       p_can_access_scanner: !!body.canAccessScanner,
@@ -110,7 +110,7 @@ export async function POST(req: NextRequest) {
       p_season_slug: body.seasonSlug,
       p_stream_code: body.streamCode,
       p_money_direction: body.moneyDirection,
-      p_amount_cents: body.amountCents,
+      p_amount_usd: body.amountUsd,
       p_memo: body.memo ?? null,
     });
 
@@ -125,8 +125,8 @@ export async function POST(req: NextRequest) {
       p_contact_name: body.contactName ?? null,
       p_contact_email: body.contactEmail ?? null,
       p_package_name: body.packageName ?? null,
-      p_cash_value_cents: body.cashValueCents ?? 0,
-      p_in_kind_value_cents: body.inKindValueCents ?? 0,
+      p_cash_value_usd: body.cashValueUsd ?? 0,
+      p_in_kind_value_usd: body.inKindValueUsd ?? 0,
       p_notes: body.notes ?? null,
     });
 
@@ -140,8 +140,8 @@ export async function POST(req: NextRequest) {
       p_sku: body.sku,
       p_item_name: body.itemName,
       p_item_type: body.itemType,
-      p_price_cents: body.priceCents,
-      p_cost_cents: body.costCents ?? 0,
+      p_price_usd: body.priceUsd,
+      p_cost_usd: body.costUsd ?? 0,
       p_inventory_count: body.inventoryCount ?? 0,
     });
 
@@ -155,7 +155,7 @@ export async function POST(req: NextRequest) {
       p_code: body.code,
       p_item_name: body.itemName,
       p_description: body.description ?? null,
-      p_price_cents: body.priceCents ?? 0,
+      p_price_usd: body.priceUsd ?? 0,
       p_fulfillment_type: body.fulfillmentType ?? "digital",
     });
 

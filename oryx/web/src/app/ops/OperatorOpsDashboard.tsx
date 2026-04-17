@@ -1,5 +1,6 @@
 import Link from "next/link";
 import SurfaceShell from "@/components/shells/SurfaceShell";
+import PerformanceScorePanel from "@/components/performance/PerformanceScorePanel";
 import { getAdminOrigin, getScannerOrigin } from "@/lib/domains";
 import type { OperatorProfile, PlatformProfile } from "@/lib/evntszn";
 import { getOrganizerClassificationLabel } from "@/lib/operator-access";
@@ -81,6 +82,12 @@ export default function OperatorOpsDashboard({
       }
     >
       <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+        <div className="lg:col-span-2">
+          <PerformanceScorePanel
+            scope={organizerClassification === "independent_organizer" ? "organizer" : "host"}
+            title={organizerClassification === "independent_organizer" ? "O-Score" : "HPS"}
+          />
+        </div>
         <section className="ev-panel p-6">
           <div className="ev-section-kicker">Access summary</div>
           <div className="mt-5 grid gap-4 md:grid-cols-2">

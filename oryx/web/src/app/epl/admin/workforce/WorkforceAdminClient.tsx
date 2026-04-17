@@ -12,12 +12,12 @@ type WorkforceEntry = {
   position_title: string | null;
   event_title: string | null;
   pay_type: string | null;
-  pay_amount_cents: number | null;
+  pay_amount_usd: number | null;
   employment_type: string | null;
   minutes_worked: number;
   regular_minutes?: number;
   overtime_minutes?: number;
-  estimated_payout_cents: number;
+  estimated_payout_usd: number;
   status: string;
   started_at: string | null;
   ended_at: string | null;
@@ -44,7 +44,7 @@ type PayrollSummary = {
   overtimeHours: number;
   approvedHours: number;
   pendingHours: number;
-  estimatedGrossPayoutCents: number;
+  estimatedGrossPayoutUsd: number;
 };
 
 export default function WorkforceAdminClient() {
@@ -161,7 +161,7 @@ export default function WorkforceAdminClient() {
             </div>
             <div className="ev-meta-card">
               <div className="ev-meta-label">Estimated payout</div>
-              <div className="ev-meta-value">${((summaries?.estimatedPayrollCents ?? 0) / 100).toFixed(0)}</div>
+              <div className="ev-meta-value">{`$${Number(summaries?.estimatedPayrollUsd ?? 0).toFixed(2)}`}</div>
             </div>
             <div className="ev-meta-card">
               <div className="ev-meta-label">Overtime hours</div>
@@ -255,7 +255,7 @@ export default function WorkforceAdminClient() {
                   <td className="px-4 py-3 text-white/62">{summary.overtimeHours}</td>
                   <td className="px-4 py-3 text-white/62">{summary.approvedHours}</td>
                   <td className="px-4 py-3 text-white/62">{summary.pendingHours}</td>
-                  <td className="px-4 py-3 text-white">${(summary.estimatedGrossPayoutCents / 100).toFixed(2)}</td>
+                  <td className="px-4 py-3 text-white">{`$${Number(summary.estimatedGrossPayoutUsd || 0).toFixed(2)}`}</td>
                 </tr>
               ))}
             </tbody>
@@ -287,7 +287,7 @@ export default function WorkforceAdminClient() {
                     `ot ${Math.round((((entry.overtime_minutes || 0) / 60) || 0) * 10) / 10}h`,
                     formatPayoutLabel({
                       payType: entry.pay_type,
-                      payAmountCents: entry.pay_amount_cents,
+                      payAmountUsd: entry.pay_amount_usd,
                     }),
                   ]
                     .filter(Boolean)
@@ -314,7 +314,7 @@ export default function WorkforceAdminClient() {
                 <div className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/65">
                   {formatPayoutLabel({
                     payType: selectedEntry.pay_type,
-                    payAmountCents: selectedEntry.pay_amount_cents,
+                    payAmountUsd: selectedEntry.pay_amount_usd,
                   })}{" "}
                   • {Math.round(((selectedEntry.minutes_worked || 0) / 60) * 10) / 10}h
                 </div>

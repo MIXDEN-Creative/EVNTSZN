@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { formatUsd } from "@/lib/money";
 
 type SponsorPackage = {
   id: string;
   package_name: string;
   description: string | null;
-  cash_price_cents: number;
+  cash_price_usd: number;
   benefits: string[] | null;
 };
 
@@ -139,7 +140,7 @@ export default function SponsorPackagesClient({ packages }: { packages: SponsorP
             <div className="ev-section-kicker">Package</div>
             <div className="mt-3 text-2xl font-black text-white">{pkg.package_name}</div>
             <div className="mt-3 text-sm leading-6 text-white/70">{pkg.description || "Premium brand visibility across EVNTSZN and EPL."}</div>
-            <div className="mt-5 text-4xl font-black text-white">${((pkg.cash_price_cents || 0) / 100).toLocaleString()}</div>
+            <div className="mt-5 text-4xl font-black text-white">{formatUsd(pkg.cash_price_usd)}</div>
             <ul className="mt-5 space-y-2 text-sm text-white/72">
               {Array.isArray(pkg.benefits) && pkg.benefits.length
                 ? pkg.benefits.map((benefit) => (

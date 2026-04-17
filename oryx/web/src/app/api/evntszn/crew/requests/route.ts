@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { createInternalWorkItem, INTERNAL_DESK_SLUGS } from "@/lib/internal-os";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
@@ -51,8 +52,14 @@ export async function POST(request: Request) {
       eventDate?: string;
       city?: string;
       state?: string;
+      eventType?: string;
+      category?: string;
+      duration?: string;
+      equipmentNotes?: string;
+      audienceSize?: string;
+      specialRequirements?: string;
       message?: string;
-      budgetAmountCents?: number | null;
+      budgetAmountUsd?: number | null;
     };
 
     const crewProfileId = String(body.crewProfileId || "").trim();
@@ -65,7 +72,7 @@ export async function POST(request: Request) {
 
     const { data: profile, error: profileError } = await supabaseAdmin
       .from("evntszn_crew_profiles")
-      .select("id, booking_fee_cents, accepts_booking_requests, status")
+      .select("id, booking_fee_usd, accepts_booking_requests, status")
       .eq("id", crewProfileId)
       .maybeSingle();
     if (profileError) throw new Error(profileError.message);
@@ -74,7 +81,7 @@ export async function POST(request: Request) {
     }
 
     const user = await getUser();
-    const { error } = await supabaseAdmin.from("evntszn_crew_booking_requests").insert({
+    const { data: requestRow, error } = await supabaseAdmin.from("evntszn_crew_booking_requests").insert({
       crew_profile_id: profile.id,
       requester_user_id: user?.id || null,
       requested_by_name: requestedByName,
@@ -86,14 +93,35 @@ export async function POST(request: Request) {
       city: String(body.city || "").trim() || null,
       state: String(body.state || "").trim() || null,
       message: String(body.message || "").trim() || null,
-      budget_amount_cents: body.budgetAmountCents ? Number(body.budgetAmountCents) : null,
-      flat_booking_fee_cents: profile.booking_fee_cents || null,
+      budget_amount_usd: body.budgetAmountUsd ? Number(body.budgetAmountUsd) : null,
+      flat_booking_fee_usd: profile.booking_fee_usd || null,
       status: "requested",
       metadata: {
+        eventType: String(body.eventType || "").trim() || null,
+        category: String(body.category || "").trim() || null,
+        duration: String(body.duration || "").trim() || null,
+        equipmentNotes: String(body.equipmentNotes || "").trim() || null,
+        audienceSize: String(body.audienceSize || "").trim() || null,
+        specialRequirements: String(body.specialRequirements || "").trim() || null,
         userAgent: request.headers.get("user-agent"),
       },
+    }).select("id").single();
+    if (error || !requestRow) throw new Error(error?.message || "Could not create booking request.");
+
+    await createInternalWorkItem({
+      deskSlug: INTERNAL_DESK_SLUGS.crew,
+      title: `Crew booking · ${String(body.eventName || "").trim() || requestedByName}`,
+      description: `Crew booking request for ${requestedByName}.`,
+      priority: "high",
+      payload: {
+        bookingRequestId: requestRow.id,
+        source: "crew_marketplace",
+        crewProfileId: profile.id,
+        requesterEmail: requestedByEmail,
+        eventName: String(body.eventName || "").trim() || null,
+        city: String(body.city || "").trim() || null,
+      },
     });
-    if (error) throw new Error(error.message);
 
     return NextResponse.json({ ok: true });
   } catch (error) {

@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
     stream_code: body.streamCode,
     money_direction: body.moneyDirection,
     entry_status: body.entryStatus || "posted",
-    amount_cents: Number(body.amountCents || 0),
+    amount_usd: Number(body.amountUsd || 0),
     memo: body.memo || null,
     related_entity_type: body.relatedEntityType || null,
     related_entity_id: body.relatedEntityId || null,

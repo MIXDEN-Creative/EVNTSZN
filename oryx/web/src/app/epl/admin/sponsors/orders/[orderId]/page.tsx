@@ -40,7 +40,7 @@ export default async function SponsorOrderDetailPage({ params }: PageProps) {
             ["Package", order.package_name || "Not set"],
             ["Order type", order.order_type],
             ["Order status", order.status],
-            ["Amount", `$${((order.amount_cents || 0) / 100).toLocaleString()}`],
+            ["Amount", `$${Number(order.amount_usd || 0).toLocaleString()}`],
             ["Contact", order.contact_name || "Not set"],
             ["Email", order.contact_email],
             ["Phone", order.contact_phone || "Not set"],

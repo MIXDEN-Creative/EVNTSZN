@@ -9,7 +9,7 @@ type Assignment = {
     title: string;
     city?: string | null;
     pay_type?: string | null;
-    pay_amount_cents?: number | null;
+    pay_amount_usd?: number | null;
   } | null;
 };
 

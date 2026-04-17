@@ -22,15 +22,18 @@ export async function GET() {
     scannerAssignmentsRes,
     cityProfilesRes,
     supportTicketsRes,
+    growthEventsRes,
+    growthSummaryRes,
+    growthAttributionsRes,
   ] = await Promise.all([
     supabaseAdmin.from("evntszn_profiles").select("user_id", { count: "exact", head: true }),
     supabaseAdmin.from("evntszn_operator_profiles").select("user_id", { count: "exact", head: true }),
     supabaseAdmin.from("evntszn_applications").select("id, status, application_type"),
     supabaseAdmin.from("evntszn_system_logs").select("id, severity, status, source, message, created_at").order("created_at", { ascending: false }).limit(10),
-    supabaseAdmin.from("evntszn_sponsor_package_orders").select("id, status, amount_cents", { count: "exact" }),
+    supabaseAdmin.from("evntszn_sponsor_package_orders").select("id, status, amount_usd", { count: "exact" }),
     supabaseAdmin.from("evntszn_events").select("id, title, status, city, check_in_count", { count: "exact" }),
-    supabaseAdmin.from("evntszn_ticket_orders").select("id, amount_total_cents, status, evntszn_events(title, city)", { count: "exact" }),
-    supabaseAdmin.schema("epl").from("sponsor_partners").select("id, cash_value_cents, status", { count: "exact" }),
+    supabaseAdmin.from("evntszn_ticket_orders").select("id, amount_total_usd, status, evntszn_events(title, city)", { count: "exact" }),
+    supabaseAdmin.schema("epl").from("sponsor_partners").select("id, cash_value_usd, status", { count: "exact" }),
     supabaseAdmin.from("evntszn_sponsor_accounts").select("id, status, scope_type, activation_status", { count: "exact" }),
     supabaseAdmin.from("evntszn_program_members").select("id, program_key, status, city, activation_readiness", { count: "exact" }),
     supabaseAdmin.schema("epl").from("staff_applications").select("id, status, opportunity_type, hiring_decision"),
@@ -39,21 +42,30 @@ export async function GET() {
     supabaseAdmin.from("evntszn_event_staff").select("id, can_scan, status"),
     supabaseAdmin.from("evntszn_operator_profiles").select("city_scope, organizer_classification, is_active"),
     supabaseAdmin.from("support_tickets").select("id, status, issue_type, severity"),
+    supabaseAdmin
+      .from("growth_compensation_events")
+      .select("id, entity_id, attributed_to_user_id, revenue_amount_usd, compensation_amount_usd, source_event_id, created_at, metadata_json"),
+    supabaseAdmin
+      .from("growth_compensation_summary")
+      .select("id, attributed_to_user_id, total_compensation_usd, last_updated_at"),
+    supabaseAdmin
+      .from("growth_attributions")
+      .select("id, entity_type, entity_id, attributed_to_user_id, attribution_active"),
   ]);
 
   const applications = appsRes.data || [];
   const paidOrders = (ticketOrdersRes.data || []).filter((row) => row.status === "paid");
-  const ticketRevenue = paidOrders.reduce((sum, row) => sum + (row.amount_total_cents || 0), 0);
-  const sponsorRevenue = (sponsorsRes.data || [])
-    .reduce((sum, row) => sum + (row.cash_value_cents || 0), 0);
+  const ticketRevenueUsd = paidOrders.reduce((sum, row) => sum + Number(row.amount_total_usd || 0), 0);
+  const sponsorRevenueUsd = (sponsorsRes.data || [])
+    .reduce((sum, row) => sum + Number(row.cash_value_usd || 0), 0);
   const cityRevenueMap = new Map<string, number>();
   const eventRevenueMap = new Map<string, number>();
 
   for (const order of paidOrders) {
     const city = ((order.evntszn_events as { city?: string } | null)?.city || "Unassigned").trim();
     const eventTitle = ((order.evntszn_events as { title?: string } | null)?.title || "Event").trim();
-    cityRevenueMap.set(city, (cityRevenueMap.get(city) || 0) + (order.amount_total_cents || 0));
-    eventRevenueMap.set(eventTitle, (eventRevenueMap.get(eventTitle) || 0) + (order.amount_total_cents || 0));
+    cityRevenueMap.set(city, (cityRevenueMap.get(city) || 0) + (order.amount_total_usd || 0));
+    eventRevenueMap.set(eventTitle, (eventRevenueMap.get(eventTitle) || 0) + (order.amount_total_usd || 0));
   }
 
   const checkInTotal = (eventsRes.data || []).reduce((sum, row) => sum + (row.check_in_count || 0), 0);
@@ -130,13 +142,38 @@ export async function GET() {
     programs: (programMembersRes.data || []).filter((row) => String(row.city || "Unassigned").trim() === city && (row.activation_readiness === "ready" || row.activation_readiness === "active")).length,
   }));
   const cityRevenue = Array.from(cityRevenueMap.entries())
-    .map(([city, cents]) => ({ city, cents }))
-    .sort((a, b) => b.cents - a.cents)
+    .map(([city, revenueUsd]) => ({ city, revenueUsd }))
+    .sort((a, b) => b.revenueUsd - a.revenueUsd)
     .slice(0, 6);
   const topEvents = Array.from(eventRevenueMap.entries())
-    .map(([title, cents]) => ({ title, cents }))
-    .sort((a, b) => b.cents - a.cents)
+    .map(([title, revenueUsd]) => ({ title, revenueUsd }))
+    .sort((a, b) => b.revenueUsd - a.revenueUsd)
     .slice(0, 6);
+  const growthEvents = growthEventsRes.data || [];
+  const totalAttributedRevenueUsd = growthEvents.reduce((sum, row) => sum + Number(row.revenue_amount_usd || 0), 0);
+  const totalGrowthCompensationUsd = growthEvents.reduce((sum, row) => sum + Number(row.compensation_amount_usd || 0), 0);
+  const growthByHost = Object.entries(
+    growthEvents.reduce<Record<string, { revenueUsd: number; compensationUsd: number; orderCount: number }>>((acc, row) => {
+      const key = String(row.entity_id || "unknown");
+      if (!acc[key]) acc[key] = { revenueUsd: 0, compensationUsd: 0, orderCount: 0 };
+      acc[key].revenueUsd += Number(row.revenue_amount_usd || 0);
+      acc[key].compensationUsd += Number(row.compensation_amount_usd || 0);
+      acc[key].orderCount += 1;
+      return acc;
+    }, {}),
+  ).map(([entityId, value]) => ({ entityId, ...value }));
+  const growthByEvent = Object.entries(
+    growthEvents.reduce<Record<string, { revenueUsd: number; compensationUsd: number; orderCount: number }>>((acc, row) => {
+      const key = String(row.source_event_id || "unknown");
+      if (!acc[key]) acc[key] = { revenueUsd: 0, compensationUsd: 0, orderCount: 0 };
+      acc[key].revenueUsd += Number(row.revenue_amount_usd || 0);
+      acc[key].compensationUsd += Number(row.compensation_amount_usd || 0);
+      acc[key].orderCount += 1;
+      return acc;
+    }, {}),
+  ).map(([eventId, value]) => ({ eventId, ...value }));
+  const activeAttributedEntities = (growthAttributionsRes.data || []).filter((row) => row.attribution_active).length;
+  const inactiveAttributedEntities = (growthAttributionsRes.data || []).filter((row) => !row.attribution_active).length;
 
   return NextResponse.json({
     stats: {
@@ -145,8 +182,8 @@ export async function GET() {
       pendingApprovals: applications.filter((row) => row.status === "new" || row.status === "reviewing").length,
       openIssues: (logsRes.data || []).filter((row) => row.status !== "resolved").length,
       publicEvents: (eventsRes.data || []).filter((row) => row.status === "published").length,
-      ticketRevenueCents: ticketRevenue,
-      sponsorRevenueCents: sponsorRevenue,
+      ticketRevenueUsd,
+      sponsorRevenueUsd,
       sponsorPackageOrders: sponsorOrdersRes.count || 0,
       sponsorAccounts: sponsorAccountsRes.count || 0,
       programMembers: programMembersRes.count || 0,
@@ -162,6 +199,10 @@ export async function GET() {
       activeScanAssignments: (scannerAssignmentsRes.data || []).filter((row) => row.can_scan && row.status === "active").length,
       storeFailureCount: (logsRes.data || []).filter((row) => String(row.source || "").includes("printful")).length,
       webhookFailureCount: (logsRes.data || []).filter((row) => String(row.source || "").includes("stripe")).length,
+      totalAttributedRevenueUsd,
+      totalGrowthCompensationUsd,
+      activeAttributedEntities,
+      inactiveAttributedEntities,
     },
     applications,
     issues: logsRes.data || [],
@@ -175,6 +216,15 @@ export async function GET() {
     opportunityCounts,
     hostOrganizerMix,
     cityReadinessCounts,
+    growthCompensation: {
+      totalAttributedRevenueUsd,
+      totalCompensationUsd: totalGrowthCompensationUsd,
+      activeAttributedEntities,
+      inactiveAttributedEntities,
+      summaries: growthSummaryRes.data || [],
+      byHost: growthByHost,
+      byEvent: growthByEvent,
+    },
     supportCountsByType: Object.entries(
       (supportTicketsRes.data || []).reduce<Record<string, number>>((acc, row) => {
         const key = String(row.issue_type || "other");

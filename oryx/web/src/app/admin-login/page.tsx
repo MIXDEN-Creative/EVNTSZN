@@ -1,7 +1,19 @@
 import Link from "next/link";
 import InternalAccessForm from "./InternalAccessForm";
+import FounderLoginForm from "@/app/account/login/FounderLoginForm";
 
-export default function AdminLoginPage() {
+type AdminLoginPageProps = {
+  searchParams?: Promise<{
+    next?: string | string[];
+  }>;
+};
+
+export default async function AdminLoginPage({ searchParams }: AdminLoginPageProps) {
+  const resolvedSearchParams = (await searchParams) ?? {};
+  const nextValue = Array.isArray(resolvedSearchParams.next)
+    ? resolvedSearchParams.next[0] ?? "/admin"
+    : resolvedSearchParams.next ?? "/admin";
+
   return (
     <main className="min-h-screen bg-[#07070b] text-white">
       <div className="mx-auto grid min-h-screen w-full max-w-7xl gap-6 px-4 py-6 md:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:px-8">
@@ -65,7 +77,25 @@ export default function AdminLoginPage() {
             </p>
 
             <div className="mt-6">
-              <InternalAccessForm />
+              <InternalAccessForm next={nextValue} />
+            </div>
+          </div>
+
+          <div className="mt-8 rounded-[1.75rem] border border-[#A259FF]/15 bg-[linear-gradient(180deg,rgba(162,89,255,0.08),rgba(255,255,255,0.02))] p-5 md:p-6">
+            <div className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-[#d7c0ff]">
+              Founder Override
+            </div>
+
+            <h3 className="text-2xl font-bold tracking-tight">
+              Founder and HQ fallback access
+            </h3>
+
+            <p className="mt-3 text-sm leading-7 text-white/65">
+              The founder credential is verified against the runtime secret and then issues the signed founder session directly. This path avoids the fragile invited-user login fallback for the founder account.
+            </p>
+
+            <div className="mt-6">
+              <FounderLoginForm next={nextValue} />
             </div>
           </div>
         </section>

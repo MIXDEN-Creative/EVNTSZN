@@ -1,17 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdminPermission } from "@/lib/admin-auth";
 import { supabaseAdmin } from "@/lib/supabase-admin";
-import { calculateWorkedMinutes, deriveOvertimeMinutes, estimatePayoutCents, minutesToHours, toCsv } from "@/lib/workforce";
+import { calculateWorkedMinutes, deriveOvertimeMinutes, estimatePayoutUsd, minutesToHours, toCsv } from "@/lib/workforce";
 import { toDatabaseUserId } from "@/lib/access-control";
 
 function unwrapOne<T>(value: T | T[] | null | undefined) {
   return Array.isArray(value) ? value[0] || null : value || null;
 }
 
-function toPayAmountCents(value: number | string | null | undefined) {
+function toPayAmountUsd(value: number | string | null | undefined) {
   const amount = Number(value || 0);
   if (!Number.isFinite(amount) || amount <= 0) return null;
-  return Math.round(amount * 100);
+  return Math.round(amount * 100) / 100;
 }
 
 export async function GET(request: NextRequest) {
@@ -76,7 +76,7 @@ export async function GET(request: NextRequest) {
           ...position,
           title: position.title_override || template?.title || "Staff role",
           role_type: template?.role_type || null,
-          pay_amount_cents: toPayAmountCents(position.pay_amount),
+          pay_amount_usd: toPayAmountUsd(position.pay_amount),
           linked_event_id: position.event_id || null,
         },
       ];
@@ -110,9 +110,9 @@ export async function GET(request: NextRequest) {
       minutes_worked: minutesWorked,
       regular_minutes: entry.regular_minutes || overtimeBreakdown.regularMinutes,
       overtime_minutes: entry.overtime_minutes || overtimeBreakdown.overtimeMinutes,
-      estimated_payout_cents: estimatePayoutCents({
+      estimated_payout_usd: estimatePayoutUsd({
         payType: entry.pay_type || position?.pay_type,
-        payAmountCents: entry.pay_amount_cents || position?.pay_amount_cents,
+        payAmountUsd: entry.pay_amount_usd || position?.pay_amount_usd,
         minutesWorked,
         overtimeMinutes: entry.overtime_minutes || overtimeBreakdown.overtimeMinutes,
       }),
@@ -135,14 +135,14 @@ export async function GET(request: NextRequest) {
       overtimeMinutes: 0,
       approvedMinutes: 0,
       pendingMinutes: 0,
-      estimatedGrossPayoutCents: 0,
+      estimatedGrossPayoutUsd: 0,
     };
 
     current.regularMinutes += entry.regular_minutes || 0;
     current.overtimeMinutes += entry.overtime_minutes || 0;
     if (entry.status === "submitted") current.pendingMinutes += entry.minutes_worked || 0;
     if (entry.status === "approved" || entry.status === "ready_for_payroll") current.approvedMinutes += entry.minutes_worked || 0;
-    if (entry.status === "approved" || entry.status === "ready_for_payroll") current.estimatedGrossPayoutCents += entry.estimated_payout_cents || 0;
+    if (entry.status === "approved" || entry.status === "ready_for_payroll") current.estimatedGrossPayoutUsd += entry.estimated_payout_usd || 0;
     payrollSummaryByUser.set(entry.user_id, current);
   }
 
@@ -164,7 +164,7 @@ export async function GET(request: NextRequest) {
         overtime_hours: summary.overtimeHours,
         approved_hours: summary.approvedHours,
         pending_hours: summary.pendingHours,
-        estimated_gross_payout: (summary.estimatedGrossPayoutCents / 100).toFixed(2),
+        estimated_gross_payout: Number(summary.estimatedGrossPayoutUsd || 0).toFixed(2),
       })),
     );
 
@@ -193,9 +193,9 @@ export async function GET(request: NextRequest) {
       pendingHours: entries
         .filter((entry: any) => entry.status === "submitted")
         .reduce((sum: number, entry: any) => sum + (entry.minutes_worked || 0), 0) / 60,
-      estimatedPayrollCents: entries
+      estimatedPayrollUsd: entries
         .filter((entry: any) => entry.status === "approved" || entry.status === "ready_for_payroll")
-      .reduce((sum: number, entry: any) => sum + (entry.estimated_payout_cents || 0), 0),
+      .reduce((sum: number, entry: any) => sum + (entry.estimated_payout_usd || 0), 0),
     },
     selectedPayPeriod: payPeriodId ? periodsById.get(payPeriodId) || null : null,
   });
@@ -231,7 +231,7 @@ export async function POST(request: Request) {
       office_label: body.officeLabel || null,
       pay_type: body.payType || "hourly",
       employment_type: body.employmentType || null,
-      pay_amount_cents: Number(body.payAmountCents || 0) || null,
+      pay_amount_usd: Number(body.payAmountUsd || 0) || null,
       status: body.status || "draft",
       started_at: startedAt || null,
       ended_at: endedAt || null,

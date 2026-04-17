@@ -25,7 +25,7 @@ export default async function SponsorPackagesPage() {
     id: string;
     package_name: string;
     description: string | null;
-    cash_price_cents: number;
+    cash_price_usd: number;
     benefits: string[] | null;
   }[];
 

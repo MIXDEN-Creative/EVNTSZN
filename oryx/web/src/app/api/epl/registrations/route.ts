@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getSupabaseAdmin } from "@/lib/epl/supabase-admin";
 import { JERSEY_NAME_DISCLAIMER } from "@/lib/epl/constants";
 import { absoluteUrl, getSeasonContext } from "@/lib/epl/helpers";
+import { toStripeCents } from "@/lib/money";
 import { stripe } from "@/lib/epl/stripe";
 import { buildWaiverUrl } from "@/lib/epl/waiver";
 
@@ -281,10 +282,10 @@ export async function POST(req: Request) {
         season_id: season.seasonId,
         player_profile_id: playerProfileId,
         application_id: application.id,
-        registration_status: season.feeCents > 0 ? "pending_payment" : "approved",
+        registration_status: season.feeUsd > 0 ? "pending_payment" : "approved",
         player_status: "prospect",
-        payment_amount_cents: season.feeCents,
-        waived_fee: season.feeCents === 0,
+        payment_amount_usd: season.feeUsd,
+        waived_fee: season.feeUsd === 0,
         registration_source: "website",
         currency_code: "usd",
       })
@@ -342,7 +343,7 @@ export async function POST(req: Request) {
       throw waiverUrlUpdateError;
     }
 
-    if (season.feeCents <= 0) {
+    if (season.feeUsd <= 0) {
       return NextResponse.json({
         ok: true,
         checkoutUrl: absoluteUrl(
@@ -372,7 +373,7 @@ export async function POST(req: Request) {
           quantity: 1,
           price_data: {
             currency: "usd",
-            unit_amount: season.feeCents,
+            unit_amount: toStripeCents(season.feeUsd),
             product_data: {
               name: `${season.leagueName} ${season.seasonName} Player Registration`,
               description: "Season 1 player registration",

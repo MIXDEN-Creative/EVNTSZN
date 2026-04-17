@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { LINK_PLAN_CONFIG, type LinkPlan } from "@/lib/platform-products";
+import { formatUsd } from "@/lib/money";
 
 type AvailableEvent = {
   id: string;
@@ -37,11 +38,11 @@ type LinkEditorPayload = {
     status: "draft" | "published";
     plan_tier: LinkPlan;
     fee_bearing_enabled: boolean;
-    monthly_price_cents: number | null;
+    monthly_price_usd: number | null;
     email_capture_enabled: boolean;
   };
   socialLinks: Array<{ id?: string; platform: string; label: string | null; url: string }>;
-  offers: Array<{ id?: string; offer_type: string; title: string; description: string | null; href: string; cta_label: string; price_label: string | null; fee_amount_cents: number | null }>;
+  offers: Array<{ id?: string; offer_type: string; title: string; description: string | null; href: string; cta_label: string; price_label: string | null; fee_amount_usd: number | null }>;
   featuredEventIds: string[];
   featuredCrewIds: string[];
   availableEvents: AvailableEvent[];
@@ -56,7 +57,7 @@ type LinkEditorPayload = {
     uniqueClicks: number;
     attributedOrderCount: number;
     attributedTicketCount: number;
-    attributedGrossRevenueCents: number;
+    attributedGrossRevenueUsd: number;
     conversionRate: number | null;
   };
   billing: {
@@ -78,7 +79,7 @@ type LinkEditorPayload = {
       clicks: number;
       orders: number;
       tickets: number;
-      grossRevenueCents: number;
+      grossRevenueUsd: number;
     }>;
     recentConversions: Array<{
       id: string;
@@ -87,7 +88,7 @@ type LinkEditorPayload = {
       convertedAt: string;
       orderCount: number;
       ticketCount: number;
-      grossRevenueCents: number;
+      grossRevenueUsd: number;
       attributionMethod: string;
     }>;
   };
@@ -114,7 +115,7 @@ type LinkApiError = {
 };
 
 const EMPTY_SOCIAL = { platform: "Instagram", label: "", url: "" };
-const EMPTY_OFFER = { offerType: "digital_product", title: "", description: "", href: "", ctaLabel: "Open", priceLabel: "", feeAmountCents: "" };
+const EMPTY_OFFER = { offerType: "digital_product", title: "", description: "", href: "", ctaLabel: "Open", priceLabel: "", feeAmountUsd: "" };
 const PLAN_ORDER: LinkPlan[] = ["free", "starter", "pro", "elite"];
 
 export default function LinkManagerClient() {
@@ -138,7 +139,7 @@ export default function LinkManagerClient() {
       status: payload.page.status,
       planTier: payload.page.plan_tier,
       feeBearingEnabled: payload.page.fee_bearing_enabled,
-      monthlyPriceCents: payload.page.monthly_price_cents ? String(payload.page.monthly_price_cents) : "",
+      monthlyPriceUsd: payload.page.monthly_price_usd ? String(payload.page.monthly_price_usd) : "",
       emailCaptureEnabled: payload.page.email_capture_enabled,
       socialLinks: payload.socialLinks.length
         ? payload.socialLinks.map((item) => ({
@@ -155,7 +156,7 @@ export default function LinkManagerClient() {
             href: item.href,
             ctaLabel: item.cta_label,
             priceLabel: item.price_label || "",
-            feeAmountCents: item.fee_amount_cents ? String(item.fee_amount_cents) : "",
+            feeAmountUsd: item.fee_amount_usd ? String(item.fee_amount_usd) : "",
           }))
         : [EMPTY_OFFER],
       featuredEventIds: payload.featuredEventIds,
@@ -198,11 +199,11 @@ export default function LinkManagerClient() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         ...draft,
-        monthlyPriceCents: draft.monthlyPriceCents ? Number(draft.monthlyPriceCents) : null,
+        monthlyPriceUsd: draft.monthlyPriceUsd ? Number(draft.monthlyPriceUsd) : null,
         socialLinks: draft.socialLinks,
         offers: draft.offers.map((offer: any) => ({
           ...offer,
-          feeAmountCents: offer.feeAmountCents ? Number(offer.feeAmountCents) : null,
+          feeAmountUsd: offer.feeAmountUsd ? Number(offer.feeAmountUsd) : null,
         })),
         featuredCrewIds: draft.featuredCrewIds,
       }),
@@ -382,7 +383,7 @@ export default function LinkManagerClient() {
           </div>
           <div className="ev-meta-card">
             <div className="ev-meta-label">{payload.featureMatrix.advancedAnalyticsUnlocked ? "Attributed revenue" : "Analytics"}</div>
-            <div className="ev-meta-value">{payload.featureMatrix.advancedAnalyticsUnlocked ? `$${(payload.usage.attributedGrossRevenueCents / 100).toLocaleString()}` : "Upgrade to Pro"}</div>
+            <div className="ev-meta-value">{payload.featureMatrix.advancedAnalyticsUnlocked ? formatUsd(payload.usage.attributedGrossRevenueUsd) : "Upgrade to Pro"}</div>
           </div>
         </div>
         <div className="mt-6 flex flex-wrap items-center gap-3">
@@ -498,7 +499,7 @@ export default function LinkManagerClient() {
             </div>
             <div className="ev-meta-card">
               <div className="ev-meta-label">Attributed revenue</div>
-              <div className="ev-meta-value">{payload.featureMatrix.advancedAnalyticsUnlocked ? `$${(payload.usage.attributedGrossRevenueCents / 100).toLocaleString()}` : "Locked"}</div>
+              <div className="ev-meta-value">{payload.featureMatrix.advancedAnalyticsUnlocked ? formatUsd(payload.usage.attributedGrossRevenueUsd) : "Locked"}</div>
               <div className="mt-2 text-xs text-white/50">
                 {payload.featureMatrix.advancedAnalyticsUnlocked ? "Gross EVNTSZN-native ticket revenue attributed to this Link" : "Upgrade to Pro to unlock attributed revenue tracking"}
               </div>
@@ -563,7 +564,7 @@ export default function LinkManagerClient() {
                           {event.clicks} clicks • {event.orders} orders • {event.tickets} tickets
                         </div>
                       </div>
-                      <div className="text-sm font-bold text-[#d9c4ff]">${(event.grossRevenueCents / 100).toLocaleString()}</div>
+                      <div className="text-sm font-bold text-[#d9c4ff]">{formatUsd(event.grossRevenueUsd)}</div>
                     </div>
                   </div>
                 )) : (
@@ -585,7 +586,7 @@ export default function LinkManagerClient() {
                           {new Date(conversion.convertedAt).toLocaleString()} • {conversion.ticketCount} tickets • {conversion.attributionMethod.replace(/_/g, " ")}
                         </div>
                       </div>
-                      <div className="text-sm font-bold text-[#d9c4ff]">${(conversion.grossRevenueCents / 100).toLocaleString()}</div>
+                      <div className="text-sm font-bold text-[#d9c4ff]">{formatUsd(conversion.grossRevenueUsd)}</div>
                     </div>
                   </div>
                 )) : (
@@ -720,9 +721,9 @@ export default function LinkManagerClient() {
                       next[index] = { ...next[index], priceLabel: event.target.value };
                       setDraft({ ...draft, offers: next });
                     }} />
-                    <input className="ev-field" placeholder="Fee amount cents (optional)" value={offer.feeAmountCents} onChange={(event) => {
+                    <input className="ev-field" placeholder="Fee amount USD (optional)" value={offer.feeAmountUsd} onChange={(event) => {
                       const next = [...draft.offers];
-                      next[index] = { ...next[index], feeAmountCents: event.target.value };
+                      next[index] = { ...next[index], feeAmountUsd: event.target.value };
                       setDraft({ ...draft, offers: next });
                     }} />
                   </div>
@@ -836,7 +837,7 @@ export default function LinkManagerClient() {
             <div className="ev-section-kicker">Monetization setup</div>
             <div className="mt-5 grid gap-4 md:grid-cols-2">
               <input className="ev-field" value={`${planConfig.label} · ${planConfig.priceLabel}`} readOnly />
-              <input className="ev-field" placeholder="Monthly price cents" value={draft.monthlyPriceCents} readOnly />
+              <input className="ev-field" placeholder="Monthly price USD" value={draft.monthlyPriceUsd} readOnly />
             </div>
             <div className="mt-5 flex flex-wrap gap-3">
               <label className={`rounded-full border px-4 py-3 text-sm font-semibold ${payload.featureMatrix.leadCaptureUnlocked ? "border-white/10 bg-black/20 text-white/80" : "border-white/10 bg-black/10 text-white/45"}`}>

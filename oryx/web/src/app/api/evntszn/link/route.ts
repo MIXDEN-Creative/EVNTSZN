@@ -16,10 +16,10 @@ type LinkPagePayload = {
   accentLabel?: string;
   status?: "draft" | "published";
   feeBearingEnabled?: boolean;
-  monthlyPriceCents?: number | null;
+  monthlyPriceUsd?: number | null;
   emailCaptureEnabled?: boolean;
   socialLinks?: Array<{ platform?: string; label?: string; url?: string }>;
-  offers?: Array<{ offerType?: string; title?: string; description?: string; href?: string; ctaLabel?: string; priceLabel?: string; feeAmountCents?: number | null }>;
+  offers?: Array<{ offerType?: string; title?: string; description?: string; href?: string; ctaLabel?: string; priceLabel?: string; feeAmountUsd?: number | null }>;
   featuredEventIds?: string[];
   featuredCrewIds?: string[];
 };
@@ -309,7 +309,7 @@ async function loadEditorPayload(userId: string) {
       .limit(2000),
     supabaseAdmin
       .from("evntszn_link_conversions")
-      .select("id, event_id, attributed_order_count, attributed_ticket_count, attributed_gross_revenue_cents, attribution_status, attribution_method, converted_at, evntszn_events:event_id(title, slug)")
+      .select("id, event_id, attributed_order_count, attributed_ticket_count, attributed_gross_revenue_usd, attribution_status, attribution_method, converted_at, evntszn_events:event_id(title, slug)")
       .eq("link_page_id", page.id)
       .order("converted_at", { ascending: false })
       .limit(200),
@@ -334,7 +334,7 @@ async function loadEditorPayload(userId: string) {
   const attributedConversions = (conversionRowsRes.data || []).filter((row) => row.attribution_status === "attributed");
   const attributedOrderCount = attributedConversions.reduce((sum, row) => sum + Number(row.attributed_order_count || 0), 0);
   const attributedTicketCount = attributedConversions.reduce((sum, row) => sum + Number(row.attributed_ticket_count || 0), 0);
-  const attributedGrossRevenueCents = attributedConversions.reduce((sum, row) => sum + Number(row.attributed_gross_revenue_cents || 0), 0);
+  const attributedGrossRevenueUsd = attributedConversions.reduce((sum, row) => sum + Number(row.attributed_gross_revenue_usd || 0), 0);
   const eventPerformance = new Map<string, {
     eventId: string;
     title: string;
@@ -342,7 +342,7 @@ async function loadEditorPayload(userId: string) {
     clicks: number;
     orders: number;
     tickets: number;
-    grossRevenueCents: number;
+    grossRevenueUsd: number;
   }>();
   for (const click of clickRowsRes.data || []) {
     const current = eventPerformance.get(click.event_id) || {
@@ -352,7 +352,7 @@ async function loadEditorPayload(userId: string) {
       clicks: 0,
       orders: 0,
       tickets: 0,
-      grossRevenueCents: 0,
+      grossRevenueUsd: 0,
     };
     current.clicks += 1;
     eventPerformance.set(click.event_id, current);
@@ -366,18 +366,18 @@ async function loadEditorPayload(userId: string) {
       clicks: 0,
       orders: 0,
       tickets: 0,
-      grossRevenueCents: 0,
+      grossRevenueUsd: 0,
     };
     current.title = eventRow?.title || current.title;
     current.slug = eventRow?.slug || current.slug;
     current.orders += Number(conversion.attributed_order_count || 0);
     current.tickets += Number(conversion.attributed_ticket_count || 0);
-    current.grossRevenueCents += Number(conversion.attributed_gross_revenue_cents || 0);
+    current.grossRevenueUsd += Number(conversion.attributed_gross_revenue_usd || 0);
     eventPerformance.set(conversion.event_id, current);
   }
   const topEvents = [...eventPerformance.values()]
     .sort((left, right) => {
-      if (right.grossRevenueCents !== left.grossRevenueCents) return right.grossRevenueCents - left.grossRevenueCents;
+      if (right.grossRevenueUsd !== left.grossRevenueUsd) return right.grossRevenueUsd - left.grossRevenueUsd;
       if (right.orders !== left.orders) return right.orders - left.orders;
       return right.clicks - left.clicks;
     })
@@ -391,7 +391,7 @@ async function loadEditorPayload(userId: string) {
       convertedAt: conversion.converted_at,
       orderCount: Number(conversion.attributed_order_count || 0),
       ticketCount: Number(conversion.attributed_ticket_count || 0),
-      grossRevenueCents: Number(conversion.attributed_gross_revenue_cents || 0),
+      grossRevenueUsd: Number(conversion.attributed_gross_revenue_usd || 0),
       attributionMethod: conversion.attribution_method || "deterministic",
     };
   });
@@ -421,7 +421,7 @@ async function loadEditorPayload(userId: string) {
       uniqueClicks,
       attributedOrderCount,
       attributedTicketCount,
-      attributedGrossRevenueCents,
+      attributedGrossRevenueUsd,
       conversionRate,
     },
     featureMatrix,
@@ -552,7 +552,7 @@ export async function POST(request: Request) {
         status: body.status === "published" ? "published" : "draft",
         plan_tier: currentPlan,
         fee_bearing_enabled: featureMatrix.advancedToolsUnlocked ? Boolean(body.feeBearingEnabled) : false,
-        monthly_price_cents: body.monthlyPriceCents ? Number(body.monthlyPriceCents) : null,
+        monthly_price_usd: body.monthlyPriceUsd ? Number(body.monthlyPriceUsd) : null,
         email_capture_enabled: featureMatrix.leadCaptureUnlocked ? body.emailCaptureEnabled !== false : false,
         metadata: nextMetadata,
       })
@@ -595,7 +595,7 @@ export async function POST(request: Request) {
             href: String(item.href || "").trim(),
             cta_label: String(item.ctaLabel || "Open").trim() || "Open",
             price_label: String(item.priceLabel || "").trim() || null,
-            fee_amount_cents: item.feeAmountCents ? Number(item.feeAmountCents) : null,
+            fee_amount_usd: item.feeAmountUsd ? Number(item.feeAmountUsd) : null,
             is_featured: index === 0,
             sort_order: index,
           })),

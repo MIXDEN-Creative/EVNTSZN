@@ -24,8 +24,8 @@ export async function POST(request: Request) {
   const payload = {
     package_name: String(body.package_name || "").trim(),
     description: String(body.description || "").trim() || null,
-    cash_price_cents: Number(body.cash_price_cents || 0),
-    in_kind_floor_cents: Number(body.in_kind_floor_cents || 0),
+    cash_price_usd: Number(body.cash_price_usd || 0),
+    in_kind_floor_usd: Number(body.in_kind_floor_usd || 0),
     benefits: Array.isArray(body.benefits) ? body.benefits : [],
     sort_order: Number(body.sort_order || 100),
     is_active: Boolean(body.is_active ?? true),

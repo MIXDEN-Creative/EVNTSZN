@@ -158,7 +158,7 @@ insert into public.evntszn_ticket_types (
   event_id,
   name,
   description,
-  price_cents,
+  price_usd,
   quantity_total,
   quantity_sold,
   max_per_order,
@@ -214,7 +214,7 @@ values
 on conflict (event_id, name) do update
 set
   description = excluded.description,
-  price_cents = excluded.price_cents,
+  price_usd = excluded.price_usd,
   quantity_total = excluded.quantity_total,
   max_per_order = excluded.max_per_order,
   sales_start_at = excluded.sales_start_at,

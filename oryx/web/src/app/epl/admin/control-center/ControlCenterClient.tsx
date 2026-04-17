@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import PlatformCapacityMonitor from "@/components/admin/PlatformCapacityMonitor";
+import PerformanceScorePanel from "@/components/performance/PerformanceScorePanel";
+import { formatUsd } from "@/lib/money";
 
 type QuickTask = {
   label: string;
@@ -83,8 +85,8 @@ export default function ControlCenterClient({ isFounder }: { isFounder?: boolean
     {
       title: "Revenue pulse",
       items: [
-        ["Ticket revenue", stats ? `$${((stats.ticketRevenueCents || 0) / 100).toLocaleString()}` : "—"],
-        ["Sponsor revenue", stats ? `$${((stats.sponsorRevenueCents || 0) / 100).toLocaleString()}` : "—"],
+        ["Ticket revenue", stats ? formatUsd(stats.ticketRevenueUsd || 0) : "—"],
+        ["Sponsor revenue", stats ? formatUsd(stats.sponsorRevenueUsd || 0) : "—"],
         ["Package orders", stats?.sponsorPackageOrders ?? "—"],
         ["Sponsor accounts", stats?.sponsorAccounts ?? "—"],
       ],
@@ -145,6 +147,10 @@ export default function ControlCenterClient({ isFounder }: { isFounder?: boolean
           </div>
         </div>
       </section>
+
+      <div className="mt-8">
+        <PerformanceScorePanel scope="founder" title="PPS" />
+      </div>
 
       {message ? (
         <div className="mt-4 rounded-2xl border border-red-400/20 bg-red-500/10 p-4 text-sm text-red-200">{message}</div>
@@ -214,7 +220,7 @@ export default function ControlCenterClient({ isFounder }: { isFounder?: boolean
                   cityRevenue.map((row: any) => (
                     <div key={row.city} className="flex items-center justify-between gap-4 py-2 border-b border-white/5 last:border-0">
                       <span className="text-sm text-white/60">{row.city}</span>
-                      <span className="text-sm font-bold text-white">${((row.cents || 0) / 100).toLocaleString()}</span>
+                      <span className="text-sm font-bold text-white">{formatUsd(row.revenueUsd || 0)}</span>
                     </div>
                   ))
                 )}
@@ -229,7 +235,7 @@ export default function ControlCenterClient({ isFounder }: { isFounder?: boolean
                   topEvents.map((row: any) => (
                     <div key={row.title} className="flex items-center justify-between gap-4 py-2 border-b border-white/5 last:border-0">
                       <span className="text-sm text-white/60 truncate max-w-[140px]">{row.title}</span>
-                      <span className="text-sm font-bold text-white">${((row.cents || 0) / 100).toLocaleString()}</span>
+                      <span className="text-sm font-bold text-white">{formatUsd(row.revenueUsd || 0)}</span>
                     </div>
                   ))
                 )}

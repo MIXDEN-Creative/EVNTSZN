@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
     code: body.code,
     item_name: body.itemName,
     description: body.description || null,
-    price_cents: Number(body.priceCents || 0),
+    price_usd: Number(body.priceUsd || 0),
     fulfillment_type: body.fulfillmentType || "digital",
     is_active: body.isActive ?? true,
   };

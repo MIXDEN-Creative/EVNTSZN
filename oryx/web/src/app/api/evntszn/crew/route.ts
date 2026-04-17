@@ -12,11 +12,11 @@ type CrewProfilePayload = {
   shortBio?: string;
   city?: string;
   state?: string;
-  rateAmountCents?: number | null;
+  rateAmountUsd?: number | null;
   rateUnit?: string | null;
   availabilityState?: string;
   acceptsBookingRequests?: boolean;
-  bookingFeeCents?: number | null;
+  bookingFeeUsd?: number | null;
   portfolioLinks?: string[];
   portfolioImages?: string[];
   tags?: string[];
@@ -206,13 +206,13 @@ export async function POST(request: Request) {
       short_bio: String(body.shortBio || "").trim() || null,
       city: String(body.city || "").trim() || null,
       state: String(body.state || "").trim() || null,
-      rate_amount_cents: body.rateAmountCents ? Number(body.rateAmountCents) : null,
+      rate_amount_usd: body.rateAmountUsd ? Number(body.rateAmountUsd) : null,
       rate_unit: String(body.rateUnit || "").trim() || null,
       availability_state: CREW_AVAILABILITY_STATES.includes(String(body.availabilityState) as any)
         ? String(body.availabilityState)
         : "available",
       accepts_booking_requests: body.acceptsBookingRequests !== false,
-      booking_fee_cents: body.bookingFeeCents ? Number(body.bookingFeeCents) : null,
+      booking_fee_usd: body.bookingFeeUsd ? Number(body.bookingFeeUsd) : null,
       portfolio_links: Array.isArray(body.portfolioLinks) ? body.portfolioLinks.filter(Boolean) : [],
       portfolio_images: Array.isArray(body.portfolioImages) ? body.portfolioImages.filter(Boolean) : [],
       tags: Array.isArray(body.tags) ? body.tags.filter(Boolean) : [],

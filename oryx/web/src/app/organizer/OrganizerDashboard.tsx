@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getCanonicalUrl } from "@/lib/domains";
+import PerformanceScorePanel from "@/components/performance/PerformanceScorePanel";
 
 type OrganizerEvent = {
   id: string;
@@ -50,7 +51,7 @@ export default function OrganizerDashboard({ canOperate, events }: OrganizerDash
     endAt: "",
     capacity: "180",
     ticketTypeName: "General Access",
-    ticketPriceCents: "3500",
+    ticketPriceUsd: "35",
     ticketQuantityTotal: "120",
     salesStartAt: "",
     salesEndAt: "",
@@ -59,7 +60,7 @@ export default function OrganizerDashboard({ canOperate, events }: OrganizerDash
   const [ticketForm, setTicketForm] = useState({
     name: "",
     quantityTotal: "60",
-    priceCents: "1200",
+    priceUsd: "12",
     maxPerOrder: "4",
     salesStartAt: "",
     salesEndAt: "",
@@ -194,7 +195,7 @@ export default function OrganizerDashboard({ canOperate, events }: OrganizerDash
       setTicketForm({
         name: "",
         quantityTotal: "60",
-        priceCents: "1200",
+        priceUsd: "12",
         maxPerOrder: "4",
         salesStartAt: "",
         salesEndAt: "",
@@ -252,6 +253,7 @@ export default function OrganizerDashboard({ canOperate, events }: OrganizerDash
 
   return (
     <div className="space-y-8">
+      <PerformanceScorePanel scope="organizer" title="O-Score" />
       <div className="flex flex-wrap gap-2 border-b border-white/10 pb-4">
         {[
           { id: "queue", label: "Event Queue" },
@@ -394,7 +396,7 @@ export default function OrganizerDashboard({ canOperate, events }: OrganizerDash
                   <div className="grid gap-4 md:grid-cols-2">
                     {[
                       ["ticketTypeName", "Ticket type"],
-                      ["ticketPriceCents", "Price (cents)"],
+                      ["ticketPriceUsd", "Price (USD)"],
                       ["ticketQuantityTotal", "Total quantity"],
                     ].map(([key, label]) => (
                       <input

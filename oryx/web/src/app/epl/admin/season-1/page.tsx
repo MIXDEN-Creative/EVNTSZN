@@ -31,7 +31,7 @@ type SeasonRegistrationRow = {
   player_profile_id: string | null;
   registration_status: string | null;
   player_status: string | null;
-  payment_amount_cents: number | null;
+  payment_amount_usd: number | null;
   waived_fee: boolean | null;
   registration_code: string | null;
   stripe_checkout_session_id: string | null;
@@ -78,7 +78,7 @@ export default async function EPLSeasonOneAdminPage() {
       supabase
         .schema("epl")
         .from("season_registrations")
-        .select("id, application_id, player_profile_id, registration_status, player_status, payment_amount_cents, waived_fee, registration_code, stripe_checkout_session_id, updated_at")
+        .select("id, application_id, player_profile_id, registration_status, player_status, payment_amount_usd, waived_fee, registration_code, stripe_checkout_session_id, updated_at")
         .order("updated_at", { ascending: false }),
       supabase
         .from("epl_v_admin_player_pool")

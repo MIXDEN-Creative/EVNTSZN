@@ -691,12 +691,12 @@ export default function DiscoveryLanding({
                 </p>
                 <div className="mt-8 grid grid-cols-3 gap-3 md:max-w-xl">
                   {[
+                    { name: "Canton Chargers", logo: "/epl_team_logos/chargers.jpeg" },
+                    { name: "Federal Hill Sentinels", logo: "/epl_team_logos/sentinels.jpeg" },
+                    { name: "Harbor Titans", logo: "/epl_team_logos/titans.jpeg" },
                     { name: "Dewey Warriors", logo: "/epl_team_logos/warriors.jpg" },
-                    { name: "Bethany Bulldogs", logo: "/epl_team_logos/bulldogs.jpg" },
-                    { name: "Delmarva Hawks", logo: "/epl_team_logos/hawks.jpg" },
+                    { name: "Fenwick Phantoms", logo: "/epl_team_logos/phantoms.PNG" },
                     { name: "Rehoboth Knights", logo: "/epl_team_logos/knights.jpg" },
-                    { name: "Ocean City Phantoms", logo: "/epl_team_logos/phantoms.jpg" },
-                    { name: "Ocean City Comets", logo: "/epl_team_logos/comets.jpg" },
                   ].map((team) => (
                     <div key={team.name} className="rounded-[22px] border border-white/10 bg-white/[0.04] p-3 text-center">
                       <Image src={team.logo} alt={team.name} width={56} height={56} className="mx-auto h-14 w-14 rounded-2xl border border-white/10 object-cover" />

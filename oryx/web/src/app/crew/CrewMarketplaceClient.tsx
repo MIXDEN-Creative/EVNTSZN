@@ -15,7 +15,7 @@ type CrewProfile = {
   short_bio: string | null;
   city: string | null;
   state: string | null;
-  rate_amount_cents: number | null;
+  rate_amount_usd: number | null;
   rate_unit: string | null;
   availability_state: string;
   tags: string[] | null;
@@ -78,7 +78,7 @@ export default function CrewMarketplaceClient() {
 
       <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
         {profiles.map((profile) => (
-          <a key={profile.id} href={`/${profile.slug}`} className="rounded-[28px] border border-white/10 bg-white/[0.03] p-6 transition hover:-translate-y-0.5 hover:bg-white/[0.06] md:p-7">
+          <a key={profile.id} href={`/crew/${profile.slug}`} className="rounded-[28px] border border-white/10 bg-white/[0.03] p-6 transition hover:-translate-y-0.5 hover:bg-white/[0.06] md:p-7">
             <div className="flex items-start justify-between gap-3">
                 <div>
                   <div className="text-[11px] uppercase tracking-[0.22em] text-[#caa7ff]">
@@ -118,9 +118,9 @@ export default function CrewMarketplaceClient() {
                 </span>
               ) : null}
             </div>
-            {profile.rate_amount_cents ? (
+            {profile.rate_amount_usd ? (
               <div className="mt-5 inline-flex rounded-full border border-emerald-400/20 bg-emerald-500/10 px-4 py-2 text-sm font-semibold text-emerald-100">
-                ${(profile.rate_amount_cents / 100).toFixed(0)} / {profile.rate_unit || "event"}
+                ${Number(profile.rate_amount_usd || 0).toFixed(0)} / {profile.rate_unit || "event"}
               </div>
             ) : null}
             {profile.tags?.length ? (

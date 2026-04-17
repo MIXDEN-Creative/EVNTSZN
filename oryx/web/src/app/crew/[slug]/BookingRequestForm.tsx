@@ -12,8 +12,14 @@ export default function BookingRequestForm({ crewProfileId, crewName }: { crewPr
     eventDate: "",
     city: "",
     state: "",
+    eventType: "",
+    category: "",
+    duration: "",
+    equipmentNotes: "",
+    audienceSize: "",
+    specialRequirements: "",
     message: "",
-    budgetAmountCents: "",
+    budgetAmount: "",
   });
   const [message, setMessage] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -29,7 +35,7 @@ export default function BookingRequestForm({ crewProfileId, crewName }: { crewPr
       body: JSON.stringify({
         ...form,
         crewProfileId,
-        budgetAmountCents: form.budgetAmountCents ? Number(form.budgetAmountCents) : null,
+        budgetAmountUsd: form.budgetAmount ? Math.round(Number(form.budgetAmount) * 100) : null,
       }),
     });
     const json = (await res.json()) as { error?: string };
@@ -48,8 +54,14 @@ export default function BookingRequestForm({ crewProfileId, crewName }: { crewPr
         eventDate: "",
         city: "",
         state: "",
+        eventType: "",
+        category: "",
+        duration: "",
+        equipmentNotes: "",
+        audienceSize: "",
+        specialRequirements: "",
         message: "",
-        budgetAmountCents: "",
+        budgetAmount: "",
       });
     }
     setSubmitting(false);
@@ -66,12 +78,18 @@ export default function BookingRequestForm({ crewProfileId, crewName }: { crewPr
         <input className="ev-field" placeholder="Your name" value={form.requestedByName} onChange={(event) => setForm({ ...form, requestedByName: event.target.value })} required />
         <input className="ev-field" type="email" placeholder="Your email" value={form.requestedByEmail} onChange={(event) => setForm({ ...form, requestedByEmail: event.target.value })} required />
         <input className="ev-field" placeholder="Phone" value={form.requestedByPhone} onChange={(event) => setForm({ ...form, requestedByPhone: event.target.value })} />
-        <input className="ev-field" placeholder="Role needed" value={form.requestedRole} onChange={(event) => setForm({ ...form, requestedRole: event.target.value })} />
+        <input className="ev-field" placeholder="Role needed" value={form.requestedRole} onChange={(event) => setForm({ ...form, requestedRole: event.target.value })} required />
         <input className="ev-field" placeholder="Event name" value={form.eventName} onChange={(event) => setForm({ ...form, eventName: event.target.value })} />
         <input className="ev-field" type="datetime-local" value={form.eventDate} onChange={(event) => setForm({ ...form, eventDate: event.target.value })} />
         <input className="ev-field" placeholder="City" value={form.city} onChange={(event) => setForm({ ...form, city: event.target.value })} />
         <input className="ev-field" placeholder="State" value={form.state} onChange={(event) => setForm({ ...form, state: event.target.value })} />
-        <input className="ev-field md:col-span-2" placeholder="Budget cents (optional)" value={form.budgetAmountCents} onChange={(event) => setForm({ ...form, budgetAmountCents: event.target.value })} />
+        <input className="ev-field" placeholder="Event type" value={form.eventType} onChange={(event) => setForm({ ...form, eventType: event.target.value })} />
+        <input className="ev-field" placeholder="Category" value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })} />
+        <input className="ev-field" placeholder="Budget in dollars" value={form.budgetAmount} onChange={(event) => setForm({ ...form, budgetAmount: event.target.value })} />
+        <input className="ev-field" placeholder="Duration" value={form.duration} onChange={(event) => setForm({ ...form, duration: event.target.value })} />
+        <input className="ev-field md:col-span-2" placeholder="Audience size" value={form.audienceSize} onChange={(event) => setForm({ ...form, audienceSize: event.target.value })} />
+        <textarea className="ev-textarea md:col-span-2" rows={4} placeholder="Equipment or setup notes" value={form.equipmentNotes} onChange={(event) => setForm({ ...form, equipmentNotes: event.target.value })} />
+        <textarea className="ev-textarea md:col-span-2" rows={4} placeholder="Special requirements" value={form.specialRequirements} onChange={(event) => setForm({ ...form, specialRequirements: event.target.value })} />
         <textarea className="ev-textarea md:col-span-2" rows={5} placeholder="What do you need this person to handle?" value={form.message} onChange={(event) => setForm({ ...form, message: event.target.value })} />
       </div>
       <button type="submit" disabled={submitting} className={`ev-button-primary mt-7 w-full md:w-auto ${sentFlash ? "scale-[1.02]" : ""}`}>

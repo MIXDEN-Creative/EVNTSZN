@@ -31,7 +31,7 @@ create table if not exists epl.seasons (
   slug text not null unique,
   name text not null,
   status text not null default 'planning',
-  player_fee_cents integer not null default 9500,
+  player_fee_usd integer not null default 9500,
   registration_opens_at timestamptz,
   registration_closes_at timestamptz,
   season_starts_at timestamptz,
@@ -124,7 +124,7 @@ create table if not exists epl.season_registrations (
   application_id uuid references epl.player_applications(id) on delete set null,
   registration_status text not null default 'pending_payment',
   player_status text not null default 'prospect',
-  payment_amount_cents integer not null default 9500,
+  payment_amount_usd integer not null default 9500,
   waived_fee boolean not null default false,
   paid_at timestamptz,
   stripe_checkout_session_id text,
@@ -203,8 +203,8 @@ create table if not exists epl.season_staff_assignments (
   role_id uuid not null references epl.staff_roles_catalog(id) on delete cascade,
   assignment_status text not null default 'assigned',
   compensation_tier text not null default 'volunteer',
-  pay_rate_cents integer,
-  stipend_cents integer,
+  pay_rate_usd integer,
+  stipend_usd integer,
   access_scope jsonb not null default '{}'::jsonb,
   can_access_admin boolean not null default false,
   can_access_draft_console boolean not null default false,
@@ -221,8 +221,8 @@ create table if not exists epl.sponsorship_packages (
   league_id uuid not null references epl.leagues(id) on delete cascade,
   package_name text not null,
   description text,
-  cash_price_cents integer not null default 0,
-  in_kind_floor_cents integer not null default 0,
+  cash_price_usd integer not null default 0,
+  in_kind_floor_usd integer not null default 0,
   benefits jsonb not null default '[]'::jsonb,
   sort_order integer not null default 100,
   is_active boolean not null default true,
@@ -239,8 +239,8 @@ create table if not exists epl.sponsor_partners (
   contact_email text,
   contact_phone text,
   package_name text,
-  cash_value_cents integer not null default 0,
-  in_kind_value_cents integer not null default 0,
+  cash_value_usd integer not null default 0,
+  in_kind_value_usd integer not null default 0,
   status text not null default 'active',
   notes text,
   is_active boolean not null default true,
@@ -270,7 +270,7 @@ create table if not exists epl.revenue_ledger (
   season_id uuid references epl.seasons(id) on delete set null,
   stream_code text not null,
   money_direction text not null default 'inflow',
-  amount_cents integer not null default 0,
+  amount_usd integer not null default 0,
   memo text,
   created_at timestamptz not null default timezone('utc', now()),
   updated_at timestamptz not null default timezone('utc', now())
@@ -283,8 +283,8 @@ create table if not exists epl.merch_catalog (
   sku text not null,
   item_name text not null,
   item_type text,
-  price_cents integer not null default 0,
-  cost_cents integer not null default 0,
+  price_usd integer not null default 0,
+  cost_usd numeric(10,2) not null default 0,
   inventory_count integer not null default 0,
   image_url text,
   is_active boolean not null default true,
@@ -300,8 +300,8 @@ create table if not exists epl.merch_sales (
   season_id uuid references epl.seasons(id) on delete set null,
   merch_catalog_id uuid not null references epl.merch_catalog(id) on delete cascade,
   quantity integer not null default 1,
-  gross_amount_cents integer not null default 0,
-  cost_amount_cents integer not null default 0,
+  gross_amount_usd integer not null default 0,
+  cost_amount_usd integer not null default 0,
   sale_channel text not null default 'on_site',
   sold_at timestamptz not null default timezone('utc', now()),
   notes text,
@@ -316,7 +316,7 @@ create table if not exists epl.add_on_catalog (
   code text not null,
   item_name text not null,
   description text,
-  price_cents integer not null default 0,
+  price_usd integer not null default 0,
   fulfillment_type text not null default 'digital',
   is_active boolean not null default true,
   is_archived boolean not null default false,
@@ -477,7 +477,7 @@ set
   state = excluded.state,
   updated_at = timezone('utc', now());
 
-insert into epl.seasons (league_id, slug, name, status, player_fee_cents, draft_event_title)
+insert into epl.seasons (league_id, slug, name, status, player_fee_usd, draft_event_title)
 select l.id, 'season-1', 'Season 1', 'active', 9500, 'EVNTSZN Prime League Draft Night'
 from epl.leagues l
 where l.slug = 'epl'
@@ -485,7 +485,7 @@ on conflict (slug) do update
 set
   name = excluded.name,
   status = excluded.status,
-  player_fee_cents = excluded.player_fee_cents,
+  player_fee_usd = excluded.player_fee_usd,
   draft_event_title = excluded.draft_event_title,
   updated_at = timezone('utc', now());
 
@@ -510,15 +510,15 @@ set
   default_access_scope = excluded.default_access_scope,
   updated_at = timezone('utc', now());
 
-insert into epl.sponsorship_packages (league_id, package_name, description, cash_price_cents, in_kind_floor_cents, benefits, sort_order)
-select l.id, v.package_name, v.description, v.cash_price_cents, v.in_kind_floor_cents, v.benefits::jsonb, v.sort_order
+insert into epl.sponsorship_packages (league_id, package_name, description, cash_price_usd, in_kind_floor_usd, benefits, sort_order)
+select l.id, v.package_name, v.description, v.cash_price_usd, v.in_kind_floor_usd, v.benefits::jsonb, v.sort_order
 from epl.leagues l
 cross join (
   values
     ('Founding Partner', 'Top-tier EPL founding sponsor placement', 150000, 50000, '["Field logo placement","Draft night feature","Premium social placements"]', 10),
     ('Game Day Partner', 'On-site and digital game day support package', 75000, 15000, '["Venue signage","PA mention","Ticketing feature slot"]', 20),
     ('Community Partner', 'Brand association with league community programming', 35000, 5000, '["Event listing mention","Community recap inclusion"]', 30)
-) as v(package_name, description, cash_price_cents, in_kind_floor_cents, benefits, sort_order)
+) as v(package_name, description, cash_price_usd, in_kind_floor_usd, benefits, sort_order)
 where l.slug = 'epl'
 on conflict do nothing;
 
@@ -533,7 +533,7 @@ cross join (
     ('voltage', 'Voltage', 'VOL', 'https://images.unsplash.com/photo-1511886929837-354d827aae26?auto=format&fit=crop&w=400&q=80', 3, 'Jordan Webb'),
     ('district', 'District IX', 'DS9', 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=400&q=80', 4, 'Morgan Ellis'),
     ('nightshift', 'Night Shift', 'NGT', 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&w=400&q=80', 5, 'Cameron Blake'),
-    ('royals', 'Midtown Royals', 'ROY', 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=400&q=80', 6, 'Jamie Cole'),
+    ('royals', 'Mount Vernon Royals', 'ROY', '/epl_team_logos/royals.jpeg', 6, 'Jamie Cole'),
     ('northstar', 'Northstar', 'NST', 'https://images.unsplash.com/photo-1517466787929-bc90951d0974?auto=format&fit=crop&w=400&q=80', 7, 'Drew Parker'),
     ('rush', 'Redline Rush', 'RSH', 'https://images.unsplash.com/photo-1486286701208-1d58e9338013?auto=format&fit=crop&w=400&q=80', 8, 'Sky Harper')
 ) as v(slug, team_name, team_code, team_logo_url, draft_order, captain_name)
@@ -652,7 +652,7 @@ select
   r.registration_code,
   r.registration_status,
   r.player_status,
-  r.payment_amount_cents,
+  r.payment_amount_usd,
   r.waived_fee,
   r.paid_at,
   p.preferred_position,
@@ -669,9 +669,9 @@ create or replace view public.epl_v_revenue_pipeline_summary as
 select
   s.slug as season_slug,
   r.stream_code,
-  coalesce(sum(case when r.money_direction = 'inflow' then r.amount_cents else 0 end), 0) as inflow_amount_cents,
-  coalesce(sum(case when r.money_direction = 'outflow' then r.amount_cents else 0 end), 0) as outflow_amount_cents,
-  coalesce(sum(case when r.money_direction = 'inflow' then r.amount_cents else -r.amount_cents end), 0) as net_amount_cents
+  coalesce(sum(case when r.money_direction = 'inflow' then r.amount_usd else 0 end), 0) as inflow_amount_usd,
+  coalesce(sum(case when r.money_direction = 'outflow' then r.amount_usd else 0 end), 0) as outflow_amount_usd,
+  coalesce(sum(case when r.money_direction = 'inflow' then r.amount_usd else -r.amount_usd end), 0) as net_amount_usd
 from epl.revenue_ledger r
 left join epl.seasons s on s.id = r.season_id
 group by s.slug, r.stream_code;
@@ -717,7 +717,7 @@ select
   mc.sku,
   mc.item_name,
   mc.item_type,
-  (ms.gross_amount_cents - ms.cost_amount_cents) as margin_amount_cents
+  (ms.gross_amount_usd - ms.cost_amount_usd) as margin_amount_usd
 from epl.merch_sales ms
 join epl.merch_catalog mc on mc.id = ms.merch_catalog_id
 left join epl.seasons s on s.id = ms.season_id;
@@ -810,7 +810,7 @@ select
   sr.registration_status,
   sr.player_status,
   sr.waived_fee,
-  sr.payment_amount_cents,
+  sr.payment_amount_usd,
   sr.paid_at,
   pp.is_draft_eligible,
   pp.draft_eligibility_reason
@@ -1045,8 +1045,8 @@ create or replace function public.epl_create_staff_assignment(
   p_staff_application_id uuid,
   p_role_id uuid,
   p_compensation_tier text,
-  p_pay_rate_cents integer default null,
-  p_stipend_cents integer default null,
+  p_pay_rate_usd integer default null,
+  p_stipend_usd integer default null,
   p_can_access_admin boolean default false,
   p_can_access_draft_console boolean default false,
   p_can_access_scanner boolean default false,
@@ -1075,8 +1075,8 @@ begin
     role_id,
     assignment_status,
     compensation_tier,
-    pay_rate_cents,
-    stipend_cents,
+    pay_rate_usd,
+    stipend_usd,
     access_scope,
     can_access_admin,
     can_access_draft_console,
@@ -1091,8 +1091,8 @@ begin
     v_role.id,
     'assigned',
     coalesce(p_compensation_tier, 'volunteer'),
-    p_pay_rate_cents,
-    p_stipend_cents,
+    p_pay_rate_usd,
+    p_stipend_usd,
     v_role.default_access_scope,
     p_can_access_admin,
     p_can_access_draft_console,
@@ -1149,7 +1149,7 @@ create or replace function public.epl_create_revenue_entry(
   p_season_slug text,
   p_stream_code text,
   p_money_direction text,
-  p_amount_cents integer,
+  p_amount_usd integer,
   p_memo text default null
 )
 returns uuid
@@ -1164,8 +1164,8 @@ begin
     raise exception 'Season not found';
   end if;
 
-  insert into epl.revenue_ledger (id, league_id, season_id, stream_code, money_direction, amount_cents, memo)
-  values (v_id, v_season.league_id, v_season.id, p_stream_code, p_money_direction, p_amount_cents, p_memo);
+  insert into epl.revenue_ledger (id, league_id, season_id, stream_code, money_direction, amount_usd, memo)
+  values (v_id, v_season.league_id, v_season.id, p_stream_code, p_money_direction, p_amount_usd, p_memo);
 
   return v_id;
 end;
@@ -1177,8 +1177,8 @@ create or replace function public.epl_create_sponsor_partner(
   p_contact_name text default null,
   p_contact_email text default null,
   p_package_name text default null,
-  p_cash_value_cents integer default 0,
-  p_in_kind_value_cents integer default 0,
+  p_cash_value_usd integer default 0,
+  p_in_kind_value_usd integer default 0,
   p_notes text default null
 )
 returns uuid
@@ -1195,11 +1195,11 @@ begin
 
   insert into epl.sponsor_partners (
     id, league_id, season_id, company_name, contact_name, contact_email, package_name,
-    cash_value_cents, in_kind_value_cents, notes
+    cash_value_usd, in_kind_value_usd, notes
   )
   values (
     v_id, v_season.league_id, v_season.id, p_company_name, p_contact_name, p_contact_email, p_package_name,
-    coalesce(p_cash_value_cents, 0), coalesce(p_in_kind_value_cents, 0), p_notes
+    coalesce(p_cash_value_usd, 0), coalesce(p_in_kind_value_usd, 0), p_notes
   );
 
   return v_id;
@@ -1211,8 +1211,8 @@ create or replace function public.epl_create_merch_item(
   p_sku text,
   p_item_name text,
   p_item_type text,
-  p_price_cents integer,
-  p_cost_cents integer default 0,
+  p_price_usd integer,
+  p_cost_usd integer default 0,
   p_inventory_count integer default 0
 )
 returns uuid
@@ -1228,11 +1228,11 @@ begin
   end if;
 
   insert into epl.merch_catalog (
-    id, league_id, season_id, sku, item_name, item_type, price_cents, cost_cents, inventory_count
+    id, league_id, season_id, sku, item_name, item_type, price_usd, cost_usd, inventory_count
   )
   values (
     v_id, v_season.league_id, v_season.id, p_sku, p_item_name, p_item_type,
-    coalesce(p_price_cents, 0), coalesce(p_cost_cents, 0), coalesce(p_inventory_count, 0)
+    coalesce(p_price_usd, 0), coalesce(p_cost_usd, 0), coalesce(p_inventory_count, 0)
   );
 
   return v_id;
@@ -1244,7 +1244,7 @@ create or replace function public.epl_create_add_on(
   p_code text,
   p_item_name text,
   p_description text default null,
-  p_price_cents integer default 0,
+  p_price_usd integer default 0,
   p_fulfillment_type text default 'digital'
 )
 returns uuid
@@ -1260,11 +1260,11 @@ begin
   end if;
 
   insert into epl.add_on_catalog (
-    id, league_id, season_id, code, item_name, description, price_cents, fulfillment_type
+    id, league_id, season_id, code, item_name, description, price_usd, fulfillment_type
   )
   values (
     v_id, v_season.league_id, v_season.id, p_code, p_item_name, p_description,
-    coalesce(p_price_cents, 0), coalesce(p_fulfillment_type, 'digital')
+    coalesce(p_price_usd, 0), coalesce(p_fulfillment_type, 'digital')
   );
 
   return v_id;

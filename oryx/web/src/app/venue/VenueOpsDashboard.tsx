@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { getCanonicalUrl } from "@/lib/domains";
+import PerformanceScorePanel from "@/components/performance/PerformanceScorePanel";
 
 type VenueEvent = {
   id: string;
@@ -53,6 +54,7 @@ export default function VenueOpsDashboard({
 
   return (
     <div className="grid gap-5">
+      <PerformanceScorePanel scope="venue" title="V-Score" />
       {events.map((event) => (
         <div key={event.id} className="rounded-[30px] border border-white/10 bg-white/[0.03] p-6">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">

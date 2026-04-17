@@ -1,51 +1,100 @@
-import OrganizerDashboard from "./OrganizerDashboard";
+import Link from "next/link";
+import PublicPageFrame from "@/components/public/PublicPageFrame";
 import SurfaceShell from "@/components/shells/SurfaceShell";
-import { getPlatformViewer, requirePlatformRole } from "@/lib/evntszn";
+import { getLoginUrl } from "@/lib/domains";
+import { getPlatformViewer } from "@/lib/evntszn";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import OrganizerDashboard from "./OrganizerDashboard";
+
+export const dynamic = "force-dynamic";
 
 export default async function OrganizerPage() {
-  await requirePlatformRole("/organizer", ["organizer"]);
   const viewer = await getPlatformViewer();
-  const isIndependentOrganizer =
-    viewer.operatorProfile?.organizer_classification === "independent_organizer";
 
-  const { data: events } = await supabaseAdmin
-    .from("evntszn_events")
-    .select("id, slug, title, status, visibility, start_at, check_in_count")
-    .eq("organizer_user_id", viewer.user!.id)
-    .order("start_at", { ascending: true });
+  if (viewer.user) {
+    const canOperate =
+      viewer.isPlatformAdmin ||
+      viewer.profile?.primary_role === "organizer" ||
+      viewer.operatorProfile?.organizer_classification === "independent_organizer";
+
+    const { data: events } = await supabaseAdmin
+      .from("evntszn_events")
+      .select("id, slug, title, status, visibility, start_at, check_in_count")
+      .eq("organizer_user_id", viewer.user.id)
+      .order("start_at", { ascending: false });
+
+    return (
+      <SurfaceShell
+        surface="ops"
+        eyebrow="Independent organizer"
+        title="Run your events without leaving the operating layer"
+        description="Create events, price tickets in dollars, manage inventory, and work from a real organizer dashboard."
+      >
+        <OrganizerDashboard canOperate={canOperate} events={events || []} />
+      </SurfaceShell>
+    );
+  }
 
   return (
-    <SurfaceShell
-      surface="ops"
-      eyebrow="Organizer OS"
-      title="Event operating system"
-      description={
-        isIndependentOrganizer
-          ? "Manage your event operations, ticket releases, scanner routes, and venue execution from the external organizer track without crossing into EVNTSZN Host network privileges."
-          : "Manage event setup, ticket releases, scanner routes, and venue execution from one premium EVNTSZN workspace."
-      }
-      meta={
-        <>
-          <div className="ev-meta-card">
-            <div className="ev-meta-label">Live events</div>
-            <div className="ev-meta-value">{events?.length || 0} productions connected to this organizer account.</div>
+    <PublicPageFrame
+      title="Independent Organizer"
+      description="Manage your own events, brand, and audience with EVNTSZN's platform tools."
+      heroImage="https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=1800&q=80"
+      seo={{
+        title: "Independent Organizer | EVNTSZN Platform",
+        description: "Organize your events independently using EVNTSZN's platform. Manage your brand, audience, and offerings with flexible tools.",
+      }}
+    >
+      <section className="mx-auto max-w-7xl px-4 py-10 md:px-6 lg:px-8">
+        <div className="ev-panel p-6">
+          <div className="ev-section-kicker">Independent organizer path</div>
+          <div className="mt-3 text-2xl font-black tracking-tight text-white md:text-3xl">
+            Operate as an Independent Organizer
           </div>
-          <div className="ev-meta-card">
-            <div className="ev-meta-label">Operator mode</div>
-            <div className="ev-meta-value">
-              {isIndependentOrganizer
-                ? "Independent Organizer surface. Event execution stays available here, but host-network benefits and internal programs remain separate unless you are approved into them."
-                : "Ticketing, scanner handoff, and event visibility remain contained inside the ops surface."}
+          <p className="mt-3 max-w-3xl text-sm leading-6 text-white/72">
+            The Independent Organizer path is for individuals and groups who manage events, brand, and audience independently. Use Link, Crew, Reserve, and event operations without entering the EVNTSZN Host economics.
+          </p>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Link href="/organizer/apply" className="ev-button-primary px-8">
+              Apply as Organizer
+            </Link>
+            <Link href={getLoginUrl("/organizer", "app.evntszn.com")} className="ev-button-secondary px-8">
+              Enter Organizer Dashboard
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4 py-10 md:px-6 lg:px-8">
+        <div className="ev-panel p-6">
+          <div className="ev-section-kicker">Organizer program value</div>
+          <div className="mt-3 text-2xl font-black tracking-tight text-white">Why EVNTSZN for Organizers?</div>
+          <div className="mt-6 grid gap-6 md:grid-cols-2">
+            <div>
+              <h3 className="text-2xl font-semibold mb-3 text-white">Platform tools</h3>
+              <p className="text-sm leading-relaxed text-white/70">
+                Access EVNTSZN Link for promotion, the Crew Marketplace to find talent, and EVNTSZN Reserve for bookings. All three are routed to keep organizer operations clean.
+              </p>
+            </div>
+            <div>
+              <h3 className="text-2xl font-semibold mb-3 text-white">Monetization & control</h3>
+              <p className="text-sm leading-relaxed text-white/70">
+                Keep your event economics intact, price tickets in dollars, control inventory, and run your own event cadence without inheriting host-network splits.
+              </p>
             </div>
           </div>
-        </>
-      }
-    >
-      <OrganizerDashboard
-        canOperate={viewer.isPlatformAdmin || viewer.profile?.primary_role === "organizer"}
-        events={events || []}
-      />
-    </SurfaceShell>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4 py-10 md:px-6 lg:px-8 text-center">
+        <h2 className="text-4xl font-bold mb-8 text-white">Interested in partnering with EVNTSZN?</h2>
+        <p className="text-lg text-white/70 max-w-3xl mx-auto mb-8">
+          If you need a larger commercial relationship, explore the partner program for brands, activations, and city-level placements.
+        </p>
+        <Link href="/partners" className="ev-button-primary px-8 py-3 text-lg">
+          Explore partner programs
+        </Link>
+      </section>
+    </PublicPageFrame>
   );
 }

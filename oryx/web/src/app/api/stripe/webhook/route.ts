@@ -3,7 +3,9 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { buildTicketCode, logEventActivity } from "@/lib/evntszn";
 import { attributeLinkConversionFromOrder } from "@/lib/link-attribution";
+import { syncHostGrowthCompensationForTicketOrder } from "@/lib/growth-attribution";
 import { getLinkPlanFromStripePriceId, getLinkPlanFromSubscription, mapStripeSubscriptionStatus } from "@/lib/link-billing";
+import { fromStripeCents } from "@/lib/money";
 import { ensureTicketRevenueAllocation } from "@/lib/revenue-engine";
 import { stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabase-admin";
@@ -150,7 +152,7 @@ async function handleEventTicketCheckout(session: Stripe.Checkout.Session) {
 
   const { data: existingOrder } = await supabaseAdmin
     .from("evntszn_ticket_orders")
-    .select("id, event_id, ticket_type_id, quantity, amount_total_cents")
+    .select("id, event_id, ticket_type_id, quantity, amount_total_usd")
     .eq("stripe_checkout_session_id", session.id)
     .maybeSingle();
 
@@ -162,7 +164,7 @@ async function handleEventTicketCheckout(session: Stripe.Checkout.Session) {
       .single(),
     supabaseAdmin
       .from("evntszn_ticket_types")
-      .select("id, name, price_cents, quantity_total, quantity_sold")
+      .select("id, name, price_usd, quantity_total, quantity_sold")
       .eq("id", ticketTypeId)
       .single(),
   ]);
@@ -193,11 +195,11 @@ async function handleEventTicketCheckout(session: Stripe.Checkout.Session) {
         purchaser_email: customerEmail,
         purchaser_name: purchaserName,
         quantity,
-        amount_total_cents: session.amount_total || 0,
+        amount_total_usd: fromStripeCents(session.amount_total || 0),
         currency_code: session.currency || "usd",
         status: "paid",
       })
-      .select("id, event_id, ticket_type_id, quantity, amount_total_cents")
+      .select("id, event_id, ticket_type_id, quantity, amount_total_usd")
       .single();
 
     if (orderError || !createdOrder) {
@@ -246,7 +248,7 @@ async function handleEventTicketCheckout(session: Stripe.Checkout.Session) {
     throw new Error(orderTicketsError.message);
   }
 
-  const unitGrossAmount = Number(ticketType.price_cents || 0) / 100;
+  const unitGrossAmount = Number(ticketType.price_usd || 0);
   for (const ticket of orderTickets || []) {
     await ensureTicketRevenueAllocation({
       ticketId: ticket.id,
@@ -261,7 +263,7 @@ async function handleEventTicketCheckout(session: Stripe.Checkout.Session) {
     orderId: order.id,
     eventId: event.id,
     purchaserUserId,
-    amountTotalCents: Number(order.amount_total_cents || session.amount_total || 0),
+    amountTotalUsd: Number(order.amount_total_usd || fromStripeCents(session.amount_total || 0) || 0),
     quantity: Number(order.quantity || quantity),
     convertedAt: new Date().toISOString(),
     checkoutSession: session,
@@ -270,6 +272,15 @@ async function handleEventTicketCheckout(session: Stripe.Checkout.Session) {
       customerEmail,
       existingOrder: Boolean(existingOrder),
     },
+  });
+
+  await syncHostGrowthCompensationForTicketOrder({
+    orderId: order.id,
+    eventId: event.id,
+    organizerUserId: event.organizer_user_id || null,
+    ticketTypeName: ticketType.name || "General Access",
+    unitGrossAmount,
+    quantity: Number(order.quantity || quantity),
   });
 
   return true;
@@ -390,7 +401,7 @@ async function handleSponsorPackageCheckout(session: Stripe.Checkout.Session) {
         contact_email: order.contact_email,
         contact_phone: order.contact_phone,
         package_name: order.package_name,
-        cash_value_cents: order.amount_cents,
+        cash_value_usd: order.amount_usd,
         status: "active",
         notes: "Created automatically from sponsor package checkout.",
       })

@@ -219,8 +219,8 @@ export default function LeagueOfficeAdminShell() {
   const [merchSaleForm, setMerchSaleForm] = useState({
     merchCatalogId: "",
     quantity: "1",
-    grossAmountCents: "",
-    costAmountCents: "",
+    grossAmountUsd: "",
+    costAmountUsd: "",
     saleChannel: "on_site",
     soldAt: "",
     notes: "",
@@ -405,8 +405,8 @@ export default function LeagueOfficeAdminShell() {
     setMerchSaleForm({
       merchCatalogId: "",
       quantity: "1",
-      grossAmountCents: "",
-      costAmountCents: "",
+      grossAmountUsd: "",
+      costAmountUsd: "",
       saleChannel: "on_site",
       soldAt: "",
       notes: "",
@@ -485,9 +485,9 @@ export default function LeagueOfficeAdminShell() {
   }, [merchSales, globalSearch, statusFilter]);
 
   const totals = useMemo(() => {
-    const moneyIn = revenueEntries.filter((r) => r.money_direction === "in").reduce((sum, r) => sum + (r.amount_cents || 0), 0);
-    const moneyOut = revenueEntries.filter((r) => r.money_direction === "out").reduce((sum, r) => sum + (r.amount_cents || 0), 0);
-    const merchGross = merchSales.reduce((sum, r) => sum + (r.gross_amount_cents || 0), 0);
+    const moneyIn = revenueEntries.filter((r) => r.money_direction === "in").reduce((sum, r) => sum + (r.amount_usd || 0), 0);
+    const moneyOut = revenueEntries.filter((r) => r.money_direction === "out").reduce((sum, r) => sum + (r.amount_usd || 0), 0);
+    const merchGross = merchSales.reduce((sum, r) => sum + (r.gross_amount_usd || 0), 0);
     return {
       players: playerPipeline.length,
       staffApps: staffApplications.length,
@@ -600,9 +600,9 @@ export default function LeagueOfficeAdminShell() {
 
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                 <StatCard label="Sponsors" value={totals.sponsors} />
-                <StatCard label="Money In" value={`$${(totals.moneyIn / 100).toFixed(2)}`} />
-                <StatCard label="Money Out" value={`$${(totals.moneyOut / 100).toFixed(2)}`} />
-                <StatCard label="Net" value={`$${(totals.net / 100).toFixed(2)}`} />
+                <StatCard label="Money In" value={`$${Number(totals.moneyIn || 0).toFixed(2)}`} />
+                <StatCard label="Money Out" value={`$${Number(totals.moneyOut || 0).toFixed(2)}`} />
+                <StatCard label="Net" value={`$${Number(totals.net || 0).toFixed(2)}`} />
               </div>
 
               <SectionCard title="Richer Staffing Board" subtitle="Live role bank for current season operations.">
@@ -960,8 +960,8 @@ export default function LeagueOfficeAdminShell() {
                 <div className="grid gap-4 md:grid-cols-4">
                   <input value={merchSaleForm.merchCatalogId} onChange={(e) => setMerchSaleForm({ ...merchSaleForm, merchCatalogId: e.target.value })} placeholder="Merch Catalog ID" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
                   <input value={merchSaleForm.quantity} onChange={(e) => setMerchSaleForm({ ...merchSaleForm, quantity: e.target.value })} placeholder="Quantity" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
-                  <input value={merchSaleForm.grossAmountCents} onChange={(e) => setMerchSaleForm({ ...merchSaleForm, grossAmountCents: e.target.value })} placeholder="Gross Amount Cents" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
-                  <input value={merchSaleForm.costAmountCents} onChange={(e) => setMerchSaleForm({ ...merchSaleForm, costAmountCents: e.target.value })} placeholder="Cost Amount Cents" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
+                  <input value={merchSaleForm.grossAmountUsd} onChange={(e) => setMerchSaleForm({ ...merchSaleForm, grossAmountUsd: e.target.value })} placeholder="Gross Amount USD" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
+                  <input value={merchSaleForm.costAmountUsd} onChange={(e) => setMerchSaleForm({ ...merchSaleForm, costAmountUsd: e.target.value })} placeholder="Cost Amount USD" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
                   <select value={merchSaleForm.saleChannel} onChange={(e) => setMerchSaleForm({ ...merchSaleForm, saleChannel: e.target.value })} className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none">
                     <option value="on_site">On Site</option>
                     <option value="online">Online</option>
@@ -997,8 +997,8 @@ export default function LeagueOfficeAdminShell() {
                         <tr key={row.id}>
                           <td className="px-4 py-4">{row.item_name}</td>
                           <td className="px-4 py-4 text-white/70">{row.quantity}</td>
-                          <td className="px-4 py-4 text-white/70">${((row.gross_amount_cents || 0) / 100).toFixed(2)}</td>
-                          <td className="px-4 py-4 text-white/70">${((row.net_amount_cents || 0) / 100).toFixed(2)}</td>
+                          <td className="px-4 py-4 text-white/70">${Number(row.gross_amount_usd || 0).toFixed(2)}</td>
+                          <td className="px-4 py-4 text-white/70">${Number(row.net_amount_usd || 0).toFixed(2)}</td>
                           <td className="px-4 py-4 text-white/70">{row.sale_channel}</td>
                           <td className="px-4 py-4">
                             <ActionMenu

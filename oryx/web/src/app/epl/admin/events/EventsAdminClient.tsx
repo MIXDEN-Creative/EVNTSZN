@@ -49,7 +49,7 @@ type ManagedTicketType = {
   id: string;
   name: string;
   description: string | null;
-  price_cents: number;
+  price_usd: number;
   quantity_total: number;
   quantity_sold: number;
   max_per_order: number;
@@ -119,7 +119,7 @@ const EMPTY_FORM = {
   endAt: "",
   capacity: "180",
   ticketTypeName: "General Access",
-  ticketPriceCents: "3500",
+  ticketPriceUsd: "35",
   ticketQuantityTotal: "120",
   ticketDescription: "",
   maxPerOrder: "4",
@@ -171,7 +171,7 @@ export default function EventsAdminClient({
   const [ticketForm, setTicketForm] = useState({
     name: "",
     description: "",
-    priceCents: "1200",
+    priceUsd: "12",
     quantityTotal: "80",
     maxPerOrder: "4",
     salesStartAt: "",
@@ -351,7 +351,7 @@ export default function EventsAdminClient({
       setTicketForm({
         name: "",
         description: "",
-        priceCents: "1200",
+        priceUsd: "12",
         quantityTotal: "80",
         maxPerOrder: "4",
         salesStartAt: "",
@@ -686,8 +686,8 @@ export default function EventsAdminClient({
                       <input value={form.ticketTypeName} onChange={(event) => setForm({ ...form, ticketTypeName: event.target.value })} placeholder="General Access" className="ev-field" />
                     </label>
                     <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40">
-                      <span>Price (Cents)</span>
-                      <input value={form.ticketPriceCents} onChange={(event) => setForm({ ...form, ticketPriceCents: event.target.value })} placeholder="3500" className="ev-field" />
+                      <span>Price (USD)</span>
+                      <input value={form.ticketPriceUsd} onChange={(event) => setForm({ ...form, ticketPriceUsd: event.target.value })} placeholder="3500" className="ev-field" />
                     </label>
                     <label className="grid gap-2 text-[11px] font-bold uppercase tracking-wider text-white/40">
                       <span>Total Inventory</span>
@@ -963,7 +963,7 @@ export default function EventsAdminClient({
                           <div>
                             <div className="text-sm font-bold text-white">{ticketType.name}</div>
                             <div className="mt-1 text-[10px] uppercase tracking-widest text-white/30">
-                              ${(ticketType.price_cents / 100).toFixed(2)} · {ticketType.quantity_sold}/{ticketType.quantity_total} sold
+                              ${Number(ticketType.price_usd || 0).toFixed(2)} · {ticketType.quantity_sold}/{ticketType.quantity_total} sold
                             </div>
                           </div>
                           <div className="flex gap-1">
@@ -993,7 +993,7 @@ export default function EventsAdminClient({
                         <input value={ticketForm.description} onChange={(event) => setTicketForm({ ...ticketForm, description: event.target.value })} placeholder="Optional description" className="ev-field h-10" />
                       </div>
                       <div className="mt-4 grid gap-3 md:grid-cols-3">
-                        <input value={ticketForm.priceCents} onChange={(event) => setTicketForm({ ...ticketForm, priceCents: event.target.value })} placeholder="Price (cents)" className="ev-field h-10" />
+                        <input value={ticketForm.priceUsd} onChange={(event) => setTicketForm({ ...ticketForm, priceUsd: event.target.value })} placeholder="Price (USD)" className="ev-field h-10" />
                         <input value={ticketForm.quantityTotal} onChange={(event) => setTicketForm({ ...ticketForm, quantityTotal: event.target.value })} placeholder="Inventory" className="ev-field h-10" />
                         <input value={ticketForm.maxPerOrder} onChange={(event) => setTicketForm({ ...ticketForm, maxPerOrder: event.target.value })} placeholder="Max per order" className="ev-field h-10" />
                       </div>

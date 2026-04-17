@@ -1,4 +1,5 @@
 import SurfaceShell from "@/components/shells/SurfaceShell";
+import PerformanceScorePanel from "@/components/performance/PerformanceScorePanel";
 import { requirePlatformUser } from "@/lib/evntszn";
 import LinkManagerClient from "./LinkManagerClient";
 
@@ -14,6 +15,7 @@ export default async function AccountLinkPage() {
       title="EVNTSZN Link"
       description="Run your public host conversion page from one desk without leaving the member side of the platform."
     >
+      <PerformanceScorePanel scope="host" title="HPS" />
       <LinkManagerClient />
     </SurfaceShell>
   );

@@ -59,8 +59,8 @@ export default function LeagueOfficeAdmin({ seasonSlug }: Props) {
     roleId: "",
     assignmentStatus: "assigned",
     compensationTier: "volunteer",
-    payRateCents: "",
-    stipendCents: "",
+    payRateUsd: "",
+    stipendUsd: "",
     canAccessAdmin: false,
     canAccessDraftConsole: false,
     canAccessScanner: false,
@@ -70,7 +70,7 @@ export default function LeagueOfficeAdmin({ seasonSlug }: Props) {
   const [revenueForm, setRevenueForm] = useState({
     streamCode: "ticketing",
     moneyDirection: "in",
-    amountCents: "",
+    amountUsd: "",
     memo: "",
     entryStatus: "posted",
   });
@@ -96,8 +96,8 @@ export default function LeagueOfficeAdmin({ seasonSlug }: Props) {
     contactEmail: "",
     packageName: "",
     partnerStatus: "lead",
-    cashValueCents: "",
-    inKindValueCents: "",
+    cashValueUsd: "",
+    inKindValueUsd: "",
     notes: "",
   });
 
@@ -105,8 +105,8 @@ export default function LeagueOfficeAdmin({ seasonSlug }: Props) {
     sku: "",
     itemName: "",
     itemType: "apparel",
-    priceCents: "",
-    costCents: "",
+    priceUsd: "",
+    costUsd: "",
     inventoryCount: "",
     isActive: true,
   });
@@ -115,7 +115,7 @@ export default function LeagueOfficeAdmin({ seasonSlug }: Props) {
     code: "",
     itemName: "",
     description: "",
-    priceCents: "",
+    priceUsd: "",
     fulfillmentType: "digital",
     isActive: true,
   });
@@ -170,11 +170,11 @@ export default function LeagueOfficeAdmin({ seasonSlug }: Props) {
   const totals = useMemo(() => {
     const moneyIn = revenueEntries
       .filter((r) => r.money_direction === "in")
-      .reduce((sum, r) => sum + (r.amount_cents || 0), 0);
+      .reduce((sum, r) => sum + (r.amount_usd || 0), 0);
 
     const moneyOut = revenueEntries
       .filter((r) => r.money_direction === "out")
-      .reduce((sum, r) => sum + (r.amount_cents || 0), 0);
+      .reduce((sum, r) => sum + (r.amount_usd || 0), 0);
 
     return {
       players: playerPipeline.length,
@@ -226,8 +226,8 @@ export default function LeagueOfficeAdmin({ seasonSlug }: Props) {
       roleId: "",
       assignmentStatus: "assigned",
       compensationTier: "volunteer",
-      payRateCents: "",
-      stipendCents: "",
+      payRateUsd: "",
+      stipendUsd: "",
       canAccessAdmin: false,
       canAccessDraftConsole: false,
       canAccessScanner: false,
@@ -253,7 +253,7 @@ export default function LeagueOfficeAdmin({ seasonSlug }: Props) {
     setRevenueForm({
       streamCode: "ticketing",
       moneyDirection: "in",
-      amountCents: "",
+      amountUsd: "",
       memo: "",
       entryStatus: "posted",
     });
@@ -316,8 +316,8 @@ export default function LeagueOfficeAdmin({ seasonSlug }: Props) {
       contactEmail: "",
       packageName: "",
       partnerStatus: "lead",
-      cashValueCents: "",
-      inKindValueCents: "",
+      cashValueUsd: "",
+      inKindValueUsd: "",
       notes: "",
     });
     await load();
@@ -341,8 +341,8 @@ export default function LeagueOfficeAdmin({ seasonSlug }: Props) {
       sku: "",
       itemName: "",
       itemType: "apparel",
-      priceCents: "",
-      costCents: "",
+      priceUsd: "",
+      costUsd: "",
       inventoryCount: "",
       isActive: true,
     });
@@ -367,7 +367,7 @@ export default function LeagueOfficeAdmin({ seasonSlug }: Props) {
       code: "",
       itemName: "",
       description: "",
-      priceCents: "",
+      priceUsd: "",
       fulfillmentType: "digital",
       isActive: true,
     });
@@ -425,9 +425,9 @@ export default function LeagueOfficeAdmin({ seasonSlug }: Props) {
             </div>
 
             <div className="grid gap-4 md:grid-cols-3">
-              <StatCard label="Money In" value={`$${(totals.moneyIn / 100).toFixed(2)}`} />
-              <StatCard label="Money Out" value={`$${(totals.moneyOut / 100).toFixed(2)}`} />
-              <StatCard label="Net" value={`$${(totals.net / 100).toFixed(2)}`} />
+              <StatCard label="Money In" value={`$${Number(totals.moneyIn || 0).toFixed(2)}`} />
+              <StatCard label="Money Out" value={`$${Number(totals.moneyOut || 0).toFixed(2)}`} />
+              <StatCard label="Net" value={`$${Number(totals.net || 0).toFixed(2)}`} />
             </div>
           </>
         ) : null}
@@ -509,8 +509,8 @@ export default function LeagueOfficeAdmin({ seasonSlug }: Props) {
                   <option value="incentivized">Incentivized</option>
                   <option value="volunteer">Volunteer</option>
                 </select>
-                <input value={assignmentForm.payRateCents} onChange={(e) => setAssignmentForm({ ...assignmentForm, payRateCents: e.target.value })} placeholder="Pay Rate Cents" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
-                <input value={assignmentForm.stipendCents} onChange={(e) => setAssignmentForm({ ...assignmentForm, stipendCents: e.target.value })} placeholder="Stipend Cents" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
+                <input value={assignmentForm.payRateUsd} onChange={(e) => setAssignmentForm({ ...assignmentForm, payRateUsd: e.target.value })} placeholder="Pay Rate USD" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
+                <input value={assignmentForm.stipendUsd} onChange={(e) => setAssignmentForm({ ...assignmentForm, stipendUsd: e.target.value })} placeholder="Stipend USD" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
                 <label className="flex items-center gap-2 text-sm text-white/80"><input type="checkbox" checked={assignmentForm.canAccessAdmin} onChange={(e) => setAssignmentForm({ ...assignmentForm, canAccessAdmin: e.target.checked })} /> Admin</label>
                 <label className="flex items-center gap-2 text-sm text-white/80"><input type="checkbox" checked={assignmentForm.canAccessDraftConsole} onChange={(e) => setAssignmentForm({ ...assignmentForm, canAccessDraftConsole: e.target.checked })} /> Draft</label>
                 <label className="flex items-center gap-2 text-sm text-white/80"><input type="checkbox" checked={assignmentForm.canAccessScanner} onChange={(e) => setAssignmentForm({ ...assignmentForm, canAccessScanner: e.target.checked })} /> Scanner</label>
@@ -537,7 +537,7 @@ export default function LeagueOfficeAdmin({ seasonSlug }: Props) {
                   <option value="in">Money In</option>
                   <option value="out">Money Out</option>
                 </select>
-                <input value={revenueForm.amountCents} onChange={(e) => setRevenueForm({ ...revenueForm, amountCents: e.target.value })} placeholder="Amount Cents" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
+                <input value={revenueForm.amountUsd} onChange={(e) => setRevenueForm({ ...revenueForm, amountUsd: e.target.value })} placeholder="Amount USD" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
                 <input value={revenueForm.memo} onChange={(e) => setRevenueForm({ ...revenueForm, memo: e.target.value })} placeholder="Memo" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
               </div>
               <button onClick={saveRevenue} className="mt-4 rounded-2xl bg-[#A259FF] px-5 py-3 text-sm font-semibold text-white">Save Revenue Entry</button>
@@ -557,7 +557,7 @@ export default function LeagueOfficeAdmin({ seasonSlug }: Props) {
                       <tr key={row.id}>
                         <td className="px-4 py-4">{row.stream_code}</td>
                         <td className="px-4 py-4 text-white/70">{row.money_direction}</td>
-                        <td className="px-4 py-4 text-white/70">${((row.amount_cents || 0) / 100).toFixed(2)}</td>
+                        <td className="px-4 py-4 text-white/70">${Number(row.amount_usd || 0).toFixed(2)}</td>
                         <td className="px-4 py-4 text-white/70">{row.memo || "—"}</td>
                       </tr>
                     ))}
@@ -572,8 +572,8 @@ export default function LeagueOfficeAdmin({ seasonSlug }: Props) {
                 <input value={sponsorForm.contactName} onChange={(e) => setSponsorForm({ ...sponsorForm, contactName: e.target.value })} placeholder="Contact Name" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
                 <input value={sponsorForm.contactEmail} onChange={(e) => setSponsorForm({ ...sponsorForm, contactEmail: e.target.value })} placeholder="Contact Email" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
                 <input value={sponsorForm.packageName} onChange={(e) => setSponsorForm({ ...sponsorForm, packageName: e.target.value })} placeholder="Package Name" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
-                <input value={sponsorForm.cashValueCents} onChange={(e) => setSponsorForm({ ...sponsorForm, cashValueCents: e.target.value })} placeholder="Cash Value Cents" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
-                <input value={sponsorForm.inKindValueCents} onChange={(e) => setSponsorForm({ ...sponsorForm, inKindValueCents: e.target.value })} placeholder="In-Kind Value Cents" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
+                <input value={sponsorForm.cashValueUsd} onChange={(e) => setSponsorForm({ ...sponsorForm, cashValueUsd: e.target.value })} placeholder="Cash Value USD" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
+                <input value={sponsorForm.inKindValueUsd} onChange={(e) => setSponsorForm({ ...sponsorForm, inKindValueUsd: e.target.value })} placeholder="In-Kind Value USD" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
                 <input value={sponsorForm.notes} onChange={(e) => setSponsorForm({ ...sponsorForm, notes: e.target.value })} placeholder="Notes" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none md:col-span-2" />
               </div>
               <button onClick={saveSponsor} className="mt-4 rounded-2xl bg-[#A259FF] px-5 py-3 text-sm font-semibold text-white">Save Sponsor</button>
@@ -584,8 +584,8 @@ export default function LeagueOfficeAdmin({ seasonSlug }: Props) {
                 <input value={merchForm.sku} onChange={(e) => setMerchForm({ ...merchForm, sku: e.target.value })} placeholder="SKU" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
                 <input value={merchForm.itemName} onChange={(e) => setMerchForm({ ...merchForm, itemName: e.target.value })} placeholder="Item Name" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
                 <input value={merchForm.itemType} onChange={(e) => setMerchForm({ ...merchForm, itemType: e.target.value })} placeholder="Item Type" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
-                <input value={merchForm.priceCents} onChange={(e) => setMerchForm({ ...merchForm, priceCents: e.target.value })} placeholder="Price Cents" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
-                <input value={merchForm.costCents} onChange={(e) => setMerchForm({ ...merchForm, costCents: e.target.value })} placeholder="Cost Cents" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
+                <input value={merchForm.priceUsd} onChange={(e) => setMerchForm({ ...merchForm, priceUsd: e.target.value })} placeholder="Price USD" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
+                <input value={merchForm.costUsd} onChange={(e) => setMerchForm({ ...merchForm, costUsd: e.target.value })} placeholder="Cost USD" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
                 <input value={merchForm.inventoryCount} onChange={(e) => setMerchForm({ ...merchForm, inventoryCount: e.target.value })} placeholder="Inventory Count" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
               </div>
               <button onClick={saveMerch} className="mt-4 rounded-2xl bg-[#A259FF] px-5 py-3 text-sm font-semibold text-white">Save Merch</button>
@@ -596,7 +596,7 @@ export default function LeagueOfficeAdmin({ seasonSlug }: Props) {
                 <input value={addOnForm.code} onChange={(e) => setAddOnForm({ ...addOnForm, code: e.target.value })} placeholder="Code" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
                 <input value={addOnForm.itemName} onChange={(e) => setAddOnForm({ ...addOnForm, itemName: e.target.value })} placeholder="Item Name" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
                 <input value={addOnForm.description} onChange={(e) => setAddOnForm({ ...addOnForm, description: e.target.value })} placeholder="Description" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
-                <input value={addOnForm.priceCents} onChange={(e) => setAddOnForm({ ...addOnForm, priceCents: e.target.value })} placeholder="Price Cents" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
+                <input value={addOnForm.priceUsd} onChange={(e) => setAddOnForm({ ...addOnForm, priceUsd: e.target.value })} placeholder="Price USD" className="h-12 rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none" />
               </div>
               <button onClick={saveAddOn} className="mt-4 rounded-2xl bg-[#A259FF] px-5 py-3 text-sm font-semibold text-white">Save Add-On</button>
             </SectionCard>

@@ -3,6 +3,7 @@ import { stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { getWebOrigin } from "@/lib/domains";
 import { logSystemIssue } from "@/lib/system-logs";
+import { toStripeCents } from "@/lib/money";
 
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
@@ -19,7 +20,7 @@ export async function POST(request: Request) {
   const { data: sponsorPackage, error: packageError } = await supabaseAdmin
     .schema("epl")
     .from("sponsorship_packages")
-    .select("id, package_name, description, cash_price_cents, is_active")
+    .select("id, package_name, description, cash_price_usd, is_active")
     .eq("id", packageId)
     .single();
 
@@ -38,7 +39,7 @@ export async function POST(request: Request) {
       contact_phone: contactPhone,
       order_type: "purchase",
       status: "pending",
-      amount_cents: sponsorPackage.cash_price_cents,
+      amount_usd: sponsorPackage.cash_price_usd,
       metadata: {
         description: sponsorPackage.description,
       },
@@ -65,7 +66,7 @@ export async function POST(request: Request) {
       {
         price_data: {
           currency: "usd",
-          unit_amount: sponsorPackage.cash_price_cents,
+          unit_amount: toStripeCents(sponsorPackage.cash_price_usd),
           product_data: {
             name: sponsorPackage.package_name,
             description: sponsorPackage.description || undefined,

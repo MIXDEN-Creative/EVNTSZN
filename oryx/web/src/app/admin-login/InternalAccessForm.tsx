@@ -8,7 +8,9 @@ type ErrorPayload = {
   message?: string;
 };
 
-export default function InternalAccessForm() {
+const FOUNDER_EMAIL = "hello@mixdencreative.com";
+
+export default function InternalAccessForm({ next = "/admin" }: { next?: string }) {
   const [email, setEmail] = useState("hello@mixdencreative.com");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -23,20 +25,29 @@ export default function InternalAccessForm() {
     setErrorMessage(null);
 
     try {
-      const res = await fetch("/api/admin/internal-access", {
+      const normalizedEmail = email.trim().toLowerCase();
+      const endpoint =
+        normalizedEmail === FOUNDER_EMAIL ? "/api/founder/login" : "/api/admin/internal-access";
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         credentials: "include",
         body: JSON.stringify({
-          email: email.trim(),
+          email: normalizedEmail,
           password,
+          next,
         }),
       });
 
       if (res.ok) {
-        window.location.replace("/admin");
+        if (normalizedEmail === FOUNDER_EMAIL) {
+          const data = (await res.json().catch(() => ({}))) as { redirectTo?: string };
+          window.location.replace(data.redirectTo || next);
+          return;
+        }
+        window.location.replace(next);
         return;
       }
 
@@ -100,6 +111,12 @@ export default function InternalAccessForm() {
       {errorMessage ? (
         <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
           {errorMessage}
+        </div>
+      ) : null}
+
+      {email.trim().toLowerCase() === FOUNDER_EMAIL ? (
+        <div className="rounded-2xl border border-[#A259FF]/20 bg-[#A259FF]/10 px-4 py-3 text-sm text-[#eadcff]">
+          Founder email uses the runtime-backed founder secret path and sets the signed founder session directly.
         </div>
       ) : null}
 

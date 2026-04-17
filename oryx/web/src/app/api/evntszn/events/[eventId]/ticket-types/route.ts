@@ -63,7 +63,7 @@ export async function POST(request: Request, { params }: { params: Params }) {
     event_id: eventId,
     name,
     description: String(body.description || "").trim() || null,
-    price_cents: Number(body.priceCents || 0),
+    price_usd: Number(body.priceUsd || 0),
     quantity_total: Math.max(0, Number(body.quantityTotal || 0)),
     max_per_order: Math.max(1, Number(body.maxPerOrder || 1)),
     sales_start_at: body.salesStartAt || null,
@@ -101,7 +101,7 @@ export async function PATCH(request: Request, { params }: { params: Params }) {
   const patch: Record<string, unknown> = {};
   if (body.name !== undefined) patch.name = String(body.name || "").trim() || null;
   if (body.description !== undefined) patch.description = String(body.description || "").trim() || null;
-  if (body.priceCents !== undefined) patch.price_cents = Math.max(0, Number(body.priceCents || 0));
+  if (body.priceUsd !== undefined) patch.price_usd = Math.max(0, Number(body.priceUsd || 0));
   if (body.quantityTotal !== undefined) patch.quantity_total = Math.max(0, Number(body.quantityTotal || 0));
   if (body.maxPerOrder !== undefined) patch.max_per_order = Math.max(1, Number(body.maxPerOrder || 1));
   if (body.salesStartAt !== undefined) patch.sales_start_at = body.salesStartAt || null;

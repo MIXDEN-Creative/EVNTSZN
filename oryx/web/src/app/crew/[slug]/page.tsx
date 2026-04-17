@@ -86,7 +86,7 @@ export default async function CrewProfilePage(context: RouteContext) {
                 <div className="rounded-[24px] border border-white/10 bg-white/[0.03] p-5">
                   <div className="text-[11px] uppercase tracking-[0.22em] text-white/42">Rate</div>
                   <div className="mt-2 text-lg font-bold text-white">
-                    {profile.rate_amount_cents ? `$${(profile.rate_amount_cents / 100).toFixed(0)} / ${profile.rate_unit || "event"}` : "Quote on request"}
+                    {profile.rate_amount_usd ? `$${Number(profile.rate_amount_usd || 0).toFixed(0)} / ${profile.rate_unit || "event"}` : "Quote on request"}
                   </div>
                 </div>
               </div>

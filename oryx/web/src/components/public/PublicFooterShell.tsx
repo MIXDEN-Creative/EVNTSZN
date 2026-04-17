@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { getAppOrigin, getEplOrigin, getWebOrigin } from "@/lib/domains";
+import { getAppOrigin, getEplOrigin, getReserveOrigin, getWebOrigin } from "@/lib/domains";
 import { PUBLIC_CITIES } from "@/lib/public-cities";
 import { getFaviconFallbackUrl, getLogoFallbackUrl } from "@/lib/external-integrations";
 import type { SponsorPlacement } from "@/lib/sponsor-placements";
@@ -63,8 +63,12 @@ export default function PublicFooterShell({
               <Link href={`${getWebOrigin()}/events`}>Events</Link>
               <Link href={`${getEplOrigin()}/`}>EPL</Link>
               <Link href={`${getWebOrigin()}/link`}>EVNTSZN Link</Link>
+              <Link href={`${getReserveOrigin()}/reserve`}>EVNTSZN Reserve</Link>
+              <Link href={`${getWebOrigin()}/venue-program`}>Venue Plans</Link>
+              <Link href={`${getWebOrigin()}/venue-agreement`}>Venue Agreement</Link>
               <Link href={`${getEplOrigin()}/opportunities`}>EPL Opportunities</Link>
-              <Link href={`${getWebOrigin()}/hosts`}>Host Network</Link>
+              <Link href={`${getWebOrigin()}/hosts`}>Host Program</Link>
+              <Link href={`${getWebOrigin()}/organizer/apply`}>Independent Organizer</Link>
               <Link href={`${getWebOrigin()}/crew`}>Crew Marketplace</Link>
               <Link href={`${getWebOrigin()}/signal/apply`}>Signal</Link>
               <Link href={`${getWebOrigin()}/ambassador/apply`}>Ambassador</Link>

@@ -49,8 +49,8 @@ export async function POST(req: NextRequest) {
     contact_email: body.contactEmail || null,
     package_name: body.packageName || null,
     status: body.partnerStatus || "lead",
-    cash_value_cents: Number(body.cashValueCents || 0),
-    in_kind_value_cents: Number(body.inKindValueCents || 0),
+    cash_value_usd: Number(body.cashValueUsd || 0),
+    in_kind_value_usd: Number(body.inKindValueUsd || 0),
     notes: body.notes || null,
   };
 

@@ -1,6 +1,7 @@
 export type EvntsznSurface =
   | "web"
   | "app"
+  | "reserve"
   | "scanner"
   | "epl"
   | "hosts"
@@ -16,6 +17,7 @@ const DEFAULT_DEV_ORIGIN = "http://localhost:3000";
 const DEFAULT_ORIGINS: Record<EvntsznSurface, string> = {
   web: "https://evntszn.com",
   app: "https://app.evntszn.com",
+  reserve: "https://reserve.evntszn.com",
   scanner: "https://scanner.evntszn.com",
   epl: "https://epl.evntszn.com",
   hosts: "https://hosts.evntszn.com",
@@ -27,6 +29,7 @@ const DEFAULT_ORIGINS: Record<EvntsznSurface, string> = {
 const SURFACE_ENV_KEYS: Record<EvntsznSurface, string[]> = {
   web: ["NEXT_PUBLIC_PUBLIC_ORIGIN", "NEXT_PUBLIC_SITE_URL"],
   app: ["NEXT_PUBLIC_APP_ORIGIN", "NEXT_PUBLIC_APP_URL"],
+  reserve: ["NEXT_PUBLIC_RESERVE_ORIGIN"],
   scanner: ["NEXT_PUBLIC_SCANNER_ORIGIN"],
   epl: ["NEXT_PUBLIC_EPL_ORIGIN"],
   hosts: ["NEXT_PUBLIC_HOSTS_ORIGIN"],
@@ -67,6 +70,8 @@ function getExpectedHost(surface: EvntsznSurface) {
       return baseDomain;
     case "app":
       return `app.${baseDomain}`;
+    case "reserve":
+      return `reserve.${baseDomain}`;
     case "scanner":
       return `scanner.${baseDomain}`;
     case "epl":
@@ -138,6 +143,10 @@ export function getAppOrigin(runtimeHost?: string) {
 
 export function getScannerOrigin(runtimeHost?: string) {
   return getCanonicalOrigin("scanner", runtimeHost);
+}
+
+export function getReserveOrigin(runtimeHost?: string) {
+  return getCanonicalOrigin("reserve", runtimeHost);
 }
 
 export function getEplOrigin(runtimeHost?: string) {
@@ -218,6 +227,7 @@ export function getSurfaceForPath(path: string): EvntsznSurface {
   const normalized = normalizeNextPath(path);
 
   if (normalized.startsWith("/scanner")) return "scanner";
+  if (normalized.startsWith("/reserve") || normalized.startsWith("/account/reserve")) return "reserve";
   if (normalized.startsWith("/epl/admin/operations")) return "hq";
   if (
     normalized.startsWith("/epl/admin") ||

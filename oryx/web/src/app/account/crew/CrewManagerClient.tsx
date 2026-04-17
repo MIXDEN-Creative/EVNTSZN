@@ -13,11 +13,11 @@ type CrewProfile = {
   short_bio?: string | null;
   city?: string | null;
   state?: string | null;
-  rate_amount_cents?: number | null;
+  rate_amount_usd?: number | null;
   rate_unit?: string | null;
   availability_state?: string;
   accepts_booking_requests?: boolean;
-  booking_fee_cents?: number | null;
+  booking_fee_usd?: number | null;
   portfolio_links?: string[];
   portfolio_images?: string[];
   tags?: string[];
@@ -48,7 +48,7 @@ type BookingRequest = {
   state: string | null;
   message: string | null;
   status: string;
-  flat_booking_fee_cents: number | null;
+  flat_booking_fee_usd: number | null;
   created_at: string;
 };
 
@@ -60,11 +60,11 @@ const DEFAULT_PROFILE: CrewProfile = {
   short_bio: "",
   city: "",
   state: "",
-  rate_amount_cents: null,
+  rate_amount_usd: null,
   rate_unit: "event",
   availability_state: "available",
   accepts_booking_requests: true,
-  booking_fee_cents: null,
+  booking_fee_usd: null,
   portfolio_links: [""],
   portfolio_images: [""],
   tags: [""],
@@ -121,11 +121,11 @@ export default function CrewManagerClient() {
         shortBio: profile.short_bio,
         city: profile.city,
         state: profile.state,
-        rateAmountCents: profile.rate_amount_cents,
+        rateAmountUsd: profile.rate_amount_usd,
         rateUnit: profile.rate_unit,
         availabilityState: profile.availability_state,
         acceptsBookingRequests: profile.accepts_booking_requests,
-        bookingFeeCents: profile.booking_fee_cents,
+        bookingFeeUsd: profile.booking_fee_usd,
         portfolioLinks: (profile.portfolio_links || []).filter(Boolean),
         portfolioImages: (profile.portfolio_images || []).filter(Boolean),
         tags: (profile.tags || []).filter(Boolean),
@@ -220,7 +220,7 @@ export default function CrewManagerClient() {
             <textarea className="ev-textarea md:col-span-2" rows={5} placeholder="Short description" value={profile.short_bio || ""} onChange={(event) => setProfile({ ...profile, short_bio: event.target.value })} />
             <input className="ev-field" placeholder="City" value={profile.city || ""} onChange={(event) => setProfile({ ...profile, city: event.target.value })} />
             <input className="ev-field" placeholder="State" value={profile.state || ""} onChange={(event) => setProfile({ ...profile, state: event.target.value })} />
-            <input className="ev-field" type="number" placeholder="Rate cents" value={profile.rate_amount_cents || ""} onChange={(event) => setProfile({ ...profile, rate_amount_cents: event.target.value ? Number(event.target.value) : null })} />
+            <input className="ev-field" type="number" placeholder="Rate USD" value={profile.rate_amount_usd || ""} onChange={(event) => setProfile({ ...profile, rate_amount_usd: event.target.value ? Number(event.target.value) : null })} />
             <input className="ev-field" placeholder="Rate unit" value={profile.rate_unit || ""} onChange={(event) => setProfile({ ...profile, rate_unit: event.target.value })} />
             <select className="ev-field" value={profile.availability_state || "available"} onChange={(event) => setProfile({ ...profile, availability_state: event.target.value })}>
               <option value="available">Available</option>
@@ -231,7 +231,7 @@ export default function CrewManagerClient() {
               <option value="draft">Draft</option>
               <option value="published">Published</option>
             </select>
-            <input className="ev-field" type="number" placeholder="Booking fee cents" value={profile.booking_fee_cents || ""} onChange={(event) => setProfile({ ...profile, booking_fee_cents: event.target.value ? Number(event.target.value) : null })} />
+            <input className="ev-field" type="number" placeholder="Booking fee USD" value={profile.booking_fee_usd || ""} onChange={(event) => setProfile({ ...profile, booking_fee_usd: event.target.value ? Number(event.target.value) : null })} />
             <input className="ev-field" placeholder="Contact email" value={profile.contact_email || ""} onChange={(event) => setProfile({ ...profile, contact_email: event.target.value })} />
             <input className="ev-field" placeholder="Instagram URL" value={profile.instagram_url || ""} onChange={(event) => setProfile({ ...profile, instagram_url: event.target.value })} />
             <input className="ev-field" placeholder="Website URL" value={profile.website_url || ""} onChange={(event) => setProfile({ ...profile, website_url: event.target.value })} />

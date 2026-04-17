@@ -28,7 +28,7 @@ export async function attributeLinkConversionFromOrder(input: {
   orderId: string;
   eventId: string;
   purchaserUserId?: string | null;
-  amountTotalCents: number;
+  amountTotalUsd: number;
   quantity: number;
   convertedAt?: string;
   metadata?: Record<string, unknown>;
@@ -107,7 +107,7 @@ export async function attributeLinkConversionFromOrder(input: {
     purchaser_user_id: input.purchaserUserId || null,
     attributed_order_count: attributionStatus === "attributed" ? 1 : 0,
     attributed_ticket_count: attributionStatus === "attributed" ? input.quantity : 0,
-    attributed_gross_revenue_cents: attributionStatus === "attributed" ? input.amountTotalCents : 0,
+    attributed_gross_revenue_usd: attributionStatus === "attributed" ? input.amountTotalUsd : 0,
     attribution_status: attributionStatus,
     attribution_method: attributionMethod,
     clicked_at: matchedClick?.created_at || null,

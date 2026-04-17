@@ -45,7 +45,7 @@ create table if not exists public.workforce_time_entries (
   office_label text,
   pay_type text not null default 'hourly' check (pay_type in ('hourly', 'daily', 'weekly', 'monthly', 'stipend', 'fixed')),
   employment_type text check (employment_type in ('full_time', 'part_time', 'seasonal', 'event_based')),
-  pay_amount_cents integer,
+  pay_amount_usd integer,
   status text not null default 'draft' check (status in ('draft', 'submitted', 'approved', 'rejected', 'corrected', 'ready_for_payroll')),
   started_at timestamptz,
   ended_at timestamptz,

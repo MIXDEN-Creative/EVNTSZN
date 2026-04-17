@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { ensurePlatformProfile, logEventActivity, requirePlatformUser } from "@/lib/evntszn";
 import { requireAdminPermission } from "@/lib/admin-auth";
+import { createInternalWorkItem, INTERNAL_DESK_SLUGS } from "@/lib/internal-os";
 import { ensureEventRevenueProfileForEvent, type RevenueEventType } from "@/lib/revenue-engine";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { getTicketAvailabilityState } from "@/lib/ticketing";
@@ -19,7 +20,7 @@ type CreateEventBody = {
   publishNow?: boolean;
   capacity?: number | string;
   payoutAccountLabel?: string;
-  ticketPriceCents?: number | string;
+  ticketPriceUsd?: number | string;
   ticketQuantityTotal?: number | string;
   ticketTypeName?: string;
   ticketDescription?: string;
@@ -242,7 +243,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: eventError?.message || "Could not create event." }, { status: 500 });
   }
 
-  const priceCents = Number(body.ticketPriceCents || 0);
+  const priceUsd = Number(body.ticketPriceUsd || 0);
   const quantityTotal = Number(body.ticketQuantityTotal || 50);
 
   const { error: ticketTypeError } = await supabaseAdmin
@@ -251,7 +252,7 @@ export async function POST(request: Request) {
       event_id: event.id,
       name: body.ticketTypeName || "General Access",
       description: body.ticketDescription || "Primary ticket inventory for this event.",
-      price_cents: priceCents,
+      price_usd: priceUsd,
       quantity_total: quantityTotal,
       max_per_order: Number(body.maxPerOrder || 4),
       sales_start_at: body.salesStartAt || null,
@@ -313,6 +314,22 @@ export async function POST(request: Request) {
     publishNow: Boolean(body.publishNow),
     eventVertical,
     eventClass,
+  });
+
+  await createInternalWorkItem({
+    deskSlug: INTERNAL_DESK_SLUGS.organizer,
+    title: `Event launched · ${title}`,
+    description: `Organizer event created for ${city}, ${state}.`,
+    priority: "medium",
+    payload: {
+      eventId: event.id,
+      eventSlug: event.slug,
+      organizerUserId: actingUserId,
+      eventClass,
+      eventVertical,
+      city,
+      state,
+    },
   });
 
   return NextResponse.json({ ok: true, event });

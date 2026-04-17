@@ -1,58 +1,44 @@
 import { supabaseAdmin } from "@/lib/supabase-admin";
-import { supabasePublicServer } from "@/lib/supabase-public-server";
-import { formatRuntimeError, getSupabaseRuntimeSnapshot, isSupabaseCredentialError } from "@/lib/runtime-env";
 
-export type DiscoverySourceType =
-  | "evntszn"
-  | "host"
-  | "independent_organizer"
-  | "ticketmaster";
-
-type DiscoveryControlRow = {
-  event_id: string;
-  source_type: Exclude<DiscoverySourceType, "ticketmaster">;
-  badge_label: string | null;
-  featured: boolean;
-  listing_priority: number;
-  promo_collection: string | null;
-  is_discoverable: boolean;
-};
-
-type NativeEventRow = {
-  id: string;
-  title: string;
-  slug: string;
-  subtitle: string | null;
-  description: string | null;
-  city: string;
-  state: string;
-  start_at: string;
-  hero_note: string | null;
-  banner_image_url: string | null;
-  organizer_user_id: string | null;
-  event_class: string | null;
-};
+export type DiscoverySourceType = "evntszn" | "host" | "independent_organizer";
 
 export type DiscoveryNativeEvent = {
   id: string;
+  source: DiscoverySourceType;
   title: string;
-  slug: string;
+  description: string;
   href: string;
-  subtitle: string | null;
-  description: string | null;
-  city: string;
-  state: string;
-  startAt: string;
-  heroNote: string | null;
   imageUrl: string | null;
-  source: Exclude<DiscoverySourceType, "ticketmaster">;
+  subtitle: string | null;
+  startAt: string | null;
+  heroNote: string | null;
   sourceLabel: string;
   badgeLabel: string;
   featured: boolean;
   listingPriority: number;
   promoCollection: string | null;
+  city: string;
+  state: string;
   isPrimary: true;
 };
+
+type DiscoveryEventRow = {
+  id: string;
+  slug: string;
+  title: string;
+  description: string | null;
+  subtitle: string | null;
+  hero_note: string | null;
+  banner_image_url: string | null;
+  start_at: string | null;
+  city: string | null;
+  state: string | null;
+  event_class: string | null;
+  visibility: string | null;
+  status: string | null;
+};
+
+type DiscoveryEventRecord = DiscoveryNativeEvent | null;
 
 const DISCOVERY_FALLBACK_IMAGES = {
   evntszn: {
@@ -60,46 +46,82 @@ const DISCOVERY_FALLBACK_IMAGES = {
       "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=1600&q=80",
     baltimore:
       "https://images.unsplash.com/photo-1519501025264-65ba15a82390?auto=format&fit=crop&w=1600&q=80",
-    newyork:
-      "https://images.unsplash.com/photo-1499092346589-b9b6be3e94b2?auto=format&fit=crop&w=1600&q=80",
-    atlanta:
-      "https://images.unsplash.com/photo-1577648188599-291bb8b831c3?auto=format&fit=crop&w=1600&q=80",
-    miami:
-      "https://images.unsplash.com/photo-1535498730771-e735b998cd64?auto=format&fit=crop&w=1600&q=80",
+    washington:
+      "https://images.unsplash.com/photo-1617581629397-a72507c3de9e?auto=format&fit=crop&w=1600&q=80",
+    rehobothbeach:
+      "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80",
+    oceancity:
+      "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1600&q=80",
+    bethanybeach:
+      "https://images.unsplash.com/photo-1506953823976-52e1fdc0149a?auto=format&fit=crop&w=1600&q=80",
   },
   host: {
     default:
       "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1600&q=80",
     baltimore:
       "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=1600&q=80",
-    newyork:
-      "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=1600&q=80",
-    atlanta:
-      "https://images.unsplash.com/photo-1507874457470-272b3c8d8ee2?auto=format&fit=crop&w=1600&q=80",
-    miami:
+    washington:
       "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=1600&q=80",
+    rehobothbeach:
+      "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1600&q=80",
+    oceancity:
+      "https://images.unsplash.com/photo-1518972559570-7cc1309f3229?auto=format&fit=crop&w=1600&q=80",
+    bethanybeach:
+      "https://images.unsplash.com/photo-1473116763249-2faaef81ccda?auto=format&fit=crop&w=1600&q=80",
   },
   independent_organizer: {
     default:
       "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1600&q=80",
     baltimore:
       "https://images.unsplash.com/photo-1521334884684-d80222895322?auto=format&fit=crop&w=1600&q=80",
-    newyork:
-      "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1600&q=80",
-    atlanta:
-      "https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=1600&q=80",
-    miami:
-      "https://images.unsplash.com/photo-1519671482749-fd09be7ccebf?auto=format&fit=crop&w=1600&q=80",
+    washington:
+      "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=1600&q=80",
+    rehobothbeach:
+      "https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=1600&q=80",
+    oceancity:
+      "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1600&q=80",
+    bethanybeach:
+      "https://images.unsplash.com/photo-1493558103817-58b2924bce98?auto=format&fit=crop&w=1600&q=80",
   },
-} satisfies Record<Exclude<DiscoverySourceType, "ticketmaster">, Record<string, string>>;
+} satisfies Record<DiscoverySourceType, Record<string, string>>;
 
-type DiscoveryFallbackImageKey = "default" | "baltimore" | "newyork" | "atlanta" | "miami";
-
-const SOURCE_PRIORITY: Record<Exclude<DiscoverySourceType, "ticketmaster">, number> = {
+const SOURCE_PRIORITY: Record<DiscoverySourceType, number> = {
   evntszn: 0,
   host: 1,
   independent_organizer: 2,
 };
+
+function normalizeCityKey(city: string | null | undefined) {
+  return String(city || "").toLowerCase().replace(/[^a-z]/g, "") || "default";
+}
+
+function normalizeSource(eventClass: string | null | undefined): DiscoverySourceType {
+  if (eventClass === "independent_organizer") return "independent_organizer";
+  if (eventClass === "host") return "host";
+  return "evntszn";
+}
+
+function getSourceLabel(source: DiscoverySourceType) {
+  switch (source) {
+    case "host":
+      return "EVNTSZN Host";
+    case "independent_organizer":
+      return "Independent Organizer";
+    default:
+      return "Official EVNTSZN";
+  }
+}
+
+function getBadgeLabel(source: DiscoverySourceType) {
+  switch (source) {
+    case "host":
+      return "Host";
+    case "independent_organizer":
+      return "Organizer";
+    default:
+      return "EVNTSZN";
+  }
+}
 
 function isMissingDiscoveryControlsError(error: unknown) {
   const code = typeof error === "object" && error !== null && "code" in error ? String((error as { code?: unknown }).code) : "";
@@ -113,297 +135,8 @@ function isMissingDiscoveryControlsError(error: unknown) {
     code === "42P01" ||
     code === "PGRST205" ||
     status === "404" ||
-    /discovery_listing_controls/i.test(message) ||
-    /relation .*discovery_listing_controls/i.test(message) ||
-    /schema cache/i.test(message)
+    /discovery_listing_controls/i.test(message)
   );
-}
-
-function isMissingEventClassColumnError(error: unknown) {
-  const message =
-    typeof error === "object" && error !== null && "message" in error
-      ? String((error as { message?: unknown }).message)
-      : "";
-  return /event_class/i.test(message) && /does not exist/i.test(message);
-}
-
-function inferSourceType(row: NativeEventRow, control?: DiscoveryControlRow | null): Exclude<DiscoverySourceType, "ticketmaster"> {
-  if (control?.source_type) {
-    return control.source_type;
-  }
-
-  if (row.event_class === "independent_organizer") {
-    return "independent_organizer";
-  }
-
-  if (!row.organizer_user_id) {
-    return "evntszn";
-  }
-
-  return "independent_organizer";
-}
-
-function getSourceLabel(source: Exclude<DiscoverySourceType, "ticketmaster">) {
-  switch (source) {
-    case "evntszn":
-      return "EVNTSZN Event";
-    case "host":
-      return "EVNTSZN Host";
-    case "independent_organizer":
-      return "Independent Organizer";
-  }
-}
-
-function getDefaultBadgeLabel(source: Exclude<DiscoverySourceType, "ticketmaster">) {
-  switch (source) {
-    case "evntszn":
-      return "Official EVNTSZN";
-    case "host":
-      return "EVNTSZN Host";
-    case "independent_organizer":
-      return "Independent Organizer";
-  }
-}
-
-function sortDiscoveryEvents(a: DiscoveryNativeEvent, b: DiscoveryNativeEvent) {
-  if (a.featured !== b.featured) {
-    return Number(b.featured) - Number(a.featured);
-  }
-
-  const sourceDelta = SOURCE_PRIORITY[a.source] - SOURCE_PRIORITY[b.source];
-  if (sourceDelta !== 0) {
-    return sourceDelta;
-  }
-
-  if (a.listingPriority !== b.listingPriority) {
-    return b.listingPriority - a.listingPriority;
-  }
-
-  return new Date(a.startAt).getTime() - new Date(b.startAt).getTime();
-}
-
-export async function getDiscoveryNativeEvents(input: {
-  query?: string;
-  city?: string;
-  limit?: number;
-  startAt?: string;
-  endAt?: string;
-}) {
-  const query = input.query?.trim() || "";
-  const city = input.city?.trim() || "";
-  const limit = input.limit || 12;
-
-  try {
-    const runNativeQuery = async (client: typeof supabaseAdmin, selectColumns: string) => {
-      let builder = client
-        .from("evntszn_events")
-        .select(selectColumns)
-        .eq("visibility", "published")
-        .order("start_at", { ascending: true })
-        .limit(limit);
-
-      if (query) {
-        builder = builder.or(`title.ilike.%${query}%,subtitle.ilike.%${query}%,description.ilike.%${query}%`);
-      }
-
-      if (city) {
-        builder = builder.ilike("city", `%${city}%`);
-      }
-
-      if (input.startAt) {
-        builder = builder.gte("start_at", input.startAt);
-      }
-
-      if (input.endAt) {
-        builder = builder.lte("start_at", input.endAt);
-      }
-
-      return builder;
-    };
-
-    let primaryResponse = await runNativeQuery(
-      supabaseAdmin,
-      "id, title, slug, subtitle, description, city, state, start_at, hero_note, banner_image_url, organizer_user_id, event_class",
-    );
-    if (primaryResponse.error && isSupabaseCredentialError(primaryResponse.error)) {
-      primaryResponse = await runNativeQuery(
-        supabasePublicServer,
-        "id, title, slug, subtitle, description, city, state, start_at, hero_note, banner_image_url, organizer_user_id, event_class",
-      );
-    }
-    let rawEvents = primaryResponse.data as NativeEventRow[] | null;
-    let rawEventsError = primaryResponse.error;
-
-    if (rawEventsError && isMissingEventClassColumnError(rawEventsError)) {
-      let fallbackResponse = await runNativeQuery(
-        supabaseAdmin,
-        "id, title, slug, subtitle, description, city, state, start_at, hero_note, banner_image_url, organizer_user_id",
-      );
-      if (fallbackResponse.error && isSupabaseCredentialError(fallbackResponse.error)) {
-        fallbackResponse = await runNativeQuery(
-          supabasePublicServer,
-          "id, title, slug, subtitle, description, city, state, start_at, hero_note, banner_image_url, organizer_user_id",
-        );
-      }
-      rawEvents = fallbackResponse.data as NativeEventRow[] | null;
-      rawEventsError = fallbackResponse.error;
-    }
-
-    if (rawEventsError) {
-      throw new Error(rawEventsError.message);
-    }
-
-    const events = (rawEvents || []) as NativeEventRow[];
-    if (!events.length) {
-      return {
-        events: [] as DiscoveryNativeEvent[],
-        storageReady: true,
-      };
-    }
-
-    const eventIds = events.map((event) => event.id);
-    let { data: rawControls, error: rawControlsError } = await supabaseAdmin
-      .from("discovery_listing_controls")
-      .select("event_id, source_type, badge_label, featured, listing_priority, promo_collection, is_discoverable")
-      .in("event_id", eventIds);
-
-    if (rawControlsError && isSupabaseCredentialError(rawControlsError)) {
-      const fallbackControls = await supabasePublicServer
-        .from("discovery_listing_controls")
-        .select("event_id, source_type, badge_label, featured, listing_priority, promo_collection, is_discoverable")
-        .in("event_id", eventIds);
-      rawControls = fallbackControls.data;
-      rawControlsError = fallbackControls.error;
-    }
-
-    const storageReady = !rawControlsError || !isMissingDiscoveryControlsError(rawControlsError);
-
-    if (rawControlsError && !isMissingDiscoveryControlsError(rawControlsError)) {
-      throw new Error(rawControlsError.message);
-    }
-
-    const controlsByEventId = new Map<string, DiscoveryControlRow>(
-      ((rawControls || []) as DiscoveryControlRow[]).map((control) => [control.event_id, control]),
-    );
-
-    const mapped = events
-      .map<DiscoveryNativeEvent | null>((event) => {
-        const control = controlsByEventId.get(event.id);
-        if (control && !control.is_discoverable) {
-          return null;
-        }
-
-        const source = inferSourceType(event, control);
-
-        return {
-          id: event.id,
-          title: event.title,
-          slug: event.slug,
-          href: `/events/${event.slug}`,
-          subtitle: event.subtitle,
-          description: event.description,
-          city: event.city,
-          state: event.state,
-          startAt: event.start_at,
-          heroNote: event.hero_note,
-          imageUrl: event.banner_image_url,
-          source,
-          sourceLabel: getSourceLabel(source),
-          badgeLabel: control?.badge_label || getDefaultBadgeLabel(source),
-          featured: control?.featured || false,
-          listingPriority: control?.listing_priority || 0,
-          promoCollection: control?.promo_collection || null,
-          isPrimary: true as const,
-        };
-      })
-      .filter((event): event is DiscoveryNativeEvent => Boolean(event))
-      .sort(sortDiscoveryEvents);
-
-    return {
-      events: mapped,
-      storageReady,
-    };
-  } catch (error) {
-    if (isMissingDiscoveryControlsError(error)) {
-      console.warn("[discovery] listing controls unavailable, using inferred native discovery ordering");
-
-      try {
-        let { data: rawEvents, error: rawEventsError } = await supabaseAdmin
-          .from("evntszn_events")
-          .select("id, title, slug, subtitle, description, city, state, start_at, hero_note, banner_image_url, organizer_user_id")
-          .eq("visibility", "published")
-          .order("start_at", { ascending: true })
-          .limit(limit);
-
-        if (rawEventsError && isSupabaseCredentialError(rawEventsError)) {
-          const fallbackEvents = await supabasePublicServer
-            .from("evntszn_events")
-            .select("id, title, slug, subtitle, description, city, state, start_at, hero_note, banner_image_url, organizer_user_id")
-            .eq("visibility", "published")
-            .order("start_at", { ascending: true })
-            .limit(limit);
-          rawEvents = fallbackEvents.data;
-          rawEventsError = fallbackEvents.error;
-        }
-
-        if (rawEventsError) {
-          throw rawEventsError;
-        }
-
-        const events = ((rawEvents || []) as NativeEventRow[])
-          .map<DiscoveryNativeEvent>((event) => {
-            const source = inferSourceType(event, null);
-
-            return {
-              id: event.id,
-              title: event.title,
-              slug: event.slug,
-              href: `/events/${event.slug}`,
-              subtitle: event.subtitle,
-              description: event.description,
-              city: event.city,
-              state: event.state,
-              startAt: event.start_at,
-              heroNote: event.hero_note,
-              imageUrl: event.banner_image_url,
-              source,
-              sourceLabel: getSourceLabel(source),
-              badgeLabel: getDefaultBadgeLabel(source),
-              featured: false,
-              listingPriority: 0,
-              promoCollection: null,
-              isPrimary: true as const,
-            };
-          })
-          .sort(sortDiscoveryEvents);
-
-        return {
-          events,
-          storageReady: false,
-        };
-      } catch (fallbackError) {
-        console.error("[discovery] fallback native discovery load failed", {
-          error: formatRuntimeError(fallbackError),
-          supabase: getSupabaseRuntimeSnapshot(),
-        });
-        return {
-          events: [] as DiscoveryNativeEvent[],
-          storageReady: false,
-        };
-      }
-    }
-
-    console.error("[discovery] native discovery load failed", {
-      error: formatRuntimeError(error),
-      route: "public-discovery",
-      credentialIssue: isSupabaseCredentialError(error),
-      supabase: getSupabaseRuntimeSnapshot(),
-    });
-    return {
-      events: [] as DiscoveryNativeEvent[],
-      storageReady: false,
-    };
-  }
 }
 
 export function groupDiscoveryEventsBySource(events: DiscoveryNativeEvent[]) {
@@ -414,18 +147,133 @@ export function groupDiscoveryEventsBySource(events: DiscoveryNativeEvent[]) {
   };
 }
 
-export function getDiscoveryFallbackImage(
-  city: string | null | undefined,
-  source: Exclude<DiscoverySourceType, "ticketmaster">,
-) {
-  const rawKey = city?.toLowerCase().replace(/\s+/g, "") || "default";
-  const key: DiscoveryFallbackImageKey =
-    rawKey === "baltimore" ||
-    rawKey === "newyork" ||
-    rawKey === "atlanta" ||
-    rawKey === "miami"
-      ? rawKey
-      : "default";
+export function getDiscoveryFallbackImage(city: string | null | undefined, source: DiscoverySourceType) {
+  const cityKey = normalizeCityKey(city);
   const sourceImages = DISCOVERY_FALLBACK_IMAGES[source];
-  return sourceImages[key] || sourceImages.default;
+  return sourceImages[cityKey as keyof typeof sourceImages] || sourceImages.default;
+}
+
+export async function getDiscoveryNativeEvents(input: {
+  city?: string | null;
+  query?: string | null;
+  limit?: number | null;
+  startAt?: string | undefined;
+  endAt?: string | undefined;
+}) {
+  const limit = Math.min(Math.max(Number(input.limit || 12), 1), 50);
+
+  let query = supabaseAdmin
+    .from("evntszn_events")
+    .select(
+      "id, slug, title, description, subtitle, hero_note, banner_image_url, start_at, city, state, event_class, visibility, status",
+    )
+    .in("visibility", ["published", "public"])
+    .in("status", ["published", "live", "scheduled"])
+    .order("start_at", { ascending: true })
+    .limit(limit * 3);
+
+  if (input.city) {
+    query = query.ilike("city", input.city);
+  }
+  if (input.query) {
+    const safeQuery = input.query.replace(/[,%]/g, " ").trim();
+    if (safeQuery) {
+      query = query.or(
+        `title.ilike.%${safeQuery}%,subtitle.ilike.%${safeQuery}%,description.ilike.%${safeQuery}%,hero_note.ilike.%${safeQuery}%`,
+      );
+    }
+  }
+  if (input.startAt) {
+    query = query.gte("start_at", input.startAt);
+  }
+  if (input.endAt) {
+    query = query.lte("start_at", input.endAt);
+  }
+
+  const { data, error } = await query;
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  let controlsById = new Map<
+    string,
+    {
+      badge_label: string | null;
+      featured: boolean | null;
+      listing_priority: number | null;
+      promo_collection: string | null;
+      is_discoverable: boolean | null;
+      source_type: string | null;
+    }
+  >();
+
+  try {
+    const eventIds = (data || []).map((row) => row.id);
+    if (eventIds.length) {
+      const controlsRes = await supabaseAdmin
+        .from("discovery_listing_controls")
+        .select("event_id, source_type, badge_label, featured, listing_priority, promo_collection, is_discoverable")
+        .in("event_id", eventIds);
+      if (controlsRes.error) {
+        throw controlsRes.error;
+      }
+      controlsById = new Map(
+        (controlsRes.data || []).map((row) => [
+          row.event_id,
+          {
+            badge_label: row.badge_label,
+            featured: row.featured,
+            listing_priority: row.listing_priority,
+            promo_collection: row.promo_collection,
+            is_discoverable: row.is_discoverable,
+            source_type: row.source_type,
+          },
+        ]),
+      );
+    }
+  } catch (error) {
+    if (!isMissingDiscoveryControlsError(error)) {
+      throw error;
+    }
+  }
+
+  const mappedEvents: DiscoveryEventRecord[] = ((data || []) as DiscoveryEventRow[]).map((row) => {
+      const controls = controlsById.get(row.id);
+      if (controls?.is_discoverable === false) return null;
+      const source = normalizeSource(controls?.source_type || row.event_class);
+      const listingPriority = Number(controls?.listing_priority ?? SOURCE_PRIORITY[source]);
+      return {
+        id: row.id,
+        source,
+        title: row.title,
+        description: row.description || "",
+        href: `/events/${row.slug}`,
+        imageUrl: row.banner_image_url || getDiscoveryFallbackImage(row.city, source),
+        subtitle: row.subtitle,
+        startAt: row.start_at,
+        heroNote: row.hero_note,
+        sourceLabel: getSourceLabel(source),
+        badgeLabel: controls?.badge_label || getBadgeLabel(source),
+        featured: Boolean(controls?.featured),
+        listingPriority,
+        promoCollection: controls?.promo_collection || null,
+        city: row.city || "",
+        state: row.state || "",
+        isPrimary: true as const,
+      };
+    });
+
+  const events = mappedEvents
+    .filter((event): event is DiscoveryNativeEvent => event !== null)
+    .sort((a, b) => {
+      if (a.featured !== b.featured) return a.featured ? -1 : 1;
+      if (a.listingPriority !== b.listingPriority) return a.listingPriority - b.listingPriority;
+      return (a.startAt || "").localeCompare(b.startAt || "");
+    })
+    .slice(0, limit);
+
+  return {
+    events,
+    storageReady: true,
+  };
 }

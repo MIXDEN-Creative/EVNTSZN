@@ -34,14 +34,14 @@ export function calculateWorkedMinutes(input: {
   return Math.max(0, totalMinutes - Math.max(0, input.breakMinutes || 0));
 }
 
-export function estimatePayoutCents(input: {
+export function estimatePayoutUsd(input: {
   payType?: string | null;
-  payAmountCents?: number | null;
+  payAmountUsd?: number | null;
   minutesWorked?: number | null;
   overtimeMinutes?: number | null;
 }) {
   const payType = String(input.payType || "hourly");
-  const amount = Number(input.payAmountCents || 0);
+  const amount = Number(input.payAmountUsd || 0);
   const minutes = Number(input.minutesWorked || 0);
   const overtimeMinutes = Number(input.overtimeMinutes || 0);
   if (!amount) return 0;
@@ -49,21 +49,21 @@ export function estimatePayoutCents(input: {
     const regularMinutes = Math.max(0, minutes - overtimeMinutes);
     const regularPay = (amount / 60) * regularMinutes;
     const overtimePay = ((amount * 1.5) / 60) * overtimeMinutes;
-    return Math.round(regularPay + overtimePay);
+    return Math.round((regularPay + overtimePay) * 100) / 100;
   }
-  return amount;
+  return Math.round(amount * 100) / 100;
 }
 
 export function formatPayoutLabel(input: {
   payType?: string | null;
-  payAmountCents?: number | null;
+  payAmountUsd?: number | null;
 }) {
-  const amount = Number(input.payAmountCents || 0);
+  const amount = Number(input.payAmountUsd || 0);
   if (!amount) return "Unpaid";
   const dollars = new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
-  }).format(amount / 100);
+  }).format(amount);
   const payType = String(input.payType || "hourly");
   if (payType === "fixed" || payType === "stipend") return `${dollars} ${payType}`;
   return `${dollars}/${payType.replace(/ly$/, "")}`;

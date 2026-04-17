@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { buildTicketCode, ensurePlatformProfile, logEventActivity, requirePlatformUser } from "@/lib/evntszn";
 import { getAppOrigin, getCanonicalUrl } from "@/lib/domains";
 import { LINK_ATTRIBUTION_WINDOW_MS, LINK_CLICK_COOKIE, parseLinkClickCookie } from "@/lib/link-attribution";
+import { toStripeCents } from "@/lib/money";
 import { stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { canPurchaseTicketType, getTicketAvailabilityState } from "@/lib/ticketing";
@@ -25,7 +26,7 @@ export async function POST(request: Request, { params }: { params: Params }) {
       .maybeSingle(),
     supabaseAdmin
       .from("evntszn_ticket_types")
-      .select("id, name, description, price_cents, quantity_total, quantity_sold, max_per_order, sales_start_at, sales_end_at, is_active, visibility_mode")
+      .select("id, name, description, price_usd, quantity_total, quantity_sold, max_per_order, sales_start_at, sales_end_at, is_active, visibility_mode")
       .eq("id", body.ticketTypeId)
       .eq("event_id", eventId)
       .maybeSingle(),
@@ -67,7 +68,7 @@ export async function POST(request: Request, { params }: { params: Params }) {
     primaryRole: viewer.profile?.primary_role || "attendee",
   });
 
-  if (ticketType.price_cents <= 0) {
+  if (ticketType.price_usd <= 0) {
     const { data: order, error: orderError } = await supabaseAdmin
       .from("evntszn_ticket_orders")
       .insert({
@@ -77,7 +78,7 @@ export async function POST(request: Request, { params }: { params: Params }) {
         purchaser_email: viewer.user!.email || "",
         purchaser_name: viewer.user?.user_metadata?.full_name || viewer.user?.email || null,
         quantity,
-        amount_total_cents: 0,
+        amount_total_usd: 0,
         currency_code: "usd",
         status: "comped",
       })
@@ -150,7 +151,7 @@ export async function POST(request: Request, { params }: { params: Params }) {
         quantity,
         price_data: {
           currency: "usd",
-          unit_amount: ticketType.price_cents,
+          unit_amount: toStripeCents(ticketType.price_usd),
           product_data: {
             name: `${event.title} · ${ticketType.name}`,
             description: ticketType.description || "EVNTSZN event access",

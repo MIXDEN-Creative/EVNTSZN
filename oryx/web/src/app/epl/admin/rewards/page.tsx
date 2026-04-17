@@ -6,7 +6,7 @@ type RewardSettings = {
   points_per_dollar: number;
   first_order_bonus: number;
   redemption_enabled: boolean;
-  redemption_value_cents: number;
+  redemption_value_usd: number;
   minimum_points_to_redeem: number;
   assigned_manager_user_id?: string | null;
 };
@@ -185,7 +185,7 @@ export default function AdminRewardsPage() {
                   {settings.redemption_enabled ? "Active & Enabled" : "Paused"}
                 </div>
                 <p className="mt-3 text-sm text-[#caa7ff]/60 leading-relaxed">
-                  Min. {settings.minimum_points_to_redeem} pts · {settings.redemption_value_cents}¢ per unit
+                  Min. {settings.minimum_points_to_redeem} pts · {settings.redemption_value_usd}¢ per unit
                 </p>
               </div>
             </div>
@@ -245,11 +245,11 @@ export default function AdminRewardsPage() {
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-white/30 ml-1">Redemption value (cents)</label>
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-white/30 ml-1">Redemption value (USD)</label>
                     <input
                       type="number"
-                      value={settings.redemption_value_cents}
-                      onChange={(e) => setSettings({ ...settings, redemption_value_cents: Number(e.target.value || 0) })}
+                      value={settings.redemption_value_usd}
+                      onChange={(e) => setSettings({ ...settings, redemption_value_usd: Number(e.target.value || 0) })}
                       className="ev-field"
                     />
                   </div>
@@ -329,7 +329,7 @@ export default function AdminRewardsPage() {
                   </div>
                   <div className="rounded-2xl border border-white/5 bg-black/40 p-4">
                     <div className="text-[9px] font-bold uppercase tracking-widest text-white/30">Spent</div>
-                    <div className="mt-1 text-lg font-bold text-white tracking-tight">${((account.total_spent || 0) / 100).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+                    <div className="mt-1 text-lg font-bold text-white tracking-tight">${Number(account.total_spent || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
                   </div>
                   <div className="rounded-2xl border border-white/5 bg-black/40 p-4">
                     <div className="text-[9px] font-bold uppercase tracking-widest text-white/30">Orders</div>

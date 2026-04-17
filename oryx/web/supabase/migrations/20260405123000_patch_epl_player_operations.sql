@@ -19,7 +19,7 @@ select
   sr.registration_status,
   sr.player_status,
   sr.waived_fee,
-  sr.payment_amount_cents,
+  sr.payment_amount_usd,
   sr.paid_at,
   sr.updated_at as registration_updated_at,
   pp.is_draft_eligible as draft_eligible,

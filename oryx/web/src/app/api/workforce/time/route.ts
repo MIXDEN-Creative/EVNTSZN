@@ -7,10 +7,10 @@ function unwrapOne<T>(value: T | T[] | null | undefined) {
   return Array.isArray(value) ? value[0] || null : value || null;
 }
 
-function toPayAmountCents(value: number | string | null | undefined) {
+function toPayAmountUsd(value: number | string | null | undefined) {
   const amount = Number(value || 0);
   if (!Number.isFinite(amount) || amount <= 0) return null;
-  return Math.round(amount * 100);
+  return Math.round(amount * 100) / 100;
 }
 
 export async function GET() {
@@ -66,7 +66,7 @@ export async function GET() {
         return {
           ...position,
           title: position.title_override || template?.title || "Assigned role",
-          pay_amount_cents: toPayAmountCents(position.pay_amount),
+          pay_amount_usd: toPayAmountUsd(position.pay_amount),
         };
       })(),
     })),
@@ -145,7 +145,7 @@ export async function POST(request: Request) {
       staff_position_id: position?.id || null,
       city: position?.city || null,
       pay_type: position?.pay_type || "hourly",
-      pay_amount_cents: toPayAmountCents(position?.pay_amount),
+      pay_amount_usd: toPayAmountUsd(position?.pay_amount),
       employment_type: position?.employment_status || null,
       status: "draft",
       started_at: new Date().toISOString(),

@@ -78,7 +78,7 @@ create table if not exists public.evntszn_sponsor_package_orders (
   source_surface text not null default 'web',
   order_type text not null default 'purchase' check (order_type in ('inquiry', 'purchase')),
   status text not null default 'pending' check (status in ('pending', 'paid', 'failed', 'canceled', 'inquiry')),
-  amount_cents integer not null default 0,
+  amount_usd integer not null default 0,
   currency_code text not null default 'usd',
   stripe_checkout_session_id text unique,
   stripe_payment_intent_id text,

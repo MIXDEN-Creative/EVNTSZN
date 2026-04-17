@@ -224,7 +224,7 @@ export default function PlayerPoolTab({ seasonSlug }: any) {
                       Fee:{" "}
                       {player.waived_fee
                         ? "Waived"
-                        : `$${((player.payment_amount_cents || 0) / 100).toFixed(2)}`}
+                        : `$${Number(player.payment_amount_usd || 0).toFixed(2)}`}
                     </div>
                   </td>
                   <td className="px-4 py-4 text-sm text-white/75">

@@ -1,77 +1,86 @@
 export type PublicCity = {
-  slug: string;
   name: string;
-  stateLabel: string;
+  slug: string;
   shortLabel: string;
-  headline: string;
-  description: string;
+  stateLabel: string;
+  stateCode: string;
   seoTitle: string;
   seoDescription: string;
+  headline: string;
+  description: string;
 };
 
 export const PUBLIC_CITIES: PublicCity[] = [
   {
-    slug: "baltimore",
     name: "Baltimore",
-    stateLabel: "Maryland",
+    slug: "baltimore",
     shortLabel: "Baltimore",
-    headline: "The home of EPL and high-stakes city energy.",
-    description:
-      "From EPL game nights to the city’s strongest concerts and nightlife plans, Baltimore is where EVNTSZN feels most alive.",
-    seoTitle: "Baltimore Events, EPL Flag Football & Nightlife | EVNTSZN",
-    seoDescription:
-      "Join the league in Baltimore. Discover high-stakes flag football, neighborhood team pride, and the city's strongest nightlife moves through EVNTSZN.",
-  },
-  {
-    slug: "dc",
-    name: "Washington",
-    stateLabel: "District of Columbia",
-    shortLabel: "DC",
-    headline: "Power plans. Direct access to Washington's live pulse.",
-    description:
-      "Move through the District’s mix of sports, concerts, and nights out with a cleaner read on what is worth the trip.",
-    seoTitle: "DC Live Events, Sports Entertainment & Washington Nightlife | EVNTSZN",
-    seoDescription:
-      "Connect to the capital's energy. EVNTSZN brings you direct access to Washington DC's live pulse, from sports to headline nightlife.",
-  },
-  {
-    slug: "rehoboth",
-    name: "Rehoboth Beach",
-    stateLabel: "Delaware",
-    shortLabel: "Rehoboth",
-    headline: "Coastal energy. Clean, premium access to the beach pulse.",
-    description:
-      "Find the nights, beach weekends, and high-energy events worth the trip to Rehoboth.",
-    seoTitle: "Rehoboth Beach Events, Nightlife & Coastal Discovery | EVNTSZN",
-    seoDescription:
-      "Find Rehoboth Beach events worth following. EVNTSZN provides a cleaner, premium surface for coastal-rooted discovery.",
-  },
-  {
-    slug: "oceancity",
-    name: "Ocean City",
     stateLabel: "Maryland",
-    shortLabel: "Ocean City",
-    headline: "The boardwalk pulse, captured in one clean view.",
-    description:
-      "From beach nights to the city’s strongest concerts and nightlife plans, Ocean City is where the summer feels most alive.",
-    seoTitle: "Ocean City Events, Nightlife & Beach Discovery | EVNTSZN",
+    stateCode: "MD",
+    seoTitle: "Baltimore nightlife, events, and league nights",
     seoDescription:
-      "Find Ocean City events worth following. EVNTSZN provides a cleaner, premium surface for beach-rooted discovery.",
+      "Track premium nightlife, events, and EVNTSZN activity across Baltimore.",
+    headline: "Baltimore nights built for momentum.",
+    description:
+      "Baltimore is the EVNTSZN home market for premium nightlife, city events, and EPL league energy.",
   },
   {
-    slug: "bethany",
-    name: "Bethany Beach",
-    stateLabel: "Delaware",
-    shortLabel: "Bethany",
-    headline: "Quiet coastal energy. Premium community access.",
-    description:
-      "Find community events, beach nights, and local plans in Bethany through the same cleaner EVNTSZN guide.",
-    seoTitle: "Bethany Beach Events, Community & Coastal Discovery | EVNTSZN",
+    name: "Washington",
+    slug: "washington",
+    shortLabel: "Washington",
+    stateLabel: "District of Columbia",
+    stateCode: "DC",
+    seoTitle: "Washington nightlife, events, and league nights",
     seoDescription:
-      "Find Bethany Beach events worth following. EVNTSZN provides a cleaner, premium surface for community-rooted discovery.",
+      "Find premium Washington nightlife, live events, and EVNTSZN activity in one operating layer.",
+    headline: "Washington plans worth leaving home for.",
+    description:
+      "Washington is wired for polished social nights, ticketed experiences, and city discovery with real signal.",
+  },
+  {
+    name: "Rehoboth Beach",
+    slug: "rehoboth",
+    shortLabel: "Rehoboth",
+    stateLabel: "Delaware",
+    stateCode: "DE",
+    seoTitle: "Rehoboth Beach nightlife, events, and league nights",
+    seoDescription:
+      "Find Rehoboth Beach nightlife, events, and EVNTSZN discovery surfaces.",
+    headline: "Rehoboth nights with a cleaner signal.",
+    description:
+      "Rehoboth Beach anchors the coastal EVNTSZN lane with nightlife, resort demand, and league-night crossover.",
+  },
+  {
+    name: "Ocean City",
+    slug: "ocean-city",
+    shortLabel: "Ocean City",
+    stateLabel: "Maryland",
+    stateCode: "MD",
+    seoTitle: "Ocean City nightlife, events, and league nights",
+    seoDescription:
+      "Browse Ocean City nightlife, event listings, and EVNTSZN public discovery.",
+    headline: "Ocean City demand, routed with intent.",
+    description:
+      "Ocean City blends nightlife traffic, hospitality demand, and reserve-ready operating volume.",
+  },
+  {
+    name: "Bethany Beach",
+    slug: "bethany",
+    shortLabel: "Bethany",
+    stateLabel: "Delaware",
+    stateCode: "DE",
+    seoTitle: "Bethany Beach nightlife, events, and league nights",
+    seoDescription:
+      "Follow Bethany Beach events, nightlife, and EVNTSZN experiences with one clean city view.",
+    headline: "Bethany plans with premium routing.",
+    description:
+      "Bethany Beach stays focused on premium placements, hospitality coordination, and the quieter coastal lane.",
   },
 ];
 
-export function getPublicCityBySlug(slug: string) {
-  return PUBLIC_CITIES.find((city) => city.slug === slug) || null;
+export const PUBLIC_HOST_MARKETS = PUBLIC_CITIES.map((city) => city.name);
+
+export function getPublicCityBySlug(citySlug: string | null | undefined) {
+  const normalized = String(citySlug || "").trim().toLowerCase();
+  return PUBLIC_CITIES.find((city) => city.slug === normalized) || null;
 }

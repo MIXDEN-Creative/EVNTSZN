@@ -34,7 +34,7 @@ export async function POST(request: Request) {
     points_per_dollar: Number(body.points_per_dollar || 1),
     first_order_bonus: Number(body.first_order_bonus || 0),
     redemption_enabled: Boolean(body.redemption_enabled),
-    redemption_value_cents: Number(body.redemption_value_cents || 100),
+    redemption_value_usd: Number(body.redemption_value_usd || 100),
     minimum_points_to_redeem: Number(body.minimum_points_to_redeem || 100),
     assigned_manager_user_id: body.assigned_manager_user_id ? String(body.assigned_manager_user_id) : null,
   };

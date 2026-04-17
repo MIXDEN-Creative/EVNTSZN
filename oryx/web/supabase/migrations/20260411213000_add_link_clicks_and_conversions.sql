@@ -26,7 +26,7 @@ create table if not exists public.evntszn_link_conversions (
   purchaser_user_id uuid references auth.users(id) on delete set null,
   attributed_order_count integer not null default 0,
   attributed_ticket_count integer not null default 0,
-  attributed_gross_revenue_cents integer not null default 0,
+  attributed_gross_revenue_usd integer not null default 0,
   attribution_status text not null default 'unattributed' check (attribution_status in ('attributed', 'unattributed', 'expired', 'ambiguous', 'mismatch')),
   attribution_method text,
   clicked_at timestamptz,

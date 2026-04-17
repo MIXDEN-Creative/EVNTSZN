@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { INTERNAL_CITY_OPTIONS, getCityStateCode } from "@/lib/city-options";
+import { formatUsd } from "@/lib/money";
 
 export default function CityOfficeClient({
   apiPath = "/api/admin/city-office",
@@ -177,8 +178,8 @@ export default function CityOfficeClient({
               ["Signal members", city.signalMembers],
               ["Ambassadors", city.ambassadorMembers],
               ["Sponsor accounts", city.sponsorAccounts],
-              ["Ticket revenue", `$${((city.paidRevenueCents || 0) / 100).toLocaleString()}`],
-              ["Sponsor revenue", `$${((city.sponsorRevenueCents || 0) / 100).toLocaleString()}`],
+              ["Ticket revenue", formatUsd(city.paidRevenueUsd || 0)],
+              ["Sponsor revenue", formatUsd(city.sponsorRevenueUsd || 0)],
             ].map(([label, value]) => (
               <div key={String(label)} className="ev-stat">
                 <div className="ev-stat-label">{label}</div>

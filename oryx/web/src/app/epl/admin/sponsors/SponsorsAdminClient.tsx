@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { INTERNAL_CITY_OPTIONS } from "@/lib/city-options";
+import { formatUsd } from "@/lib/money";
 
 function parseList(value: string) {
   return value
@@ -455,7 +456,7 @@ export default function SponsorsAdminClient() {
               {packages.map((pkg) => (
                 <div key={pkg.id} className="rounded-3xl border border-white/5 bg-black/40 p-6 transition hover:bg-black/60">
                   <div className="text-sm font-bold text-white">{pkg.package_name}</div>
-                  <div className="mt-2 text-lg font-black text-[#caa7ff]">${((pkg.cash_price_cents || 0) / 100).toLocaleString()}</div>
+                  <div className="mt-2 text-lg font-black text-[#caa7ff]">{formatUsd(pkg.cash_price_usd)}</div>
                 </div>
               ))}
             </div>

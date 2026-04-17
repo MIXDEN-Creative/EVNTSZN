@@ -43,7 +43,7 @@ export default async function EventDetailPage({ params }: { params: Params }) {
 
   const { data: ticketTypes } = await supabaseAdmin
     .from("evntszn_ticket_types")
-    .select("id, name, description, price_cents, quantity_total, quantity_sold, max_per_order, sales_start_at, sales_end_at, is_active, visibility_mode, sort_order")
+    .select("id, name, description, price_usd, quantity_total, quantity_sold, max_per_order, sales_start_at, sales_end_at, is_active, visibility_mode, sort_order")
     .eq("event_id", event.id)
     .order("sort_order", { ascending: true });
 
@@ -68,7 +68,7 @@ export default async function EventDetailPage({ params }: { params: Params }) {
       id: string;
       name: string;
       description: string | null;
-      price_cents: number;
+      price_usd: number;
       quantity_total: number;
       quantity_sold: number;
       max_per_order: number;
@@ -106,7 +106,7 @@ export default async function EventDetailPage({ params }: { params: Params }) {
     "offers": visibleTicketTypes.map(tt => ({
       "@type": "Offer",
       "name": tt.name,
-      "price": (tt.price_cents / 100).toFixed(2),
+      "price": Number(tt.price_usd || 0).toFixed(2),
       "priceCurrency": "USD",
       "availability": tt.availability_state === 'active' ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
       "validFrom": tt.sales_start_at

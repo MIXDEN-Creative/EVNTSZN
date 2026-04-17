@@ -1,86 +1,60 @@
-import type { Metadata } from "next";
 import Link from "next/link";
-import EplNav from "@/components/epl/EplNav";
-import PublicFooter from "@/components/public/PublicFooter";
-import { getEplOrigin } from "@/lib/domains";
-import { EPL_TEAM_PROFILES } from "@/lib/epl-teams";
-import { getEplPublicContent } from "@/lib/site-content";
+import Image from "next/image";
+import { getTeamsByConference } from "@/lib/epl-teams";
+import PublicPageFrame from "@/components/public/PublicPageFrame";
 
-export const metadata: Metadata = {
-  title: "EPL Teams",
-  description:
-    "Meet the Season 1 clubs in EVNTSZN Prime League and follow the teams carrying coed adult flag football into draft night and game-day competition.",
-  alternates: {
-    canonical: `${getEplOrigin()}/teams`,
-  },
-  openGraph: {
-    title: "EPL Teams",
-    description:
-      "Meet the Season 1 clubs in EVNTSZN Prime League and follow the teams carrying coed adult flag football into draft night and game-day competition.",
-    url: `${getEplOrigin()}/teams`,
-    siteName: "EVNTSZN",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "EPL Teams",
-    description:
-      "Meet the Season 1 clubs in EVNTSZN Prime League and follow the teams carrying coed adult flag football into draft night and game-day competition.",
-  },
-};
+const EPLTeamsPage = () => {
+  const baltimoreTeams = getTeamsByConference("Baltimore");
+  const coastalTeams = getTeamsByConference("Coastal");
 
-export default async function EplTeamsPage() {
-  const content = await getEplPublicContent();
+  const renderTeamCard = (team: (typeof baltimoreTeams)[number]) => (
+    <Link
+      key={team.slug}
+      href={`/epl/teams/${team.slug}`}
+      className="ev-panel p-6 rounded-2xl hover:border-purple-500 transition-colors duration-300 flex flex-col items-center text-center"
+    >
+      <div className="w-20 h-20 rounded-2xl border border-white/10 bg-white/[0.04] p-3 mb-4">
+        <Image src={team.logoUrl} alt={team.name} width={80} height={80} className="mx-auto h-full w-full rounded-lg object-cover" />
+      </div>
+      <div className="text-xl font-bold text-white mb-1">{team.name}</div>
+      <div className="text-sm font-semibold text-white/70">{team.city}</div>
+    </Link>
+  );
 
   return (
-    <main className="min-h-screen bg-black text-white">
-      <EplNav menu={content.menu} />
-      <section className="mx-auto max-w-7xl px-4 py-16 md:px-6 lg:px-8 lg:py-20">
-        <div className="ev-kicker">Season 1 clubs</div>
-        <h1 className="ev-title">Six teams. One league. Real flag football identity.</h1>
-        <p className="ev-subtitle max-w-3xl">
-          EPL teams are built to be followed all season: draft-night storylines, city pride, sideline energy, and clubs worth showing up for on game day.
+    <PublicPageFrame
+      title="EVNTSZN EPL Teams"
+      description="Meet the 12 clubs competing in the EVNTSZN Premier League Season 1."
+      heroImage="https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&w=1800&q=80"
+      seo={{
+        title: "EVNTSZN EPL Teams | Meet the Clubs",
+        description: "Discover the 12 fierce teams of the EVNTSZN Premier League, from Baltimore to the Coast.",
+      }}
+    >
+      <section className="mx-auto max-w-7xl px-4 py-16 md:px-6 lg:px-8">
+        <h1 className="text-5xl font-bold mb-4 text-white text-center">EVNTSZN Premier League Teams</h1>
+        <p className="text-xl text-gray-300 text-center max-w-3xl mx-auto mt-6">
+          Get to know the 12 clubs battling for supremacy in Season 1. Each team brings unique talent and city pride to the field.
         </p>
 
-        <div className="mt-14 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-          {EPL_TEAM_PROFILES.map((team) => (
-            <Link
-              key={team.slug}
-              href={`/epl/teams/${team.slug}`}
-              className="ev-panel block p-6 transition hover:border-white/20 hover:bg-white/[0.08]"
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#b899ff]">
-                    {team.neighborhood}
-                  </div>
-                  <h2 className="mt-3 text-2xl font-black text-white">{team.name}</h2>
-                </div>
-                <img src={team.logoUrl} alt={team.name} className="h-16 w-16 rounded-2xl border border-white/10 object-cover" />
-              </div>
-              <p className="mt-3 text-sm leading-6 text-white/72">{team.headline}</p>
-              <div className="mt-5 flex flex-wrap gap-2">
-                {team.notes.map((note) => (
-                  <span key={note} className="ev-chip ev-chip--external">
-                    {note}
-                  </span>
-                ))}
-              </div>
-              <div className="mt-6 text-sm font-semibold text-white">Open team page</div>
-            </Link>
-          ))}
+        <div className="mt-16">
+          <h2 className="text-4xl font-bold text-center mb-8 text-purple-400">Baltimore Conference</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {baltimoreTeams.map(team => renderTeamCard(team))}
+          </div>
         </div>
 
-        <div className="mt-10 flex flex-wrap gap-3">
-          <Link href="/epl/standings" className="ev-button-primary">
-            View standings
-          </Link>
-          <Link href="/epl/season-1/register" className="ev-button-secondary">
-            Register for Season 1
-          </Link>
+        <div className="mt-16">
+          <h2 className="text-4xl font-bold text-center mb-8 text-blue-400">Coastal Conference</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {coastalTeams.map(team => renderTeamCard(team))}
+          </div>
         </div>
       </section>
-      <PublicFooter />
-    </main>
+
+      {/* Link to individual team pages would be handled by routing */}
+    </PublicPageFrame>
   );
-}
+};
+
+export default EPLTeamsPage;
