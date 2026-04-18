@@ -17,10 +17,10 @@ const LINK_PLANS = [
     cta: { href: "/account/register?next=/link", label: "Go Link Pro" },
   },
   {
-    title: "Included with Curator ops",
+    title: "Included with Venue Pro and network ops",
     price: "Included",
     note: "Inside the network",
-    points: ["Link Pro access", "Curator routing", "Priority city visibility", "Tighter Pulse and event integration"],
+    points: ["Link Pro access", "Venue Pro + Venue Pro + Reserve inclusion", "Curator routing", "Priority city visibility"],
     cta: { href: "/hosts", label: "Explore Curators" },
   },
 ];

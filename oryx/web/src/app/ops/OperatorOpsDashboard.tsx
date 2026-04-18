@@ -53,6 +53,9 @@ export default function OperatorOpsDashboard({
     <Link key="messages" href="/ops/messages" className="ev-button-secondary">
       Internal messaging
     </Link>,
+    <Link key="growth" href="/ops/growth" className="ev-button-secondary">
+      Growth earnings
+    </Link>,
     operatorProfile.module_access.includes("staffing") ? (
       <Link key="time" href="/ops/time" className="ev-button-secondary">
         Track time

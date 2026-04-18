@@ -164,6 +164,12 @@ function buildQuickLinks(viewer: Awaited<ReturnType<typeof getPlatformViewer>>) 
       label: "Open ops",
     });
     operationalLinks.push({
+      title: "Growth earnings",
+      body: "Managed accounts, recurring earnings, and recent monetization events tied to your login.",
+      href: "/ops/growth",
+      label: "Open growth earnings",
+    });
+    operationalLinks.push({
       title: "Internal Pulse",
       body: "Review internal ops signals, assignments, and reserve pressure.",
       href: "/ops/pulse",

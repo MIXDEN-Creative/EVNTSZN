@@ -23,7 +23,7 @@ export default function ReserveIntakeForm() {
     companyName: "",
     market: String(MARKET_OPTIONS[0]),
     venueName: "",
-    reservePlan: "venue_pro_plus_reserve",
+    reservePlan: "venue_pro_reserve",
     averageWeeklyReservations: "",
     primaryNeed: "table-service",
     notes: "",
@@ -58,7 +58,7 @@ export default function ReserveIntakeForm() {
       companyName: "",
       market: String(MARKET_OPTIONS[0]),
       venueName: "",
-      reservePlan: "venue_pro_plus_reserve",
+      reservePlan: "venue_pro_reserve",
       averageWeeklyReservations: "",
       primaryNeed: "table-service",
       notes: "",
@@ -87,7 +87,7 @@ export default function ReserveIntakeForm() {
         <select className="ev-field" value={form.reservePlan} onChange={(event) => setForm({ ...form, reservePlan: event.target.value })}>
           <option value="venue_listing">Venue listing</option>
           <option value="venue_pro">Venue Pro</option>
-          <option value="venue_pro_plus_reserve">Venue Pro + Reserve</option>
+          <option value="venue_pro_reserve">Venue Pro + Reserve</option>
           <option value="reserve_standalone">Reserve standalone</option>
         </select>
         <input className="ev-field" type="number" min="0" step="1" placeholder="Average weekly reservations" value={form.averageWeeklyReservations} onChange={(event) => setForm({ ...form, averageWeeklyReservations: event.target.value })} />

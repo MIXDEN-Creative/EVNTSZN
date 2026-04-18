@@ -27,6 +27,7 @@ export default function NodeTapLink({
   async function handleClick(event: MouseEvent<HTMLAnchorElement>) {
     event.preventDefault();
     const sessionKey = getSessionKey(slug);
+    const width = window.innerWidth;
 
     await Promise.race([
       fetch(`/api/evntszn/nodes/${slug}/interactions`, {
@@ -37,6 +38,7 @@ export default function NodeTapLink({
           sessionKey,
           source: "node_cta",
           city,
+          deviceType: width < 768 ? "mobile" : width < 1100 ? "tablet" : "desktop",
         }),
       }).catch(() => undefined),
       new Promise((resolve) => window.setTimeout(resolve, 180)),

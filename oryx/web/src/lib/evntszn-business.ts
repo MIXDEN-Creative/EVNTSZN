@@ -34,9 +34,9 @@ export const LINK_TIERS = [
   {
     key: "pro",
     label: "Link Pro",
-    priceLabel: "Included",
-    audience: "Partner Pro and EVNTSZN Curator Program",
-    includedIn: "Included in Partner Pro, EVNTSZN Curator, Pro Curator, and City Leader paths",
+    priceLabel: "$29/month",
+    audience: "Paid Link, Venue Pro, and included network tiers",
+    includedIn: "Included in Venue Pro, Venue Pro + Reserve, EVNTSZN Curator network accounts, and eligible partner pro paths",
     features: [
       "Custom branded page",
       "Unlimited links",
@@ -169,7 +169,7 @@ export const PLATFORM_FEE_RULES = [
 
 export const VENUE_PLANS = [
   {
-    key: "venue-free",
+    key: "venue_free",
     label: "EVNTSZN Venue",
     priceLabel: "$0",
     sublabel: "Listing only",
@@ -182,7 +182,7 @@ export const VENUE_PLANS = [
     note: "Smart Fill is available as a $29.00/month add-on.",
   },
   {
-    key: "venue-pro",
+    key: "venue_pro",
     label: "Venue Pro",
     priceLabel: "$39.00/month",
     sublabel: "No Reserve",
@@ -192,14 +192,13 @@ export const VENUE_PLANS = [
       "NFC cards for bartenders and servers",
       "Messaging and Pulse integration",
       "Event requests and venue photos",
-      "Spaces Available section",
       "Private calendar visibility",
-      "Restaurant group logic",
+      "Link Pro included",
     ],
     note: "Does not include the Reserve engine.",
   },
   {
-    key: "venue-pro-reserve",
+    key: "venue_pro_reserve",
     label: "Venue Pro + Reserve",
     priceLabel: "$99.00/month + $0.30 per reservation",
     sublabel: "Venue operating suite",
@@ -214,24 +213,24 @@ export const VENUE_PLANS = [
 
 export const RESERVE_PLANS = [
   {
-    key: "reserve-standalone",
+    key: "reserve_standalone",
     label: "EVNTSZN Reserve Standalone",
-    priceLabel: "$79.00/month + $0.50 per reservation",
+    priceLabel: "$39/month under 150 cap · $79/month at 150+ cap · $0.50 per reservation",
     features: [
       "Dining and nightlife reservations",
       "Waitlist system",
       "Time slots",
       "Capacity control",
-      "Booking dashboard",
     ],
     excludes: [
       "No Smart Fill",
-      "No Pulse",
-      "No EVNTSZN ecosystem listing layer",
+      "No Nodes",
+      "No messaging layer",
+      "No Venue Pro ops features",
     ],
   },
   {
-    key: "reserve-venue-pro",
+    key: "venue_pro_reserve",
     label: "Add Reserve to Venue Pro",
     priceLabel: "$99.00/month + $0.30 per reservation",
     features: [
@@ -245,9 +244,9 @@ export const RESERVE_PLANS = [
 ] as const;
 
 export const NODES_PRICING = [
-  "Standalone Nodes for capacity 150 or less: $49.00/month",
-  "Standalone Nodes for capacity above 150: $89.00/month",
   "Venue Pro includes Nodes by default.",
+  "Venue Pro + Reserve includes Nodes by default.",
+  "Venue Free does not include Nodes.",
 ] as const;
 
 export const SMART_FILL_RULES = [

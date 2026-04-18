@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import PulseActivityBeacon from "@/components/evntszn/PulseActivityBeacon";
+import ReturnTrigger from "@/components/evntszn/ReturnTrigger";
+import SaveToggle from "@/components/evntszn/SaveToggle";
 import PublicPageFrame from "@/components/public/PublicPageFrame";
 import PublicReserveBookingClient from "@/components/reserve/PublicReserveBookingClient";
 import {
@@ -11,6 +14,7 @@ import {
 } from "@/lib/public-directory";
 import { getPublicCityBySlug } from "@/lib/public-cities";
 import { getReserveOrigin } from "@/lib/domains";
+import { getReserveUrgencyLabel } from "@/lib/evntszn-phase";
 import { getReserveVenueBySlug, normalizeReserveSettings, unwrapVenue } from "@/lib/reserve";
 import { buildCollectionPageSchema, buildItemListSchema, buildPageMetadata } from "@/lib/seo";
 import { supabaseAdmin } from "@/lib/supabase-admin";
@@ -187,6 +191,11 @@ export default async function ReserveVenuePage({ params }: ReserveSlugPageProps)
 
   const slots = slotsRes.data || [];
   const similarReserve = similarPlaces.filter((item) => item.slug !== venue.slug).slice(0, 4);
+  const urgency = getReserveUrgencyLabel({
+    slotCount: slots.length,
+    reservationFeeUsd: Number(settings.reservation_fee_usd || 0),
+    waitlistEnabled: settings.waitlist_enabled !== false,
+  });
 
   const structuredData = [
     {
@@ -246,6 +255,7 @@ export default async function ReserveVenuePage({ params }: ReserveSlugPageProps)
       ]}
       structuredData={structuredData}
     >
+      <PulseActivityBeacon sourceType="reserve_view" city={venue.city} referenceType="reserve" referenceId={venue.slug} />
       <section className="mx-auto max-w-7xl px-4 py-12 md:px-6 lg:px-8">
         <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
           <div className="space-y-6">
@@ -256,9 +266,42 @@ export default async function ReserveVenuePage({ params }: ReserveSlugPageProps)
               <p className="mt-5 text-base leading-7 text-white/68">
                 Reserve handles dining reservations, nightlife tables, and guest flow for venues that need more than a static booking link.
               </p>
+              <div className="mt-4 flex flex-wrap gap-3">
+                <div className="rounded-full border border-amber-300/20 bg-amber-300/10 px-4 py-2 text-[11px] font-black uppercase tracking-[0.18em] text-amber-50">
+                  {urgency.label}
+                </div>
+                <SaveToggle
+                  item={{
+                    intent: "save",
+                    entityType: "reserve",
+                    entityKey: venue.slug,
+                    title: venue.name,
+                    href: `/reserve/${venue.slug}`,
+                    city: venue.city,
+                    state: venue.state,
+                  }}
+                  inactiveLabel="Save spot"
+                />
+                <SaveToggle
+                  item={{
+                    intent: "watch",
+                    entityType: "reserve",
+                    entityKey: `${venue.slug}:watch`,
+                    title: `${venue.name} watch`,
+                    href: `/reserve/${venue.slug}`,
+                    city: venue.city,
+                    state: venue.state,
+                  }}
+                  inactiveLabel="Watch demand"
+                  activeLabel="Watching demand"
+                />
+              </div>
               <div className="mt-6 rounded-2xl border border-white/10 bg-black/25 p-4 text-sm text-white/68">
                 Booking window {settings.booking_window_days || 30} days · max party {settings.max_party_size || 8} · waitlist{" "}
                 {settings.waitlist_enabled === false ? "off" : "on"}
+              </div>
+              <div className="mt-4">
+                <ReturnTrigger href={`/reserve/${venue.slug}`} tone="reserve" />
               </div>
             </div>
 

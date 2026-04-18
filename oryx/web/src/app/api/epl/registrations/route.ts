@@ -2,10 +2,10 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSupabaseAdmin } from "@/lib/epl/supabase-admin";
 import { JERSEY_NAME_DISCLAIMER } from "@/lib/epl/constants";
+import { recordRevenueEventAndCommissions, syncManagedAccountAttribution } from "@/lib/evntszn-monetization";
 import { absoluteUrl, getSeasonContext } from "@/lib/epl/helpers";
-import { toStripeCents } from "@/lib/money";
-import { stripe } from "@/lib/epl/stripe";
 import { buildWaiverUrl } from "@/lib/epl/waiver";
+import { recordPulseActivity } from "@/lib/pulse-signal";
 
 const registrationSchema = z.object({
   firstName: z.string().min(1).max(80),
@@ -282,10 +282,10 @@ export async function POST(req: Request) {
         season_id: season.seasonId,
         player_profile_id: playerProfileId,
         application_id: application.id,
-        registration_status: season.feeUsd > 0 ? "pending_payment" : "approved",
+        registration_status: "approved",
         player_status: "prospect",
-        payment_amount_usd: season.feeUsd,
-        waived_fee: season.feeUsd === 0,
+        payment_amount_usd: 0,
+        waived_fee: true,
         registration_source: "website",
         currency_code: "usd",
       })
@@ -343,73 +343,54 @@ export async function POST(req: Request) {
       throw waiverUrlUpdateError;
     }
 
-    if (season.feeUsd <= 0) {
-      return NextResponse.json({
-        ok: true,
-        checkoutUrl: absoluteUrl(
-          `/epl/season-1/register/success?registration=${registration.registration_code}`,
-          requestHost,
-        ),
-      });
-    }
-
-    const session = await stripe.checkout.sessions.create({
-      mode: "payment",
-      success_url: absoluteUrl(
-        `/epl/season-1/register/success?registration=${registration.registration_code}&session_id={CHECKOUT_SESSION_ID}`,
-        requestHost,
-      ),
-      cancel_url: absoluteUrl(`/epl/season-1/register`, requestHost),
-      customer_email: email,
+    await recordPulseActivity({
+      sourceType: "epl_registration",
+      city: parsed.city.trim(),
+      userId: null,
+      referenceType: "epl_registration",
+      referenceId: registration.id,
       metadata: {
-        epl_registration_id: registration.id,
-        epl_application_id: application.id,
-        epl_player_profile_id: playerProfileId,
-        epl_season_id: season.seasonId,
-        epl_league: "EPL",
+        seasonId: season.seasonId,
+        positionPrimary: parsed.positionPrimary.trim(),
       },
-      line_items: [
-        {
-          quantity: 1,
-          price_data: {
-            currency: "usd",
-            unit_amount: toStripeCents(season.feeUsd),
-            product_data: {
-              name: `${season.leagueName} ${season.seasonName} Player Registration`,
-              description: "Season 1 player registration",
-            },
-          },
-        },
-      ],
-    });
+    }).catch(() => null);
 
-    const { data: updatedRegistration, error: registrationStripeUpdateError } = await supabase
-      .schema("epl")
-      .from("season_registrations")
-      .update({ stripe_checkout_session_id: session.id })
-      .eq("id", registration.id)
-      .select("id, stripe_checkout_session_id")
-      .single();
+    await syncManagedAccountAttribution({
+      sourceType: "epl_player_signup",
+      sourceId: registration.id,
+      activeStatus: "active",
+      metadata: {
+        displayName: `${parsed.firstName.trim()} ${parsed.lastName.trim()}`,
+        city: parsed.city.trim(),
+        state: parsed.state.trim(),
+        registrationCode: registration.registration_code,
+        seasonSlug: "season-1",
+      },
+    }).catch(() => null);
 
-    if (registrationStripeUpdateError || !updatedRegistration) {
-      console.error("[epl-registration] season_registrations stripe update failed", {
-        email,
-        registrationId: registration.id,
-        stripeSessionId: session.id,
-        error: registrationStripeUpdateError,
-      });
-      throw registrationStripeUpdateError || new Error("Could not update registration checkout session");
-    }
-
-    console.log("[epl-registration] season registration checkout linked", {
-      email,
-      registrationId: updatedRegistration.id,
-      stripeSessionId: updatedRegistration.stripe_checkout_session_id,
-    });
+    await recordRevenueEventAndCommissions({
+      sourceType: "epl_player_signup",
+      sourceId: registration.id,
+      eventType: "player_signup",
+      grossAmount: 0,
+      quantity: 1,
+      externalKey: `epl-player-signup:${registration.id}`,
+      metadata: {
+        displayName: `${parsed.firstName.trim()} ${parsed.lastName.trim()}`,
+        city: parsed.city.trim(),
+        state: parsed.state.trim(),
+        registrationCode: registration.registration_code,
+        seasonSlug: "season-1",
+      },
+    }).catch(() => null);
 
     return NextResponse.json({
       ok: true,
-      checkoutUrl: session.url,
+      checkoutUrl: absoluteUrl(
+        `/epl/season-1/register/success?registration=${registration.registration_code}`,
+        requestHost,
+      ),
+      message: "Registration accepted. No payment is required in this phase.",
     });
   } catch (error) {
     console.error(error);

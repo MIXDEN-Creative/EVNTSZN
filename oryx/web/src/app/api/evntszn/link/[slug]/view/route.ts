@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { recordPulseActivity } from "@/lib/pulse-signal";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 type RouteContext = {
@@ -11,7 +12,7 @@ export async function POST(_request: Request, context: RouteContext) {
 
     const { data: page, error: pageError } = await supabaseAdmin
       .from("evntszn_link_pages")
-      .select("id, metadata")
+      .select("id, city, metadata")
       .eq("slug", slug)
       .eq("status", "published")
       .maybeSingle();
@@ -39,6 +40,14 @@ export async function POST(_request: Request, context: RouteContext) {
     if (updateError) {
       return NextResponse.json({ error: updateError.message }, { status: 500 });
     }
+
+    await recordPulseActivity({
+      sourceType: "link_view",
+      city: page.city || (typeof (metadata as Record<string, unknown>).city === "string" ? String((metadata as Record<string, unknown>).city) : null),
+      referenceType: "link",
+      referenceId: page.id,
+      metadata: { slug },
+    }).catch(() => null);
 
     return NextResponse.json({ ok: true, viewCount: currentCount + 1 });
   } catch (error) {

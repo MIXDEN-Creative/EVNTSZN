@@ -8,6 +8,7 @@ import "@fontsource/poppins/600.css";
 import "@fontsource/poppins/700.css";
 import type { Metadata } from "next";
 import Script from "next/script";
+import SavedItemsProvider from "@/components/evntszn/SavedItemsProvider";
 import { getWebOrigin } from "@/lib/domains";
 import "./globals.css";
 
@@ -57,7 +58,7 @@ export default function RootLayout({
           crossOrigin="anonymous"
           async
         />
-        {children}
+        <SavedItemsProvider>{children}</SavedItemsProvider>
       </body>
     </html>
   );

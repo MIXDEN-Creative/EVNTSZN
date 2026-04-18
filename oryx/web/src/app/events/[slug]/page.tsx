@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import SaveToggle from "@/components/evntszn/SaveToggle";
 import PublicPageFrame from "@/components/public/PublicPageFrame";
 import {
   CREATOR_KICKOFF_DESCRIPTION,
@@ -272,6 +273,32 @@ export default async function EventDetailPage({ params }: { params: Params }) {
                       Hot
                     </span>
                   ) : null}
+                  <SaveToggle
+                    item={{
+                      intent: "save",
+                      entityType: "event",
+                      entityKey: event.slug,
+                      title: event.title,
+                      href: `/events/${event.slug}`,
+                      city: event.city,
+                      state: event.state,
+                      startsAt: event.start_at,
+                    }}
+                  />
+                  <SaveToggle
+                    item={{
+                      intent: "watch",
+                      entityType: "event",
+                      entityKey: `${event.slug}:watch`,
+                      title: `${event.title} watch`,
+                      href: `/events/${event.slug}`,
+                      city: event.city,
+                      state: event.state,
+                      startsAt: event.start_at,
+                    }}
+                    inactiveLabel="Watch tonight"
+                    activeLabel="Watching tonight"
+                  />
                 </div>
                 <h1 className="mt-3 text-5xl font-black tracking-tight md:text-6xl">{event.title}</h1>
                 <div className="mt-5 max-w-3xl space-y-4 text-base leading-7 text-white/72">

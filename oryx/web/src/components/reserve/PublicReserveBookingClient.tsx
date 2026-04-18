@@ -1,6 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import ReturnTrigger from "@/components/evntszn/ReturnTrigger";
+import { useSavedItems } from "@/components/evntszn/SavedItemsProvider";
+import SaveToggle from "@/components/evntszn/SaveToggle";
+import { getReserveUrgencyLabel } from "@/lib/evntszn-phase";
 import { formatUsd } from "@/lib/money";
 
 type SlotRow = {
@@ -35,6 +39,7 @@ export default function PublicReserveBookingClient({
   venue: VenuePayload;
   slots: SlotRow[];
 }) {
+  const { upsertItem } = useSavedItems();
   const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
   const maxBookableDate = useMemo(() => {
     const date = new Date();
@@ -67,6 +72,16 @@ export default function PublicReserveBookingClient({
     }
     return [...uniqueTimes];
   }, [availableSlots]);
+  const urgency = useMemo(
+    () =>
+      getReserveUrgencyLabel({
+        slotCount: availableTimes.length,
+        reservationFeeUsd: Number(venue.settings?.reservation_fee_usd || 0),
+        waitlistEnabled: venue.settings?.waitlist_enabled !== false,
+        isLateWindow: availableTimes.some((time) => Number(time.slice(0, 2)) >= 21),
+      }),
+    [availableTimes, venue.settings],
+  );
 
   const [bookingTime, setBookingTime] = useState("");
 
@@ -107,6 +122,21 @@ export default function PublicReserveBookingClient({
       });
       const payload = (await response.json()) as { error?: string; booking?: { status: string } };
       if (!response.ok) throw new Error(payload.error || "Could not request reservation.");
+      await upsertItem({
+        intent: "plan",
+        entityType: "reserve",
+        entityKey: venue.venue?.slug || venue.id,
+        title: venue.venue?.name || "Reserve plan",
+        href: venue.venue?.slug ? `/reserve/${venue.venue.slug}` : "/reserve",
+        city: venue.venue?.city || null,
+        state: venue.venue?.state || null,
+        startsAt: `${bookingDate}T${bookingTime}`,
+        metadata: {
+          bookingDate,
+          bookingTime,
+          partySize: Number(partySize || 1),
+        },
+      });
       const bookingStatus = payload.booking?.status || "confirmed";
       setMessage(`Reservation ${bookingStatus === "waitlisted" ? "added to waitlist" : "confirmed"}.`);
     } catch (error) {
@@ -124,6 +154,24 @@ export default function PublicReserveBookingClient({
       <p className="mt-4 max-w-2xl text-sm leading-7 text-white/68">
         Availability sits up front, guest details stay clean, and confirmation happens in one calm flow.
       </p>
+      <div className="mt-4 flex flex-wrap gap-3">
+        <div className="rounded-full border border-amber-300/20 bg-amber-300/10 px-4 py-2 text-[11px] font-black uppercase tracking-[0.18em] text-amber-50">
+          {urgency.label}
+        </div>
+        <SaveToggle
+          item={{
+            intent: "watch",
+            entityType: "reserve",
+            entityKey: venue.venue?.slug || venue.id,
+            title: `${venue.venue?.name || "Reserve"} watch`,
+            href: venue.venue?.slug ? `/reserve/${venue.venue.slug}` : "/reserve",
+            city: venue.venue?.city || null,
+            state: venue.venue?.state || null,
+          }}
+          inactiveLabel="Watch this spot"
+          activeLabel="Watching spot"
+        />
+      </div>
       <div className="mt-6 ev-dashboard-metrics">
         <div className="ev-feature-card">
           <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#caa7ff]">Reservation fee</div>
@@ -181,7 +229,10 @@ export default function PublicReserveBookingClient({
                 >
                   <div className="text-sm font-black uppercase tracking-[0.16em]">{slot.start_time.slice(0, 5)}-{slot.end_time.slice(0, 5)}</div>
                   <div className={`mt-2 text-sm ${bookingTime === slot.start_time.slice(0, 5) ? "text-black/70" : "text-white/56"}`}>
-                    Capacity {slot.capacity_limit}
+                    Capacity {slot.capacity_limit} · {getReserveUrgencyLabel({
+                      slotCount: availableSlots.length,
+                      waitlistEnabled: venue.settings?.waitlist_enabled !== false,
+                    }).label}
                   </div>
                 </button>
               ))}
@@ -200,6 +251,9 @@ export default function PublicReserveBookingClient({
             <p className="mt-3 text-sm leading-6 text-white/62">
               Submit the request once the date, time, and party size feel right. If live capacity is exhausted and waitlist is enabled, EVNTSZN will place the booking into the waitlist flow instead of dropping it.
             </p>
+            <div className="mt-4">
+              <ReturnTrigger href={venue.venue?.slug ? `/reserve/${venue.venue.slug}` : "/reserve"} tone="reserve" />
+            </div>
             <button type="button" onClick={submitBooking} disabled={submitting || !availableSlots.length || !bookingTime} className="ev-button-primary mt-5 w-full px-8">
         {submitting ? "Submitting..." : "Request reservation"}
       </button>

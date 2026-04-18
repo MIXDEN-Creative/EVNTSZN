@@ -1,6 +1,6 @@
 import { isMidnightRunEvent } from "@/lib/events-runtime";
 import { getPublicCityByName, getPublicCityBySlug, type PublicCity } from "@/lib/public-cities";
-import { normalizeReserveSettings } from "@/lib/reserve";
+import { deriveReserveSettingsFromPlan, normalizeReserveSettings } from "@/lib/reserve";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 const EVENT_FALLBACK_IMAGE =
@@ -38,12 +38,19 @@ type VenueRow = {
   capacity: number | null;
   contact_email: string | null;
   contact_phone: string | null;
+  plan_key?: string | null;
+  smart_fill_add_on_active?: boolean | null;
+  link_plan_override?: string | null;
+  plan_status?: string | null;
 };
 
 type ReserveVenueRow = {
   id: string;
   venue_id: string;
   is_active: boolean;
+  plan_key?: string | null;
+  subscription_status?: string | null;
+  capacity_snapshot?: number | null;
   settings: Record<string, unknown> | null;
   evntszn_venues:
     | VenueRow
@@ -208,6 +215,9 @@ export async function getReserveVenueListings(limit = 80) {
         id,
         venue_id,
         is_active,
+        plan_key,
+        subscription_status,
+        capacity_snapshot,
         settings,
         evntszn_venues!inner(
           id,
@@ -218,7 +228,11 @@ export async function getReserveVenueListings(limit = 80) {
           timezone,
           capacity,
           contact_email,
-          contact_phone
+          contact_phone,
+          plan_key,
+          smart_fill_add_on_active,
+          link_plan_override,
+          plan_status
         )
       `)
       .order("created_at", { ascending: false })
@@ -243,7 +257,14 @@ export async function getReserveVenueListings(limit = 80) {
         imageUrl: EVENT_FALLBACK_IMAGE,
         isReserveActive: row.is_active,
         reserveVenueId: row.id,
-        reserveSettings: normalizeReserveSettings((row.settings || {}) as Record<string, unknown>),
+        reserveSettings: deriveReserveSettingsFromPlan({
+          settings: (row.settings || {}) as Record<string, unknown>,
+          venuePlanKey: venue?.plan_key,
+          reservePlanKey: row.plan_key,
+          capacity: venue?.capacity || row.capacity_snapshot || null,
+          smartFillAddOnActive: Boolean(venue?.smart_fill_add_on_active),
+          linkPlanOverride: venue?.link_plan_override,
+        }),
         cityProfile,
       } satisfies PublicVenueListing;
     });

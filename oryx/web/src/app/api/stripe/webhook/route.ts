@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { buildTicketCode, logEventActivity } from "@/lib/evntszn";
+import { recordRevenueEventAndCommissions, syncManagedAccountAttribution } from "@/lib/evntszn-monetization";
 import { attributeLinkConversionFromOrder } from "@/lib/link-attribution";
 import { syncHostGrowthCompensationForTicketOrder } from "@/lib/growth-attribution";
 import { getLinkPlanFromStripePriceId, getLinkPlanFromSubscription, mapStripeSubscriptionStatus } from "@/lib/link-billing";
@@ -283,6 +284,51 @@ async function handleEventTicketCheckout(session: Stripe.Checkout.Session) {
     quantity: Number(order.quantity || quantity),
   });
 
+  if (event.organizer_user_id) {
+    const [{ data: operatorProfile }, { data: organizerProfile }] = await Promise.all([
+      supabaseAdmin
+        .from("evntszn_operator_profiles")
+        .select("user_id, organizer_classification")
+        .eq("user_id", event.organizer_user_id)
+        .maybeSingle(),
+      supabaseAdmin
+        .from("evntszn_profiles")
+        .select("user_id, full_name")
+        .eq("user_id", event.organizer_user_id)
+        .maybeSingle(),
+    ]);
+
+    const organizerClassification = String(operatorProfile?.organizer_classification || "");
+    const sourceType =
+      organizerClassification === "independent_organizer" ? "partner_account" : "curator_account";
+    const ticketClass = unitGrossAmount > 30 ? "premium" : "standard";
+
+    await syncManagedAccountAttribution({
+      sourceType,
+      sourceId: event.organizer_user_id,
+      activeStatus: "active",
+      metadata: {
+        displayName: organizerProfile?.full_name || event.title || event.organizer_user_id,
+        city: event.city || null,
+      },
+    }).catch(() => null);
+
+    await recordRevenueEventAndCommissions({
+      sourceType,
+      sourceId: event.organizer_user_id,
+      eventType: "ticket_sale",
+      grossAmount: Number(order.amount_total_usd || fromStripeCents(session.amount_total || 0) || 0),
+      quantity: Number(order.quantity || quantity),
+      externalKey: `ticket-sale:${order.id}:${sourceType}`,
+      metadata: {
+        displayName: organizerProfile?.full_name || event.title || event.organizer_user_id,
+        city: event.city || null,
+        ticketClass,
+        ticketTypeName: ticketType.name || "General Access",
+      },
+    }).catch(() => null);
+  }
+
   return true;
 }
 
@@ -428,6 +474,65 @@ async function handleSponsorPackageCheckout(session: Stripe.Checkout.Session) {
 
   if (updateError) {
     throw new Error(updateError.message);
+  }
+
+  const sponsorPlanKey = String(order.package_name || "").toLowerCase().includes("elite") ? "sponsor_elite" : "sponsor_pro";
+  const existingSponsorAccount = await supabaseAdmin
+    .from("evntszn_sponsor_accounts")
+    .select("id, name")
+    .ilike("name", order.company_name)
+    .limit(1)
+    .maybeSingle();
+  if (existingSponsorAccount.error) {
+    throw new Error(existingSponsorAccount.error.message);
+  }
+
+  const sponsorAccount =
+    existingSponsorAccount.data ||
+    (
+      await supabaseAdmin
+        .from("evntszn_sponsor_accounts")
+        .insert({
+          name: order.company_name,
+          slug: order.company_name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 64),
+          account_type: "sponsor",
+          scope_type: "epl",
+          tier_label: order.package_name,
+          status: "active",
+          billing_plan_key: sponsorPlanKey,
+          notes: "Created automatically from sponsor package payment.",
+          metadata: {
+            sponsorPartnerId,
+            source: "stripe_webhook",
+          },
+        })
+        .select("id, name")
+        .single()
+    ).data;
+
+  if (sponsorAccount) {
+    await syncManagedAccountAttribution({
+      sourceType: "sponsor_account",
+      sourceId: sponsorAccount.id,
+      activeStatus: "active",
+      metadata: {
+        displayName: sponsorAccount.name,
+        billingPlanKey: sponsorPlanKey,
+      },
+    }).catch(() => null);
+
+    await recordRevenueEventAndCommissions({
+      sourceType: "sponsor_account",
+      sourceId: sponsorAccount.id,
+      eventType: "subscription_billed",
+      grossAmount: Number(order.amount_usd || 0),
+      quantity: 1,
+      externalKey: `sponsor-package:${order.id}`,
+      metadata: {
+        displayName: sponsorAccount.name,
+        billingPlanKey: sponsorPlanKey,
+      },
+    }).catch(() => null);
   }
 
   return true;

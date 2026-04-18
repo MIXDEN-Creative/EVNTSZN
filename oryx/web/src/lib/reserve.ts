@@ -1,4 +1,5 @@
 import { createInternalWorkItem, INTERNAL_DESK_SLUGS } from "@/lib/internal-os";
+import { deriveReserveStandaloneReservationFee, getVenueCommerceState } from "@/lib/evntszn-monetization";
 import { roundUsd } from "@/lib/money";
 import { refreshPerformanceSnapshot } from "@/lib/performance-engine";
 import { supabaseAdmin } from "@/lib/supabase-admin";
@@ -29,6 +30,9 @@ type ReserveVenueRow = {
   id: string;
   venue_id: string;
   is_active: boolean;
+  plan_key?: string | null;
+  subscription_status?: string | null;
+  capacity_snapshot?: number | null;
   settings: ReserveVenueSettings | null;
   evntszn_venues?: {
     id: string;
@@ -38,6 +42,11 @@ type ReserveVenueRow = {
     state: string;
     timezone: string;
     owner_user_id: string | null;
+    capacity?: number | null;
+    plan_key?: string | null;
+    smart_fill_add_on_active?: boolean | null;
+    link_plan_override?: string | null;
+    plan_status?: string | null;
   } | {
     id: string;
     slug: string;
@@ -46,6 +55,11 @@ type ReserveVenueRow = {
     state: string;
     timezone: string;
     owner_user_id: string | null;
+    capacity?: number | null;
+    plan_key?: string | null;
+    smart_fill_add_on_active?: boolean | null;
+    link_plan_override?: string | null;
+    plan_status?: string | null;
   }[] | null;
 };
 
@@ -80,10 +94,55 @@ export function normalizeReserveSettings(settings: Record<string, unknown> | nul
   };
 }
 
+export function deriveReserveSettingsFromPlan(input: {
+  settings: Record<string, unknown> | null | undefined;
+  venuePlanKey?: unknown;
+  reservePlanKey?: unknown;
+  capacity?: number | null;
+  smartFillAddOnActive?: boolean;
+  linkPlanOverride?: unknown;
+}) {
+  const normalized = normalizeReserveSettings(input.settings);
+  const commerceState = getVenueCommerceState({
+    venuePlanKey: input.venuePlanKey,
+    reservePlanKey: input.reservePlanKey,
+    capacity: input.capacity,
+    smartFillAddOnActive: input.smartFillAddOnActive,
+    linkPlanOverride: input.linkPlanOverride,
+  });
+
+  return {
+    ...normalized,
+    reservation_fee_usd:
+      commerceState.reservationFeeUsd !== null
+        ? roundUsd(commerceState.reservationFeeUsd)
+        : normalized.reservation_fee_usd ?? deriveReserveStandaloneReservationFee(),
+    waitlist_enabled: commerceState.waitlistIncluded ? normalized.waitlist_enabled !== false : false,
+  };
+}
+
+export function canAccessReserve(input: {
+  venuePlanKey?: unknown;
+  reservePlanKey?: unknown;
+  capacity?: number | null;
+  smartFillAddOnActive?: boolean;
+  linkPlanOverride?: unknown;
+  reserveVenueIsActive?: boolean;
+  reserveSubscriptionStatus?: string | null;
+  venuePlanStatus?: string | null;
+}) {
+  const commerceState = getVenueCommerceState(input);
+  const reservePlanActive =
+    input.reservePlanKey === "reserve_standalone" ? input.reserveSubscriptionStatus !== "inactive" && input.reserveSubscriptionStatus !== "canceled" : true;
+  const venuePlanActive = input.venuePlanStatus !== "inactive" && input.venuePlanStatus !== "canceled";
+
+  return Boolean(input.reserveVenueIsActive !== false && commerceState.reserveEnabled && reservePlanActive && venuePlanActive);
+}
+
 export async function getReserveVenueBySlug(venueSlug: string) {
   const { data, error } = await supabaseAdmin
     .from("evntszn_reserve_venues")
-    .select("id, venue_id, is_active, settings, evntszn_venues!inner(id, slug, name, city, state, timezone, owner_user_id)")
+    .select("id, venue_id, is_active, plan_key, subscription_status, capacity_snapshot, settings, evntszn_venues!inner(id, slug, name, city, state, timezone, owner_user_id, capacity, plan_key, smart_fill_add_on_active, link_plan_override, plan_status)")
     .eq("evntszn_venues.slug", venueSlug)
     .maybeSingle();
 
@@ -94,7 +153,7 @@ export async function getReserveVenueBySlug(venueSlug: string) {
 export async function getReserveVenueForOwner(userId: string, reserveVenueId: string) {
   const { data, error } = await supabaseAdmin
     .from("evntszn_reserve_venues")
-    .select("id, venue_id, is_active, settings, evntszn_venues!inner(id, slug, name, city, state, timezone, owner_user_id)")
+    .select("id, venue_id, is_active, plan_key, subscription_status, capacity_snapshot, settings, evntszn_venues!inner(id, slug, name, city, state, timezone, owner_user_id, capacity, plan_key, smart_fill_add_on_active, link_plan_override, plan_status)")
     .eq("id", reserveVenueId)
     .eq("evntszn_venues.owner_user_id", userId)
     .maybeSingle();

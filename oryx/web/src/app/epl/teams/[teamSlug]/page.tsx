@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import SaveToggle from "@/components/evntszn/SaveToggle";
 import EplNav from "@/components/epl/EplNav";
 import SponsorPlacementStrip from "@/components/public/SponsorPlacementStrip";
 import PublicFooter from "@/components/public/PublicFooter";
@@ -67,6 +68,20 @@ export default async function EplTeamPage({ params }: TeamPageProps) {
           <div>
             <h1 className="ev-title">{team.name}</h1>
             <p className="ev-subtitle max-w-3xl">{team.description}</p>
+            <div className="mt-4">
+              <SaveToggle
+                item={{
+                  intent: "watch",
+                  entityType: "epl_team",
+                  entityKey: team.slug,
+                  title: team.name,
+                  href: `/epl/teams/${team.slug}`,
+                  city: team.city,
+                }}
+                inactiveLabel="Follow team"
+                activeLabel="Following team"
+              />
+            </div>
           </div>
           <img src={team.logoUrl} alt={team.name} className="h-32 w-32 rounded-[28px] border border-white/10 object-cover" />
         </div>

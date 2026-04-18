@@ -79,7 +79,7 @@ export default async function VenuePublicPage() {
             <ul className="mt-10 space-y-4 text-white/75">
               <li className="flex items-center gap-3">✓ Smart Fill included</li>
               <li className="flex items-center gap-3">✓ Nodes included</li>
-              <li className="flex items-center gap-3">✓ NFC cards, messaging, event requests, photos, private calendar</li>
+              <li className="flex items-center gap-3">✓ NFC cards, messaging, event requests, photos, private calendar, and Link Pro included</li>
               <li className="flex items-center gap-3">✓ Reserve available on the Pro with Reserve plan</li>
             </ul>
             <div className="mt-12 text-3xl font-black">$39.00 / mo</div>
@@ -101,6 +101,9 @@ export default async function VenuePublicPage() {
       </section>
 
       <section className="mx-auto max-w-7xl px-4 py-20 md:px-6 lg:px-8">
+        <div className="mb-8 rounded-[32px] border border-white/10 bg-white/[0.03] p-6 text-white/72">
+          Reserve standalone stays separate from Venue Pro. It is $39/month when venue capacity is under 150, $79/month at capacity 150+, and $0.50 per reservation.
+        </div>
         <div className="rounded-[48px] border border-white/10 bg-white/[0.02] p-10 md:p-16 text-center">
           <h2 className="text-4xl font-black tracking-tight text-white md:text-6xl">Ready to activate?</h2>
           <p className="mx-auto mt-6 max-w-2xl text-lg text-white/70">

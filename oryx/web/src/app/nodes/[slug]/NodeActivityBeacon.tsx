@@ -14,6 +14,7 @@ function getSessionKey(slug: string) {
 export default function NodeActivityBeacon({ slug, city }: { slug: string; city?: string | null }) {
   useEffect(() => {
     const sessionKey = getSessionKey(slug);
+    const width = window.innerWidth;
     void fetch(`/api/evntszn/nodes/${slug}/interactions`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -22,6 +23,7 @@ export default function NodeActivityBeacon({ slug, city }: { slug: string; city?
         sessionKey,
         source: "node_page",
         city,
+        deviceType: width < 768 ? "mobile" : width < 1100 ? "tablet" : "desktop",
       }),
     }).catch(() => undefined);
   }, [slug, city]);

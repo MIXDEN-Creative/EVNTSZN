@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdminPermission } from "@/lib/admin-auth";
+import { recordRevenueEventAndCommissions } from "@/lib/evntszn-monetization";
+import { recordPulseActivity } from "@/lib/pulse-signal";
 import { createClient } from "@/lib/supabase/server";
 import {
+  canAccessReserve,
   createReserveWorkItem,
+  deriveReserveSettingsFromPlan,
   getBookingDayOfWeek,
   getReserveVenueBySlug,
   getReserveVenueForOwner,
   isTimeWithinSlot,
-  normalizeReserveSettings,
   RESERVE_BOOKING_STATUSES,
   syncReservePerformance,
   unwrapVenue,
@@ -102,10 +105,30 @@ export async function POST(request: NextRequest) {
     }
     if (!reserveVenue && venueSlug) reserveVenue = (await getReserveVenueBySlug(venueSlug)) as any;
     if (!reserveVenue) return NextResponse.json({ error: "Reserve venue not found." }, { status: 404 });
-    if (!reserveVenue.is_active) return NextResponse.json({ error: "Reserve is not active for this venue." }, { status: 409 });
 
     const venue = unwrapVenue(reserveVenue);
-    const settings = normalizeReserveSettings((reserveVenue.settings || {}) as Record<string, unknown>);
+    if (!venue) return NextResponse.json({ error: "Reserve venue is missing its parent venue." }, { status: 404 });
+
+    const hasReserveAccess = canAccessReserve({
+      venuePlanKey: venue.plan_key,
+      reservePlanKey: reserveVenue.plan_key,
+      capacity: venue.capacity || reserveVenue.capacity_snapshot || null,
+      smartFillAddOnActive: Boolean(venue.smart_fill_add_on_active),
+      linkPlanOverride: venue.link_plan_override,
+      reserveVenueIsActive: reserveVenue.is_active,
+      reserveSubscriptionStatus: reserveVenue.subscription_status,
+      venuePlanStatus: venue.plan_status,
+    });
+    if (!hasReserveAccess) return NextResponse.json({ error: "Reserve is not active for this venue plan." }, { status: 409 });
+
+    const settings = deriveReserveSettingsFromPlan({
+      settings: (reserveVenue.settings || {}) as Record<string, unknown>,
+      venuePlanKey: venue.plan_key,
+      reservePlanKey: reserveVenue.plan_key,
+      capacity: venue.capacity || reserveVenue.capacity_snapshot || null,
+      smartFillAddOnActive: Boolean(venue.smart_fill_add_on_active),
+      linkPlanOverride: venue.link_plan_override,
+    });
     if (partySize > Number(settings.max_party_size || 8)) {
       return NextResponse.json({ error: `Party size exceeds the venue limit of ${settings.max_party_size}.` }, { status: 400 });
     }
@@ -165,6 +188,9 @@ export async function POST(request: NextRequest) {
           occasion,
           reservationFeeUsd: Number(settings.reservation_fee_usd || 0),
           serviceModes: settings.service_modes || [],
+          capacity: venue.capacity || reserveVenue.capacity_snapshot || null,
+          reservePlanKey: reserveVenue.plan_key,
+          venuePlanKey: venue.plan_key,
         },
       })
       .select("id, reserve_venue_id, guest_name, guest_email, booking_date, booking_time, party_size, status, metadata")
@@ -180,6 +206,52 @@ export async function POST(request: NextRequest) {
         reserveVenueId: reserveVenue.id,
         venueId: reserveVenue.venue_id,
         bookingId: data.id,
+      },
+    }).catch(() => null);
+    await recordPulseActivity({
+      sourceType: statusValue === "waitlisted" ? "reserve_waitlist" : "reserve_booking",
+      city: venue?.city || null,
+      userId: user?.id || null,
+      referenceType: "reserve",
+      referenceId: reserveVenue.id,
+      metadata: {
+        bookingDate,
+        bookingTime,
+        partySize,
+      },
+    }).catch(() => null);
+    await recordRevenueEventAndCommissions({
+      sourceType: "reserve_account",
+      sourceId: reserveVenue.id,
+      eventType: "reservation_created",
+      grossAmount: Number(settings.reservation_fee_usd || 0),
+      quantity: 1,
+      externalKey: `reserve-public-booking:${data.id}`,
+      metadata: {
+        displayName: venue.name,
+        city: venue.city,
+        state: venue.state,
+        capacity: venue.capacity || reserveVenue.capacity_snapshot || null,
+        reservePlanKey: reserveVenue.plan_key,
+        venuePlanKey: venue.plan_key,
+        reserveEnabled: true,
+      },
+    }).catch(() => null);
+    await recordRevenueEventAndCommissions({
+      sourceType: "venue_account",
+      sourceId: reserveVenue.venue_id,
+      eventType: "reservation_created",
+      grossAmount: Number(settings.reservation_fee_usd || 0),
+      quantity: 1,
+      externalKey: `venue-public-booking:${data.id}`,
+      metadata: {
+        displayName: venue.name,
+        city: venue.city,
+        state: venue.state,
+        capacity: venue.capacity || reserveVenue.capacity_snapshot || null,
+        reservePlanKey: reserveVenue.plan_key,
+        venuePlanKey: venue.plan_key,
+        reserveEnabled: true,
       },
     }).catch(() => null);
     await syncReservePerformance(venue?.owner_user_id).catch(() => null);

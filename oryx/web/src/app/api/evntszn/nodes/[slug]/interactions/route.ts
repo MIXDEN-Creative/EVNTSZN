@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
+import { recordPulseActivity } from "@/lib/pulse-signal";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
@@ -30,6 +31,10 @@ export async function POST(request: NextRequest, context: RouteContext) {
       source?: string;
       reaction?: string;
       city?: string;
+      areaLabel?: string;
+      deviceType?: string;
+      resolvedDestinationSlug?: string;
+      resolvedDestinationId?: string;
     };
 
     const interactionType = body.interactionType || "view";
@@ -39,7 +44,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     const { data: node, error: nodeError } = await supabaseAdmin
       .from("evntszn_nodes")
-      .select("id, slug, status")
+      .select("id, slug, status, node_type, destination_type, city, area_label, location_type")
       .eq("slug", slug)
       .eq("status", "active")
       .maybeSingle();
@@ -81,11 +86,33 @@ export async function POST(request: NextRequest, context: RouteContext) {
         interaction_fingerprint: user ? null : fingerprint,
         source: String(body.source || "node_page"),
         referrer: request.headers.get("referer"),
-        city: String(body.city || "").trim() || null,
-        metadata: body.reaction ? { reaction: String(body.reaction) } : {},
+        city: String(body.city || node.city || "").trim() || null,
+        area_label: String(body.areaLabel || node.area_label || "").trim() || null,
+        node_type_snapshot: String(node.location_type || node.node_type || ""),
+        destination_type_snapshot: String(node.destination_type || ""),
+        device_type: String(body.deviceType || "").trim() || null,
+        resolved_destination_slug: String(body.resolvedDestinationSlug || "").trim() || null,
+        resolved_destination_id: String(body.resolvedDestinationId || "").trim() || null,
+        metadata: body.reaction ? { reaction: String(body.reaction), locationType: node.location_type || null } : { locationType: node.location_type || null },
       });
       if (insertError) throw new Error(insertError.message);
     }
+
+    await recordPulseActivity({
+      sourceType: interactionType === "tap" || interactionType === "reaction" ? "node_tap" : "node_view",
+      city: String(body.city || node.city || "").trim() || null,
+      areaLabel: String(body.areaLabel || node.area_label || "").trim() || null,
+      userId: user?.id || null,
+      sessionKey,
+      referenceType: node.location_type || node.node_type || "node",
+      referenceId: node.id,
+      metadata: {
+        destinationType: node.destination_type,
+        resolvedDestinationSlug: body.resolvedDestinationSlug || null,
+        resolvedDestinationId: body.resolvedDestinationId || null,
+        deviceType: body.deviceType || null,
+      },
+    }).catch(() => null);
 
     await supabaseAdmin
       .from("evntszn_nodes")
