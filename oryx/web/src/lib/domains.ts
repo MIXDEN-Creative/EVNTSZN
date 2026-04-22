@@ -1,6 +1,7 @@
 export type EvntsznSurface =
   | "web"
   | "app"
+  | "stayops"
   | "reserve"
   | "scanner"
   | "epl"
@@ -9,7 +10,7 @@ export type EvntsznSurface =
   | "hq"
   | "admin";
 
-export type RestrictedSurface = Exclude<EvntsznSurface, "web" | "hosts">;
+export type RestrictedSurface = Exclude<EvntsznSurface, "web" | "hosts" | "stayops">;
 
 const DEFAULT_BASE_DOMAIN = "evntszn.com";
 const DEFAULT_DEV_ORIGIN = "http://localhost:3000";
@@ -17,6 +18,7 @@ const DEFAULT_DEV_ORIGIN = "http://localhost:3000";
 const DEFAULT_ORIGINS: Record<EvntsznSurface, string> = {
   web: "https://evntszn.com",
   app: "https://app.evntszn.com",
+  stayops: "https://stayops.evntszn.com",
   reserve: "https://reserve.evntszn.com",
   scanner: "https://scanner.evntszn.com",
   epl: "https://epl.evntszn.com",
@@ -29,6 +31,7 @@ const DEFAULT_ORIGINS: Record<EvntsznSurface, string> = {
 const SURFACE_ENV_KEYS: Record<EvntsznSurface, string[]> = {
   web: ["NEXT_PUBLIC_PUBLIC_ORIGIN", "NEXT_PUBLIC_SITE_URL"],
   app: ["NEXT_PUBLIC_APP_ORIGIN", "NEXT_PUBLIC_APP_URL"],
+  stayops: ["NEXT_PUBLIC_STAYOPS_ORIGIN"],
   reserve: ["NEXT_PUBLIC_RESERVE_ORIGIN"],
   scanner: ["NEXT_PUBLIC_SCANNER_ORIGIN"],
   epl: ["NEXT_PUBLIC_EPL_ORIGIN"],
@@ -70,6 +73,8 @@ function getExpectedHost(surface: EvntsznSurface) {
       return baseDomain;
     case "app":
       return `app.${baseDomain}`;
+    case "stayops":
+      return `stayops.${baseDomain}`;
     case "reserve":
       return `reserve.${baseDomain}`;
     case "scanner":
@@ -155,6 +160,10 @@ export function getWebOrigin(runtimeHost?: string) {
 
 export function getAppOrigin(runtimeHost?: string) {
   return getCanonicalOrigin("app", runtimeHost);
+}
+
+export function getStayOpsOrigin(runtimeHost?: string) {
+  return getCanonicalOrigin("stayops", runtimeHost);
 }
 
 export function getScannerOrigin(runtimeHost?: string) {
@@ -243,6 +252,7 @@ export function getSurfaceForPath(path: string): EvntsznSurface {
   const normalized = normalizeNextPath(path);
 
   if (normalized.startsWith("/scanner")) return "scanner";
+  if (normalized.startsWith("/stayops")) return "stayops";
   if (normalized.startsWith("/reserve") || normalized.startsWith("/account/reserve")) return "reserve";
   if (normalized.startsWith("/epl/admin/operations")) return "hq";
   if (
@@ -290,6 +300,11 @@ export function getCanonicalPath(path: string, surface: EvntsznSurface) {
 
   if (surface === "scanner") {
     const trimmed = normalized.replace(/^\/scanner(?=\/|$)/, "");
+    return trimmed || "/";
+  }
+
+  if (surface === "stayops") {
+    const trimmed = normalized.replace(/^\/stayops(?=\/|$)/, "");
     return trimmed || "/";
   }
 
@@ -387,7 +402,7 @@ export function getSurfaceLabel(surface: RestrictedSurface) {
 
 export function getRestrictedSurfaceForPath(path: string): RestrictedSurface {
   const surface = getSurfaceForPath(path);
-  if (surface === "web" || surface === "hosts") {
+  if (surface === "web" || surface === "hosts" || surface === "stayops") {
     return "app";
   }
 

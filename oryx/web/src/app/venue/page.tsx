@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { getPlatformViewer } from "@/lib/evntszn";
-import { getReserveOrigin } from "@/lib/domains";
 import PublicNav from "@/components/public/PublicNav";
 import PublicFooter from "@/components/public/PublicFooter";
 
@@ -36,7 +35,7 @@ export default async function VenuePublicPage() {
               <Link href={isLoggedIn ? "/venue/dashboard" : "/account/login?next=/venue/dashboard"} className="ev-button-secondary px-8">
                 Enter Venue Dashboard
               </Link>
-              <Link href={`${getReserveOrigin()}/`} className="ev-button-secondary px-8">
+              <Link href="/reserve" className="ev-button-secondary px-8">
                 Explore Reserve
               </Link>
             </div>
@@ -111,7 +110,7 @@ export default async function VenuePublicPage() {
           </p>
           <div className="mt-10 flex flex-wrap justify-center gap-3">
             <Link href="/venue/agreement?intent=tier-request" className="ev-button-primary px-10">Activate Venue</Link>
-            <Link href={`${getReserveOrigin()}/`} className="ev-button-secondary px-10">Reserve workflow</Link>
+            <Link href="/reserve" className="ev-button-secondary px-10">Reserve workflow</Link>
           </div>
         </div>
       </section>

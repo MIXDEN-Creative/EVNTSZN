@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { formatUsd } from "@/lib/money";
 
@@ -119,6 +120,9 @@ export default function SponsorPackagesClient({ packages }: { packages: SponsorP
         </div>
         <textarea className="ev-textarea mt-4" rows={4} placeholder="What kind of sponsorship, city activation, or sponsor package are you exploring?" value={notes} onChange={(e) => setNotes(e.target.value)} />
         <div className="mt-4 flex flex-wrap gap-3">
+          <Link href="/sponsors/apply" className="ev-button-secondary">
+            Become a Sponsor
+          </Link>
           <button
             type="button"
             onClick={submitGeneralInquiry}
@@ -128,7 +132,7 @@ export default function SponsorPackagesClient({ packages }: { packages: SponsorP
             {loadingId === "general" ? "Submitting..." : "Submit sponsor inquiry"}
           </button>
           <div className="text-sm leading-6 text-white/62">
-            Use this if you want a sponsorship conversation first. Package-specific inquiry and checkout still remain available below.
+            Use this if you want a sponsorship conversation first. Package-specific inquiry, direct purchase, and sponsor application still remain available below.
           </div>
         </div>
         {message ? <div className="mt-4 rounded-2xl border border-white/10 bg-black/30 p-4 text-sm text-white/75">{message}</div> : null}

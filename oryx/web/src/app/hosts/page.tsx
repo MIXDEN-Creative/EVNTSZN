@@ -2,7 +2,6 @@
 'use client';
 
 import Link from 'next/link';
-import { getLoginUrl } from '@/lib/domains';
 import PublicPageFrame from '@/components/public/PublicPageFrame';
 import { PUBLIC_CITIES, PUBLIC_HOST_MARKETS } from '@/lib/public-cities';
 
@@ -34,7 +33,7 @@ const HostsPage = () => {
             <Link href="/hosts/apply" className="ev-button-primary px-8">
               Apply as a Curator
             </Link>
-            <Link href={getLoginUrl("/ops", "app.evntszn.com")} className="ev-button-secondary px-8">
+            <Link href="/admin-login?next=/ops" className="ev-button-secondary px-8">
               Enter Curator Ops
             </Link>
           </div>

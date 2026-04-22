@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import PublicPageFrame from "@/components/public/PublicPageFrame";
+import { isSupabaseCredentialError } from "@/lib/runtime-env";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { supabasePublicServer } from "@/lib/supabase-public-server";
 import { CREW_CATEGORIES, getCrewCategoryLabel } from "@/lib/platform-products";
 import BookingRequestForm from "./BookingRequestForm";
 
@@ -9,22 +11,43 @@ type RouteContext = {
   params: Promise<{ slug: string }>;
 };
 
+type WorkedEvent = {
+  id: string;
+  title: string;
+  slug: string;
+  city: string | null;
+  state: string | null;
+  start_at: string;
+};
+
 export const dynamic = "force-dynamic";
+
+function firstErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : String(error);
+}
 
 export default async function CrewProfilePage(context: RouteContext) {
   const { slug } = await context.params;
   const matchedCategory = CREW_CATEGORIES.includes(slug as (typeof CREW_CATEGORIES)[number]) ? slug : null;
 
   if (matchedCategory && matchedCategory !== "custom") {
-    const { data: profiles, error: categoryError } = await supabaseAdmin
-      .from("evntszn_crew_profiles")
-      .select("id, slug, display_name, headline, city, state, availability_state, rate_unit, custom_category")
-      .eq("status", "published")
-      .eq("category", matchedCategory)
-      .order("updated_at", { ascending: false });
+    const runCategoryQuery = async (client: typeof supabaseAdmin) =>
+      client
+        .from("evntszn_crew_profiles")
+        .select("id, slug, display_name, headline, city, state, availability_state, rate_unit, custom_category")
+        .eq("status", "published")
+        .eq("category", matchedCategory)
+        .order("updated_at", { ascending: false });
+
+    let { data: profiles, error: categoryError } = await runCategoryQuery(supabaseAdmin);
+    if (categoryError && isSupabaseCredentialError(categoryError)) {
+      const fallback = await runCategoryQuery(supabasePublicServer);
+      profiles = fallback.data;
+      categoryError = fallback.error;
+    }
 
     if (categoryError) {
-      throw new Error(categoryError.message);
+      throw new Error(firstErrorMessage(categoryError));
     }
 
     return (
@@ -72,36 +95,55 @@ export default async function CrewProfilePage(context: RouteContext) {
     );
   }
 
-  const { data: profile, error } = await supabaseAdmin
-    .from("evntszn_crew_profiles")
-    .select("id, slug, display_name, category, custom_category, headline, short_bio, city, state, availability_state, rate_unit, portfolio_links, website_url, instagram_url, tags, metadata, updated_at, created_at, booking_fee_usd")
-    .eq("slug", slug)
-    .eq("status", "published")
-    .maybeSingle();
+  const runProfileQuery = async (client: typeof supabaseAdmin) =>
+    client
+      .from("evntszn_crew_profiles")
+      .select("id, slug, display_name, category, custom_category, headline, short_bio, city, state, availability_state, rate_unit, portfolio_links, website_url, instagram_url, tags, metadata, updated_at, created_at, booking_fee_usd")
+      .eq("slug", slug)
+      .eq("status", "published")
+      .maybeSingle();
+
+  let { data: profile, error } = await runProfileQuery(supabaseAdmin);
+  if (error && isSupabaseCredentialError(error)) {
+    const fallback = await runProfileQuery(supabasePublicServer);
+    profile = fallback.data;
+    error = fallback.error;
+  }
 
   if (error || !profile) {
     notFound();
   }
 
-  const requestsRes = await supabaseAdmin
-    .from("evntszn_crew_booking_requests")
-    .select("id", { count: "exact", head: true })
-    .eq("crew_profile_id", profile.id);
+  let requestsRes: { count?: number | null } = { count: 0 };
+  try {
+    requestsRes = await supabaseAdmin
+      .from("evntszn_crew_booking_requests")
+      .select("id", { count: "exact", head: true })
+      .eq("crew_profile_id", profile.id);
+  } catch {
+    requestsRes = { count: 0 };
+  }
   const requestCount = requestsRes.count || 0;
   const isRecentlyActive = new Date(profile.updated_at).getTime() >= Date.now() - 1000 * 60 * 60 * 24 * 10;
   const workedEventIds = Array.isArray(profile.metadata?.workedEventIds)
     ? profile.metadata.workedEventIds.map((value: unknown) => String(value))
     : [];
-  const { data: workedEvents } = workedEventIds.length
-    ? await supabaseAdmin
+  let workedEvents: WorkedEvent[] = [];
+  if (workedEventIds.length) {
+    try {
+      const response = await supabaseAdmin
         .from("evntszn_events")
         .select("id, title, slug, city, state, start_at")
         .in("id", workedEventIds)
         .eq("visibility", "published")
-        .eq("status", "published")
-    : { data: [] as any[] };
+        .eq("status", "published");
+      workedEvents = (response.data || []) as WorkedEvent[];
+    } catch {
+      workedEvents = [];
+    }
+  }
   const creditedEvents = workedEventIds
-    .map((id: string) => (workedEvents || []).find((event: any) => event.id === id))
+    .map((id: string) => workedEvents.find((event: WorkedEvent) => event.id === id))
     .filter(Boolean);
 
   return (
@@ -146,7 +188,9 @@ export default async function CrewProfilePage(context: RouteContext) {
                 </div>
                 <div className="ev-feature-card">
                   <div className="text-[11px] uppercase tracking-[0.22em] text-white/42">Rate</div>
-                  <div className="mt-2 text-lg font-bold text-white">Quote on request</div>
+                  <div className="mt-2 text-lg font-bold text-white">
+                    {profile.booking_fee_usd && profile.booking_fee_usd > 0 ? `$${Number(profile.booking_fee_usd).toFixed(2)} platform fee + provider quote` : "Provider quote + 10% EVNTSZN booking fee"}
+                  </div>
                 </div>
               </div>
 
@@ -180,7 +224,7 @@ export default async function CrewProfilePage(context: RouteContext) {
                 <div className="mt-8 rounded-[26px] border border-white/10 bg-black/20 p-5">
                   <div className="text-[11px] uppercase tracking-[0.22em] text-[#caa7ff]">Worked events</div>
                   <div className="mt-4 grid gap-3">
-                    {creditedEvents.map((event: any) => (
+                    {creditedEvents.map((event: WorkedEvent) => (
                       <a key={event.id} href={`/events/${event.slug}`} className="ev-list-card transition hover:bg-white/[0.06]">
                         <div className="text-base font-bold text-white">{event.title}</div>
                         <div className="mt-1 text-xs uppercase tracking-[0.18em] text-white/45">

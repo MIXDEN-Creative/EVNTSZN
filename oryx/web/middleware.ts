@@ -8,6 +8,7 @@ import {
   getOpsOrigin,
   getReserveOrigin,
   getScannerOrigin,
+  getStayOpsOrigin,
   getSurfaceFromHost,
   getWebOrigin,
   hasConfiguredOrigin,
@@ -148,6 +149,7 @@ export function middleware(request: NextRequest) {
       "terms",
       "refund-policy",
       "liability-notice",
+      "stayops",
       "orders",
       "checkout",
       "coming-soon",
@@ -178,6 +180,7 @@ export function middleware(request: NextRequest) {
     "/checkout/cancel",
     "/coming-soon",
     "/hosts",
+    "/stayops",
     "/support",
     "/privacy",
     "/terms",
@@ -187,7 +190,7 @@ export function middleware(request: NextRequest) {
     "/robots.txt",
     "/sitemap.xml",
     ];
-    const publicAllowedPrefixes = ["/events/", "/crew/", "/link/", "/nodes/"];
+    const publicAllowedPrefixes = ["/events/", "/crew/", "/link/", "/nodes/", "/stayops/"];
     const publicAllowedApiPatterns = [
       /^\/api\/evntszn\/events\/[^/]+\/checkout$/,
       /^\/api\/evntszn\/events\/[^/]+\/pulse$/,
@@ -202,6 +205,7 @@ export function middleware(request: NextRequest) {
       /^\/api\/public\/applications$/,
       /^\/api\/programs\/applications$/,
       /^\/api\/support\/tickets$/,
+      /^\/api\/stayops\/intake$/,
       /^\/api\/sponsors\/checkout$/,
       /^\/api\/sponsors\/inquiries$/,
     ];
@@ -244,6 +248,10 @@ export function middleware(request: NextRequest) {
   }
 
   if (surface === "app") {
+    if (pathname.startsWith("/stayops")) {
+      return redirectToOrigin(getCanonicalPath(pathname, "stayops"), getStayOpsOrigin(host));
+    }
+
     if (pathname.startsWith("/reserve")) {
       if (isLocalHost(host) || !hasConfiguredOrigin("reserve")) {
         return NextResponse.next();
@@ -268,6 +276,56 @@ export function middleware(request: NextRequest) {
       return NextResponse.redirect(url);
     }
     return NextResponse.next();
+  }
+
+  if (surface === "stayops") {
+    if (pathname === "/") {
+      url.pathname = "/stayops";
+      return NextResponse.rewrite(url);
+    }
+
+    if (pathname === "/intake" || pathname.startsWith("/intake/")) {
+      url.pathname = `/stayops${pathname}`;
+      return NextResponse.rewrite(url);
+    }
+
+    if (pathname === "/confirmation" || pathname.startsWith("/confirmation/")) {
+      url.pathname = `/stayops${pathname}`;
+      return NextResponse.rewrite(url);
+    }
+
+    if (pathname.startsWith("/api/stayops/")) {
+      return NextResponse.next();
+    }
+
+    if (pathname.startsWith("/account")) {
+      return redirectToOrigin(getCanonicalPath(pathname, "app"), getAppOrigin(host));
+    }
+
+    if (pathname.startsWith("/scanner")) {
+      return redirectToOrigin(getCanonicalPath(pathname, "scanner"), getScannerOrigin(host));
+    }
+
+    if (pathname.startsWith("/reserve")) {
+      if (isLocalHost(host) || !hasConfiguredOrigin("reserve")) {
+        return NextResponse.next();
+      }
+      return redirectToOrigin(pathname, getReserveOrigin(host));
+    }
+
+    if (pathname.startsWith("/epl")) {
+      return redirectToOrigin(getCanonicalPath(pathname, "epl"), getEplOrigin(host));
+    }
+
+    if (pathname.startsWith("/organizer") || pathname.startsWith("/venue")) {
+      return redirectToOrigin(pathname, getOpsOrigin(host));
+    }
+
+    if (pathname.startsWith("/stayops")) {
+      return NextResponse.next();
+    }
+
+    return NextResponse.redirect(new URL(pathname, getWebOrigin(host)));
   }
 
   if (surface === "reserve") {

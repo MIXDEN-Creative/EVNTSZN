@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import StructuredData from "@/components/seo/StructuredData";
-import SurfaceShell from "@/components/shells/SurfaceShell";
-import { getReserveOrigin } from "@/lib/domains";
+import PublicPageFrame from "@/components/public/PublicPageFrame";
 import { isMidnightRunEvent } from "@/lib/events-runtime";
 import { getPublicCityByName, PUBLIC_CITIES } from "@/lib/public-cities";
 import { buildItemListSchema, buildPageMetadata } from "@/lib/seo";
@@ -34,7 +33,7 @@ function getCityPath(cityName: string | null | undefined, section: "events" | "n
 
 function getReserveCityPath(cityName: string | null | undefined) {
   const city = getPublicCityByName(cityName);
-  return city ? `${getReserveOrigin()}/${city.slug}` : `${getReserveOrigin()}/`;
+  return city ? `/reserve/${city.slug}` : "/reserve";
 }
 
 export default async function EventsPage() {
@@ -69,11 +68,10 @@ export default async function EventsPage() {
           }),
         ]}
       />
-      <SurfaceShell
-        surface="web"
-        eyebrow="Public events"
+      <PublicPageFrame
         title="The city is currently in motion."
         description="Official ticket drops, hosted nights, and the moves actually worth being at. One clean feed for real-time discovery."
+        heroImage={FALLBACK_EVENT_IMAGE}
       >
         <div className="mb-8 rounded-[30px] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-2xl">
           <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#caa7ff]">Explore by city</div>
@@ -150,7 +148,7 @@ export default async function EventsPage() {
             </article>
           ))}
         </div>
-      </SurfaceShell>
+      </PublicPageFrame>
     </>
   );
 }

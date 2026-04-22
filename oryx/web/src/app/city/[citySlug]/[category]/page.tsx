@@ -147,7 +147,7 @@ export default async function CityCategoryPage({ params }: CityCategoryPageProps
                 More {link} in {city.shortLabel}
               </Link>
             ))}
-            <Link href={`${getReserveOrigin()}/${city.slug}`} className="rounded-full border border-white/12 bg-black/25 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-white/70 hover:border-white/20 hover:text-white">
+            <Link href={`/reserve/${city.slug}`} className="rounded-full border border-white/12 bg-black/25 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-white/70 hover:border-white/20 hover:text-white">
               Reserve in {city.shortLabel}
             </Link>
           </div>
@@ -183,7 +183,7 @@ export default async function CityCategoryPage({ params }: CityCategoryPageProps
       {category === "reservations" ? (
         <section className="mx-auto grid max-w-7xl gap-6 px-4 pb-10 md:grid-cols-2 xl:grid-cols-3 md:px-6 lg:px-8">
           {reserveVenues.map((venue) => (
-            <Link key={venue.slug} href={`${getReserveOrigin()}/${venue.slug}`} className="rounded-[28px] border border-white/10 bg-[#0b0b10] p-6 transition hover:border-white/20">
+            <Link key={venue.slug} href={`/reserve/${venue.slug}`} className="rounded-[28px] border border-white/10 bg-[#0b0b10] p-6 transition hover:border-white/20">
               <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#caa7ff]">Reservations live</div>
               <h2 className="mt-3 text-2xl font-black tracking-tight text-white">{venue.name}</h2>
               <p className="mt-3 text-sm leading-6 text-white/68">
@@ -216,7 +216,7 @@ export default async function CityCategoryPage({ params }: CityCategoryPageProps
               </p>
               <div className="mt-5 flex flex-wrap gap-3 text-xs uppercase tracking-[0.18em] text-white/45">
                 <Link href={`/city/${city.slug}/nightlife`} className="hover:text-white/80">More nightlife like this</Link>
-                {venue.isReserveActive ? <Link href={`${getReserveOrigin()}/${venue.slug}`} className="hover:text-white/80">Reserve</Link> : null}
+                {venue.isReserveActive ? <Link href={`/reserve/${venue.slug}`} className="hover:text-white/80">Reserve</Link> : null}
                 <Link href={`/city/${city.slug}/events`} className="hover:text-white/80">Events nearby</Link>
               </div>
             </div>

@@ -11,9 +11,10 @@ import {
 } from "@/lib/events-runtime";
 import { getRelatedEvents, getReserveVenuesByCity } from "@/lib/public-directory";
 import { getPublicCityByName } from "@/lib/public-cities";
-import { getReserveOrigin } from "@/lib/domains";
+import { isSupabaseCredentialError } from "@/lib/runtime-env";
 import { buildPageMetadata } from "@/lib/seo";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { supabasePublicServer } from "@/lib/supabase-public-server";
 import { getTicketAvailabilityState, type TicketAvailabilityState } from "@/lib/ticketing";
 import { averagePulseVote, describePulseScore } from "@/lib/platform-products";
 import TicketPurchaseCard from "./TicketPurchaseCard";
@@ -52,34 +53,41 @@ function formatEventStart(value: string) {
 }
 
 async function getEventBySlug(slug: string) {
-  const { data: event } = await supabaseAdmin
-    .from("evntszn_events")
-    .select(`
-      id,
-      title,
-      slug,
-      subtitle,
-      description,
-      hero_note,
-      city,
-      state,
-      start_at,
-      end_at,
-      scanner_status,
-      event_class,
-      event_vertical,
-      banner_image_url,
-      evntszn_venues (
-        name,
+  const runQuery = async (client: typeof supabaseAdmin) =>
+    client
+      .from("evntszn_events")
+      .select(`
+        id,
+        title,
         slug,
+        subtitle,
+        description,
+        hero_note,
         city,
         state,
-        timezone
-      )
-    `)
-    .eq("slug", slug)
-    .eq("visibility", "published")
-    .maybeSingle();
+        start_at,
+        end_at,
+        scanner_status,
+        event_class,
+        event_vertical,
+        banner_image_url,
+        evntszn_venues (
+          name,
+          slug,
+          city,
+          state,
+          timezone
+        )
+      `)
+      .eq("slug", slug)
+      .eq("visibility", "published")
+      .maybeSingle();
+
+  let { data: event, error } = await runQuery(supabaseAdmin);
+  if (error && isSupabaseCredentialError(error)) {
+    const fallback = await runQuery(supabasePublicServer);
+    event = fallback.data;
+  }
 
   return event;
 }
@@ -345,7 +353,7 @@ export default async function EventDetailPage({ params }: { params: Params }) {
                     {cityProfile ? <Link href={`/city/${cityProfile.slug}/events`} className="hover:text-white">Explore in {cityProfile.shortLabel}</Link> : null}
                     {cityProfile ? <Link href={`/city/${cityProfile.slug}/nightlife`} className="hover:text-white">More events like this</Link> : null}
                     {cityProfile ? <Link href={`/city/${cityProfile.slug}/venues`} className="hover:text-white">Top venues nearby</Link> : null}
-                    {cityProfile ? <Link href={`${getReserveOrigin()}/${cityProfile.slug}`} className="hover:text-white">Reserve nearby</Link> : null}
+                    {cityProfile ? <Link href={`/reserve/${cityProfile.slug}`} className="hover:text-white">Reserve nearby</Link> : null}
                   </div>
                 </div>
                 <div className="rounded-[28px] border border-white/10 bg-white/[0.03] p-5">
@@ -381,7 +389,7 @@ export default async function EventDetailPage({ params }: { params: Params }) {
               <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#caa7ff]">Reserve at similar places</div>
               <div className="mt-4 space-y-3">
                 {nearbyReserve.length ? nearbyReserve.map((venue) => (
-                  <Link key={venue.slug} href={`${getReserveOrigin()}/${venue.slug}`} className="block rounded-2xl border border-white/10 bg-black/20 p-4 hover:border-white/20">
+                  <Link key={venue.slug} href={`/reserve/${venue.slug}`} className="block rounded-2xl border border-white/10 bg-black/20 p-4 hover:border-white/20">
                     <div className="text-sm font-semibold text-white">{venue.name}</div>
                     <div className="mt-1 text-sm text-white/60">{venue.city}, {venue.state}</div>
                   </Link>

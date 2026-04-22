@@ -1,6 +1,5 @@
 import Image from "next/image";
 import Link from "next/link";
-import { getAppOrigin, getEplOrigin, getReserveOrigin, getWebOrigin } from "@/lib/domains";
 import { PUBLIC_CITIES } from "@/lib/public-cities";
 import { getFaviconFallbackUrl, getLogoFallbackUrl } from "@/lib/external-integrations";
 import type { SponsorPlacement } from "@/lib/sponsor-placements";
@@ -50,40 +49,41 @@ export default function PublicFooterShell({
 
         <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr_0.9fr_0.9fr]">
           <div>
-            <Link href={`${getWebOrigin()}/`} className="text-2xl font-black tracking-tight text-white">EVNTSZN™</Link>
+            <Link href="/" className="text-2xl font-black tracking-tight text-white">EVNTSZN™</Link>
             <p className="mt-4 max-w-md text-sm leading-7 text-white/68">
-              EVNTSZN brings together nights out, live games, concerts, EPL, and city plans people actually want to keep up with.
+              EVNTSZN is the operating environment for discovery, bookings, league operations, crew, venues, and premium city movement.
             </p>
           </div>
 
           <div>
-            <div className="text-sm font-semibold uppercase tracking-[0.22em] text-white/48">Explore</div>
+            <div className="text-sm font-semibold uppercase tracking-[0.22em] text-white/48">Platform</div>
             <div className="mt-4 flex flex-col gap-3 text-sm text-white/78">
-              <Link href={`${getWebOrigin()}/`}>Discover</Link>
-              <Link href={`${getWebOrigin()}/events`}>Events</Link>
-              <Link href={`${getWebOrigin()}/city`}>City Guides</Link>
-              <Link href={`${getEplOrigin()}/`}>EPL</Link>
-              <Link href={`${getWebOrigin()}/link`}>EVNTSZN Link</Link>
-              <Link href={`${getReserveOrigin()}/`}>Reserve</Link>
-              <Link href={`${getWebOrigin()}/venue-program`}>Venue Plans</Link>
-              <Link href={`${getWebOrigin()}/venue/agreement`}>Venue Agreement</Link>
-              <Link href={`${getEplOrigin()}/opportunities`}>EPL Opportunities</Link>
-              <Link href={`${getWebOrigin()}/hosts`}>Curators</Link>
-              <Link href={`${getWebOrigin()}/partners`}>Partners</Link>
-              <Link href={`${getWebOrigin()}/crew`}>Crew Marketplace</Link>
-              <Link href={`${getWebOrigin()}/signal/apply`}>Signal</Link>
-              <Link href={`${getWebOrigin()}/ambassador/apply`}>Ambassador</Link>
-              <Link href={`${getWebOrigin()}/sponsors`}>Sponsors</Link>
-              <Link href={`${getEplOrigin()}/store`}>Store</Link>
-              <Link href={`${getWebOrigin()}/support`}>Support</Link>
+              <Link href="/">Discover</Link>
+              <Link href="/events">Events</Link>
+              <Link href="/pulse">Pulse</Link>
+              <Link href="/reserve">Reserve</Link>
+              <Link href="/crew">Crew Marketplace</Link>
+              <Link href="/link">Link</Link>
+              <Link href="/epl">EPL</Link>
+              <Link href="/venue">Venue</Link>
+              <Link href="/stayops">StayOps</Link>
+              <Link href="/operate">Operate</Link>
             </div>
           </div>
 
           <div>
-            <div className="text-sm font-semibold uppercase tracking-[0.22em] text-white/48">Cities</div>
+            <div className="text-sm font-semibold uppercase tracking-[0.22em] text-white/48">Programs</div>
             <div className="mt-4 flex flex-col gap-3 text-sm text-white/78">
+              <Link href="/hosts">Curator Network</Link>
+              <Link href="/partners">Partner Program</Link>
+              <Link href="/sponsors">Sponsors</Link>
+              <Link href="/venue-program">Venue Plans</Link>
+              <Link href="/venue/agreement">Venue Agreement</Link>
+              <Link href="/epl/opportunities">EPL Opportunities</Link>
+              <Link href="/signal/apply">Signal</Link>
+              <Link href="/support">Support</Link>
               {PUBLIC_CITIES.map((city) => (
-                <Link key={city.slug} href={`${getWebOrigin()}/city/${city.slug}`}>
+                <Link key={city.slug} href={`/city/${city.slug}`}>
                   {city.name}
                 </Link>
               ))}
@@ -91,15 +91,16 @@ export default function PublicFooterShell({
           </div>
 
           <div>
-            <div className="text-sm font-semibold uppercase tracking-[0.22em] text-white/48">Trust</div>
+            <div className="text-sm font-semibold uppercase tracking-[0.22em] text-white/48">Entry</div>
             <div className="mt-4 flex flex-col gap-3 text-sm text-white/78">
-              <Link href={`${getAppOrigin()}/account/login`}>Sign In</Link>
-              <Link href={`${getAppOrigin()}/account/register?next=/account`}>Create member account</Link>
-              <Link href={`${getWebOrigin()}/privacy`}>Privacy Policy</Link>
-              <Link href={`${getWebOrigin()}/terms`}>Terms</Link>
-              <Link href={`${getWebOrigin()}/refund-policy`}>Refund Policy</Link>
-              <Link href={`${getWebOrigin()}/liability-notice`}>Liability Notice</Link>
-              <Link href={`${getWebOrigin()}/support`}>Support Desk</Link>
+              <Link href="/enter">Sign In / Enter</Link>
+              <Link href="/account/login?next=/account">Member Sign In</Link>
+              <Link href="/account/register?next=/account">Create member account</Link>
+              <Link href="/admin-login?next=/ops">Internal access</Link>
+              <Link href="/privacy">Privacy Policy</Link>
+              <Link href="/terms">Terms</Link>
+              <Link href="/refund-policy">Refund Policy</Link>
+              <Link href="/liability-notice">Liability Notice</Link>
             </div>
           </div>
         </div>

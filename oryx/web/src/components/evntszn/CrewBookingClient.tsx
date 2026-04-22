@@ -73,7 +73,7 @@ export default function CrewBookingClient({
           <Badge>Crew Marketplace</Badge>
           <CardTitle className="mt-4 text-3xl">Book DJs, bartenders, shooters, and curators fast.</CardTitle>
           <CardDescription className="mt-3">
-            Requests route through EVNTSZN with fee logic applied transparently at submission time.
+            Requests route through EVNTSZN with provider pricing, platform fee logic, and booking scope stated before you submit.
           </CardDescription>
         </div>
         <div className="space-y-3">
@@ -131,7 +131,11 @@ export default function CrewBookingClient({
         <Textarea placeholder="What do you need covered?" value={notes} onChange={(event) => setNotes(event.target.value)} />
 
         <div className="rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-white/72">
-          Subtotal {formatUsd(Number(budgetUsd || 0))} · {pricing.feeLabel} · Total {formatUsd(pricing.totalUsd)}
+          Provider subtotal {formatUsd(Number(budgetUsd || 0))} · {pricing.feeLabel} · Estimated total {formatUsd(pricing.totalUsd)}
+        </div>
+
+        <div className="rounded-2xl border border-[#A259FF]/20 bg-[#A259FF]/8 p-4 text-sm leading-6 text-[#eadcff]">
+          EVNTSZN marketplace fee: {pricing.feeLabel}. Provider payout and platform fee stay separated so the booking is commercially clear before the request is sent.
         </div>
 
         {message ? <div className="rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-white/72">{message}</div> : null}

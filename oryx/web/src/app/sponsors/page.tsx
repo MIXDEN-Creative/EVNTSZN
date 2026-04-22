@@ -3,47 +3,47 @@ import PublicPageFrame from "@/components/public/PublicPageFrame";
 
 const SPONSOR_TIERS = [
   {
-    title: "Sponsor",
-    price: "$0",
-    note: "Free tier",
+    title: "City Activation",
+    price: "$1,500+",
+    note: "Events + discovery",
     points: [
-      "Sponsor profile page",
-      "Low-priority logo listing on EVNTSZN",
-      "Basic analytics for views and clicks",
-      "Can be tagged in events and EPL games",
+      "Event sponsorship packages",
+      "City activation planning",
+      "Premium placement in discovery and venue flows",
+      "Sponsor inquiry routed into the EVNTSZN sponsor desk",
     ],
   },
   {
-    title: "Sponsor Pro",
-    price: "$99",
-    note: "Monthly",
+    title: "Pulse Visibility",
+    price: "$2,500+",
+    note: "Public energy layer",
     points: [
-      "Priority listing on platform",
-      "Featured sponsor badge",
-      "Limited Pulse Feed mentions",
-      "Enhanced analytics and sponsor boost capability",
+      "Pulse placement around live city movement",
+      "Brand visibility inside public-safe feed surfaces",
+      "Sponsored city moments tied to attendance intent",
+      "Operational follow-through for sponsor delivery",
     ],
   },
   {
-    title: "Sponsor Elite",
-    price: "$249",
-    note: "Monthly",
+    title: "EPL Sponsor",
+    price: "$2,500+",
+    note: "League lane",
     points: [
-      "Priority Pulse Feed exposure",
-      "EPL integrations",
-      "Venue page featured placement",
-      "Sponsor Smart Fill opportunities",
+      "League-night sponsorship",
+      "Club and standings adjacency",
+      "Game-night brand presence",
+      "Supporter-facing sponsor activation planning",
     ],
   },
   {
     title: "Sponsor Premier",
-    price: "$499",
-    note: "Monthly",
+    price: "$5,000+",
+    note: "Cross-platform package",
     points: [
-      "Guaranteed placement across Events, Venues, and EPL",
-      "Homepage featured sections",
-      "Sponsored sections in Pulse Feed",
-      "Co-branded event and EPL activations",
+      "Guaranteed placement across Events, Pulse, Venues, and EPL",
+      "Premium platform placement strategy",
+      "Co-branded event and league activations",
+      "Commercial planning support with sponsor desk ownership",
     ],
   },
 ];
@@ -82,11 +82,14 @@ export default function SponsorsPage() {
               ))}
             </div>
             <div className="mt-7 flex flex-wrap gap-3">
-              <Link href="/partners/packages" className="ev-button-primary px-8">
+              <Link href="/sponsors/apply" className="ev-button-primary px-8">
+                Become a Sponsor
+              </Link>
+              <Link href="/sponsors/packages" className="ev-button-primary px-8">
                 Open sponsor packages
               </Link>
-              <Link href="/support" className="ev-button-secondary px-8">
-                Talk to EVNTSZN
+              <Link href="/enter" className="ev-button-secondary px-8">
+                Enter EVNTSZN
               </Link>
             </div>
           </div>
@@ -129,10 +132,29 @@ export default function SponsorsPage() {
                   </div>
                 ))}
               </div>
-              <Link href="/partners/packages" className="ev-button-primary mt-5 w-full justify-center">
+              <Link href="/sponsors/packages" className="ev-button-primary mt-5 w-full justify-center">
                 Request tier
               </Link>
+              <Link href="/sponsors/apply" className="ev-button-secondary mt-3 w-full justify-center">
+                Become a Sponsor
+              </Link>
             </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4 pb-14 md:px-6 lg:px-8">
+        <div className="grid gap-6 lg:grid-cols-4">
+          {[
+            ["Events", "Sponsor headline events, room energy, and major attendance moments."],
+            ["Pulse", "Appear inside public city movement without making the feed feel cluttered."],
+            ["EPL", "Align with league nights, teams, and supporter attention."],
+            ["Venue + Reserve", "Show up where premium dining and nightlife demand is already converting."],
+          ].map(([title, body]) => (
+            <div key={title} className="rounded-[28px] border border-white/10 bg-white/[0.03] p-5">
+              <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#caa7ff]">{title}</div>
+              <p className="mt-3 text-sm leading-6 text-white/64">{body}</p>
+            </div>
           ))}
         </div>
       </section>

@@ -2,7 +2,9 @@ import { createInternalWorkItem, INTERNAL_DESK_SLUGS } from "@/lib/internal-os";
 import { deriveReserveStandaloneReservationFee, getVenueCommerceState } from "@/lib/evntszn-monetization";
 import { roundUsd } from "@/lib/money";
 import { refreshPerformanceSnapshot } from "@/lib/performance-engine";
+import { isSupabaseCredentialError } from "@/lib/runtime-env";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { supabasePublicServer } from "@/lib/supabase-public-server";
 
 export const RESERVE_BOOKING_STATUSES = [
   "confirmed",
@@ -140,11 +142,19 @@ export function canAccessReserve(input: {
 }
 
 export async function getReserveVenueBySlug(venueSlug: string) {
-  const { data, error } = await supabaseAdmin
-    .from("evntszn_reserve_venues")
-    .select("id, venue_id, is_active, plan_key, subscription_status, capacity_snapshot, settings, evntszn_venues!inner(id, slug, name, city, state, timezone, owner_user_id, capacity, plan_key, smart_fill_add_on_active, link_plan_override, plan_status)")
-    .eq("evntszn_venues.slug", venueSlug)
-    .maybeSingle();
+  const runQuery = async (client: typeof supabaseAdmin) =>
+    client
+      .from("evntszn_reserve_venues")
+      .select("id, venue_id, is_active, plan_key, subscription_status, capacity_snapshot, settings, evntszn_venues!inner(id, slug, name, city, state, timezone, owner_user_id, capacity, plan_key, smart_fill_add_on_active, link_plan_override, plan_status)")
+      .eq("evntszn_venues.slug", venueSlug)
+      .maybeSingle();
+
+  let { data, error } = await runQuery(supabaseAdmin);
+  if (error && isSupabaseCredentialError(error)) {
+    const fallback = await runQuery(supabasePublicServer);
+    data = fallback.data;
+    error = fallback.error;
+  }
 
   if (error) throw new Error(error.message);
   return data as ReserveVenueRow | null;

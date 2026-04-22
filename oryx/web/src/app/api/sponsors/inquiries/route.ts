@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
+import { notifyPipelineEvent } from "@/lib/application-notifications";
 import { createInternalWorkItem, INTERNAL_DESK_SLUGS } from "@/lib/internal-os";
+import { estimateSponsorBudgetUsd } from "@/lib/pipeline-value";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { logSystemIssue } from "@/lib/system-logs";
 
@@ -14,11 +16,16 @@ export async function POST(request: Request) {
     contact_email: String(body.contactEmail || "").trim().toLowerCase(),
     contact_phone: String(body.contactPhone || "").trim() || null,
     order_type: "inquiry",
-    status: "inquiry",
+    status: "new",
     notes: String(body.notes || "").trim() || null,
     wants_followup: true,
     metadata: {
       source: "public-sponsor-packages",
+      budgetRange: String(body.budgetRange || "").trim() || null,
+      targetCity: String(body.targetCity || "").trim() || null,
+      interests: Array.isArray(body.interests) ? body.interests.map(String) : [],
+      requestInvoice: Boolean(body.requestInvoice),
+      estimatedBudgetUsd: estimateSponsorBudgetUsd(String(body.budgetRange || "").trim()),
     },
   };
 
@@ -56,6 +63,21 @@ export async function POST(request: Request) {
       packageName: payload.package_name,
     },
   }).catch(() => null);
+
+  await notifyPipelineEvent({
+    kind: "sponsor",
+    title: `New sponsor application · ${payload.company_name}`,
+    companyName: payload.company_name,
+    contactName: payload.contact_name,
+    city: String(body.targetCity || "").trim() || null,
+    status: "new",
+    estimatedValueUsd: estimateSponsorBudgetUsd(String(body.budgetRange || "").trim()),
+    metadata: {
+      budgetRange: String(body.budgetRange || "").trim() || null,
+      interests: Array.isArray(body.interests) ? body.interests.map(String) : [],
+      requestInvoice: Boolean(body.requestInvoice),
+    },
+  });
 
   return NextResponse.json({ ok: true });
 }

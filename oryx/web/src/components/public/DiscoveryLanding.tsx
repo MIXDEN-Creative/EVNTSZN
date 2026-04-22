@@ -9,7 +9,6 @@ import type { PublicVenueListing } from "@/lib/public-directory";
 import type { HomepageContent, PublicModules } from "@/lib/site-content";
 import type { TicketmasterEvent } from "@/lib/ticketmaster";
 import { PUBLIC_CITIES } from "@/lib/public-cities";
-import { getReserveOrigin } from "@/lib/domains";
 import type { SponsorPlacement } from "@/lib/sponsor-placements";
 import SponsorPlacementStrip from "@/components/public/SponsorPlacementStrip";
 
@@ -495,7 +494,7 @@ export default function DiscoveryLanding({
                     <button type="button" className="ev-button-primary" onClick={() => void runSearch()}>
                       {loading ? "Searching..." : "Show the best options"}
                     </button>
-                    <Link href="https://app.evntszn.com/account/register?next=/account" className="ev-button-secondary">
+                    <Link href="/account/register?next=/account" className="ev-button-secondary">
                       Create member account
                     </Link>
                   </div>
@@ -503,7 +502,7 @@ export default function DiscoveryLanding({
 
                 <div className="mt-4 text-sm leading-6 text-white/56">
                   Already have an account?{" "}
-                  <Link href="https://app.evntszn.com/account/login" className="font-semibold text-white/80 transition hover:text-white">
+                  <Link href="/enter" className="font-semibold text-white/80 transition hover:text-white">
                     Member sign in
                   </Link>
                 </div>
@@ -635,7 +634,7 @@ export default function DiscoveryLanding({
                 <div className="ev-section-kicker">Reserve tonight</div>
                 <h2 className="mt-3 text-3xl font-black tracking-[-0.04em] text-white">Reservation and waitlist intent has its own lane.</h2>
               </div>
-              <Link href={`${getReserveOrigin()}/`} className="ev-chip ev-chip--host">
+              <Link href="/reserve" className="ev-chip ev-chip--host">
                 Open Reserve
               </Link>
             </div>
@@ -644,7 +643,7 @@ export default function DiscoveryLanding({
             </p>
             <div className="mt-6 ev-card-grid ev-card-grid--tight">
               {reserveSpotlight.length ? reserveSpotlight.map((venue) => (
-                <Link key={venue.slug} href={`${getReserveOrigin()}/${venue.slug}`} className="ev-list-card transition hover:border-white/20 hover:bg-white/[0.06]">
+                <Link key={venue.slug} href={`/reserve/${venue.slug}`} className="ev-list-card transition hover:border-white/20 hover:bg-white/[0.06]">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <div className="ev-chip ev-chip--host">{venue.reserveSettings?.waitlist_enabled === false ? "Reservations only" : "Reservations + waitlist"}</div>
@@ -659,7 +658,7 @@ export default function DiscoveryLanding({
                   </p>
                 </Link>
               )) : PUBLIC_CITIES.slice(0, 3).map((cityItem) => (
-                <Link key={cityItem.slug} href={`${getReserveOrigin()}/${cityItem.slug}`} className="ev-list-card transition hover:border-white/20 hover:bg-white/[0.06]">
+                <Link key={cityItem.slug} href={`/reserve/${cityItem.slug}`} className="ev-list-card transition hover:border-white/20 hover:bg-white/[0.06]">
                   <div className="ev-chip ev-chip--host">Reserve by city</div>
                   <div className="mt-3 text-xl font-black tracking-tight text-white">{cityItem.shortLabel}</div>
                   <p className="mt-3 text-sm leading-6 text-white/62">{cityItem.reservationsIntro}</p>
@@ -755,6 +754,40 @@ export default function DiscoveryLanding({
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-[1600px] px-4 pb-16 md:px-6 lg:px-8 lg:pb-20">
+        <div className="grid gap-6 xl:grid-cols-[1.08fr_0.92fr]">
+          <div className="rounded-[36px] border border-white/10 bg-[#0c0c15] p-8 md:p-10">
+            <div className="ev-section-kicker">StayOps</div>
+            <h2 className="mt-4 text-4xl font-black tracking-[-0.04em] text-white md:text-5xl leading-[0.95]">
+              Premium short-term rental revenue operations for event-driven markets.
+            </h2>
+            <p className="mt-5 max-w-3xl text-base md:text-lg leading-7 text-white/68">
+              StayOps fits directly into the EVNTSZN ecosystem: event demand, nightlife movement, reserve behavior, and group travel all improve how a short-term rental asset performs.
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link href="/stayops" className="ev-button-primary px-8">
+                Explore StayOps
+              </Link>
+              <Link href="/operate" className="ev-button-secondary px-8">
+                See operations
+              </Link>
+            </div>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-1">
+            {[
+              "Core Ops for day-to-day property operations and owner visibility.",
+              "Pro Ops for pricing optimization, group demand, and event-linked stays.",
+              "Elite / Concierge positioning toward the future StayOS moat.",
+            ].map((item) => (
+              <div key={item} className="rounded-[28px] border border-white/10 bg-white/[0.03] p-6 text-sm leading-7 text-white/64">
+                {item}
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -864,10 +897,10 @@ export default function DiscoveryLanding({
                   ))}
                 </div>
                 <div className="mt-10 flex flex-wrap gap-4">
-                  <Link href="https://epl.evntszn.com" className="ev-button-primary px-8">
+                  <Link href="/epl" className="ev-button-primary px-8">
                     Explore EPL
                   </Link>
-                  <Link href="https://epl.evntszn.com/season-1/register" className="ev-button-secondary px-8">
+                  <Link href="/epl/season-1/register" className="ev-button-secondary px-8">
                     Register
                   </Link>
                 </div>

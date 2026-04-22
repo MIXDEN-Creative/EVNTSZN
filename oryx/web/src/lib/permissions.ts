@@ -1,4 +1,9 @@
-export function hasPermission(operator: any, fn: string): boolean {
+type OperatorLike = {
+  role_key?: string | null;
+  functions?: string[] | null;
+} | null | undefined;
+
+export function hasPermission(operator: OperatorLike, fn: string): boolean {
   if (!operator) return false;
 
   if (operator.role_key === "platform_admin") return true;

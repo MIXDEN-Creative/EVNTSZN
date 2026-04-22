@@ -103,7 +103,7 @@ export default function ReservePageClient({
           <Badge className="border-[#A259FF]/25 bg-[#A259FF]/12 text-[#f1e7ff]">Reserve Revenue Engine</Badge>
           <CardTitle className="mt-4 text-3xl">Reserve tables, paid holds, and waitlist lanes.</CardTitle>
           <CardDescription className="mt-3">
-            EVNTSZN Reserve keeps the city alive even with thin supply by blending real inventory with urgency and mock fallback.
+            EVNTSZN Reserve keeps the booking flow premium and trustworthy with visible inventory, clear hold fees, and fast next steps.
           </CardDescription>
         </div>
 
@@ -220,7 +220,7 @@ export default function ReservePageClient({
         </div>
 
         <div className="rounded-2xl border border-amber-300/20 bg-amber-300/10 p-4 text-sm text-amber-50">
-          {selectedVenue.urgency}. Hold fee: {formatUsd(selectedVenue.reservationFeeUsd)}.
+          {selectedVenue.urgency}. Hold fee: {formatUsd(selectedVenue.reservationFeeUsd)}. EVNTSZN confirms the lane before inventory closes.
         </div>
 
         <SaveToggle

@@ -144,7 +144,7 @@ export default async function CityOverviewPage({ params }: CityOverviewProps) {
             <div className="mt-4 space-y-4">
               {reserveVenues.length ? (
                 reserveVenues.map((venue) => (
-                <Link key={venue.slug} href={`${getReserveOrigin()}/${venue.slug}`} className="block rounded-2xl border border-white/10 bg-black/20 p-4 hover:border-white/20">
+                <Link key={venue.slug} href={`/reserve/${venue.slug}`} className="block rounded-2xl border border-white/10 bg-black/20 p-4 hover:border-white/20">
                     <div className="text-sm font-semibold text-white">{venue.name}</div>
                     <div className="mt-1 text-sm text-white/60">
                       Waitlist {venue.reserveSettings?.waitlist_enabled === false ? "off" : "on"} · max party {venue.reserveSettings?.max_party_size || 8}
@@ -152,7 +152,7 @@ export default async function CityOverviewPage({ params }: CityOverviewProps) {
                   </Link>
                 ))
               ) : (
-                <Link href={`${getReserveOrigin()}/${city.slug}`} className="block rounded-2xl border border-white/10 bg-black/20 p-4 hover:border-white/20">
+                <Link href={`/reserve/${city.slug}`} className="block rounded-2xl border border-white/10 bg-black/20 p-4 hover:border-white/20">
                   <div className="text-sm font-semibold text-white">Search Reserve in {city.name}</div>
                   <div className="mt-1 text-sm text-white/60">See who is taking reservations, brunch bookings, and nightlife table requests.</div>
                 </Link>

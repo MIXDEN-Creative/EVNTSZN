@@ -1,15 +1,18 @@
 import { redirect } from "next/navigation";
 import { hasPermission } from "@/lib/permissions";
 
-export function requireAuth(user: any) {
+type UserLike = { id?: string | null } | null | undefined;
+type OperatorLike = { role_key?: string | null; functions?: string[] | null } | null | undefined;
+
+export function requireAuth(user: UserLike) {
   if (!user) redirect("/");
 }
 
-export function requireOperator(operator: any) {
+export function requireOperator(operator: OperatorLike) {
   if (!operator) redirect("/");
 }
 
-export function requireFunction(operator: any, fn: string) {
+export function requireFunction(operator: OperatorLike, fn: string) {
   if (!hasPermission(operator, fn)) {
     redirect("/");
   }

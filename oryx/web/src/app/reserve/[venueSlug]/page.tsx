@@ -118,7 +118,7 @@ export default async function ReserveVenuePage({ params }: ReserveSlugPageProps)
 
         <section className="mx-auto grid max-w-7xl gap-6 px-4 pb-10 md:grid-cols-2 xl:grid-cols-3 md:px-6 lg:px-8">
           {reserveVenues.length ? reserveVenues.map((venue) => (
-            <Link key={venue.slug} href={`${getReserveOrigin()}/${venue.slug}`} className="rounded-[28px] border border-white/10 bg-[#0b0b10] p-6 transition hover:border-white/20">
+            <Link key={venue.slug} href={`/reserve/${venue.slug}`} className="rounded-[28px] border border-white/10 bg-[#0b0b10] p-6 transition hover:border-white/20">
               <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#caa7ff]">Reserve-ready venue</div>
               <h2 className="mt-3 text-2xl font-black tracking-tight text-white">{venue.name}</h2>
               <p className="mt-3 text-sm leading-6 text-white/68">
@@ -145,7 +145,7 @@ export default async function ReserveVenuePage({ params }: ReserveSlugPageProps)
                     <div className="text-sm font-semibold text-white">{venue.name}</div>
                     <div className="mt-2 flex flex-wrap gap-3 text-xs uppercase tracking-[0.18em] text-white/45">
                       <Link href={`/city/${city.slug}/venues`} className="hover:text-white/80">Top venues nearby</Link>
-                      {venue.isReserveActive ? <Link href={`${getReserveOrigin()}/${venue.slug}`} className="hover:text-white/80">Reserve at similar places</Link> : null}
+                      {venue.isReserveActive ? <Link href={`/reserve/${venue.slug}`} className="hover:text-white/80">Reserve at similar places</Link> : null}
                     </div>
                   </div>
                 ))}
@@ -309,7 +309,7 @@ export default async function ReserveVenuePage({ params }: ReserveSlugPageProps)
               <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#caa7ff]">Reserve at similar places</div>
               <div className="mt-4 space-y-3">
                 {similarReserve.length ? similarReserve.map((place) => (
-                  <Link key={place.slug} href={`${getReserveOrigin()}/${place.slug}`} className="block rounded-2xl border border-white/10 bg-black/20 p-4 hover:border-white/20">
+                  <Link key={place.slug} href={`/reserve/${place.slug}`} className="block rounded-2xl border border-white/10 bg-black/20 p-4 hover:border-white/20">
                     <div className="text-sm font-semibold text-white">{place.name}</div>
                     <div className="mt-1 text-sm text-white/60">{place.city}, {place.state}</div>
                   </Link>

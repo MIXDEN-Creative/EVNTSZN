@@ -1,5 +1,7 @@
 import { isMidnightRunEvent } from "@/lib/events-runtime";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { supabasePublicServer } from "@/lib/supabase-public-server";
+import { isSupabaseCredentialError } from "@/lib/runtime-env";
 
 export type DiscoverySourceType = "evntszn" | "host" | "independent_organizer";
 
@@ -164,33 +166,41 @@ export async function getDiscoveryNativeEvents(input: {
   const limit = Math.min(Math.max(Number(input.limit || 12), 1), 50);
   const effectiveStartAt = input.startAt || new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
 
-  let query = supabaseAdmin
-    .from("evntszn_events")
-    .select(
-      "id, slug, title, description, subtitle, hero_note, banner_image_url, start_at, city, state, event_class, visibility, status",
-    )
-    .in("visibility", ["published", "public"])
-    .in("status", ["published", "live", "scheduled"])
-    .order("start_at", { ascending: true })
-    .limit(limit * 3);
+  const runEventQuery = async (client: typeof supabaseAdmin) => {
+    let query = client
+      .from("evntszn_events")
+      .select(
+        "id, slug, title, description, subtitle, hero_note, banner_image_url, start_at, city, state, event_class, visibility, status",
+      )
+      .in("visibility", ["published", "public"])
+      .in("status", ["published", "live", "scheduled"])
+      .order("start_at", { ascending: true })
+      .limit(limit * 3);
 
-  if (input.city) {
-    query = query.ilike("city", input.city);
-  }
-  if (input.query) {
-    const safeQuery = input.query.replace(/[,%]/g, " ").trim();
-    if (safeQuery) {
-      query = query.or(
-        `title.ilike.%${safeQuery}%,subtitle.ilike.%${safeQuery}%,description.ilike.%${safeQuery}%,hero_note.ilike.%${safeQuery}%`,
-      );
+    if (input.city) {
+      query = query.ilike("city", input.city);
     }
-  }
-  query = query.gte("start_at", effectiveStartAt);
-  if (input.endAt) {
-    query = query.lte("start_at", input.endAt);
-  }
+    if (input.query) {
+      const safeQuery = input.query.replace(/[,%]/g, " ").trim();
+      if (safeQuery) {
+        query = query.or(
+          `title.ilike.%${safeQuery}%,subtitle.ilike.%${safeQuery}%,description.ilike.%${safeQuery}%,hero_note.ilike.%${safeQuery}%`,
+        );
+      }
+    }
+    query = query.gte("start_at", effectiveStartAt);
+    if (input.endAt) {
+      query = query.lte("start_at", input.endAt);
+    }
+    return query;
+  };
 
-  const { data, error } = await query;
+  let { data, error } = await runEventQuery(supabaseAdmin);
+  if (error && isSupabaseCredentialError(error)) {
+    const fallback = await runEventQuery(supabasePublicServer);
+    data = fallback.data;
+    error = fallback.error;
+  }
   if (error) {
     throw new Error(error.message);
   }

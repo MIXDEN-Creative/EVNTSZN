@@ -1,7 +1,6 @@
 import Link from "next/link";
 import PublicPageFrame from "@/components/public/PublicPageFrame";
 import SurfaceShell from "@/components/shells/SurfaceShell";
-import { getLoginUrl } from "@/lib/domains";
 import { getPlatformViewer } from "@/lib/evntszn";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import OrganizerDashboard from "./OrganizerDashboard";
@@ -58,7 +57,7 @@ export default async function OrganizerPage() {
             <Link href="/organizer/apply" className="ev-button-primary px-8">
               Apply as Partner
             </Link>
-            <Link href={getLoginUrl("/organizer", "app.evntszn.com")} className="ev-button-secondary px-8">
+            <Link href="/admin-login?next=/organizer" className="ev-button-secondary px-8">
               Enter Organizer Dashboard
             </Link>
           </div>

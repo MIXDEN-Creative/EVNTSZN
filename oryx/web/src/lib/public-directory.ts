@@ -2,6 +2,8 @@ import { isMidnightRunEvent } from "@/lib/events-runtime";
 import { getPublicCityByName, getPublicCityBySlug, type PublicCity } from "@/lib/public-cities";
 import { deriveReserveSettingsFromPlan, normalizeReserveSettings } from "@/lib/reserve";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { supabasePublicServer } from "@/lib/supabase-public-server";
+import { isSupabaseCredentialError } from "@/lib/runtime-env";
 
 const EVENT_FALLBACK_IMAGE =
   "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=1600&q=80";
@@ -144,37 +146,45 @@ function nightlifeScore(event: PublicEventListing) {
 }
 
 export async function getAllPublishedEvents(limit = 120) {
-  const { data, error } = await supabaseAdmin
-    .from("evntszn_events")
-    .select(`
-      id,
-      slug,
-      title,
-      subtitle,
-      description,
-      hero_note,
-      city,
-      state,
-      start_at,
-      end_at,
-      banner_image_url,
-      event_class,
-      event_vertical,
-      visibility,
-      status,
-      evntszn_venues (
+  const runQuery = async (client: typeof supabaseAdmin) =>
+    client
+      .from("evntszn_events")
+      .select(`
+        id,
         slug,
-        name,
+        title,
+        subtitle,
+        description,
+        hero_note,
         city,
         state,
-        timezone
-      )
-    `)
-    .eq("visibility", "published")
-    .in("status", ["published", "live", "scheduled"])
-    .gte("start_at", new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString())
-    .order("start_at", { ascending: true })
-    .limit(limit);
+        start_at,
+        end_at,
+        banner_image_url,
+        event_class,
+        event_vertical,
+        visibility,
+        status,
+        evntszn_venues (
+          slug,
+          name,
+          city,
+          state,
+          timezone
+        )
+      `)
+      .eq("visibility", "published")
+      .in("status", ["published", "live", "scheduled"])
+      .gte("start_at", new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString())
+      .order("start_at", { ascending: true })
+      .limit(limit);
+
+  let { data, error } = await runQuery(supabaseAdmin);
+  if (error && isSupabaseCredentialError(error)) {
+    const fallback = await runQuery(supabasePublicServer);
+    data = fallback.data;
+    error = fallback.error;
+  }
 
   if (error) throw new Error(error.message);
 
@@ -209,34 +219,42 @@ export async function getRelatedEvents(input: { city: string; excludeSlug?: stri
 
 export async function getReserveVenueListings(limit = 80) {
   try {
-    const { data, error } = await supabaseAdmin
-      .from("evntszn_reserve_venues")
-      .select(`
-        id,
-        venue_id,
-        is_active,
-        plan_key,
-        subscription_status,
-        capacity_snapshot,
-        settings,
-        evntszn_venues!inner(
+    const runQuery = async (client: typeof supabaseAdmin) =>
+      client
+        .from("evntszn_reserve_venues")
+        .select(`
           id,
-          slug,
-          name,
-          city,
-          state,
-          timezone,
-          capacity,
-          contact_email,
-          contact_phone,
+          venue_id,
+          is_active,
           plan_key,
-          smart_fill_add_on_active,
-          link_plan_override,
-          plan_status
-        )
-      `)
-      .order("created_at", { ascending: false })
-      .limit(limit);
+          subscription_status,
+          capacity_snapshot,
+          settings,
+          evntszn_venues!inner(
+            id,
+            slug,
+            name,
+            city,
+            state,
+            timezone,
+            capacity,
+            contact_email,
+            contact_phone,
+            plan_key,
+            smart_fill_add_on_active,
+            link_plan_override,
+            plan_status
+          )
+        `)
+        .order("created_at", { ascending: false })
+        .limit(limit);
+
+    let { data, error } = await runQuery(supabaseAdmin);
+    if (error && isSupabaseCredentialError(error)) {
+      const fallback = await runQuery(supabasePublicServer);
+      data = fallback.data;
+      error = fallback.error;
+    }
 
     if (error) throw new Error(error.message);
 

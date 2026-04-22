@@ -4,6 +4,7 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 import { getFounderSession } from "@/lib/founder-session";
 import { getAppOrigin, getLoginUrl, getRestrictedSurfaceForPath, getRestrictedUrl } from "@/lib/domains";
 import { isMissingRbacTableError } from "@/lib/admin-auth";
+import { getSupabaseRuntimeConfig } from "@/lib/runtime-env";
 
 export type PlatformRole = "attendee" | "organizer" | "venue" | "scanner" | "admin";
 
@@ -104,6 +105,16 @@ export async function getPlatformViewer() {
   }
 
   const authedUser = user;
+  const adminConfig = getSupabaseRuntimeConfig("server-admin", "platform.viewer");
+
+  if (!adminConfig.ok) {
+    return {
+      user: authedUser,
+      profile: null,
+      operatorProfile: null,
+      isPlatformAdmin: false,
+    };
+  }
 
   const [{ data: profile }, membershipsResponse, { data: operatorProfile }] = await Promise.all([
     supabaseAdmin

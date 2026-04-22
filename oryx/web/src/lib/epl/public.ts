@@ -1,4 +1,6 @@
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { supabasePublicServer } from "@/lib/supabase-public-server";
+import { isSupabaseCredentialError } from "@/lib/runtime-env";
 import { resolveEplTeamProfile } from "@/lib/epl-teams";
 import { getSeasonContext } from "@/lib/epl/helpers";
 
@@ -127,45 +129,54 @@ export type EplPublicEventSnapshot = {
 
 export async function getEplPublicSnapshot() {
   const context = await getSeasonContext();
-  const [{ data: season }, { data: teams }, { data: rosterSummary }, { data: draftNeeds }, { data: draftSessions }, { data: playerPool }, { data: leagueEvents }] =
-    await Promise.all([
-      supabaseAdmin
+  const runQueries = (client: typeof supabaseAdmin) =>
+    Promise.all([
+      client
         .schema("epl")
         .from("seasons")
         .select("id, slug, name, status, player_fee_usd, registration_opens_at, registration_closes_at, season_starts_at, season_ends_at, draft_event_title, draft_state, production_message, sponsor_message")
         .eq("id", context.seasonId)
         .single(),
-      supabaseAdmin
+      client
         .schema("epl")
         .from("teams")
         .select("id, slug, team_name, team_code, team_logo_url, draft_order, captain_name, season_id")
         .eq("season_id", context.seasonId)
         .eq("is_active", true)
         .order("draft_order", { ascending: true }),
-      supabaseAdmin
+      client
         .from("epl_v_admin_team_roster_summary")
         .select("team_id, season_slug, team_name, team_logo_url, roster_size, drafted_players")
         .eq("season_slug", "season-1"),
-      supabaseAdmin
+      client
         .from("epl_v_admin_team_draft_needs")
         .select("team_id, season_slug, team_name, team_logo_url, qb_need, receiver_need, defense_need")
         .eq("season_slug", "season-1"),
-      supabaseAdmin
+      client
         .from("epl_v_draft_sessions")
         .select("draft_session_id, season_slug, title, status, current_pick_number, total_picks, production_state, production_message, sponsor_message, created_at, updated_at")
         .eq("season_slug", "season-1")
         .order("created_at", { ascending: true }),
-      supabaseAdmin
+      client
         .from("epl_v_admin_player_pool")
         .select("registration_id, season_slug, registration_status, player_status, paid_at, is_draft_eligible")
         .eq("season_slug", "season-1"),
-      supabaseAdmin
+      client
         .from("evntszn_events")
         .select("id, slug, title, subtitle, city, state, start_at, end_at, status, visibility, event_collection, home_side_label, away_side_label")
         .eq("event_vertical", "epl")
         .eq("visibility", "published")
         .order("start_at", { ascending: true }),
     ]);
+
+  let queryResults = await runQueries(supabaseAdmin);
+  const firstError = queryResults.find((result) => result.error)?.error;
+  if (firstError && isSupabaseCredentialError(firstError)) {
+    queryResults = await runQueries(supabasePublicServer);
+  }
+
+  const [{ data: season }, { data: teams }, { data: rosterSummary }, { data: draftNeeds }, { data: draftSessions }, { data: playerPool }, { data: leagueEvents }] =
+    queryResults;
 
   const teamRows = (teams || []) as TeamRow[];
   const rosterRows = new Map(((rosterSummary || []) as TeamRosterSummaryRow[]).map((row) => [row.team_id, row]));

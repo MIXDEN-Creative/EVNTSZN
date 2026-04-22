@@ -3,7 +3,9 @@ import { getVenueCommerceState } from "@/lib/evntszn-monetization";
 import { slugify } from "@/lib/platform-products";
 import { getAllPublishedEvents, getReserveVenueListings } from "@/lib/public-directory";
 import { getPulseStateSnapshot, getPulseStatesByCity } from "@/lib/pulse-signal";
+import { isSupabaseCredentialError } from "@/lib/runtime-env";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { supabasePublicServer } from "@/lib/supabase-public-server";
 import {
   type CrewMemberSummary,
   type ReserveVenueSummary,
@@ -468,11 +470,19 @@ function buildTimingSignal(startAt: string | null) {
 }
 
 export async function getCrewMembersForPhase(): Promise<CrewMemberSummary[]> {
-  const { data, error } = await supabaseAdmin
-    .from("evntszn_crew_profiles")
-    .select("id, slug, display_name, category, custom_category, city, state, rate_amount_usd, headline, metadata")
-    .eq("status", "published")
-    .limit(16);
+  const runQuery = async (client: typeof supabaseAdmin) =>
+    client
+      .from("evntszn_crew_profiles")
+      .select("id, slug, display_name, category, custom_category, city, state, rate_amount_usd, headline, metadata")
+      .eq("status", "published")
+      .limit(16);
+
+  let { data, error } = await runQuery(supabaseAdmin);
+  if (error && isSupabaseCredentialError(error)) {
+    const fallback = await runQuery(supabasePublicServer);
+    data = fallback.data;
+    error = fallback.error;
+  }
 
   if (error || !data?.length) {
     return MOCK_CREW;
@@ -497,11 +507,19 @@ export async function getCrewMembersForPhase(): Promise<CrewMemberSummary[]> {
 }
 
 export async function getVenueSupplyForPhase(): Promise<VenueSupplySummary[]> {
-  const { data, error } = await supabaseAdmin
-    .from("evntszn_venues")
-    .select("id, slug, name, city, state, capacity, plan_key, smart_fill_add_on_active, link_plan_override, metadata")
-    .order("created_at", { ascending: false })
-    .limit(12);
+  const runQuery = async (client: typeof supabaseAdmin) =>
+    client
+      .from("evntszn_venues")
+      .select("id, slug, name, city, state, capacity, plan_key, smart_fill_add_on_active, link_plan_override, metadata")
+      .order("created_at", { ascending: false })
+      .limit(12);
+
+  let { data, error } = await runQuery(supabaseAdmin);
+  if (error && isSupabaseCredentialError(error)) {
+    const fallback = await runQuery(supabasePublicServer);
+    data = fallback.data;
+    error = fallback.error;
+  }
 
   if (error || !data?.length) {
     return MOCK_RESERVE_VENUES.map((venue) => ({
