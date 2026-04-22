@@ -1,5 +1,6 @@
 import PulseActivityBeacon from "@/components/evntszn/PulseActivityBeacon";
 import DiscoveryLanding from "@/components/public/DiscoveryLanding";
+import PublicPageFrame from "@/components/public/PublicPageFrame";
 import { safePublicLoad } from "@/lib/public-safe-load";
 import { getDiscoveryNativeEvents, groupDiscoveryEventsBySource, type DiscoveryNativeEvent } from "@/lib/discovery";
 import { getReserveVenueListings } from "@/lib/public-directory";
@@ -64,7 +65,7 @@ export default async function HomePage() {
   ];
 
   return (
-    <main className="ev-public-page bg-black text-white">
+    <PublicPageFrame>
       <PulseActivityBeacon sourceType="discover_view" city="Baltimore" referenceType="discover" referenceId="homepage" />
       <DiscoveryLanding
         content={content}
@@ -75,6 +76,6 @@ export default async function HomePage() {
         reserveVenues={reserveVenues}
         sponsorPlacements={sponsorPlacements}
       />
-    </main>
+    </PublicPageFrame>
   );
 }
