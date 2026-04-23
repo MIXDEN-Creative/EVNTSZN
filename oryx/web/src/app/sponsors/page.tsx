@@ -1,5 +1,20 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+import EngagementBeacon from "@/components/engagement/EngagementBeacon";
+import EngagementLoopPanel from "@/components/engagement/EngagementLoopPanel";
 import PublicPageFrame from "@/components/public/PublicPageFrame";
+import ProductTrustGrid from "@/components/public/ProductTrustGrid";
+import SystemActivityRail from "@/components/public/SystemActivityRail";
+import { buildCollectionPageSchema, buildItemListSchema, buildPageMetadata } from "@/lib/seo";
+import { getWebOrigin } from "@/lib/domains";
+
+export const metadata: Metadata = buildPageMetadata({
+  title: "EVNTSZN Sponsors | brand visibility across nightlife and EPL",
+  description:
+    "Sponsor EVNTSZN events, venues, EPL, and Pulse with structured placements, analytics, and live activation lanes.",
+  path: "/sponsors",
+  origin: getWebOrigin(),
+});
 
 const SPONSOR_TIERS = [
   {
@@ -54,11 +69,24 @@ export default function SponsorsPage() {
       title="EVNTSZN Sponsors"
       description="Put your brand inside EVNTSZN events, venues, EPL, and Pulse with one clean sponsorship lane."
       heroImage="https://images.unsplash.com/photo-1515169067868-5387ec356754?auto=format&fit=crop&w=1800&q=80"
-      seo={{
-        title: "EVNTSZN Sponsors | Brand visibility across nightlife, venues, and EPL",
-        description: "Sponsor EVNTSZN events, venues, EPL, and Pulse with structured placements, analytics, and live activation lanes.",
-      }}
+      structuredData={[
+        buildCollectionPageSchema({
+          name: "EVNTSZN Sponsors",
+          description:
+            "Commercial visibility lanes across events, Pulse, venues, and EPL.",
+          path: "/sponsors",
+        }),
+        buildItemListSchema({
+          name: "Sponsor tiers",
+          path: "/sponsors",
+          items: SPONSOR_TIERS.map((tier) => ({
+            name: tier.title,
+            url: "/sponsors/packages",
+          })),
+        }),
+      ]}
     >
+      <EngagementBeacon eventType="sponsor_perk_viewed" city="Baltimore" referenceType="sponsors" referenceId="landing" dedupeKey={`sponsors:view:${new Date().toISOString().slice(0, 10)}`} />
       <section className="mx-auto max-w-7xl px-4 py-12 md:px-6 lg:px-8">
         <div className="grid gap-6 lg:grid-cols-[1.08fr_0.92fr]">
           <div className="ev-panel p-7 md:p-8">
@@ -85,7 +113,7 @@ export default function SponsorsPage() {
               <Link href="/sponsors/apply" className="ev-button-primary px-8">
                 Become a Sponsor
               </Link>
-              <Link href="/sponsors/packages" className="ev-button-primary px-8">
+              <Link href="/sponsors/packages" className="ev-button-secondary px-8">
                 Open sponsor packages
               </Link>
               <Link href="/enter" className="ev-button-secondary px-8">
@@ -115,6 +143,46 @@ export default function SponsorsPage() {
           </div>
         </div>
       </section>
+
+      <SystemActivityRail cityLabel="Baltimore" audienceLabel="brands" mode="compact" />
+
+      <section className="mx-auto max-w-7xl px-4 py-4 md:px-6 lg:px-8">
+        <EngagementLoopPanel
+          contextLabel="Perk path"
+          title="Turn sponsor visibility into premium member value."
+          body="Sponsor engagement now feeds perk unlocks, city reward paths, and a more useful return loop than coupon clutter."
+          actionHref="/enter"
+          actionLabel="Enter EVNTSZN"
+        />
+      </section>
+
+      <ProductTrustGrid
+        title="Sponsors are not filler placements. They are commercial partners inside the ecosystem."
+        subtitle="The sponsor lane is built to prove where visibility lands, what it drives, and how it connects to events, EPL, and Pulse."
+        proofTitle="Proof"
+        proof={[
+          { title: "Multi-surface reach", body: "Sponsors can appear across events, venues, Pulse, and league nights." },
+          { title: "Commercial workflow", body: "Inquiry, package review, and follow-through live in one desk." },
+          { title: "Outcome-first", body: "The system is framed around placements and activation, not vague brand awareness." },
+        ]}
+        outcomesTitle="Outcomes"
+        outcomes={[
+          { title: "More visible", body: "Brands know where they show up and why it matters." },
+          { title: "More measurable", body: "The lane connects into the commercial system instead of disappearing into static pages." },
+          { title: "More premium", body: "The packages feel like serious city activation, not ad inventory." },
+        ]}
+        objectionsTitle="Objections"
+        objections={[
+          { question: "Is this just banner advertising?", answer: "No. It is placement, activation, and ecosystem adjacency." },
+          { question: "Can sponsors target specific lanes?", answer: "Yes. Events, Pulse, EPL, and venue placements are distinct pathways." },
+          { question: "What happens after inquiry?", answer: "The sponsor desk can review, scope, invoice, or route into packages." },
+        ]}
+        links={[
+          { href: "/sponsors/packages", label: "View sponsor packages" },
+          { href: "/epl", label: "See EPL" },
+          { href: "/pulse", label: "See Pulse" },
+        ]}
+      />
 
       <section className="mx-auto max-w-7xl px-4 py-12 md:px-6 lg:px-8">
         <div className="ev-section-kicker">Sponsor pricing</div>

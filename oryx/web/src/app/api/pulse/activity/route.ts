@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { buildActivitySourceMetadata } from "@/lib/activity-source";
 import { createClient } from "@/lib/supabase/server";
 import { recordPulseActivity } from "@/lib/pulse-signal";
 
@@ -41,6 +42,14 @@ export async function POST(request: Request) {
       metadata: {
         deviceType: body.deviceType || null,
         referrer: request.headers.get("referer"),
+        ...buildActivitySourceMetadata({
+          sourceType: "evntszn_native",
+          referenceType: body.referenceType || null,
+          entityType: body.referenceType || null,
+          metadata: {
+            deviceType: body.deviceType || null,
+          },
+        }),
       },
     });
 

@@ -4,7 +4,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { DiscoveryNativeEvent } from "@/lib/discovery";
+import EngagementBeacon from "@/components/engagement/EngagementBeacon";
+import EngagementLoopPanel from "@/components/engagement/EngagementLoopPanel";
+import SaveToggle from "@/components/evntszn/SaveToggle";
+import SystemActivityRail from "@/components/public/SystemActivityRail";
+import NightBuilderStudio from "@/components/public/NightBuilderStudio";
+import { rankDiscoveryListings, type DiscoveryNativeEvent } from "@/lib/discovery";
+import type { EngagementSnapshot } from "@/lib/engagement";
 import type { PublicVenueListing } from "@/lib/public-directory";
 import type { HomepageContent, PublicModules } from "@/lib/site-content";
 import type { TicketmasterEvent } from "@/lib/ticketmaster";
@@ -69,10 +75,153 @@ type DiscoveryResponse = {
     summary?: string;
     venueNote?: string | null;
   } | null;
+  market?: {
+    maturityState?: "strong" | "growing" | "imported_fallback";
+    maturityScore?: number;
+    maturityReason?: string;
+    policyState?: "strong" | "growing" | "imported_fallback";
+    policyLabel?: string;
+    policyExplanation?: string;
+    homepageBehavior?: string;
+    searchBehavior?: string;
+    momentumBehavior?: string;
+  } | null;
 };
 
 const FALLBACK_DISCOVERY_IMAGE =
   "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=1800&q=80";
+
+const DISCOVERY_LANES = [
+  {
+    key: "rooftop-circuit",
+    title: "Rooftop Circuit",
+    category: "Vibe lane",
+    cityZone: "Downtown skyline",
+    body: "Start high, keep the line clean, and build a night around elevated views, first cocktails, and a premium opening move.",
+  },
+  {
+    key: "late-night-dining",
+    title: "Late-Night Dining",
+    category: "Nightlife category",
+    cityZone: "Core city dining zone",
+    body: "A quieter build with dinner, one strong room, and a cleaner transition into the late window.",
+  },
+  {
+    key: "pulse-to-peak",
+    title: "Pulse To Peak",
+    category: "City zone",
+    cityZone: "Where the city speeds up",
+    body: "Use live Pulse and reserve pressure to move from early momentum into the room that actually peaks.",
+  },
+] as const;
+
+const POWER_ROLES = [
+  {
+    title: "Curators",
+    body: "Approved network operators running premium city nights inside the EVNTSZN system.",
+    href: "/hosts",
+    label: "Apply as Curator",
+  },
+  {
+    title: "Partners",
+    body: "Independent organizers who grow their own audience while using EVNTSZN as the platform.",
+    href: "/partners",
+    label: "Open Partner path",
+  },
+  {
+    title: "Venues",
+    body: "Venue groups that need visibility, demand routing, and a cleaner operating stack.",
+    href: "/venue",
+    label: "Open Venue lane",
+  },
+  {
+    title: "Crew / Operators",
+    body: "Trusted service providers and operators that keep nights moving with reliable execution.",
+    href: "/crew",
+    label: "Open Crew",
+  },
+] as const;
+
+const VENUE_STACK = [
+  {
+    title: "EVNTSZN Venue",
+    body: "Listing, visibility, event presence, and Pulse presence for the foundation layer.",
+    href: "/venue",
+    label: "Start Venue",
+  },
+  {
+    title: "Venue Pro",
+    body: "Premium venue tooling for messaging, demand support, Smart Fill, and deeper network presence.",
+    href: "/venue/pro",
+    label: "See Venue Pro",
+  },
+  {
+    title: "Venue Pro + Reserve",
+    body: "The venue ladder with reservations, waitlists, and premium hospitality operations.",
+    href: "/venue/pro-reserve",
+    label: "See Reserve stack",
+  },
+] as const;
+
+const INFRA_TOOLS = [
+  {
+    title: "Reserve",
+    body: "Premium booking, waitlist pressure, and calm reservation flow.",
+    href: "/reserve",
+    label: "Open Reserve",
+  },
+  {
+    title: "Nodes",
+    body: "Tap points and routing infrastructure that connect the physical network.",
+    href: "/nodes",
+    label: "Open Nodes",
+  },
+  {
+    title: "Tap to Pour",
+    body: "Hospitality interaction layer for venues, service, and faster guest motion.",
+    href: "/tap-to-pour",
+    label: "Open Tap to Pour",
+  },
+  {
+    title: "Link",
+    body: "Conversion pages for events, offers, tickets, and profile traffic.",
+    href: "/link",
+    label: "Open Link",
+  },
+  {
+    title: "Crew",
+    body: "Trusted service marketplace with premium pricing and clearer booking flow.",
+    href: "/crew",
+    label: "Open Crew",
+  },
+] as const;
+
+const PROGRAMS = [
+  {
+    title: "EPL",
+    body: "League identity, schedule, standings, and supporter progression.",
+    href: "/epl",
+    label: "Open EPL",
+  },
+  {
+    title: "StayOps",
+    body: "Premium short-term rental revenue operations tied to city demand and event movement.",
+    href: "/stayops",
+    label: "Open StayOps",
+  },
+  {
+    title: "Sponsors",
+    body: "Brand visibility, city activations, and premium placements across the ecosystem.",
+    href: "/sponsors",
+    label: "Open Sponsors",
+  },
+  {
+    title: "Network progression",
+    body: "Curator, partner, and operator lanes that unlock deeper responsibility.",
+    href: "/operate",
+    label: "Open Operate",
+  },
+] as const;
 
 function formatEventDate(value: string | null | undefined) {
   if (!value) return "Date coming soon";
@@ -127,7 +276,7 @@ function normalizeExternalEvent(event: ExternalDiscoveryEvent): DiscoveryListing
     state: event.state || "",
     startAt: event.startAt,
     source: event.source,
-    badgeLabel: event.source === "ticketmaster" ? "Ticketmaster" : "Eventbrite",
+    badgeLabel: "Imported signal",
     summary:
       event.description ||
       `${event.venueName || "Live event"}${event.city ? ` · ${event.city}` : ""}`,
@@ -167,15 +316,41 @@ function getSourceChipClass(source: DiscoveryListing["source"]) {
 function getSourceLabel(source: DiscoveryListing["source"]) {
   switch (source) {
     case "evntszn":
-      return "Official EVNTSZN";
+      return "EVNTSZN Native";
     case "host":
-      return "EVNTSZN Curator";
+      return "Curator Network";
     case "independent_organizer":
       return "Partner";
     case "ticketmaster":
-      return "Ticketmaster-backed";
+      return "Imported signal";
     case "eventbrite":
-      return "Eventbrite-backed";
+      return "Imported signal";
+  }
+}
+
+function getSourceStory(source: DiscoveryListing["source"]) {
+  switch (source) {
+    case "evntszn":
+      return "Native EVNTSZN inventory";
+    case "host":
+      return "Curator-run inventory";
+    case "independent_organizer":
+      return "Partner-run inventory";
+    default:
+      return "Imported inventory";
+  }
+}
+
+function getSourceActionLabel(source: DiscoveryListing["source"]) {
+  switch (source) {
+    case "evntszn":
+      return "Open EVNTSZN drop";
+    case "host":
+      return "See curator room";
+    case "independent_organizer":
+      return "Open partner event";
+    default:
+      return "View imported signal";
   }
 }
 
@@ -233,13 +408,17 @@ function DiscoveryCard({
         <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-white/42">Event details</div>
         <div className="mt-3 text-base font-semibold text-white/78">{event.venue}</div>
         <div className="mt-1 text-sm text-white/58">{formatEventDate(event.startAt)}</div>
+        <div className="mt-2 text-[10px] font-bold uppercase tracking-[0.18em] text-white/48">{getSourceStory(event.source)}</div>
         <p className="mt-4 line-clamp-3 text-sm leading-7 text-white/72">{event.summary}</p>
         <Link
           href={event.href}
           className="mt-6 ev-button-primary w-full"
         >
-          Get Access
+          {getSourceActionLabel(event.source)}
         </Link>
+        <div className="mt-3 text-[10px] font-bold uppercase tracking-[0.18em] text-white/48">
+          {"This moves you closer to tonight's signal."}
+        </div>
       </div>
     </article>
   );
@@ -263,6 +442,9 @@ export default function DiscoveryLanding({
   const [results, setResults] = useState<DiscoveryListing[]>(initialPopular);
   const [normalizedLocationLabel, setNormalizedLocationLabel] = useState<string | null>(null);
   const [weatherSummary, setWeatherSummary] = useState<string | null>(null);
+  const [marketPolicyLabel, setMarketPolicyLabel] = useState<string | null>(null);
+  const [marketPolicyExplanation, setMarketPolicyExplanation] = useState<string | null>(null);
+  const [engagementPreview, setEngagementPreview] = useState<Pick<EngagementSnapshot, "level" | "xpIntoLevel" | "xpForNextLevel" | "currentStreak" | "bestNextMove" | "todaySignal" | "timePressureLabel" | "timePressureCountdown" | "socialMomentum" | "nearCompleteHeadline" | "nextBestAction" | "socialComparisonLabel" | "peopleLikeYouLabel"> | null>(null);
 
   const groupedNative = useMemo(
     () => ({
@@ -315,6 +497,30 @@ export default function DiscoveryLanding({
         setResults(nextResults);
         setNormalizedLocationLabel(payload.normalizedCity?.label || null);
         setWeatherSummary(payload.weather?.summary || payload.weather?.venueNote || null);
+        setMarketPolicyLabel(payload.market?.policyLabel || null);
+        setMarketPolicyExplanation(payload.market?.policyExplanation || payload.market?.maturityReason || null);
+        const exploredCity = payload.normalizedCity?.city || nextCity.trim() || null;
+        if (exploredCity) {
+          void fetch("/api/engagement/events", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                eventType: "city_explored",
+                city: exploredCity,
+                referenceType: "discover_search",
+                referenceId: nextQuery.trim() || nextWhen || "city",
+                dedupeKey: `discover-search:${exploredCity}:${nextWhen || "open"}`,
+                metadata: {
+                  query: nextQuery.trim() || null,
+                  when: nextWhen || null,
+                  resultCount: nextResults.length,
+                  sourceType: nextResults[0]?.source || "imported",
+                  sourceLabel: nextResults[0]?.badgeLabel || "Imported signal",
+                },
+              }),
+            keepalive: true,
+          }).catch(() => null);
+        }
         if (!nextResults.length) {
           setMessage(createEmptyState(nextQuery, nextCity).body);
         }
@@ -322,6 +528,8 @@ export default function DiscoveryLanding({
         setResults([]);
         setMessage("Search is taking a beat. Try again in a moment.");
         setWeatherSummary(null);
+        setMarketPolicyLabel(null);
+        setMarketPolicyExplanation(null);
       } finally {
         setLoading(false);
       }
@@ -336,6 +544,39 @@ export default function DiscoveryLanding({
     }, 250);
     return () => window.clearTimeout(timeout);
   }, [query, city, when, runSearch]);
+
+  useEffect(() => {
+    let active = true;
+    async function loadEngagementPreview() {
+      try {
+        const response = await fetch("/api/engagement/snapshot", { cache: "no-store" });
+        const payload = (await response.json().catch(() => ({}))) as EngagementSnapshot & { error?: string };
+        if (!active) return;
+        if (!response.ok) return;
+        setEngagementPreview({
+          bestNextMove: payload.bestNextMove,
+          todaySignal: payload.todaySignal,
+          timePressureLabel: payload.timePressureLabel,
+          timePressureCountdown: payload.timePressureCountdown,
+          socialMomentum: payload.socialMomentum,
+          nearCompleteHeadline: payload.nearCompleteHeadline,
+          nextBestAction: payload.nextBestAction,
+          level: payload.level,
+          xpIntoLevel: payload.xpIntoLevel,
+          xpForNextLevel: payload.xpForNextLevel,
+          currentStreak: payload.currentStreak,
+          socialComparisonLabel: payload.socialComparisonLabel,
+          peopleLikeYouLabel: payload.peopleLikeYouLabel,
+        });
+      } catch {
+        if (!active) return;
+      }
+    }
+    void loadEngagementPreview();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   async function useNearMe() {
     if (!navigator.geolocation) {
@@ -362,24 +603,58 @@ export default function DiscoveryLanding({
     );
   }
 
-  const visibleResults = dedupeListings(results).slice(0, 8);
+  const visibleResults = rankDiscoveryListings(dedupeListings(results)).slice(0, 8);
   const spotlight = visibleResults[0] || null;
   const rail = visibleResults.slice(spotlight ? 1 : 0);
   const emptyState = createEmptyState(query, city);
   const primaryInventory = useMemo(
     () =>
-      dedupeListings([
+      rankDiscoveryListings(dedupeListings([
         ...groupedNative.evntszn,
         ...groupedNative.host,
         ...groupedNative.independent,
-      ]).slice(0, 6),
-    [groupedNative],
+        ...groupedNative.external,
+        ...initialPopular,
+      ])).slice(0, 6),
+    [groupedNative, initialPopular],
   );
   const reserveSpotlight = reserveVenues.filter((venue) => venue.isReserveActive).slice(0, 4);
   const externalSpotlight = groupedNative.external.slice(0, 4);
 
+  async function exploreLane(lane: typeof DISCOVERY_LANES[number]) {
+    setQuery(lane.title);
+    setHasSearched(true);
+    setMessage(null);
+    await fetch("/api/engagement/events", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        eventType: "discovery_lane_explored",
+        city: city || normalizedLocationLabel || "Baltimore",
+        referenceType: "vibe_lane",
+        referenceId: lane.key,
+        dedupeKey: `lane:${lane.key}:${new Date().toISOString().slice(0, 10)}`,
+        metadata: {
+          title: lane.title,
+          category: lane.category,
+          cityZone: lane.cityZone,
+          sourceType: "evntszn_native",
+          sourceLabel: "EVNTSZN Native",
+        },
+      }),
+      keepalive: true,
+    }).catch(() => null);
+  }
+
   return (
     <>
+      <EngagementBeacon
+        eventType="discover_view"
+        city={city || normalizedLocationLabel || "Baltimore"}
+        referenceType="discover"
+        referenceId="homepage"
+        dedupeKey={`discover:homepage:${new Date().toISOString().slice(0, 10)}`}
+      />
       <section className="relative overflow-hidden border-b border-white/10 pt-[var(--public-page-top-space)]">
         <div className="absolute inset-0">
           <Image
@@ -412,18 +687,18 @@ export default function DiscoveryLanding({
 
               <div className="mt-8 flex flex-wrap gap-4">
                 <Link href="/events" className="ev-button-primary px-10">
-                  Find Events
+                  See what’s building tonight
                 </Link>
                 <Link href="/epl" className="ev-button-secondary px-10">
-                  Prime League
+                  Step into the network
                 </Link>
               </div>
 
               <div className="mt-10 grid gap-3 sm:grid-cols-3">
                 {[
-                  { label: "Tonight", value: "Find the move fast", detail: "Search what is happening now, what starts next, and what is worth getting dressed for." },
-                  { label: "This weekend", value: "Big game and big-night energy", detail: "Concerts, sports, parties, and league nights across the cities people watch first." },
-                  { label: "Across EVNTSZN", value: "One clean way in", detail: "Browse, buy, register, and keep up with EPL without getting dropped into disconnected pages." },
+                  { label: "Tonight", value: "See what is building now", detail: "Search what is happening now, what starts next, and what is worth getting dressed for." },
+                  { label: "This weekend", value: "Momentum is already forming", detail: "Concerts, sports, parties, and league nights across the cities people watch first." },
+                  { label: "Across EVNTSZN", value: "One clean way in", detail: "See what's building tonight, buy, register, and keep up with EPL without getting dropped into disconnected pages." },
                 ].map((stat) => (
                   <div key={stat.label} className="ev-feature-card bg-black/35">
                     <div className="ev-meta-label">{stat.label}</div>
@@ -432,6 +707,28 @@ export default function DiscoveryLanding({
                   </div>
                 ))}
               </div>
+
+              {engagementPreview ? (
+                <div className="mt-4 grid gap-3 rounded-[28px] border border-white/10 bg-black/30 p-4 md:grid-cols-3">
+                  <div>
+                    <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/42">Your next move</div>
+                    <div className="mt-2 text-sm font-black text-white">{engagementPreview.nextBestAction?.label || engagementPreview.bestNextMove}</div>
+                    <div className="mt-1 text-xs leading-5 text-white/60">{engagementPreview.nearCompleteHeadline}</div>
+                  </div>
+                  <div>
+                    <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#caa7ff]">Today’s Signal</div>
+                    <div className="mt-2 text-sm font-black text-white">{engagementPreview.todaySignal.title}</div>
+                    <div className="mt-1 text-xs leading-5 text-white/60">{engagementPreview.todaySignal.body}</div>
+                  </div>
+                  <div>
+                    <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/42">{engagementPreview.timePressureLabel}</div>
+                    <div className="mt-2 text-sm font-black text-white">{engagementPreview.timePressureCountdown}</div>
+                    <div className="mt-1 text-xs leading-5 text-white/60">
+                      {engagementPreview.socialComparisonLabel || "You're gaining momentum"}
+                    </div>
+                  </div>
+                </div>
+              ) : null}
             </motion.div>
 
             <motion.div
@@ -441,73 +738,170 @@ export default function DiscoveryLanding({
               className="ev-section-frame"
             >
               <div className="ev-section-inner">
-                <div className="ev-section-kicker">Find your next plan</div>
+                <div className="ev-section-kicker">Today’s Signal</div>
                 <h2 className="mt-4 text-3xl font-black tracking-[-0.05em] text-white md:text-[2.2rem]">
-                  Search by city, artist, team, or nightlife mood. The strongest options surface first.
+                  {engagementPreview?.todaySignal.title || "Your next move is already visible."}
                 </h2>
                 <p className="mt-4 text-base leading-7 text-white/72">
-                  Discovery is curated to feel closer to a private city guide than a directory. EVNTSZN inventory leads, reserve stays nearby, and broader feeds support the search without flattening the experience.
+                  {engagementPreview?.todaySignal.body || "Open EVNTSZN, keep momentum alive, and move one step closer to the next unlock."}
                 </p>
 
-                <div className="mt-8 rounded-[28px] border border-white/10 bg-black/25 p-4 md:p-5">
-                  <div className="grid gap-4 md:grid-cols-[1.15fr_0.85fr]">
-                    <input
-                      value={query}
-                      onChange={(event) => setQuery(event.target.value)}
-                      placeholder={content.discovery.searchPlaceholder}
-                      className="ev-field"
-                    />
-                    <input
-                      value={city}
-                      onChange={(event) => setCity(event.target.value)}
-                      placeholder={content.discovery.cityPlaceholder}
-                      className="ev-field"
+                <div className="mt-8 grid gap-3 rounded-[28px] border border-white/10 bg-black/25 p-5">
+                  <div className="grid gap-3 md:grid-cols-[1.1fr_0.9fr]">
+                    <div className="rounded-[24px] border border-[#a259ff]/25 bg-[linear-gradient(135deg,rgba(162,89,255,0.2),rgba(0,0,0,0.7))] p-5">
+                      <div className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#f0e5ff]/80">Next best action</div>
+                      <div className="mt-2 text-2xl font-black tracking-tight text-white">
+                        {engagementPreview?.nextBestAction?.label || engagementPreview?.bestNextMove || "Open discovery"}
+                      </div>
+                      <div className="mt-2 text-sm leading-6 text-white/70">
+                        {engagementPreview?.nearCompleteHeadline || "You are one move away from visible progress."}
+                      </div>
+                    </div>
+                    <div className="grid gap-3">
+                      <div className="rounded-[22px] border border-white/10 bg-white/[0.03] px-4 py-4">
+                        <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/42">Streak / countdown</div>
+                        <div className="mt-2 text-xl font-black text-white">{engagementPreview?.timePressureCountdown || "Expiring soon"}</div>
+                        <div className="mt-1 text-sm text-white/60">{engagementPreview?.timePressureLabel || "Tonight window"}</div>
+                      </div>
+                      <div className="rounded-[22px] border border-white/10 bg-white/[0.03] px-4 py-4">
+                        <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/42">Progress</div>
+                        <div className="mt-2 text-xl font-black text-white">{engagementPreview?.level || 1}</div>
+                        <div className="mt-1 text-sm text-white/60">{engagementPreview ? `${engagementPreview.xpIntoLevel}/${engagementPreview.xpForNextLevel} XP to next level` : "Open EVNTSZN to load progress."}</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="h-2 overflow-hidden rounded-full bg-white/10">
+                    <div
+                      className="h-full rounded-full bg-[linear-gradient(90deg,#ffffff,#a259ff)] transition-all"
+                      style={{ width: `${engagementPreview ? Math.max(0, Math.min(100, Math.round((engagementPreview.xpIntoLevel / engagementPreview.xpForNextLevel) * 100))) : 0}%` }}
                     />
                   </div>
 
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {[
-                      { key: "", label: "Popular" },
-                      { key: "tonight", label: "Tonight" },
-                      { key: "week", label: "This week" },
-                      { key: "weekend", label: "Weekend" },
-                    ].map((option) => (
-                      <button
-                        key={option.label}
-                        type="button"
-                        className={option.key === when ? "ev-toolbar-pill" : "ev-chip ev-chip--external"}
-                        data-active={option.key === when}
-                        onClick={() => {
-                          setWhen(option.key as "" | "tonight" | "week" | "weekend");
-                          void runSearch({ when: option.key as "" | "tonight" | "week" | "weekend" });
-                        }}
-                      >
-                        {option.label}
-                      </button>
-                    ))}
-                    <button type="button" className="ev-chip ev-chip--external" onClick={useNearMe}>
-                      Near me
-                    </button>
-                  </div>
-
-                  <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                    <button type="button" className="ev-button-primary" onClick={() => void runSearch()}>
-                      {loading ? "Searching..." : "Show the best options"}
-                    </button>
-                    <Link href="/account/register?next=/account" className="ev-button-secondary">
-                      Create member account
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <Link href="/account" className="ev-button-primary justify-center">
+                      Continue your night
+                    </Link>
+                    <Link href="/pulse" className="ev-button-secondary justify-center">
+                      Step into the network
                     </Link>
                   </div>
                 </div>
-
-                <div className="mt-4 text-sm leading-6 text-white/56">
-                  Already have an account?{" "}
-                  <Link href="/enter" className="font-semibold text-white/80 transition hover:text-white">
-                    Member sign in
-                  </Link>
-                </div>
               </div>
             </motion.div>
+          </div>
+        </div>
+      </section>
+
+      <SystemActivityRail cityLabel={normalizedLocationLabel || city || "Baltimore"} audienceLabel="people" />
+
+      <section className="mx-auto max-w-[1600px] px-4 py-4 md:px-6 lg:px-8 lg:py-6">
+        <div className="grid gap-3 md:grid-cols-4">
+          {[
+            { href: "/account", label: "Continue your night" },
+            { href: "#night-builder", label: "Build a plan" },
+            { href: "#night-builder", label: "Explore a lane" },
+            { href: "/pulse", label: "Step into the network" },
+          ].map((action) => (
+            <Link key={action.label} href={action.href} className="rounded-[24px] border border-white/10 bg-white/[0.04] px-4 py-4 text-sm font-bold uppercase tracking-[0.18em] text-white transition hover:bg-white/[0.08]">
+              {action.label}
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-[1600px] px-4 py-6 md:px-6 lg:px-8 lg:py-8">
+        <EngagementLoopPanel
+          contextLabel="Identity and progression"
+          title="Your account, status, and future value keep compounding here."
+          body="Levels, streaks, badges, collections, saved plans, reserve pressure, Pulse contribution, and sponsor perks all feed a visible identity layer that rewards return behavior."
+          actionHref="/enter"
+          actionLabel="Enter EVNTSZN"
+          variant="full"
+        />
+      </section>
+
+      <section className="mx-auto max-w-[1600px] px-4 py-6 md:px-6 lg:px-8 lg:py-8">
+        <div className="grid gap-5 xl:grid-cols-[1.05fr_0.95fr]">
+          <div className="ev-section-frame">
+            <div className="ev-section-inner">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                <div className="ev-section-kicker">Discovery without events</div>
+                <h2 className="mt-3 text-3xl font-black tracking-[-0.04em] text-white">See what’s building tonight by vibe lane, city zone, and nightlife category.</h2>
+              </div>
+                <div className="ev-chip ev-chip--external">Identity-first discovery</div>
+              </div>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <div className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-white/72">
+                  {engagementPreview?.peopleLikeYouLabel || "People like you are exploring this tonight"}
+                </div>
+                <div className="rounded-full border border-[#a259ff]/25 bg-[#a259ff]/12 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[#f0e5ff]">
+                  {engagementPreview?.socialComparisonLabel || "You’re gaining momentum"}
+                </div>
+              </div>
+              <p className="mt-4 max-w-3xl text-sm leading-6 text-white/68">
+                Explore a lane, save the vibe, and build a night. These actions now count toward progression, runs, collections, and synthetic city momentum even if there are zero live events in the grid.
+              </p>
+              <div className="mt-6 grid gap-4 md:grid-cols-3">
+                {DISCOVERY_LANES.map((lane) => (
+                  <div key={lane.key} className="rounded-[28px] border border-white/10 bg-white/[0.03] p-5">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#caa7ff]">{lane.category}</div>
+                        <div className="mt-3 text-2xl font-black text-white">{lane.title}</div>
+                      </div>
+                      <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/45">{lane.cityZone}</div>
+                    </div>
+                    <p className="mt-4 text-sm leading-6 text-white/66">{lane.body}</p>
+                    <div className="mt-4 rounded-[18px] border border-white/10 bg-black/20 px-4 py-3 text-[10px] font-bold uppercase tracking-[0.18em] text-white/66">
+                      {engagementPreview?.peopleLikeYouLabel || "People like you are exploring this tonight"}
+                    </div>
+                    <div className="mt-5 grid gap-2">
+                      <button type="button" className="ev-button-primary" onClick={() => void exploreLane(lane)}>
+                        Explore this lane
+                      </button>
+                      <SaveToggle
+                        item={{
+                          intent: "save",
+                          entityType: "vibe_lane",
+                          entityKey: lane.key,
+                          title: lane.title,
+                          href: "/",
+                          city: city || normalizedLocationLabel || "Baltimore",
+                          metadata: {
+                            category: lane.category,
+                            cityZone: lane.cityZone,
+                            title: lane.title,
+                            sourceType: "evntszn_native",
+                            sourceLabel: "EVNTSZN Native",
+                          },
+                        }}
+                        inactiveLabel="Save this vibe"
+                        activeLabel="Saved vibe"
+                      />
+                      <button
+                        type="button"
+                        className="ev-button-secondary"
+                        onClick={() => {
+                          void exploreLane(lane);
+                          document.getElementById("night-builder")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                        }}
+                      >
+                        Build your night
+                      </button>
+                    </div>
+                    <div className="mt-3 text-[10px] font-bold uppercase tracking-[0.18em] text-white/48">
+                      {`${engagementPreview?.socialComparisonLabel || "You’re gaining momentum"} · +10 XP toward tonight's signal`}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div id="night-builder">
+            <NightBuilderStudio defaultCity={city || normalizedLocationLabel || "Baltimore"} />
           </div>
         </div>
       </section>
@@ -525,6 +919,24 @@ export default function DiscoveryLanding({
                 <p className="mt-5 max-w-3xl text-base md:text-lg leading-7 text-white/68">
                   {content.discovery.body}
                 </p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <div className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-white/72">
+                    {engagementPreview?.peopleLikeYouLabel || "People like you are exploring this tonight"}
+                  </div>
+                  <div className="rounded-full border border-[#a259ff]/25 bg-[#a259ff]/12 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[#f0e5ff]">
+                    {engagementPreview?.socialComparisonLabel || "You’re gaining momentum"}
+                  </div>
+                </div>
+                {marketPolicyLabel || marketPolicyExplanation ? (
+                  <div className="mt-4 rounded-[22px] border border-white/10 bg-white/[0.03] px-4 py-4">
+                    <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/42">
+                      {marketPolicyLabel || "Market policy"}
+                    </div>
+                    <div className="mt-2 text-sm leading-6 text-white/66">
+                      {marketPolicyExplanation || "Discovery is adapting to this city's current EVNTSZN maturity without dropping imported usefulness."}
+                    </div>
+                  </div>
+                ) : null}
               </div>
               <div className="grid gap-3 sm:grid-cols-3 xl:max-w-[460px]">
                 {[
@@ -538,6 +950,31 @@ export default function DiscoveryLanding({
                   </div>
                 ))}
               </div>
+            </div>
+
+            <div className="mt-5 flex flex-wrap gap-2">
+              {[
+                { key: "", label: "Popular" },
+                { key: "tonight", label: "Tonight" },
+                { key: "week", label: "This week" },
+                { key: "weekend", label: "Weekend" },
+              ].map((option) => (
+                <button
+                  key={option.label}
+                  type="button"
+                  className={option.key === when ? "ev-toolbar-pill" : "ev-chip ev-chip--external"}
+                  data-active={option.key === when}
+                  onClick={() => {
+                    setWhen(option.key as "" | "tonight" | "week" | "weekend");
+                    void runSearch({ when: option.key as "" | "tonight" | "week" | "weekend" });
+                  }}
+                >
+                  {option.label}
+                </button>
+              ))}
+              <button type="button" className="ev-chip ev-chip--external" onClick={useNearMe}>
+                Near me
+              </button>
             </div>
 
             <div className="mt-6 flex flex-wrap gap-2">
@@ -704,12 +1141,12 @@ export default function DiscoveryLanding({
         <div className="ev-panel overflow-hidden p-8 md:p-10 lg:p-14">
           <div className="grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
             <div>
-              <div className="ev-section-kicker">Build on EVNTSZN</div>
+              <div className="ev-section-kicker">Power the Night</div>
               <h2 className="mt-4 text-4xl font-black tracking-[-0.04em] text-white md:text-5xl lg:text-6xl leading-[0.95]">
-                Choose the right lane before you build the event.
+                Supply-side power roles inside the EVNTSZN ecosystem.
               </h2>
               <p className="mt-6 max-w-3xl text-lg md:text-xl leading-relaxed text-white/72">
-                EVNTSZN Curators and Partners are not the same path. Curators operate inside the approved EVNTSZN network. Partners use EVNTSZN as a self-directed event platform with their own brand, audience, and operating lane.
+                Curators, Partners, Venues, and Crew/Operators are not side pages. They are the people and businesses that power the city layer.
               </p>
               <div className="mt-10 flex flex-wrap gap-4">
                 <Link href="/hosts/apply" className="ev-button-primary px-8">
@@ -721,37 +1158,77 @@ export default function DiscoveryLanding({
               </div>
             </div>
 
-            <div className="mt-8 grid gap-6 md:grid-cols-2">
-              <div className="rounded-[32px] border border-white/10 bg-white/[0.02] p-7 md:p-8">
-                <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#A259FF]">EVNTSZN Curator</div>
-                <div className="mt-4 text-2xl font-black text-white">Approved network lane.</div>
-                <div className="mt-6 grid gap-4">
-                  {[
-                    "Operate inside the EVNTSZN Curator network and commission structure.",
-                    "Best for approved city-facing operators who can run a room and hold the standard.",
-                    "Current curator markets: Baltimore, Washington, Rehoboth Beach, Ocean City, and Bethany Beach.",
-                  ].map((item) => (
-                    <div key={item} className="rounded-2xl border border-white/5 bg-white/[0.03] p-5 text-sm md:text-base leading-relaxed text-white/70">
-                      {item}
-                    </div>
-                  ))}
-                </div>
-              </div>
+            <div className="mt-8 grid gap-4 md:grid-cols-2">
+              {POWER_ROLES.map((role) => (
+                <Link key={role.title} href={role.href} className="rounded-[32px] border border-white/10 bg-white/[0.02] p-7 md:p-8 transition hover:-translate-y-1 hover:bg-white/[0.05]">
+                  <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#A259FF]">{role.title}</div>
+                  <div className="mt-4 text-2xl font-black text-white">{role.title}</div>
+                  <p className="mt-4 text-sm leading-6 text-white/70">{role.body}</p>
+                  <div className="mt-5 text-[11px] font-bold uppercase tracking-[0.18em] text-white/55">{role.label}</div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
 
-              <div className="rounded-[32px] border border-white/10 bg-white/[0.02] p-7 md:p-8">
-                <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-white/42">Partner</div>
-                <div className="mt-4 text-2xl font-black text-white">Self-operated event lane.</div>
-                <div className="mt-6 grid gap-4">
-                  {[
-                    "Use EVNTSZN as your event platform without being treated as internal Curator network staff.",
-                    "Best for your own events, audience, venue relationships, and operating model.",
-                    "Crew Marketplace and EVNTSZN Link stay available without collapsing into the Curator path.",
-                  ].map((item) => (
-                    <div key={item} className="rounded-2xl border border-white/5 bg-white/[0.03] p-5 text-sm md:text-base leading-relaxed text-white/70">
-                      {item}
+      <section className="mx-auto max-w-[1600px] px-4 pb-16 md:px-6 lg:px-8 lg:pb-20">
+        <div className="grid gap-5 xl:grid-cols-3">
+          {VENUE_STACK.map((item) => (
+            <div key={item.title} className="ev-section-frame ev-section-frame--muted">
+              <div className="ev-section-inner">
+                <div className="ev-section-kicker">Venue & Hospitality Stack</div>
+                <h3 className="mt-3 text-3xl font-black tracking-[-0.04em] text-white">{item.title}</h3>
+                <p className="mt-4 text-sm leading-6 text-white/68">{item.body}</p>
+                <Link href={item.href} className="mt-6 inline-flex rounded-full bg-white px-5 py-3 text-xs font-black uppercase tracking-[0.18em] text-black transition hover:opacity-90">
+                  {item.label}
+                </Link>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-[1600px] px-4 pb-16 md:px-6 lg:px-8 lg:pb-20">
+        <div className="grid gap-5 xl:grid-cols-[1.05fr_0.95fr]">
+          <div className="ev-section-frame">
+            <div className="ev-section-inner">
+              <div className="ev-section-kicker">Infrastructure Tools</div>
+              <h2 className="mt-3 text-3xl font-black tracking-[-0.04em] text-white md:text-4xl">The operating stack behind the city layer.</h2>
+              <p className="mt-4 text-sm leading-6 text-white/68">
+                Reserve, Nodes, Tap to Pour, Link, and Crew power how EVNTSZN converts real-world movement into usable operations.
+              </p>
+              <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {INFRA_TOOLS.map((tool) => (
+                  <Link key={tool.title} href={tool.href} className="rounded-[28px] border border-white/10 bg-white/[0.03] p-5 transition hover:-translate-y-1 hover:bg-white/[0.06]">
+                    <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#caa7ff]">{tool.title}</div>
+                    <div className="mt-3 text-xl font-black text-white">{tool.body}</div>
+                    <div className="mt-5 text-[11px] font-bold uppercase tracking-[0.18em] text-white/55">{tool.label}</div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="ev-section-frame ev-section-frame--muted">
+            <div className="ev-section-inner">
+              <div className="ev-section-kicker">Programs / premium ecosystem</div>
+              <h2 className="mt-3 text-3xl font-black tracking-[-0.04em] text-white md:text-4xl">EPL, StayOps, Sponsors, and network progression.</h2>
+              <p className="mt-4 text-sm leading-6 text-white/68">
+                These lanes turn the ecosystem into a real business system instead of a static website.
+              </p>
+              <div className="mt-6 grid gap-4">
+                {PROGRAMS.map((program) => (
+                  <Link key={program.title} href={program.href} className="rounded-[24px] border border-white/10 bg-black/25 p-5 transition hover:border-white/20 hover:bg-white/[0.06]">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#caa7ff]">{program.title}</div>
+                        <div className="mt-2 text-base font-black text-white">{program.body}</div>
+                      </div>
+                      <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/45">{program.label}</div>
                     </div>
-                  ))}
-                </div>
+                  </Link>
+                ))}
               </div>
             </div>
           </div>
@@ -788,6 +1265,37 @@ export default function DiscoveryLanding({
                 {item}
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-[1600px] px-4 pb-16 md:px-6 lg:px-8 lg:pb-20">
+        <div className="rounded-[44px] border border-white/10 bg-[linear-gradient(135deg,rgba(162,89,255,0.2),rgba(0,0,0,0.95))] p-8 md:p-10 lg:p-12 shadow-[0_30px_100px_rgba(0,0,0,0.42)]">
+          <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+            <div>
+              <div className="ev-section-kicker">Finish tonight</div>
+              <h2 className="mt-4 text-4xl font-black tracking-[-0.04em] text-white md:text-5xl lg:text-6xl leading-[0.95]">
+                {engagementPreview?.nextBestAction?.label || "Your next best action is still waiting."}
+              </h2>
+              <p className="mt-5 max-w-3xl text-lg leading-7 text-white/72">
+                {engagementPreview?.nextBestAction?.detail || "Keep your streak alive, close one near-complete lane, and turn today into stored progress."}
+              </p>
+            </div>
+            <div className="grid gap-3">
+              <div className="rounded-[26px] border border-white/10 bg-black/25 px-5 py-5">
+                <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/45">Today’s Signal</div>
+                <div className="mt-2 text-2xl font-black text-white">{engagementPreview?.todaySignal.title || "Today’s Signal"}</div>
+                <div className="mt-2 text-sm leading-6 text-white/66">{engagementPreview?.todaySignal.body || "Open EVNTSZN and keep momentum alive."}</div>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Link href="/account" className="ev-button-primary justify-center">
+                  Continue your run
+                </Link>
+                <Link href="#night-builder" className="ev-button-secondary justify-center">
+                  Finish this tonight
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </section>

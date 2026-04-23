@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { buildActivitySourceMetadata } from "@/lib/activity-source";
 import { recordPulseActivity } from "@/lib/pulse-signal";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
@@ -46,7 +47,15 @@ export async function POST(_request: Request, context: RouteContext) {
       city: page.city || (typeof (metadata as Record<string, unknown>).city === "string" ? String((metadata as Record<string, unknown>).city) : null),
       referenceType: "link",
       referenceId: page.id,
-      metadata: { slug },
+      metadata: {
+        slug,
+        ...buildActivitySourceMetadata({
+          sourceType: "evntszn_native",
+          referenceType: "link",
+          entityType: "link_page",
+          metadata: { slug },
+        }),
+      },
     }).catch(() => null);
 
     return NextResponse.json({ ok: true, viewCount: currentCount + 1 });

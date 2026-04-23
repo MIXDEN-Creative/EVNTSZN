@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { buildActivitySourceMetadata } from "@/lib/activity-source";
 import { requireAdminPermission } from "@/lib/admin-auth";
 import { recordRevenueEventAndCommissions } from "@/lib/evntszn-monetization";
 import { recordPulseActivity } from "@/lib/pulse-signal";
@@ -218,6 +219,16 @@ export async function POST(request: NextRequest) {
         bookingDate,
         bookingTime,
         partySize,
+        ...buildActivitySourceMetadata({
+          sourceType: "evntszn_native",
+          referenceType: "reserve",
+          entityType: "reserve_booking",
+          metadata: {
+            bookingDate,
+            bookingTime,
+            partySize,
+          },
+        }),
       },
     }).catch(() => null);
     await recordRevenueEventAndCommissions({

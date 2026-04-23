@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { buildActivitySourceMetadata } from "@/lib/activity-source";
 import { getSupabaseAdmin } from "@/lib/epl/supabase-admin";
 import { JERSEY_NAME_DISCLAIMER } from "@/lib/epl/constants";
 import { recordRevenueEventAndCommissions, syncManagedAccountAttribution } from "@/lib/evntszn-monetization";
@@ -352,6 +353,15 @@ export async function POST(req: Request) {
       metadata: {
         seasonId: season.seasonId,
         positionPrimary: parsed.positionPrimary.trim(),
+        ...buildActivitySourceMetadata({
+          sourceType: "evntszn_native",
+          referenceType: "epl_registration",
+          entityType: "epl_registration",
+          metadata: {
+            seasonId: season.seasonId,
+            positionPrimary: parsed.positionPrimary.trim(),
+          },
+        }),
       },
     }).catch(() => null);
 

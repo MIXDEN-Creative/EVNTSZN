@@ -24,7 +24,7 @@ const NAV_GROUPS: NavGroup[] = [
     href: '/',
     matches: ['/', '/events', '/pulse', '/city', '/map'],
     children: [
-      { href: '/events', label: 'Events', detail: 'Image-first event discovery with ticket-ready routes.' },
+      { href: '/events', label: 'Events', detail: "See what's building tonight with ticket-ready routes." },
       { href: '/pulse', label: 'Pulse', detail: 'Public city energy, venue momentum, and live signals.' },
       { href: '/epl', label: 'EPL', detail: 'League highlights, clubs, standings, and schedule.' },
       { href: '/city', label: 'City Guides', detail: 'Browse nightlife, reservations, and local movement by market.' },
@@ -44,13 +44,17 @@ const NAV_GROUPS: NavGroup[] = [
   {
     label: 'Services',
     href: '/reserve',
-    matches: ['/reserve', '/crew', '/link', '/sponsors', '/venue', '/venues', '/venue-program'],
+    matches: ['/reserve', '/crew', '/link', '/sponsors', '/venue', '/venues', '/venue-program', '/tap-to-pour', '/nodes'],
     children: [
       { href: '/reserve', label: 'Reserve', detail: 'Premium booking, table holds, and waitlist control.' },
       { href: '/crew', label: 'Crew', detail: 'Trusted event service marketplace with clear pricing.' },
       { href: '/link', label: 'Link', detail: 'Conversion-ready pages for events, offers, and profile traffic.' },
       { href: '/sponsors', label: 'Sponsors', detail: 'Brand placement across events, Pulse, venues, and EPL.' },
       { href: '/venue', label: 'Venue', detail: 'Venue growth, reserve activation, and operator onboarding.' },
+      { href: '/venue/pro', label: 'Venue Pro', detail: 'Premium venue tooling for messaging, demand support, and smarter fill.' },
+      { href: '/venue/pro-reserve', label: 'Venue Pro + Reserve', detail: 'Reservation and waitlist operations built into the venue stack.' },
+      { href: '/tap-to-pour', label: 'Tap to Pour', detail: 'Premium hospitality interaction layer for venue service moments.' },
+      { href: '/nodes', label: 'Nodes', detail: 'Discovery points and real-world routing across the EVNTSZN network.' },
     ],
   },
   {
@@ -58,7 +62,7 @@ const NAV_GROUPS: NavGroup[] = [
     href: '/enter',
     matches: ['/enter', '/account', '/support'],
     children: [
-      { href: '/events', label: 'Find Events', detail: 'Browse what is actually worth going to next.' },
+      { href: '/events', label: "Tonight's Move", detail: "See what's building tonight and decide what happens next." },
       { href: '/reserve', label: 'Book Reserve', detail: 'Open a calm, premium reservation flow.' },
       { href: '/pulse', label: 'Follow Pulse', detail: 'See where the city is actually moving.' },
       { href: '/enter', label: 'Member Entry', detail: 'Tickets, bookings, saved plans, and account access.' },

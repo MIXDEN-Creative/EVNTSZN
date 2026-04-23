@@ -1,9 +1,19 @@
-// src/app/hosts/page.tsx
-'use client';
-
+import type { Metadata } from "next";
 import Link from 'next/link';
 import PublicPageFrame from '@/components/public/PublicPageFrame';
+import ProductTrustGrid from '@/components/public/ProductTrustGrid';
+import SystemActivityRail from '@/components/public/SystemActivityRail';
+import { buildCollectionPageSchema, buildPageMetadata } from '@/lib/seo';
+import { getWebOrigin } from '@/lib/domains';
 import { PUBLIC_CITIES, PUBLIC_HOST_MARKETS } from '@/lib/public-cities';
+
+export const metadata: Metadata = buildPageMetadata({
+  title: "EVNTSZN Curator Network | premium city nights and network operators",
+  description:
+    "Apply to the EVNTSZN Curator Network to operate premium city nights with deeper platform support, controlled access, and venue-linked tools.",
+  path: "/hosts",
+  origin: getWebOrigin(),
+});
 
 const HostsPage = () => {
   const hostMarketsWithState = PUBLIC_HOST_MARKETS.map(market => {
@@ -17,10 +27,12 @@ const HostsPage = () => {
       title="EVNTSZN Curators"
       description="Become an approved EVNTSZN Curator and operate premium city nights within the network."
       heroImage="https://images.unsplash.com/photo-1505236858219-8359eb29e329?auto=format&fit=crop&w=1800&q=80"
-      seo={{
-        title: "EVNTSZN Curators - Operate Premium City Nights",
-        description: "Become an approved EVNTSZN Curator and run premium nightlife experiences in Baltimore, Washington, Rehoboth Beach, Ocean City, and Bethany Beach.",
-      }}
+      structuredData={buildCollectionPageSchema({
+        name: "EVNTSZN Curator Network",
+        description:
+          "Approved network operators running premium city nights inside EVNTSZN.",
+        path: "/hosts",
+      })}
     >
       <section className="mx-auto max-w-7xl px-4 py-10 md:px-6 lg:px-8">
         <div className="ev-panel p-6">
@@ -39,6 +51,8 @@ const HostsPage = () => {
           </div>
         </div>
       </section>
+
+      <SystemActivityRail cityLabel="Baltimore" audienceLabel="curators" mode="compact" />
 
       <section className="mx-auto max-w-7xl px-4 py-10 md:px-6 lg:px-8">
         <div className="ev-panel p-6">
@@ -82,6 +96,34 @@ const HostsPage = () => {
         </div>
       </section>
 
+      <ProductTrustGrid
+        title="Curators are not generic hosts. They are approved network operators."
+        subtitle="The Curator Network exists for operators who want deeper platform support, controlled access, and city-night responsibility inside EVNTSZN."
+        proofTitle="Proof"
+        proof={[
+          { title: "Approved role", body: "Curators operate inside a controlled network instead of a loose marketplace." },
+          { title: "City-night responsibility", body: "The lane is built for real nights, not just profile traffic." },
+          { title: "Ecosystem support", body: "Curators sit closer to venue, reserve, and operator workflows than partners do." },
+        ]}
+        outcomesTitle="Outcomes"
+        outcomes={[
+          { title: "More authority", body: "The role is clear, premium, and easy to understand." },
+          { title: "More leverage", body: "Approved curators get the support and routing layer needed to operate well." },
+          { title: "More growth", body: "The network structure makes scale easier without turning the page into a generic signup." },
+        ]}
+        objectionsTitle="Objections"
+        objections={[
+          { question: "Is this the same as Partner?", answer: "No. Curators are approved operators inside the network; Partners are independent organizers." },
+          { question: "Do I need a venue?", answer: "Not always, but the role is strongest when paired with venue and city responsibilities." },
+          { question: "Is it available everywhere?", answer: "It is market-based and approval-driven, not open-ended." },
+        ]}
+        links={[
+          { href: "/organizer", label: "See Partner Program" },
+          { href: "/venue", label: "See Venue" },
+          { href: "/venue-program", label: "See Venue Plans" },
+        ]}
+      />
+
       <section className="mx-auto max-w-7xl px-4 py-10 md:px-6 lg:px-8 text-center">
         <h2 className="text-4xl font-bold mb-8 text-white">Not an EVNTSZN Curator?</h2>
         <p className="text-lg text-white/70 max-w-3xl mx-auto mb-8">
@@ -90,6 +132,11 @@ const HostsPage = () => {
         <Link href="/organizer/apply" className="ev-button-primary px-8 py-3 text-lg">
           Learn about Partners
         </Link>
+        <div className="mt-6 flex justify-center">
+          <Link href="/curator" className="ev-button-secondary px-8 py-3 text-lg">
+            Open Curator landing
+          </Link>
+        </div>
       </section>
     </PublicPageFrame>
   );

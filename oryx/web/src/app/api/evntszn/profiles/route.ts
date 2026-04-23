@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { buildActivitySourceMetadata } from "@/lib/activity-source";
+import { trackEngagementEvent } from "@/lib/engagement";
 import { ensurePlatformProfile, requirePlatformUser, type PlatformRole } from "@/lib/evntszn";
 
 type ProfileBody = {
@@ -23,6 +25,29 @@ export async function POST(request: Request) {
       city: body.city || null,
       state: body.state || null,
     });
+
+    const profileLooksComplete = Boolean(profile.full_name && profile.city && profile.state && profile.primary_role);
+    if (profileLooksComplete) {
+      await trackEngagementEvent({
+        userId: viewer.user!.id,
+        eventType: "profile_completed",
+        city: profile.city,
+        referenceType: "profile",
+        referenceId: viewer.user!.id,
+        dedupeKey: `profile-complete:${viewer.user!.id}`,
+        metadata: {
+          primaryRole: profile.primary_role,
+          ...buildActivitySourceMetadata({
+            sourceType: "evntszn_native",
+            referenceType: "profile",
+            entityType: "profile",
+            metadata: {
+              primaryRole: profile.primary_role,
+            },
+          }),
+        },
+      }).catch(() => null);
+    }
 
     return NextResponse.json({ ok: true, profile });
   } catch (error) {

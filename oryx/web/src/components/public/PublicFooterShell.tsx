@@ -66,6 +66,10 @@ export default function PublicFooterShell({
               <Link href="/link">Link</Link>
               <Link href="/epl">EPL</Link>
               <Link href="/venue">Venue</Link>
+              <Link href="/venue/pro">Venue Pro</Link>
+              <Link href="/venue/pro-reserve">Venue Pro + Reserve</Link>
+              <Link href="/tap-to-pour">Tap to Pour</Link>
+              <Link href="/nodes">Nodes</Link>
               <Link href="/stayops">StayOps</Link>
               <Link href="/operate">Operate</Link>
             </div>

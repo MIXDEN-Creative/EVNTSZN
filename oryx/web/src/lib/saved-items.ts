@@ -6,6 +6,8 @@ export const SAVED_ITEM_ENTITY_TYPES = [
   "epl_team",
   "link",
   "node",
+  "vibe_lane",
+  "night_plan",
 ] as const;
 
 export const SAVED_ITEM_INTENTS = ["save", "watch", "plan"] as const;

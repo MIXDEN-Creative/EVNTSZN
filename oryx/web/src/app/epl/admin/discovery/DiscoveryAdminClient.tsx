@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { ActivitySourceKey } from "@/lib/activity-source";
+import { getSourceMixLabel } from "@/lib/discovery-intelligence";
 
 type ManagedContent = {
   hero: {
@@ -143,6 +145,99 @@ type ExternalDiscoveryListing = {
   notes?: string | null;
 };
 
+type SourceMixMetric = Record<ActivitySourceKey, { count: number; share: number }>;
+
+type DiscoveryCityMaturityState = "strong" | "growing" | "imported_fallback";
+
+type DiscoveryCityPromotionStatus =
+  | "stable"
+  | "promotion_ready"
+  | "hold"
+  | "declining"
+  | "fallback_needed";
+
+type DiscoveryCityPromotionEvaluation = {
+  status: DiscoveryCityPromotionStatus;
+  nextLevel: DiscoveryCityMaturityState | null;
+  missingSignals: string[];
+  promotionReason: string;
+  isEligibleForPromotion: boolean;
+};
+
+type DiscoveryCityAutomationStatus = "monitoring" | "accelerating" | "recovering" | "intervening";
+
+type DiscoveryCityOpsFlag =
+  | "growth_ready"
+  | "needs_curator_supply"
+  | "needs_partner_supply"
+  | "needs_native_inventory"
+  | "needs_momentum"
+  | "watch_decline"
+  | "fallback_support_mode"
+  | "ready_for_manual_review";
+
+type DiscoveryCityAutomationPolicy = {
+  status: DiscoveryCityAutomationStatus;
+  label: string;
+  reason: string;
+  confidence: number;
+  reviewWindowDays: number;
+  nativeWeightAdjustment: number;
+  importedToleranceAdjustment: number;
+  opsFlags: DiscoveryCityOpsFlag[];
+  actionPlan: string[];
+};
+
+type DiscoveryCityAutomationIntelligence = {
+  policy: DiscoveryCityAutomationPolicy;
+  isOverridden: boolean;
+  overrideReason?: string;
+  forcedPolicyStatus?: DiscoveryCityAutomationStatus | null;
+  forcedMaturityState?: DiscoveryCityMaturityState | null;
+  suppressPromotion?: boolean;
+  lastEvaluatedAt?: string | null;
+  nextEvaluationAt: string;
+};
+
+type DiscoveryCityIntelligence = {
+  city: string;
+  citySlug: string;
+  totalUsableInventory: number;
+  sourceMix: SourceMixMetric;
+  maturityScore: number;
+  maturityLabel: DiscoveryCityMaturityState;
+  policy: {
+    state: DiscoveryCityMaturityState;
+    label: string;
+    explanation: string;
+    homepageBehavior: string;
+    searchBehavior: string;
+    momentumBehavior: string;
+    automationStatus: DiscoveryCityAutomationStatus;
+    automationIntelligence: DiscoveryCityAutomationIntelligence;
+  };
+  policyReason: string;
+  promotionEvaluation: DiscoveryCityPromotionEvaluation;
+  automationStatus: DiscoveryCityAutomationStatus;
+  automationIntelligence: DiscoveryCityAutomationIntelligence;
+  trendDirection: "up" | "down" | "flat";
+  trendDeltaPercent: number;
+  momentumSourceMix: SourceMixMetric;
+  dominantMomentumSource: ActivitySourceKey | null;
+  topSlots: SourceMixMetric;
+  nativeLifted: boolean;
+  importedDominating: boolean;
+  outcomeLabel: string;
+};
+
+type DiscoveryIntelligenceSnapshot = {
+  generatedAt: string;
+  overallInventory: number;
+  overallSourceMix: SourceMixMetric;
+  overallMomentumSourceMix: SourceMixMetric;
+  cityRows: DiscoveryCityIntelligence[];
+};
+
 function parseLines(value: string, mode: "category" | "city") {
   return value
     .split("\n")
@@ -174,13 +269,108 @@ function serializeCities(items: Array<{ name: string; description: string }>) {
   return items.map((item) => `${item.name}|${item.description}`).join("\n");
 }
 
+function formatPercent(value: number) {
+  return `${Math.round(value * 100)}%`;
+}
+
+function formatTrendLabel(direction: DiscoveryCityIntelligence["trendDirection"], delta: number) {
+  if (direction === "flat") return "Flat";
+  const prefix = direction === "up" ? "+" : "";
+  return `${prefix}${delta}%`;
+}
+
+function getMaturityTone(label: DiscoveryCityIntelligence["maturityLabel"]) {
+  switch (label) {
+    case "strong":
+      return "text-emerald-300";
+    case "growing":
+      return "text-violet-200";
+    default:
+      return "text-amber-200";
+  }
+}
+
+function getPromotionTone(status: DiscoveryCityPromotionStatus) {
+  switch (status) {
+    case "promotion_ready":
+      return "text-emerald-400 bg-emerald-400/10 border-emerald-400/20";
+    case "hold":
+      return "text-amber-300 bg-amber-300/10 border-amber-300/20";
+    case "declining":
+      return "text-orange-400 bg-orange-400/10 border-orange-400/20";
+    case "fallback_needed":
+      return "text-rose-400 bg-rose-400/10 border-rose-400/20";
+    default:
+      return "text-white/40 bg-white/5 border-white/10";
+  }
+}
+
+function getPromotionLabel(status: DiscoveryCityPromotionStatus) {
+  switch (status) {
+    case "promotion_ready":
+      return "Promotion Ready";
+    case "hold":
+      return "On Hold";
+    case "declining":
+      return "Declining";
+    case "fallback_needed":
+      return "Fallback Needed";
+    default:
+      return "Stable";
+  }
+}
+
+function getAutomationTone(status: DiscoveryCityAutomationStatus) {
+  switch (status) {
+    case "accelerating":
+      return "text-emerald-400 bg-emerald-400/10 border-emerald-400/20";
+    case "recovering":
+      return "text-orange-400 bg-orange-400/10 border-orange-400/20";
+    case "intervening":
+      return "text-rose-400 bg-rose-400/10 border-rose-400/20";
+    default:
+      return "text-blue-300 bg-blue-300/10 border-blue-300/20";
+  }
+}
+
+function getOpsFlagLabel(flag: DiscoveryCityOpsFlag) {
+  switch (flag) {
+    case "growth_ready":
+      return "Growth Ready";
+    case "needs_curator_supply":
+      return "Curator Supply Gap";
+    case "needs_partner_supply":
+      return "Partner Supply Gap";
+    case "needs_native_inventory":
+      return "Native Supply Gap";
+    case "needs_momentum":
+      return "Momentum Gap";
+    case "watch_decline":
+      return "Watch Decline";
+    case "fallback_support_mode":
+      return "Fallback Support";
+    case "ready_for_manual_review":
+      return "Manual Review Ready";
+    default:
+      return flag;
+  }
+}
+
+type AutomationDraft = {
+  forcedPolicyStatus: DiscoveryCityAutomationStatus | "";
+  forcedMaturityState: DiscoveryCityMaturityState | "";
+  suppressPromotion: boolean;
+  overrideReason: string;
+};
+
 export default function DiscoveryAdminClient() {
-  const [activeSection, setActiveSection] = useState<"homepage" | "modules" | "listings" | "external" | "epl">("homepage");
+  const [activeSection, setActiveSection] = useState<"homepage" | "modules" | "listings" | "external" | "intelligence" | "epl">("homepage");
   const [content, setContent] = useState<ManagedContent | null>(null);
   const [eplContent, setEplContent] = useState<ManagedEplContent | null>(null);
   const [modules, setModules] = useState<ManagedPublicModules | null>(null);
   const [listings, setListings] = useState<DiscoveryListing[]>([]);
   const [externalListings, setExternalListings] = useState<ExternalDiscoveryListing[]>([]);
+  const [intelligence, setIntelligence] = useState<DiscoveryIntelligenceSnapshot | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -188,6 +378,7 @@ export default function DiscoveryAdminClient() {
   const [taxonomyCities, setTaxonomyCities] = useState("");
   const [listingQuery, setListingQuery] = useState("");
   const [externalQuery, setExternalQuery] = useState("");
+  const [automationDrafts, setAutomationDrafts] = useState<Record<string, AutomationDraft>>({});
 
   const discoveryStats = {
     native: listings.filter((listing) => listing.source === "evntszn").length,
@@ -195,6 +386,10 @@ export default function DiscoveryAdminClient() {
     independent: listings.filter((listing) => listing.source === "independent_organizer").length,
     externalHidden: externalListings.filter((listing) => listing.moderationStatus === "hidden").length,
   };
+
+  const overallTopSource = intelligence
+    ? (Object.entries(intelligence.overallSourceMix).sort((a, b) => b[1].count - a[1].count)[0]?.[0] as ActivitySourceKey | undefined)
+    : undefined;
 
   const filteredListings = listings.filter((listing) => {
     const normalizedQuery = listingQuery.trim().toLowerCase();
@@ -235,6 +430,7 @@ export default function DiscoveryAdminClient() {
     setModules(nextModules);
     setListings((payload.listings as DiscoveryListing[]) || []);
     setExternalListings((payload.externalListings as ExternalDiscoveryListing[]) || []);
+    setIntelligence((payload.intelligence as DiscoveryIntelligenceSnapshot) || null);
     setTaxonomyCategories(serializeCategories(nextContent.taxonomy.categories));
     setTaxonomyCities(serializeCities(nextContent.taxonomy.cities));
     setMessage(nextContent.storageReady && nextEpl.storageReady && nextModules.storageReady ? null : "Public-surface controls are running on fallback content until the discovery controls migration is applied.");
@@ -343,6 +539,69 @@ export default function DiscoveryAdminClient() {
     await load();
   }
 
+  function getAutomationDraft(row: DiscoveryCityIntelligence): AutomationDraft {
+    return automationDrafts[row.citySlug] || {
+      forcedPolicyStatus: row.automationIntelligence.forcedPolicyStatus || "",
+      forcedMaturityState: row.automationIntelligence.forcedMaturityState || "",
+      suppressPromotion: Boolean(row.automationIntelligence.suppressPromotion),
+      overrideReason: row.automationIntelligence.overrideReason || "",
+    };
+  }
+
+  async function updateAutomation(action: "set_override" | "clear_override" | "evaluate_city" | "evaluate_all", row?: DiscoveryCityIntelligence) {
+    setSaving(action === "evaluate_all" ? "automation:all" : row ? `automation:${row.citySlug}` : "automation");
+    setMessage(null);
+
+    const draft = row ? getAutomationDraft(row) : null;
+    const response = await fetch("/api/admin/discovery/automation", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(
+        action === "set_override"
+          ? {
+              action,
+              cityKey: row?.citySlug,
+              cityLabel: row?.city,
+              forcedPolicyStatus: draft?.forcedPolicyStatus || null,
+              forcedMaturityState: draft?.forcedMaturityState || null,
+              suppressPromotion: Boolean(draft?.suppressPromotion),
+              overrideReason: draft?.overrideReason?.trim() || null,
+            }
+          : action === "clear_override"
+            ? {
+                action,
+                cityKey: row?.citySlug,
+                cityLabel: row?.city,
+              }
+            : action === "evaluate_city"
+              ? {
+                  action,
+                  cityKey: row?.citySlug,
+                }
+              : { action },
+      ),
+    });
+
+    const payload = (await response.json()) as Record<string, unknown>;
+    setSaving(null);
+
+    if (!response.ok) {
+      setMessage(String(payload.error || "Could not update automation controls."));
+      return;
+    }
+
+    setMessage(
+      action === "evaluate_all"
+        ? "City automation re-evaluated across all tracked markets."
+        : action === "evaluate_city"
+          ? `Re-evaluated ${row?.city}.`
+          : action === "clear_override"
+            ? `Cleared override for ${row?.city}.`
+            : `Updated override for ${row?.city}.`,
+    );
+    await load();
+  }
+
   if (loading || !content || !eplContent || !modules) {
     return (
       <main className="mx-auto max-w-7xl p-6">
@@ -377,6 +636,14 @@ export default function DiscoveryAdminClient() {
               <div className="ev-meta-label">External hidden</div>
               <div className="ev-meta-value">{discoveryStats.externalHidden} listings are currently suppressed.</div>
             </div>
+            <div className="ev-meta-card">
+              <div className="ev-meta-label">City source mix</div>
+              <div className="ev-meta-value">
+                {intelligence && overallTopSource
+                  ? `${getSourceMixLabel(overallTopSource)} leads ${formatPercent(intelligence.overallSourceMix[overallTopSource].share)} of current discovery inventory.`
+                  : "Source intelligence is loading."}
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -392,6 +659,7 @@ export default function DiscoveryAdminClient() {
             ["modules", "Public modules"],
             ["listings", "Native listings"],
             ["external", "External moderation"],
+            ["intelligence", "City intelligence"],
             ["epl", "EPL public"],
           ].map(([key, label]) => (
             <button
@@ -1260,6 +1528,344 @@ export default function DiscoveryAdminClient() {
               <div className="rounded-3xl border border-white/10 bg-black/25 p-5 text-sm leading-6 text-white/65">Use <span className="text-white">Featured</span> only when the external listing deserves homepage-level weight.</div>
               <div className="rounded-3xl border border-white/10 bg-black/25 p-5 text-sm leading-6 text-white/65">Use <span className="text-white">Hidden</span> or <span className="text-white">Unsuitable</span> when the event should not surface to customers.</div>
               <div className="rounded-3xl border border-white/10 bg-black/25 p-5 text-sm leading-6 text-white/65">Use override summary and notes only when the source description needs correction.</div>
+            </div>
+          </section>
+        </div>
+        ) : null}
+
+        {activeSection === "intelligence" ? (
+        <div className="grid gap-8">
+          <section className="ev-panel p-6">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+              <div>
+                <div className="ev-section-kicker">City supply intelligence</div>
+                <h2 className="mt-3 text-2xl font-bold text-white">See where EVNTSZN is still dependent on imported inventory and where native supply is starting to win.</h2>
+                <p className="mt-3 text-sm text-white/65">
+                  This uses the same source model and city-aware weighting logic the public discovery stack is using. Operators can read city maturity, momentum source mix, active automation, and override state.
+                </p>
+              </div>
+              <button
+                type="button"
+                className="ev-button-primary"
+                disabled={saving === "automation:all"}
+                onClick={() => updateAutomation("evaluate_all")}
+              >
+                {saving === "automation:all" ? "Evaluating..." : "Run all evaluations"}
+              </button>
+            </div>
+            <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+              <div className="ev-meta-card">
+                <div className="ev-meta-label">Total usable inventory</div>
+                <div className="ev-meta-value">{intelligence?.overallInventory || 0}</div>
+              </div>
+              <div className="ev-meta-card">
+                <div className="ev-meta-label">EVNTSZN Native share</div>
+                <div className="ev-meta-value">{intelligence ? formatPercent(intelligence.overallSourceMix.evntszn_native.share) : "0%"}</div>
+              </div>
+              <div className="ev-meta-card">
+                <div className="ev-meta-label">Curator + Partner share</div>
+                <div className="ev-meta-value">
+                  {intelligence
+                    ? formatPercent(intelligence.overallSourceMix.curator_network.share + intelligence.overallSourceMix.partner.share)
+                    : "0%"}
+                </div>
+              </div>
+              <div className="ev-meta-card">
+                <div className="ev-meta-label">Imported dependency</div>
+                <div className="ev-meta-value">{intelligence ? formatPercent(intelligence.overallSourceMix.imported.share) : "0%"}</div>
+              </div>
+            </div>
+            <div className="mt-6 grid gap-4 lg:grid-cols-2">
+              <div className="rounded-3xl border border-white/10 bg-black/25 p-5">
+                <div className="text-sm font-medium text-white/78">Overall discovery source mix</div>
+                <div className="mt-4 grid gap-3">
+                  {intelligence ? (Object.entries(intelligence.overallSourceMix) as Array<[ActivitySourceKey, { count: number; share: number }]>).map(([key, value]) => (
+                    <div key={key} className="flex items-center justify-between text-sm text-white/72">
+                      <span>{getSourceMixLabel(key)}</span>
+                      <span>{value.count} · {formatPercent(value.share)}</span>
+                    </div>
+                  )) : null}
+                </div>
+              </div>
+              <div className="rounded-3xl border border-white/10 bg-black/25 p-5">
+                <div className="text-sm font-medium text-white/78">Overall momentum source mix</div>
+                <div className="mt-4 grid gap-3">
+                  {intelligence ? (Object.entries(intelligence.overallMomentumSourceMix) as Array<[ActivitySourceKey, { count: number; share: number }]>).map(([key, value]) => (
+                    <div key={key} className="flex items-center justify-between text-sm text-white/72">
+                      <span>{getSourceMixLabel(key)}</span>
+                      <span>{value.count} · {formatPercent(value.share)}</span>
+                    </div>
+                  )) : null}
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section className="ev-panel p-6">
+            <div className="ev-section-kicker">Market-by-market visibility</div>
+            <div className="mt-5 space-y-4">
+              {(intelligence?.cityRows || []).map((row) => (
+                <div key={row.citySlug} className="rounded-3xl border border-white/10 bg-black/25 p-5">
+                  <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+                    <div className="xl:max-w-sm">
+                      <div className="text-lg font-semibold text-white">{row.city}</div>
+                      <div className="mt-2 text-sm text-white/58">
+                        {row.totalUsableInventory} usable listings · trend {formatTrendLabel(row.trendDirection, row.trendDeltaPercent)}
+                      </div>
+                      <div className={`mt-3 text-sm font-semibold ${getMaturityTone(row.maturityLabel)}`}>
+                        {Math.round(row.maturityScore * 100)}% maturity · {row.maturityLabel.replace(/_/g, " ")}
+                      </div>
+
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        <div className={`rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${getPromotionTone(row.promotionEvaluation.status)}`}>
+                          {getPromotionLabel(row.promotionEvaluation.status)}
+                        </div>
+                        <div className={`rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${getAutomationTone(row.automationStatus)}`}>
+                          Policy: {row.automationIntelligence.policy.label}
+                        </div>
+                        {row.promotionEvaluation.nextLevel && (
+                          <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white/60">
+                            Target: {row.promotionEvaluation.nextLevel.replace(/_/g, " ")}
+                          </div>
+                        )}
+                      </div>
+
+                      <p className="mt-4 text-sm leading-6 text-white/65">{row.outcomeLabel}</p>
+                      <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4">
+                        <div className="text-xs font-semibold uppercase tracking-[0.18em] text-white/48">Active policy</div>
+                        <div className="mt-2 text-sm font-semibold text-white">{row.policy.label}</div>
+                        <div className="mt-2 text-sm leading-6 text-white/65">{row.policy.explanation}</div>
+                        <div className="mt-2 text-xs leading-5 text-white/48">{row.policyReason}</div>
+                        
+                        <div className="mt-6 pt-6 border-t border-white/5">
+                          <div className="flex items-center justify-between">
+                            <div className="text-[10px] font-bold uppercase tracking-widest text-white/32">Automation Intelligence</div>
+                            <div className="text-[10px] font-bold text-white/20 uppercase tracking-widest">Confidence {Math.round(row.automationIntelligence.policy.confidence * 100)}%</div>
+                          </div>
+                          <div className="mt-3 text-sm font-semibold text-white/90">{row.automationIntelligence.policy.reason}</div>
+                          
+                          {row.automationIntelligence.policy.opsFlags.length > 0 && (
+                            <div className="mt-3 flex flex-wrap gap-2">
+                              {row.automationIntelligence.policy.opsFlags.map((flag) => (
+                                <div key={flag} className="rounded-lg bg-white/5 border border-white/10 px-2 py-1 text-[10px] font-semibold text-white/50">
+                                  {getOpsFlagLabel(flag)}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          <div className="mt-4 space-y-2">
+                            <div className="text-[10px] font-bold uppercase tracking-widest text-white/20">Action Plan</div>
+                            {row.automationIntelligence.policy.actionPlan.map((action, i) => (
+                              <div key={i} className="flex items-start gap-2 text-xs text-white/60">
+                                <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-blue-400/40" />
+                                {action}
+                              </div>
+                            ))}
+                          </div>
+                          
+                          <div className="mt-4 flex items-center justify-between text-[10px] text-white/25">
+                            <div>
+                              Last evaluation {row.automationIntelligence.lastEvaluatedAt ? new Date(row.automationIntelligence.lastEvaluatedAt).toLocaleString() : "Pending first run"}
+                            </div>
+                          </div>
+                          <div className="mt-2 flex items-center justify-between text-[10px] text-white/25">
+                            <div>Next evaluation {new Date(row.automationIntelligence.nextEvaluationAt).toLocaleString()}</div>
+                            {row.automationIntelligence.isOverridden && (
+                              <div className="text-orange-400/80 font-bold uppercase tracking-widest">Manual Override Active</div>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="mt-6 pt-6 border-t border-white/5">
+                          <div className="text-[10px] font-bold uppercase tracking-widest text-white/32">Promotion Signals</div>
+                          <div className="mt-2 text-xs leading-5 text-white/72">{row.promotionEvaluation.promotionReason}</div>
+                          {row.promotionEvaluation.missingSignals.length > 0 && (
+                            <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
+                              {row.promotionEvaluation.missingSignals.map((signal) => (
+                                <div key={signal} className="text-[10px] text-rose-300/65">
+                                  × {signal}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid flex-1 gap-4 lg:grid-cols-3">
+                      <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                        <div className="text-xs font-semibold uppercase tracking-[0.18em] text-white/48">Source mix</div>
+                        <div className="mt-3 grid gap-2 text-sm text-white/72">
+                          {(Object.entries(row.sourceMix) as Array<[ActivitySourceKey, { count: number; share: number }]>).map(([key, value]) => (
+                            <div key={key} className="flex items-center justify-between">
+                              <span>{getSourceMixLabel(key)}</span>
+                              <span>{value.count} · {formatPercent(value.share)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                        <div className="text-xs font-semibold uppercase tracking-[0.18em] text-white/48">Momentum source</div>
+                        <div className="mt-3 grid gap-2 text-sm text-white/72">
+                          {(Object.entries(row.momentumSourceMix) as Array<[ActivitySourceKey, { count: number; share: number }]>).map(([key, value]) => (
+                            <div key={key} className="flex items-center justify-between">
+                              <span>{getSourceMixLabel(key)}</span>
+                              <span>{value.count} · {formatPercent(value.share)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                        <div className="text-xs font-semibold uppercase tracking-[0.18em] text-white/48">Ranking outcome</div>
+                        <div className="mt-3 grid gap-2 text-sm text-white/72">
+                          <div className="flex items-center justify-between">
+                            <span>Top slots: EVNTSZN</span>
+                            <span>{formatPercent(row.topSlots.evntszn_native.share)}</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span>Top slots: Curator + Partner</span>
+                            <span>{formatPercent(row.topSlots.curator_network.share + row.topSlots.partner.share)}</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span>Top slots: Imported</span>
+                            <span>{formatPercent(row.topSlots.imported.share)}</span>
+                          </div>
+                          <div className="mt-2 text-xs text-white/52">
+                            {row.nativeLifted ? "Native supply is being lifted." : row.importedDominating ? "Fallback is still dominating." : "Source balance is mixed."}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="rounded-2xl border border-white/10 bg-black/20 p-4 lg:col-span-3">
+                        <div className="text-xs font-semibold uppercase tracking-[0.18em] text-white/48">Policy actions</div>
+                        <div className="mt-3 grid gap-3 md:grid-cols-3 text-sm text-white/72">
+                          <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                            <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/42">Homepage</div>
+                            <div className="mt-2 leading-6">{row.policy.homepageBehavior}</div>
+                          </div>
+                          <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                            <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/42">Search</div>
+                            <div className="mt-2 leading-6">{row.policy.searchBehavior}</div>
+                          </div>
+                          <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                            <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/42">Momentum</div>
+                            <div className="mt-2 leading-6">{row.policy.momentumBehavior}</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="rounded-2xl border border-white/10 bg-black/20 p-4 lg:col-span-3">
+                        <div className="flex items-center justify-between">
+                          <div className="text-xs font-semibold uppercase tracking-[0.18em] text-white/48">Automation controls</div>
+                          <button
+                            type="button"
+                            className="ev-button-secondary"
+                            disabled={saving === `automation:${row.citySlug}`}
+                            onClick={() => updateAutomation("evaluate_city", row)}
+                          >
+                            {saving === `automation:${row.citySlug}` ? "Running..." : "Re-evaluate city"}
+                          </button>
+                        </div>
+                        <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                          <select
+                            className="ev-select"
+                            value={getAutomationDraft(row).forcedPolicyStatus}
+                            onChange={(event) =>
+                              setAutomationDrafts((current) => ({
+                                ...current,
+                                [row.citySlug]: {
+                                  ...getAutomationDraft(row),
+                                  forcedPolicyStatus: event.target.value as DiscoveryCityAutomationStatus | "",
+                                },
+                              }))
+                            }
+                          >
+                            <option value="">Use evaluated policy</option>
+                            <option value="monitoring">Monitoring</option>
+                            <option value="accelerating">Accelerating</option>
+                            <option value="recovering">Recovering</option>
+                            <option value="intervening">Intervening</option>
+                          </select>
+                          <select
+                            className="ev-select"
+                            value={getAutomationDraft(row).forcedMaturityState}
+                            onChange={(event) =>
+                              setAutomationDrafts((current) => ({
+                                ...current,
+                                [row.citySlug]: {
+                                  ...getAutomationDraft(row),
+                                  forcedMaturityState: event.target.value as DiscoveryCityMaturityState | "",
+                                },
+                              }))
+                            }
+                          >
+                            <option value="">Use evaluated maturity</option>
+                            <option value="imported_fallback">Imported fallback</option>
+                            <option value="growing">Growing</option>
+                            <option value="strong">Strong</option>
+                          </select>
+                          <label className="flex items-center gap-3 rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white/72">
+                            <input
+                              type="checkbox"
+                              checked={getAutomationDraft(row).suppressPromotion}
+                              onChange={(event) =>
+                                setAutomationDrafts((current) => ({
+                                  ...current,
+                                  [row.citySlug]: {
+                                    ...getAutomationDraft(row),
+                                    suppressPromotion: event.target.checked,
+                                  },
+                                }))
+                              }
+                            />
+                            Suppress promotion
+                          </label>
+                          <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white/62">
+                            Effective policy
+                            <div className="mt-1 font-semibold text-white">{row.policy.label}</div>
+                          </div>
+                        </div>
+                        <textarea
+                          className="ev-textarea mt-3"
+                          rows={3}
+                          placeholder="Override reason"
+                          value={getAutomationDraft(row).overrideReason}
+                          onChange={(event) =>
+                            setAutomationDrafts((current) => ({
+                              ...current,
+                              [row.citySlug]: {
+                                ...getAutomationDraft(row),
+                                overrideReason: event.target.value,
+                              },
+                            }))
+                          }
+                        />
+                        <div className="mt-4 flex flex-wrap gap-3">
+                          <button
+                            type="button"
+                            className="ev-button-primary"
+                            disabled={saving === `automation:${row.citySlug}`}
+                            onClick={() => updateAutomation("set_override", row)}
+                          >
+                            {saving === `automation:${row.citySlug}` ? "Saving..." : "Save override"}
+                          </button>
+                          <button
+                            type="button"
+                            className="ev-button-secondary"
+                            disabled={saving === `automation:${row.citySlug}`}
+                            onClick={() => updateAutomation("clear_override", row)}
+                          >
+                            Clear override
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </section>
         </div>

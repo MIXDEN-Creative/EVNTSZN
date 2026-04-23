@@ -1,7 +1,20 @@
 import { NextResponse } from "next/server";
+import { buildActivitySourceMetadata } from "@/lib/activity-source";
 import { calculateCrewBookingFee } from "@/lib/evntszn-phase-shared";
+import { trackEngagementEvent } from "@/lib/engagement";
 import { recordPulseActivity } from "@/lib/pulse-signal";
+import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+
+async function getUserId() {
+  try {
+    const supabase = await createClient();
+    const { data } = await supabase.auth.getUser();
+    return data.user?.id || null;
+  } catch {
+    return null;
+  }
+}
 
 export async function POST(request: Request) {
   try {
@@ -63,8 +76,41 @@ export async function POST(request: Request) {
       referenceId: body.crewProfileId,
       metadata: {
         category: body.category || null,
+        ...buildActivitySourceMetadata({
+          sourceType: "evntszn_native",
+          referenceType: "crew",
+          entityType: "crew_request",
+          metadata: {
+            category: body.category || null,
+          },
+        }),
       },
     }).catch(() => null);
+
+    const userId = await getUserId();
+    if (userId) {
+      await trackEngagementEvent({
+        userId,
+        eventType: "crew_requested",
+        city: body.city || null,
+        referenceType: "crew",
+        referenceId: body.crewProfileId,
+        value: Number(body.budgetAmountUsd || 0),
+        dedupeKey: `crew:${data.id}`,
+        metadata: {
+          category: body.category || null,
+          totalAmountUsd: pricing.totalUsd,
+          ...buildActivitySourceMetadata({
+            sourceType: "evntszn_native",
+            referenceType: "crew",
+            entityType: "crew_request",
+            metadata: {
+              category: body.category || null,
+            },
+          }),
+        },
+      }).catch(() => null);
+    }
 
     return NextResponse.json({
       ok: true,

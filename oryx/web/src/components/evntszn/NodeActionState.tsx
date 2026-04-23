@@ -80,26 +80,34 @@ export default function NodeActionState({
             <Button>{destinationLabel}</Button>
           </a>
           <SaveToggle
-            item={{
-              intent: "save",
-              entityType,
-              entityKey,
-              title,
-              href: destinationHref,
-              city: city || null,
-            }}
+          item={{
+            intent: "save",
+            entityType,
+            entityKey,
+            title,
+            href: destinationHref,
+            city: city || null,
+            metadata: {
+              sourceType: "evntszn_native",
+              sourceLabel: "EVNTSZN Native",
+            },
+          }}
             inactiveLabel="Save this spot"
             activeLabel="Saved spot"
           />
           <SaveToggle
-            item={{
-              intent: "watch",
-              entityType,
-              entityKey: `${entityKey}:watch`,
-              title: `${title} watch`,
-              href: destinationHref,
-              city: city || null,
-            }}
+          item={{
+            intent: "watch",
+            entityType,
+            entityKey: `${entityKey}:watch`,
+            title: `${title} watch`,
+            href: destinationHref,
+            city: city || null,
+            metadata: {
+              sourceType: "evntszn_native",
+              sourceLabel: "EVNTSZN Native",
+            },
+          }}
             inactiveLabel="Watch this area"
             activeLabel="Watching"
           />

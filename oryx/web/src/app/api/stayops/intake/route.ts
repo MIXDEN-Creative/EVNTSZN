@@ -1,8 +1,21 @@
 import { NextResponse } from "next/server";
+import { buildActivitySourceMetadata } from "@/lib/activity-source";
 import { notifyPipelineEvent } from "@/lib/application-notifications";
+import { trackEngagementEvent } from "@/lib/engagement";
 import { createInternalWorkItem, INTERNAL_DESK_SLUGS } from "@/lib/internal-os";
 import { estimateStayOpsValueUsd } from "@/lib/pipeline-value";
+import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+
+async function getUserId() {
+  try {
+    const supabase = await createClient();
+    const { data } = await supabase.auth.getUser();
+    return data.user?.id || null;
+  } catch {
+    return null;
+  }
+}
 
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
@@ -88,6 +101,33 @@ export async function POST(request: Request) {
       nextStep: String(body.nextStep || "").trim() || "review",
     },
   });
+
+  const userId = await getUserId();
+  if (userId) {
+    await trackEngagementEvent({
+      userId,
+      eventType: "stayops_intake_submitted",
+      city: location,
+      referenceType: "stayops",
+      referenceId: data.id,
+      value: estimatedValueUsd,
+      dedupeKey: `stayops:${data.id}`,
+      metadata: {
+        propertyType,
+        serviceTier,
+        nextStep: String(body.nextStep || "").trim() || "review",
+        ...buildActivitySourceMetadata({
+          sourceType: "evntszn_native",
+          referenceType: "stayops",
+          entityType: "stayops_application",
+          metadata: {
+            propertyType,
+            serviceTier,
+          },
+        }),
+      },
+    }).catch(() => null);
+  }
 
   return NextResponse.json({ ok: true, intakeId: data.id });
 }

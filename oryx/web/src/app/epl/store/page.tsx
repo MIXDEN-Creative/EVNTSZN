@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import PublicNav from "@/components/public/PublicNav";
 import PublicFooterShell from "@/components/public/PublicFooterShell";
+import SystemActivityRail from "@/components/public/SystemActivityRail";
 import { DEFAULT_PUBLIC_MODULES } from "@/lib/site-content";
 
 type Product = {
@@ -236,7 +237,7 @@ export default function EPLStorePage() {
           </h1>
 
           <p className="mt-3 max-w-2xl text-lg text-white/70">
-            Official EVNTSZN Prime League merch built around club identity, league nights, and the gear players and supporters actually want to wear.
+            Official EVNTSZN league merch built around club identity, supporter demand, and the gear players and supporters actually want to wear.
           </p>
 
           <div className="mt-8 flex flex-wrap gap-3">
@@ -252,6 +253,8 @@ export default function EPLStorePage() {
           </div>
         </div>
       </section>
+
+      <SystemActivityRail cityLabel="Baltimore" audienceLabel="supporters" mode="compact" />
 
       <section className="mx-auto max-w-7xl px-6 py-8">
         {!catalogReady ? (

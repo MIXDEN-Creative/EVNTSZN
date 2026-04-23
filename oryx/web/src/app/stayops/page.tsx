@@ -1,7 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import EngagementBeacon from "@/components/engagement/EngagementBeacon";
+import EngagementLoopPanel from "@/components/engagement/EngagementLoopPanel";
 import PublicPageFrame from "@/components/public/PublicPageFrame";
+import ProductTrustGrid from "@/components/public/ProductTrustGrid";
+import SystemActivityRail from "@/components/public/SystemActivityRail";
 import { getStayOpsOrigin } from "@/lib/domains";
+import { buildCollectionPageSchema, buildItemListSchema } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "EVNTSZN StayOps | Premium short-term rental operations system",
@@ -62,7 +67,24 @@ export default function StayOpsPage() {
       title="StayOps turns short-term rentals into operated revenue assets."
       description="A premium short-term rental operations system built around hospitality quality, pricing discipline, and EVNTSZN's advantage around city movement, events, nightlife, and group demand."
       heroImage="https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1800&q=80"
+      structuredData={[
+        buildCollectionPageSchema({
+          name: "EVNTSZN StayOps",
+          description:
+            "Premium short-term rental operations with Core Ops, Pro Ops, and Elite / Concierge tiers.",
+          path: "/stayops",
+        }),
+        buildItemListSchema({
+          name: "StayOps tiers",
+          path: "/stayops",
+          items: STAYOPS_TIERS.map((tier) => ({
+            name: tier.name,
+            url: "/stayops/intake",
+          })),
+        }),
+      ]}
     >
+      <EngagementBeacon eventType="stayops_view" city="Baltimore" referenceType="stayops" referenceId="landing" dedupeKey={`stayops:view:${new Date().toISOString().slice(0, 10)}`} />
       <section className="mx-auto max-w-7xl px-4 py-12 md:px-6 lg:px-8">
         <div className="grid gap-6 xl:grid-cols-[1.08fr_0.92fr]">
           <div className="rounded-[36px] border border-white/10 bg-[#0c0c15] p-7 md:p-9">
@@ -110,6 +132,46 @@ export default function StayOpsPage() {
         </div>
       </section>
 
+      <SystemActivityRail cityLabel="Baltimore" audienceLabel="operators" mode="compact" />
+
+      <ProductTrustGrid
+        title="StayOps works because it ties property operations to city demand."
+        subtitle="The system is designed for owners and operators who want premium operations, not a generic co-hosting pitch."
+        proofTitle="Proof"
+        proof={[
+          { title: "Revenue asset framing", body: "The property is treated as a managed commercial asset, not a casual listing." },
+          { title: "Event-linked demand", body: "Pricing and messaging can respond to nightlife, league activity, and group movement." },
+          { title: "Structured tiers", body: "Core, Pro, and Elite tiers make the operating model easy to understand." },
+        ]}
+        outcomesTitle="Outcomes"
+        outcomes={[
+          { title: "Clearer revenue story", body: "Owners understand what gets managed and why the model is premium." },
+          { title: "Better fit", body: "The offer is positioned around operations, not low-ticket cohosting." },
+          { title: "Better next step", body: "The intake leads into review and onboarding instead of a dead lead form." },
+        ]}
+        objectionsTitle="Objections"
+        objections={[
+          { question: "Is this Airbnb cohosting?", answer: "No. It is premium short-term rental operations and revenue management." },
+          { question: "Does it work without event spikes?", answer: "Yes. Event-linked demand is an advantage, not the only source of value." },
+          { question: "What happens after intake?", answer: "The property is reviewed, scoped, and routed into onboarding or invoice flow." },
+        ]}
+        links={[
+          { href: "/stayops/intake", label: "Start StayOps" },
+          { href: "/events", label: "See Events" },
+          { href: "/reserve", label: "See Reserve" },
+        ]}
+      />
+
+      <section className="mx-auto max-w-7xl px-4 py-4 md:px-6 lg:px-8">
+        <EngagementLoopPanel
+          contextLabel="Asset progression"
+          title="Keep StayOps credible while still storing progress."
+          body="StayOps now tracks operator-grade movement through intake, onboarding progress, and revenue-asset milestones without drifting into childish gamification."
+          actionHref="/stayops/intake"
+          actionLabel="Start StayOps"
+        />
+      </section>
+
       <section className="mx-auto max-w-7xl px-4 py-4 md:px-6 lg:px-8">
         <div className="grid gap-6 xl:grid-cols-3">
           {STAYOPS_TIERS.map((tier) => (
@@ -125,6 +187,22 @@ export default function StayOpsPage() {
                 ))}
               </div>
             </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4 py-6 md:px-6 lg:px-8">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {[
+            ["Events", "/events", "Tie property demand to event movement."],
+            ["City", "/city", "Follow the city layer that feeds demand."],
+            ["Reserve", "/reserve", "Connect booking intent with hospitality flow."],
+            ["Sponsors", "/sponsors", "Unlock city partnerships and commercial value."],
+          ].map(([label, href, body]) => (
+            <Link key={label} href={href} className="rounded-[24px] border border-white/10 bg-white/[0.03] p-5 transition hover:bg-white/[0.06]">
+              <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#caa7ff]">{label}</div>
+              <p className="mt-3 text-sm leading-6 text-white/64">{body}</p>
+            </Link>
           ))}
         </div>
       </section>

@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
+import { buildActivitySourceMetadata } from "@/lib/activity-source";
 import { requireAdminPermission } from "@/lib/admin-auth";
+import { trackEngagementEvent } from "@/lib/engagement";
 import {
   canAccessInternalPulse,
   createFallbackPulsePost,
@@ -63,6 +65,24 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Pulse publishing could not be completed." }, { status: 500 });
       }
     }
+
+    await trackEngagementEvent({
+      userId: viewer.user.id,
+      eventType: "pulse_posted",
+      city: String(body.city || "").trim() || viewer.profile?.city || null,
+      referenceType: "pulse",
+      referenceId: title.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 48) || "post",
+      dedupeKey: `pulse-post:${viewer.user.id}:${title.toLowerCase().slice(0, 24)}`,
+      metadata: {
+        visibility,
+        ...buildActivitySourceMetadata({
+          sourceType: visibility === "public" ? "evntszn_native" : "evntszn_native",
+          referenceType: "pulse",
+          entityType: "pulse_post",
+          metadata: { visibility },
+        }),
+      },
+    }).catch(() => null);
 
     return NextResponse.json({ ok: true });
   } catch (error) {

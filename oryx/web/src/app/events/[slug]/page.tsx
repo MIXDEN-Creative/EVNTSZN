@@ -291,6 +291,10 @@ export default async function EventDetailPage({ params }: { params: Params }) {
                       city: event.city,
                       state: event.state,
                       startsAt: event.start_at,
+                      metadata: {
+                        sourceType: String(event.event_class || "imported"),
+                        sourceLabel: String(event.event_class || "Imported signal"),
+                      },
                     }}
                   />
                   <SaveToggle
@@ -303,6 +307,10 @@ export default async function EventDetailPage({ params }: { params: Params }) {
                       city: event.city,
                       state: event.state,
                       startsAt: event.start_at,
+                      metadata: {
+                        sourceType: String(event.event_class || "imported"),
+                        sourceLabel: String(event.event_class || "Imported signal"),
+                      },
                     }}
                     inactiveLabel="Watch tonight"
                     activeLabel="Watching tonight"

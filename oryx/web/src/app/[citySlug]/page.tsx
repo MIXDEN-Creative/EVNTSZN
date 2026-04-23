@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import PublicPageFrame from "@/components/public/PublicPageFrame";
 import SponsorPlacementStrip from "@/components/public/SponsorPlacementStrip";
+import { rankDiscoveryListingsWithStoredPolicies } from "@/lib/discovery-automation-runtime";
 import { getWebOrigin } from "@/lib/domains";
 import { getDiscoveryNativeEvents } from "@/lib/discovery";
 import { PUBLIC_CITIES, getPublicCityBySlug } from "@/lib/public-cities";
@@ -117,7 +118,7 @@ export default async function PublicCityPage({ params }: CityPageProps) {
     safePublicLoad("city-sponsor-placements", () => getPublicSponsorPlacements([`city:${city.slug}`, "city"]), []),
   ]);
 
-  const cards = [
+  const candidateCards = [
     ...nativeResult.events.map((event) => ({
       id: event.id,
       title: event.title,
@@ -126,6 +127,10 @@ export default async function PublicCityPage({ params }: CityPageProps) {
       venue: event.subtitle || event.heroNote || "EVNTSZN listing",
       date: event.startAt,
       badge: event.badgeLabel,
+      city: city.name,
+      source: event.source,
+      featured: event.featured,
+      isPrimary: true,
     })),
     ...externalEvents.map((event) => ({
       id: event.id,
@@ -135,8 +140,16 @@ export default async function PublicCityPage({ params }: CityPageProps) {
       venue: event.venueName || `${city.name} listing`,
       date: event.startAt,
       badge: "External listing",
+      city: city.name,
+      source: event.source,
+      featured: false,
+      isPrimary: false,
     })),
-  ].slice(0, 8);
+  ];
+
+  const cards = await rankDiscoveryListingsWithStoredPolicies(candidateCards)
+    .then((rows) => rows.slice(0, 8))
+    .catch(() => candidateCards.slice(0, 8));
 
   return (
     <PublicPageFrame>

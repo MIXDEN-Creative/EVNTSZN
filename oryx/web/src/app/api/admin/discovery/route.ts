@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdminPermission } from "@/lib/admin-auth";
 import { getDiscoveryNativeEvents } from "@/lib/discovery";
+import { getDiscoveryIntelligenceSnapshot } from "@/lib/discovery-intelligence";
 import { applyExternalDiscoveryControls } from "@/lib/external-discovery-controls";
 import {
   getHomepageContent,
@@ -71,12 +72,13 @@ function isMissingDiscoveryTableError(error: unknown) {
 export async function GET() {
   await requireAdminPermission("catalog.manage", "/epl/admin/discovery");
 
-  const [homepage, discoveryListings, epl, modules, moderatedExternal] = await Promise.all([
+  const [homepage, discoveryListings, epl, modules, moderatedExternal, intelligence] = await Promise.all([
     getHomepageContent(),
     getDiscoveryNativeEvents({ limit: 50 }),
     getEplPublicContent(),
     getPublicModulesContent(),
     getTicketmasterShowcase().then((events) => applyExternalDiscoveryControls("ticketmaster", events)),
+    getDiscoveryIntelligenceSnapshot(),
   ]);
 
   return NextResponse.json({
@@ -92,6 +94,7 @@ export async function GET() {
     modules,
     listings: discoveryListings.events,
     externalListings: moderatedExternal,
+    intelligence,
   });
 }
 

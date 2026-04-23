@@ -279,6 +279,10 @@ export default async function ReserveVenuePage({ params }: ReserveSlugPageProps)
                     href: `/reserve/${venue.slug}`,
                     city: venue.city,
                     state: venue.state,
+                    metadata: {
+                      sourceType: "evntszn_native",
+                      sourceLabel: "EVNTSZN Native",
+                    },
                   }}
                   inactiveLabel="Save spot"
                 />
@@ -291,6 +295,10 @@ export default async function ReserveVenuePage({ params }: ReserveSlugPageProps)
                     href: `/reserve/${venue.slug}`,
                     city: venue.city,
                     state: venue.state,
+                    metadata: {
+                      sourceType: "evntszn_native",
+                      sourceLabel: "EVNTSZN Native",
+                    },
                   }}
                   inactiveLabel="Watch demand"
                   activeLabel="Watching demand"

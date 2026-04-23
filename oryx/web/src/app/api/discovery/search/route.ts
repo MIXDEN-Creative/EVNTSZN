@@ -1,5 +1,14 @@
 import { NextRequest } from "next/server";
-import { getDiscoveryNativeEvents, getDiscoveryFallbackImage, type DiscoveryNativeEvent } from "@/lib/discovery";
+import {
+  classifyDiscoveryCityMaturity,
+  getDiscoveryCityPolicyProfile,
+  getDiscoveryFallbackImage,
+  getDiscoveryNativeEvents,
+  getDiscoverySourceMixTotals,
+  rankDiscoveryListings,
+  type DiscoveryNativeEvent,
+} from "@/lib/discovery";
+import { rankDiscoveryListingsWithStoredPolicies } from "@/lib/discovery-automation-runtime";
 import { searchEventbriteEvents, type EventbriteEvent } from "@/lib/eventbrite";
 import { normalizeCitySearchInput } from "@/lib/external-integrations";
 import { searchTicketmasterEvents, type TicketmasterEvent } from "@/lib/ticketmaster";
@@ -20,6 +29,32 @@ type DiscoveryListing = {
   isPrimary: boolean;
   featured?: boolean;
 };
+
+function toSourceMix(items: DiscoveryListing[]) {
+  return items.reduce(
+    (acc, item) => {
+      switch (item.source) {
+        case "evntszn":
+          acc.evntszn = (acc.evntszn || 0) + 1;
+          break;
+        case "host":
+          acc.host = (acc.host || 0) + 1;
+          break;
+        case "independent_organizer":
+          acc.independent_organizer = (acc.independent_organizer || 0) + 1;
+          break;
+        case "ticketmaster":
+          acc.ticketmaster = (acc.ticketmaster || 0) + 1;
+          break;
+        case "eventbrite":
+          acc.eventbrite = (acc.eventbrite || 0) + 1;
+          break;
+      }
+      return acc;
+    },
+    {} as Record<DiscoveryListing["source"], number>,
+  );
+}
 
 function getTimeRange(when: string | null) {
   const now = new Date();
@@ -150,11 +185,29 @@ export async function GET(req: NextRequest) {
       }),
     ]);
 
-    const results = dedupeListings([
+    const candidateResults = dedupeListings([
       ...nativeResult.events.map(normalizeNativeEvent),
       ...ticketmasterEvents.map(normalizeExternalEvent),
       ...eventbriteEvents.map(normalizeExternalEvent),
-    ]).slice(0, 12);
+    ]);
+    const results = await rankDiscoveryListingsWithStoredPolicies(candidateResults)
+      .then((rows) => rows.slice(0, 12))
+      .catch(() => rankDiscoveryListings(candidateResults).slice(0, 12));
+    const sourceMix = toSourceMix(results);
+    const topSlots = toSourceMix(results.slice(0, 4));
+    const sourceTotals = getDiscoverySourceMixTotals(sourceMix);
+    const topSlotTotals = getDiscoverySourceMixTotals(topSlots);
+    const marketClassification = classifyDiscoveryCityMaturity({
+      city: resolvedCity || normalizedCity?.city || null,
+      sourceMix,
+      topSlotMix: topSlots,
+    });
+    const marketPolicy = getDiscoveryCityPolicyProfile({
+      city: resolvedCity || normalizedCity?.city || null,
+      sourceMix,
+      trendDirection: "flat",
+      topSlotMix: topSlots,
+    });
 
     return new Response(
       JSON.stringify({
@@ -171,6 +224,20 @@ export async function GET(req: NextRequest) {
             }
           : null,
         weather,
+        market: {
+          maturityState: marketClassification.state,
+          maturityScore: marketClassification.maturityScore,
+          maturityReason: marketClassification.reason,
+          firstPartyShare: sourceTotals.totalCount ? sourceTotals.firstPartyCount / sourceTotals.totalCount : 0,
+          importedShare: sourceTotals.totalCount ? sourceTotals.importedCount / sourceTotals.totalCount : 0,
+          topSlotFirstPartyShare: topSlotTotals.totalCount ? topSlotTotals.firstPartyCount / topSlotTotals.totalCount : 0,
+          policyState: marketPolicy.state,
+          policyLabel: marketPolicy.label,
+          policyExplanation: marketPolicy.explanation,
+          homepageBehavior: marketPolicy.homepageBehavior,
+          searchBehavior: marketPolicy.searchBehavior,
+          momentumBehavior: marketPolicy.momentumBehavior,
+        },
       }),
       {
         headers: { "Content-Type": "application/json" },

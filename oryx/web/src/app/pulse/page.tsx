@@ -1,3 +1,5 @@
+import EngagementBeacon from "@/components/engagement/EngagementBeacon";
+import EngagementLoopPanel from "@/components/engagement/EngagementLoopPanel";
 import PublicPageFrame from "@/components/public/PublicPageFrame";
 import PulseFeedClient from "@/components/pulse/PulseFeedClient";
 import { getPublicPulseFeed } from "@/lib/pulse";
@@ -10,11 +12,21 @@ export default async function PublicPulsePage() {
   return (
     <PublicPageFrame>
       <section className="mx-auto max-w-7xl px-4 py-14 md:px-6 lg:px-8">
+        <EngagementBeacon eventType="pulse_view" city="Baltimore" referenceType="pulse" referenceId="public-feed" dedupeKey={`pulse:view:${new Date().toISOString().slice(0, 10)}`} />
         <div className="ev-kicker">EVNTSZN Pulse</div>
         <h1 className="ev-title max-w-5xl">Live city movement, event energy, venues, and reserve signals.</h1>
         <p className="ev-subtitle max-w-3xl">
           Public Pulse stays discovery-first. Events, venues, live energy, reserve movement, and public-safe sponsor visibility surface here without exposing internal ops.
         </p>
+        <div className="mt-8">
+          <EngagementLoopPanel
+            contextLabel="Pulse loop"
+            title="Contribute signal. Build trust. Return because the city moved."
+            body="Pulse rewards useful participation, city consistency, and visible contributor progress without turning the feed into a noisy leaderboard."
+            actionHref="/enter"
+            actionLabel="Enter and contribute"
+          />
+        </div>
         <div className="mt-10">
           <PulseFeedClient scope="public" initialItems={items} />
         </div>

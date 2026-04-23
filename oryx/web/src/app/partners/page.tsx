@@ -1,5 +1,16 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import PublicPageFrame from "@/components/public/PublicPageFrame";
+import { buildCollectionPageSchema, buildPageMetadata } from "@/lib/seo";
+import { getWebOrigin } from "@/lib/domains";
+
+export const metadata: Metadata = buildPageMetadata({
+  title: "EVNTSZN Partners | independent event organizers",
+  description:
+    "Run events independently with EVNTSZN tools, ticketing, Pulse access, and Link support.",
+  path: "/partners",
+  origin: getWebOrigin(),
+});
 
 const PARTNER_PLANS = [
   {
@@ -22,6 +33,12 @@ export default function PartnersPage() {
       title="EVNTSZN Partners"
       description="Run events independently with EVNTSZN tools, ticketing, Pulse access, and Link support."
       heroImage="https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=1800&q=80"
+      structuredData={buildCollectionPageSchema({
+        name: "EVNTSZN Partners",
+        description:
+          "Independent organizers using EVNTSZN for ticketing, discovery, Pulse, and Link support.",
+        path: "/partners",
+      })}
     >
       <section className="mx-auto max-w-7xl px-4 py-10 md:px-6 lg:px-8">
         <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">

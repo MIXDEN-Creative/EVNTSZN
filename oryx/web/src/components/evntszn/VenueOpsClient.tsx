@@ -222,6 +222,10 @@ export default function VenueOpsClient({
                         href: `/venues`,
                         city: venue.city,
                         state: venue.state,
+                        metadata: {
+                          sourceType: "evntszn_native",
+                          sourceLabel: "EVNTSZN Native",
+                        },
                       }}
                       inactiveLabel="Save venue"
                     />

@@ -1,8 +1,11 @@
 import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
+import EngagementLoopPanel from "@/components/engagement/EngagementLoopPanel";
+import NightBuilderStudio from "@/components/public/NightBuilderStudio";
 import PublicNav from "@/components/public/PublicNav";
 import PublicFooter from "@/components/public/PublicFooter";
+import SystemActivityRail from "@/components/public/SystemActivityRail";
 import { getAppOrigin, getEplOrigin, getWebOrigin } from "@/lib/domains";
 import { getPlatformViewer } from "@/lib/evntszn";
 
@@ -33,7 +36,7 @@ function buildQuickLinks(viewer: Awaited<ReturnType<typeof getPlatformViewer>>) 
   const attendeeLinks = [
     {
       title: "Discover",
-      body: "Browse public events, city plans, and nightlife picks.",
+      body: "See what's building tonight, city plans, and nightlife picks.",
       href: `${getWebOrigin()}/`,
       label: "Open discovery",
     },
@@ -368,6 +371,23 @@ export default async function AccountPage() {
                   {item}
                 </div>
               ))}
+            </div>
+
+            <div className="mt-8">
+              <SystemActivityRail cityLabel={viewer.profile?.city || "Baltimore"} audienceLabel="you" mode="compact" />
+            </div>
+
+            <div className="mt-12">
+              <EngagementLoopPanel
+                contextLabel="Member progression"
+                title="Your account now stores momentum, not just access."
+                body="EVNTSZN tracks levels, streaks, mission completions, badges, city exploration, reserve movement, Pulse contribution, EPL follows, crew actions, and sponsor-perk unlocks in one member progression layer."
+                variant="full"
+              />
+            </div>
+
+            <div className="mt-12">
+              <NightBuilderStudio defaultCity={viewer.profile?.city || "Baltimore"} />
             </div>
 
             <div className="mt-12">

@@ -9,6 +9,7 @@ import {
   SMART_FILL_RULES,
   VENUE_PLANS,
 } from "@/lib/evntszn-business";
+import { buildCollectionPageSchema } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "EVNTSZN Venue Plans",
@@ -21,7 +22,14 @@ export const metadata: Metadata = {
 
 export default function VenueProgramPage() {
   return (
-    <PublicPageFrame>
+    <PublicPageFrame
+      structuredData={buildCollectionPageSchema({
+        name: "EVNTSZN Venue Plans",
+        description:
+          "Venue listing, Venue Pro, Nodes, Smart Fill, and Reserve-ready venue structure.",
+        path: "/venue-program",
+      })}
+    >
       <section className="relative overflow-hidden border-b border-white/10">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(162,89,255,0.2),transparent_36%),linear-gradient(180deg,#09090c_0%,#050507_100%)]" />
         <div className="relative mx-auto max-w-7xl px-4 py-16 md:px-6 lg:px-8 lg:py-24">

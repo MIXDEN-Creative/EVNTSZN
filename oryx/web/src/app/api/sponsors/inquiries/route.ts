@@ -1,9 +1,22 @@
 import { NextResponse } from "next/server";
+import { buildActivitySourceMetadata } from "@/lib/activity-source";
 import { notifyPipelineEvent } from "@/lib/application-notifications";
+import { trackEngagementEvent } from "@/lib/engagement";
 import { createInternalWorkItem, INTERNAL_DESK_SLUGS } from "@/lib/internal-os";
 import { estimateSponsorBudgetUsd } from "@/lib/pipeline-value";
+import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { logSystemIssue } from "@/lib/system-logs";
+
+async function getUserId() {
+  try {
+    const supabase = await createClient();
+    const { data } = await supabase.auth.getUser();
+    return data.user?.id || null;
+  } catch {
+    return null;
+  }
+}
 
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
@@ -78,6 +91,31 @@ export async function POST(request: Request) {
       requestInvoice: Boolean(body.requestInvoice),
     },
   });
+
+  const userId = await getUserId();
+  if (userId) {
+    await trackEngagementEvent({
+      userId,
+      eventType: "sponsor_perk_viewed",
+      city: String(body.targetCity || "").trim() || null,
+      referenceType: "sponsor",
+      referenceId: payload.package_id || data.id,
+      value: estimateSponsorBudgetUsd(String(body.budgetRange || "").trim()),
+      dedupeKey: `sponsor:${data.id}`,
+      metadata: {
+        interests: Array.isArray(body.interests) ? body.interests.map(String) : [],
+        requestInvoice: Boolean(body.requestInvoice),
+        ...buildActivitySourceMetadata({
+          sourceType: "evntszn_native",
+          referenceType: "sponsor",
+          entityType: "sponsor_package_order",
+          metadata: {
+            interests: Array.isArray(body.interests) ? body.interests.map(String) : [],
+          },
+        }),
+      },
+    }).catch(() => null);
+  }
 
   return NextResponse.json({ ok: true });
 }

@@ -1,7 +1,26 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+import StructuredData from "@/components/seo/StructuredData";
+import ProductTrustGrid from "@/components/public/ProductTrustGrid";
+import SystemActivityRail from "@/components/public/SystemActivityRail";
 import { getPlatformViewer } from "@/lib/evntszn";
+import { buildCollectionPageSchema, buildItemListSchema, buildPageMetadata } from "@/lib/seo";
 import PublicNav from "@/components/public/PublicNav";
 import PublicFooter from "@/components/public/PublicFooter";
+
+export const metadata: Metadata = buildPageMetadata({
+  title: "EVNTSZN Venue | visibility, discovery, and reserve-ready venue operations",
+  description:
+    "EVNTSZN Venue is the public entry point for venue visibility, discovery, Smart Fill, reserve readiness, and the ladder into Venue Pro and Venue Pro + Reserve.",
+  path: "/venue",
+});
+
+const VENUE_LADDER = [
+  { name: "EVNTSZN Venue", href: "/venue" },
+  { name: "EVNTSZN Venue Pro", href: "/venue/pro" },
+  { name: "EVNTSZN Venue Pro + Reserve", href: "/venue/pro-reserve" },
+  { name: "Reserve", href: "/reserve" },
+];
 
 export default async function VenuePublicPage() {
   const viewer = await getPlatformViewer();
@@ -9,6 +28,24 @@ export default async function VenuePublicPage() {
 
   return (
     <main className="min-h-screen bg-black text-white">
+      <StructuredData
+        id="venue-structured-data"
+        data={[
+          buildCollectionPageSchema({
+            name: "EVNTSZN Venue",
+            description: "Venue visibility, discovery, reserve readiness, and the operating ladder into Venue Pro.",
+            path: "/venue",
+          }),
+          buildItemListSchema({
+            name: "EVNTSZN venue ladder",
+            path: "/venue",
+            items: VENUE_LADDER.map((item) => ({
+              name: item.name,
+              url: item.href,
+            })),
+          }),
+        ]}
+      />
       <PublicNav />
       <section className="relative min-h-[520px] overflow-hidden border-b border-white/10 pt-[var(--public-page-top-space)]">
         <div className="absolute inset-0">
@@ -30,7 +67,7 @@ export default async function VenuePublicPage() {
             </p>
             <div className="mt-10 flex flex-wrap gap-4">
               <Link href="/venue/agreement?intent=venue-onboarding" className="ev-button-primary px-8">
-                Start venue intake
+                Apply for Venue
               </Link>
               <Link href={isLoggedIn ? "/venue/dashboard" : "/account/login?next=/venue/dashboard"} className="ev-button-secondary px-8">
                 Enter Venue Dashboard
@@ -38,6 +75,12 @@ export default async function VenuePublicPage() {
               <Link href="/reserve" className="ev-button-secondary px-8">
                 Explore Reserve
               </Link>
+            </div>
+            <div className="mt-4 flex flex-wrap gap-3 text-xs font-bold uppercase tracking-[0.18em] text-white/70">
+              <Link href="/venue/pro" className="rounded-full border border-white/12 bg-white/5 px-4 py-2 transition hover:bg-white/10">Venue Pro</Link>
+              <Link href="/venue/pro-reserve" className="rounded-full border border-white/12 bg-white/5 px-4 py-2 transition hover:bg-white/10">Venue Pro + Reserve</Link>
+              <Link href="/tap-to-pour" className="rounded-full border border-white/12 bg-white/5 px-4 py-2 transition hover:bg-white/10">Tap to Pour</Link>
+              <Link href="/nodes" className="rounded-full border border-white/12 bg-white/5 px-4 py-2 transition hover:bg-white/10">Nodes</Link>
             </div>
           </div>
 
@@ -55,6 +98,36 @@ export default async function VenuePublicPage() {
           </div>
         </div>
       </section>
+
+      <SystemActivityRail cityLabel="Baltimore" audienceLabel="venues" mode="compact" />
+
+      <ProductTrustGrid
+        title="Why venues choose EVNTSZN instead of a disconnected stack."
+        subtitle="The venue lane is built for teams that want visibility, reserve readiness, and network presence without bolting together separate tools."
+        proofTitle="Proof that it is real"
+        proof={[
+          { title: "Venue visibility", body: "Public venue presence, event adjacency, and Pulse weight live in one system." },
+          { title: "Reserve-ready flow", body: "The ladder cleanly moves into Reserve when bookings and waitlists matter." },
+          { title: "Operator path", body: "Intake routes into the agreements desk instead of ending at a static form." },
+        ]}
+        outcomesTitle="What changes for the venue"
+        outcomes={[
+          { title: "More discoverable", body: "Your venue becomes easier to find in the city ecosystem and in search." },
+          { title: "Cleaner demand", body: "Reserve, Nodes, and Tap to Pour reduce friction in the guest journey." },
+          { title: "Upgradeable", body: "You can start with listing, then move up the ladder as operations mature." },
+        ]}
+        objectionsTitle="What operators usually ask"
+        objections={[
+          { question: "Do we have to activate Reserve immediately?", answer: "No. Venue can stand alone and expand into Reserve when ready." },
+          { question: "Will this replace our current tools?", answer: "No. It sits above the flow and adds EVNTSZN-specific discovery and operator routing." },
+          { question: "Can we start small?", answer: "Yes. The ladder is designed to make the first step easy and the upgrade obvious." },
+        ]}
+        links={[
+          { href: "/venue/pro", label: "See Venue Pro" },
+          { href: "/venue/pro-reserve", label: "See Venue Pro + Reserve" },
+          { href: "/reserve", label: "Explore Reserve" },
+        ]}
+      />
 
       <section id="plans" className="mx-auto max-w-7xl px-4 py-24 md:px-6 lg:px-8">
         <div className="grid gap-10 xl:grid-cols-3">
@@ -112,6 +185,22 @@ export default async function VenuePublicPage() {
             <Link href="/venue/agreement?intent=tier-request" className="ev-button-primary px-10">Activate Venue</Link>
             <Link href="/reserve" className="ev-button-secondary px-10">Reserve workflow</Link>
           </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4 pb-16 md:px-6 lg:px-8">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {[
+            ["Venue Pro", "/venue/pro", "Upgrade into the operational layer."],
+            ["Venue Pro + Reserve", "/venue/pro-reserve", "Add the booking engine."],
+            ["Tap to Pour", "/tap-to-pour", "Add the hospitality interaction layer."],
+            ["Nodes", "/nodes", "Add discovery points and routing."],
+          ].map(([label, href, body]) => (
+            <Link key={label} href={href} className="rounded-[24px] border border-white/10 bg-white/[0.03] p-5 transition hover:bg-white/[0.06]">
+              <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#caa7ff]">{label}</div>
+              <p className="mt-3 text-sm leading-6 text-white/64">{body}</p>
+            </Link>
+          ))}
         </div>
       </section>
       <PublicFooter />

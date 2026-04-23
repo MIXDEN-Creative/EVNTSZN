@@ -1,8 +1,9 @@
 import PulseActivityBeacon from "@/components/evntszn/PulseActivityBeacon";
 import DiscoveryLanding from "@/components/public/DiscoveryLanding";
 import PublicPageFrame from "@/components/public/PublicPageFrame";
+import { rankDiscoveryListingsWithStoredPolicies } from "@/lib/discovery-automation-runtime";
 import { safePublicLoad } from "@/lib/public-safe-load";
-import { getDiscoveryNativeEvents, groupDiscoveryEventsBySource, type DiscoveryNativeEvent } from "@/lib/discovery";
+import { getDiscoveryNativeEvents, groupDiscoveryEventsBySource, rankDiscoveryListings, type DiscoveryNativeEvent } from "@/lib/discovery";
 import { getReserveVenueListings } from "@/lib/public-directory";
 import { getPublicModulesContent, getHomepageContent, DEFAULT_PUBLIC_MODULES, DEFAULT_HOMEPAGE_CONTENT } from "@/lib/site-content";
 import { getPublicSponsorPlacements } from "@/lib/sponsor-placements";
@@ -46,7 +47,7 @@ export default async function HomePage() {
   ]);
 
   const nativeSections = groupDiscoveryEventsBySource(nativeResponse.events);
-  const initialPopular = [
+  const initialPopular = await rankDiscoveryListingsWithStoredPolicies([
     ...nativeResponse.events.slice(0, 6).map(mapNativeToListing),
     ...ticketmaster.slice(0, 4).map((event) => ({
       id: event.id,
@@ -62,7 +63,25 @@ export default async function HomePage() {
       summary: event.description || `${event.venueName || "Event"}${event.city ? ` · ${event.city}` : ""}`,
       isPrimary: false,
     })),
-  ];
+  ]).then((rows) => rows.slice(0, 10)).catch(() =>
+    rankDiscoveryListings([
+      ...nativeResponse.events.slice(0, 6).map(mapNativeToListing),
+      ...ticketmaster.slice(0, 4).map((event) => ({
+        id: event.id,
+        title: event.title,
+        href: event.url || "/events",
+        imageUrl: event.imageUrl || "",
+        venue: event.venueName || "Live event",
+        city: event.city || "",
+        state: event.state || "",
+        startAt: event.startAt,
+        source: event.source,
+        badgeLabel: "Ticketmaster",
+        summary: event.description || `${event.venueName || "Event"}${event.city ? ` · ${event.city}` : ""}`,
+        isPrimary: false,
+      })),
+    ]).slice(0, 10),
+  );
 
   return (
     <PublicPageFrame>

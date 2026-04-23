@@ -1,5 +1,16 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import PublicPageFrame from "@/components/public/PublicPageFrame";
+import { buildCollectionPageSchema, buildPageMetadata } from "@/lib/seo";
+import { getWebOrigin } from "@/lib/domains";
+
+export const metadata: Metadata = buildPageMetadata({
+  title: "EVNTSZN Link | conversion-ready event pages",
+  description:
+    "Run one premium EVNTSZN Link page for events, profile traffic, Reserve, and sponsor-ready visibility.",
+  path: "/link",
+  origin: getWebOrigin(),
+});
 
 const LINK_PLANS = [
   {
@@ -31,10 +42,12 @@ export default function LinkPage() {
       title="EVNTSZN Link"
       description="One clean profile for events, tickets, Reserve, sponsor placements, and conversion-ready traffic."
       heroImage="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=1800&q=80"
-      seo={{
-        title: "EVNTSZN Link | Conversion-ready event pages",
-        description: "Run one premium EVNTSZN Link page for events, profile traffic, Reserve, and sponsor-ready visibility.",
-      }}
+      structuredData={buildCollectionPageSchema({
+        name: "EVNTSZN Link",
+        description:
+          "Conversion-ready profile pages for events, Reserve, sponsor placements, and traffic flow.",
+        path: "/link",
+      })}
     >
       <section className="mx-auto max-w-7xl px-4 py-12 md:px-6 lg:px-8">
         <div className="grid gap-6 lg:grid-cols-[1.08fr_0.92fr]">

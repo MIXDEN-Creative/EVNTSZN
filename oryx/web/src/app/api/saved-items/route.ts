@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
+import { buildActivitySourceMetadata } from "@/lib/activity-source";
 import { createClient } from "@/lib/supabase/server";
+import { trackEngagementEvent } from "@/lib/engagement";
 import { recordPulseActivity } from "@/lib/pulse-signal";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { normalizeSavedItems, type SavedItemRecord } from "@/lib/saved-items";
@@ -46,6 +48,13 @@ export async function POST(request: Request) {
     if (!item) {
       return NextResponse.json({ error: "Invalid saved item." }, { status: 400 });
     }
+    const sourceMetadata = buildActivitySourceMetadata({
+      sourceType: String(item.metadata?.sourceType || item.metadata?.source_type || "").trim() || null,
+      sourceLabel: String(item.metadata?.sourceLabel || item.metadata?.source_label || "").trim() || null,
+      referenceType: item.entityType,
+      entityType: item.entityType,
+      metadata: item.metadata || {},
+    });
 
     const { error } = await supabaseAdmin
       .from("evntszn_saved_items")
@@ -73,8 +82,55 @@ export async function POST(request: Request) {
       userId: user.id,
       referenceType: item.entityType,
       referenceId: item.entityKey,
-      metadata: item.metadata,
+      metadata: {
+        ...(item.metadata || {}),
+        ...sourceMetadata,
+      },
     }).catch(() => null);
+
+    await trackEngagementEvent({
+      userId: user.id,
+      eventType: "saved_item",
+      city: item.city || null,
+      referenceType: item.entityType,
+      referenceId: item.entityKey,
+      dedupeKey: `saved:${item.intent}:${item.entityType}:${item.entityKey}`,
+      metadata: {
+        intent: item.intent,
+        entityType: item.entityType,
+        ...sourceMetadata,
+      },
+    }).catch(() => null);
+
+    if (item.city) {
+      await trackEngagementEvent({
+        userId: user.id,
+        eventType: "city_explored",
+        city: item.city,
+        referenceType: item.entityType,
+        referenceId: item.entityKey,
+        dedupeKey: `city:${item.city.toLowerCase()}:${item.entityType}`,
+        metadata: {
+          fromIntent: item.intent,
+          ...sourceMetadata,
+        },
+      }).catch(() => null);
+    }
+
+    if (item.entityType.startsWith("epl")) {
+      await trackEngagementEvent({
+        userId: user.id,
+        eventType: "epl_followed",
+        city: item.city || null,
+        referenceType: item.entityType,
+        referenceId: item.entityKey,
+        dedupeKey: `epl-follow:${item.entityType}:${item.entityKey}`,
+        metadata: {
+          intent: item.intent,
+          ...sourceMetadata,
+        },
+      }).catch(() => null);
+    }
 
     return NextResponse.json({ ok: true });
   } catch (error) {

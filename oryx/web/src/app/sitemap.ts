@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { getReserveOrigin, getWebOrigin } from "@/lib/domains";
+import { getReserveOrigin, getStayOpsOrigin, getWebOrigin } from "@/lib/domains";
 import { EPL_TEAM_PROFILES } from "@/lib/epl-teams";
 import { PUBLIC_CITIES } from "@/lib/public-cities";
 import { supabaseAdmin } from "@/lib/supabase-admin";
@@ -43,9 +43,24 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.7,
     },
     {
+      url: `${origin}/curator`,
+      changeFrequency: "weekly",
+      priority: 0.7,
+    },
+    {
+      url: `${origin}/curator-network`,
+      changeFrequency: "weekly",
+      priority: 0.7,
+    },
+    {
       url: `${origin}/link`,
       changeFrequency: "weekly",
       priority: 0.8,
+    },
+    {
+      url: `${origin}/venue-program`,
+      changeFrequency: "weekly",
+      priority: 0.7,
     },
     {
       url: `${origin}/crew`,
@@ -63,12 +78,102 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     },
     {
+      url: `${origin}/reserve`,
+      changeFrequency: "weekly",
+      priority: 0.8,
+    },
+    {
       url: `${origin}/partners`,
       changeFrequency: "weekly",
       priority: 0.7,
     },
     {
+      url: `${origin}/partners/packages`,
+      changeFrequency: "weekly",
+      priority: 0.7,
+    },
+    {
+      url: `${origin}/partner`,
+      changeFrequency: "weekly",
+      priority: 0.7,
+    },
+    {
       url: `${origin}/sponsors`,
+      changeFrequency: "weekly",
+      priority: 0.7,
+    },
+    {
+      url: `${origin}/sponsors/apply`,
+      changeFrequency: "weekly",
+      priority: 0.7,
+    },
+    {
+      url: `${origin}/sponsors/packages`,
+      changeFrequency: "weekly",
+      priority: 0.7,
+    },
+    {
+      url: `${origin}/venue`,
+      changeFrequency: "weekly",
+      priority: 0.8,
+    },
+    {
+      url: `${origin}/venue/pro`,
+      changeFrequency: "weekly",
+      priority: 0.8,
+    },
+    {
+      url: `${origin}/venue/pro-reserve`,
+      changeFrequency: "weekly",
+      priority: 0.8,
+    },
+    {
+      url: `${origin}/venue/agreement`,
+      changeFrequency: "weekly",
+      priority: 0.7,
+    },
+    {
+      url: `${origin}/tap-to-pour`,
+      changeFrequency: "weekly",
+      priority: 0.75,
+    },
+    {
+      url: `${origin}/nodes`,
+      changeFrequency: "weekly",
+      priority: 0.75,
+    },
+    {
+      url: `${origin}/organizer`,
+      changeFrequency: "weekly",
+      priority: 0.7,
+    },
+    {
+      url: `${origin}/stayops`,
+      changeFrequency: "weekly",
+      priority: 0.75,
+    },
+    {
+      url: `${getStayOpsOrigin()}/`,
+      changeFrequency: "weekly",
+      priority: 0.75,
+    },
+    {
+      url: `${origin}/stayops/intake`,
+      changeFrequency: "weekly",
+      priority: 0.7,
+    },
+    {
+      url: `${getStayOpsOrigin()}/intake`,
+      changeFrequency: "weekly",
+      priority: 0.7,
+    },
+    {
+      url: `${origin}/stayops/confirmation`,
+      changeFrequency: "weekly",
+      priority: 0.7,
+    },
+    {
+      url: `${getStayOpsOrigin()}/confirmation`,
       changeFrequency: "weekly",
       priority: 0.7,
     },

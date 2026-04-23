@@ -2,10 +2,21 @@ import Link from "next/link";
 import PublicPageFrame from "@/components/public/PublicPageFrame";
 import SurfaceShell from "@/components/shells/SurfaceShell";
 import { getPlatformViewer } from "@/lib/evntszn";
+import ProductTrustGrid from "@/components/public/ProductTrustGrid";
+import SystemActivityRail from "@/components/public/SystemActivityRail";
+import { buildCollectionPageSchema, buildPageMetadata } from "@/lib/seo";
+import { getWebOrigin } from "@/lib/domains";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import OrganizerDashboard from "./OrganizerDashboard";
 
 export const dynamic = "force-dynamic";
+export const metadata = buildPageMetadata({
+  title: "EVNTSZN Partner Program | independent organizer lane",
+  description:
+    "Run your own event business on EVNTSZN with the Partner Program, ticketing, discovery, audience conversion, and production workflows.",
+  path: "/organizer",
+  origin: getWebOrigin(),
+});
 
 export default async function OrganizerPage() {
   const viewer = await getPlatformViewer();
@@ -39,10 +50,12 @@ export default async function OrganizerPage() {
       title="Partner"
       description="Manage your own events, brand, and audience with EVNTSZN's platform tools."
       heroImage="https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=1800&q=80"
-      seo={{
-        title: "Partner | EVNTSZN Platform",
-        description: "Run your own events with EVNTSZN platform tools while keeping your brand, audience, and operating lane intact.",
-      }}
+      structuredData={buildCollectionPageSchema({
+        name: "EVNTSZN Partner Program",
+        description:
+          "Independent organizers using EVNTSZN for discovery, conversion, tickets, and production workflows.",
+        path: "/organizer",
+      })}
     >
       <section className="mx-auto max-w-7xl px-4 py-10 md:px-6 lg:px-8">
         <div className="ev-panel p-6">
@@ -63,6 +76,8 @@ export default async function OrganizerPage() {
           </div>
         </div>
       </section>
+
+      <SystemActivityRail cityLabel="Baltimore" audienceLabel="partners" mode="compact" />
 
       <section className="mx-auto max-w-7xl px-4 py-10 md:px-6 lg:px-8">
         <div className="ev-panel p-6">
@@ -85,6 +100,34 @@ export default async function OrganizerPage() {
         </div>
       </section>
 
+      <ProductTrustGrid
+        title="Partners keep ownership while EVNTSZN handles the platform layer."
+        subtitle="The Partner path is for independent organizers who want discovery, ticketing, and conversion tools without entering curator economics."
+        proofTitle="Proof"
+        proof={[
+          { title: "Independent lane", body: "Partners keep their own brand and audience while using EVNTSZN tools." },
+          { title: "Production utility", body: "The stack includes event posting, ticketing, and conversion support." },
+          { title: "Clear separation", body: "The role is intentionally different from Curator so the economics stay understandable." },
+        ]}
+        outcomesTitle="Outcomes"
+        outcomes={[
+          { title: "More control", body: "You run your business without being swallowed by a network split structure." },
+          { title: "More traffic", body: "Discovery, Link, Pulse, and Reserve help the event convert." },
+          { title: "More trust", body: "Visitors can tell exactly what the lane is and what happens next." },
+        ]}
+        objectionsTitle="Objections"
+        objections={[
+          { question: "How is this different from Curator?", answer: "Curator is an approved network operator. Partner is the independent organizer lane." },
+          { question: "Do I need to switch everything?", answer: "No. The platform layer works alongside your event business." },
+          { question: "Can I grow into more?", answer: "Yes. The lane is built to stage into stronger operating relationships over time." },
+        ]}
+        links={[
+          { href: "/hosts", label: "See Curator Network" },
+          { href: "/link", label: "See Link" },
+          { href: "/sponsors", label: "See Sponsors" },
+        ]}
+      />
+
       <section className="mx-auto max-w-7xl px-4 py-10 md:px-6 lg:px-8 text-center">
         <h2 className="text-4xl font-bold mb-8 text-white">Interested in partnering with EVNTSZN?</h2>
         <p className="text-lg text-white/70 max-w-3xl mx-auto mb-8">
@@ -93,6 +136,11 @@ export default async function OrganizerPage() {
         <Link href="/sponsors" className="ev-button-primary px-8 py-3 text-lg">
           Explore sponsors
         </Link>
+        <div className="mt-6 flex justify-center">
+          <Link href="/partner" className="ev-button-secondary px-8 py-3 text-lg">
+            Open Partner landing
+          </Link>
+        </div>
       </section>
     </PublicPageFrame>
   );

@@ -1,3 +1,4 @@
+import { buildActivitySourceMetadata } from "@/lib/activity-source";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export type PulseState = "low" | "active" | "rising" | "hot";
@@ -65,6 +66,12 @@ export async function recordPulseActivity(input: PulseActivityInput) {
   const areaLabel = normalizeAreaLabel(input.areaLabel);
   const weight = PULSE_WEIGHTS[input.sourceType] || 1;
   const now = new Date().toISOString();
+  const sourceMetadata = buildActivitySourceMetadata({
+    sourceType: String(input.metadata?.sourceType || input.metadata?.source_type || "").trim() || null,
+    sourceLabel: String(input.metadata?.sourceLabel || input.metadata?.source_label || "").trim() || null,
+    referenceType: input.referenceType || null,
+    metadata: input.metadata || null,
+  });
 
   await supabaseAdmin.from("evntszn_pulse_activity").insert({
     source_type: input.sourceType,
@@ -75,7 +82,10 @@ export async function recordPulseActivity(input: PulseActivityInput) {
     reference_type: input.referenceType || null,
     reference_id: input.referenceId || null,
     weight,
-    metadata: input.metadata || {},
+    metadata: {
+      ...(input.metadata || {}),
+      ...sourceMetadata,
+    },
   });
 
   const since = new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString();

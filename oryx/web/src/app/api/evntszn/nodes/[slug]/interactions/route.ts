@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
+import { buildActivitySourceMetadata } from "@/lib/activity-source";
 import { recordPulseActivity } from "@/lib/pulse-signal";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
@@ -111,6 +112,15 @@ export async function POST(request: NextRequest, context: RouteContext) {
         resolvedDestinationSlug: body.resolvedDestinationSlug || null,
         resolvedDestinationId: body.resolvedDestinationId || null,
         deviceType: body.deviceType || null,
+        ...buildActivitySourceMetadata({
+          sourceType: "evntszn_native",
+          referenceType: node.location_type || node.node_type || "node",
+          entityType: "node",
+          metadata: {
+            destinationType: node.destination_type,
+            deviceType: body.deviceType || null,
+          },
+        }),
       },
     }).catch(() => null);
 

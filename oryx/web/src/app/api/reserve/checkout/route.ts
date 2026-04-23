@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
+import { buildActivitySourceMetadata } from "@/lib/activity-source";
+import { trackEngagementEvent } from "@/lib/engagement";
 import { canAccessReserve, deriveReserveSettingsFromPlan, unwrapVenue } from "@/lib/reserve";
 import { recordRevenueEventAndCommissions } from "@/lib/evntszn-monetization";
 import { recordPulseActivity } from "@/lib/pulse-signal";
@@ -58,7 +60,30 @@ export async function POST(request: Request) {
         sourceType: shouldWaitlist ? "reserve_waitlist" : "reserve_booking",
         referenceType: "reserve",
         referenceId: body.venueSlug || null,
+        metadata: buildActivitySourceMetadata({
+          sourceType: "evntszn_native",
+          referenceType: "reserve",
+          entityType: "reserve_booking",
+        }),
       }).catch(() => null);
+      const anonymousUserId = await getUserId();
+      if (anonymousUserId) {
+        await trackEngagementEvent({
+          userId: anonymousUserId,
+          eventType: shouldWaitlist ? "reserve_waitlist_joined" : "reserve_requested",
+          city: null,
+          referenceType: "reserve",
+          referenceId: body.venueSlug || null,
+          dedupeKey: `reserve-launch:${body.venueSlug || "launch"}:${body.bookingDate}:${body.bookingTime}`,
+          metadata: {
+            ...buildActivitySourceMetadata({
+              sourceType: "evntszn_native",
+              referenceType: "reserve",
+              entityType: "reserve_booking",
+            }),
+          },
+        }).catch(() => null);
+      }
       return NextResponse.json({
         ok: true,
         message: shouldWaitlist
@@ -149,8 +174,39 @@ export async function POST(request: Request) {
       metadata: {
         bookingDate: body.bookingDate,
         bookingTime: body.bookingTime,
+        ...buildActivitySourceMetadata({
+          sourceType: "evntszn_native",
+          referenceType: "reserve",
+          entityType: "reserve_booking",
+          metadata: {
+            bookingDate: body.bookingDate,
+            bookingTime: body.bookingTime,
+          },
+        }),
       },
     }).catch(() => null);
+
+    if (userId) {
+      await trackEngagementEvent({
+        userId,
+        eventType: shouldWaitlist ? "reserve_waitlist_joined" : "reserve_requested",
+        city: venue.city || null,
+        referenceType: "reserve",
+        referenceId: body.venueSlug || reserveVenueId,
+        value: derivedAmountUsd,
+        dedupeKey: `reserve:${booking.id}`,
+        metadata: {
+          bookingDate: body.bookingDate,
+          bookingTime: body.bookingTime,
+          partySize: Number(body.partySize || 1),
+          ...buildActivitySourceMetadata({
+            sourceType: "evntszn_native",
+            referenceType: "reserve",
+            entityType: "reserve_booking",
+          }),
+        },
+      }).catch(() => null);
+    }
 
     const revenueMetadata = {
       displayName: venue.name,
